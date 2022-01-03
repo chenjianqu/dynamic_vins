@@ -10,7 +10,7 @@
 #include "instance_tracker.h"
 #include "segment_image.h"
 #include "../utils.h"
-#include "../utility/ViodeUtils.h"
+#include "../utility/viode_utils.h"
 
 
 using namespace torch::indexing;

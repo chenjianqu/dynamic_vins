@@ -19,7 +19,6 @@ image_width: 1226
 image_height: 370
 
 
-
 # Extrinsic parameter between IMU and Camera.
 estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
                         # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
@@ -91,12 +90,13 @@ SOLO_SCORE_THR: 0.1
 SOLO_MASK_THR: 0.5
 SOLO_UPDATE_THR: 0.2
 
-TRACKING_MAX_AGE: 30
-TRACKING_N_INIT: 3
+tracking_max_age: 30
+tracking_n_init: 3
+extractor_model_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/weights/ckpt.bin"
+
 
 min_dynamic_dist: 10
 max_dynamic_cnt: 50
-
 
 #log
 estimator_log_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/log/estimator_log.txt"
@@ -112,8 +112,15 @@ segmentor_log_flush: "debug"
 #物体可视化的持续时间
 VISUAL_INST_DURATION: 120
 
-EXTRACTOR_MODEL_PATH: "/home/chen/ws/dynamic_ws/src/dynamic_vins/weights/ckpt.bin"
 
+fnet_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_fnet.onnx"
+fnet_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_fnet.bin"
+
+cnet_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_cnet.onnx"
+cnet_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_cnet.bin"
+
+update_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_update.onnx"
+update_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_update.bin"
 
 #0表示raw,1表示naive,2表示dynamic
 slam_type: 2

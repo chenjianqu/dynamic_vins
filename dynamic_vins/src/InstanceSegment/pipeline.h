@@ -16,9 +16,9 @@
 #include <torch/torch.h>
 #include <torchvision/vision.h>
 
-#include "../parameters.h"
-#include "../utils.h"
-#include "../featureTracker/segment_image.h"
+#include "parameters.h"
+#include "utils.h"
+#include "featureTracker/segment_image.h"
 
 class Pipeline {
 public:
@@ -27,8 +27,7 @@ public:
     Pipeline(){
     }
 
-    template<typename ImageType>
-    std::tuple<float,float> GetXYWHS(const ImageType &img);
+    std::tuple<float,float> GetXYWHS(int img_h,int img_w);
 
     cv::Mat ReadImage(const std::string& fileName);
     cv::Mat ProcessPad(cv::Mat &img);
@@ -37,15 +36,21 @@ public:
     void ProcessKitti(cv::Mat &input, cv::Mat &output0, cv::Mat &output1);
     cv::Mat ProcessCut(cv::Mat &img);
 
-    static void SetBufferWithNorm(const cv::Mat &img, float *buffer);
-
     void* SetInputTensor(cv::Mat &img);
-    void* SetInputTensorCuda(cv::Mat &img);
+    void* ProcessInput(cv::Mat &img){
+        auto t = ImageToTensor(img);
+        return ProcessInput(t);
+    }
+    void* ProcessInput(torch::Tensor &img);
 
     cv::Mat ProcessMask(cv::Mat &mask, std::vector<InstInfo> &insts);
 
     ImageInfo image_info;
     torch::Tensor input_tensor;
+
+    static void SetBufferWithNorm(const cv::Mat &img, float *buffer);
+    static torch::Tensor ImageToTensor(cv::Mat &img);
+    static torch::Tensor ImageToTensor(cv::cuda::GpuMat &img);
 
 private:
 };

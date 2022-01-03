@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "Instance.h"
+#include "instance.h"
 #include "estimator.h"
 
 

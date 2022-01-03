@@ -14,9 +14,8 @@
 #include <torch/torch.h>
 #include <tuple>
 
-#include "Track.h"
-#include "KalmanTracker.h"
-#include "../utils.h"
+#include "kalman_tracker.h"
+#include "utils.h"
 
 using DistanceMetricFunc = std::function<
         torch::Tensor(const std::vector<int> &trk_ids, const std::vector<int> &det_ids)>;

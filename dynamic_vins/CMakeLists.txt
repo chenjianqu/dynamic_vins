@@ -123,10 +123,13 @@ target_link_libraries(tracking parameter instance_tracking_lib)
 add_executable(build_model src/build_model.cpp src/InstanceSegment/logger.cpp)
 target_link_libraries(build_model  ${TensorRT_LIBS} parameter)]]
 
+include_directories(src)
 
-set(Basic_Sources src/parameters.cpp src/utils.cpp src/utility/ViodeUtils.cpp)
+set(Basic_Sources src/parameters.cpp src/utils.cpp src/utility/viode_utils.cpp)
 aux_source_directory(src/InstanceSegment InstanceSegmentation_SOURCES)
 aux_source_directory(src/InstanceTracking InstanceTracking_SOURCES)
+aux_source_directory(src/FlowEstimating OpticalFlowEstimating_SOURCES)
+aux_source_directory(src/TensorRT TensorRT_SOURCES)
 aux_source_directory(src/featureTracker featureTracker_SOURCES)
 aux_source_directory(src/initial initial_SOURCES)
 aux_source_directory(src/utility utility_SOURCES)
@@ -136,6 +139,15 @@ aux_source_directory(src/estimator estimator_SOURCES)
 message("estimator_SOURCES: ${estimator_SOURCES} ")
 
 add_executable(dynamic_vins src/main.cpp ${Basic_Sources} ${InstanceSegmentation_SOURCES} ${InstanceTracking_SOURCES}
-        ${featureTracker_SOURCES} ${initial_SOURCES} ${utility_SOURCES} ${factor_SOURCES} ${estimator_SOURCES})
+        ${featureTracker_SOURCES} ${initial_SOURCES} ${utility_SOURCES} ${factor_SOURCES} ${estimator_SOURCES}
+        ${OpticalFlowEstimating_SOURCES} ${TensorRT_SOURCES})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
+
+add_executable(build_raft src/build_raft.cpp ${TensorRT_SOURCES} src/parameters.cpp)
+target_link_libraries(build_raft  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
+        TorchVision::TorchVision ${TensorRT_LIBS})
+
+add_executable(build_solo src/build_solo.cpp ${TensorRT_SOURCES} src/parameters.cpp)
+target_link_libraries(build_solo  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
+        TorchVision::TorchVision ${TensorRT_LIBS})

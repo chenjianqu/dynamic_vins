@@ -10,8 +10,8 @@
 #include <set>
 #include <algorithm>
 
-#include "TrackerManager.h"
-#include "Hungarian.h"
+#include "tracker_manager.h"
+#include "hungarian.h"
 
 using namespace std;
 using namespace cv;

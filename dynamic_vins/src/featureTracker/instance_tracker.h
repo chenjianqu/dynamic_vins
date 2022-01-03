@@ -35,7 +35,7 @@
 #include "../parameters.h"
 #include "../estimator/dynamic.h"
 
-#include "../InstanceTracking/DeepSORT.h"
+#include "../InstanceTracking/deep_sort.h"
 
 using Slice = torch::indexing::Slice;
 

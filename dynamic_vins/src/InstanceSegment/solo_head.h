@@ -7,8 +7,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_SOLO_H
-#define DYNAMIC_VINS_SOLO_H
+#ifndef DYNAMIC_VINS_SOLO_HEAD_H
+#define DYNAMIC_VINS_SOLO_HEAD_H
 
 #include <memory>
 
@@ -40,4 +40,4 @@ private:
 };
 
 
-#endif //DYNAMIC_VINS_SOLO_H
+#endif //DYNAMIC_VINS_SOLO_HEAD_H

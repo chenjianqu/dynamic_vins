@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "solo.h"
+#include "solo_head.h"
 #include "../utils.h"
 
 using namespace std;
@@ -610,6 +610,9 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     cate_tensor=cate_tensor.index({sort_inds});
     cate_labels=cate_labels.index({sort_inds});
 
+    DebugS("seg_masks.dims:{}", DimsToStr(seg_masks.sizes()));
+    DebugS("cate_labels.dims:{}", DimsToStr(cate_labels.sizes()));
+
     ///执行Matrix NMS
     auto cate_scores = MatrixNMS(seg_masks,cate_labels,cate_tensor,sum_masks);
 
@@ -624,11 +627,10 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     cate_labels = cate_labels.index({keep});
     sum_masks = sum_masks.index({keep});
 
-
     for(int i=0;i<cate_scores.sizes()[0];++i){
-        DebugS("id:{},cls:{},prob:{}", i, Config::CocoLabelVector[cate_labels[i].item().toInt()], cate_scores[i].item().toFloat());
+        DebugS("id:{},cls:{},prob:{}", i, Config::CocoLabelVector[cate_labels[i].item().toInt()],
+               cate_scores[i].item().toFloat());
     }
-
 
     ///再次根据置信度进行排序
     sort_inds = torch::argsort(cate_scores,-1,true);
@@ -647,7 +649,6 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     auto op1=options.size(std::vector<int64_t>({kFeatHeight * 4, kFeatWidth * 4}));
     seg_preds = torch::nn::functional::interpolate(seg_preds.unsqueeze(0),op1);
 
-
     ///对mask进行裁切、缩放，得到原始图片大小的mask
     seg_preds =seg_preds.index({"...",Slice(img_info.rect_y,img_info.rect_y+img_info.rect_h),
                                 Slice(img_info.rect_x,img_info.rect_x+img_info.rect_w)});
@@ -656,7 +657,6 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     seg_preds = torch::nn::functional::interpolate(seg_preds,op2);
 
     seg_preds=seg_preds.squeeze(0);
-
 
     ///阈值化
     mask_tensor = seg_preds > Config::kSoloMaskThr;

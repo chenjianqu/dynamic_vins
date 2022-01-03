@@ -7,38 +7,30 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_INFER_H
-#define DYNAMIC_VINS_INFER_H
+#ifndef DYNAMIC_VINS_INSTANCE_SEGMENTOR_H
+#define DYNAMIC_VINS_INSTANCE_SEGMENTOR_H
 
 #include <optional>
 #include <memory>
 
-#include "../featureTracker/segment_image.h"
-
-#include "common.h"
-#include "pipeline.h"
-#include "solo.h"
-#include "buffer.h"
-
 #include <NvInfer.h>
 
+#include "featureTracker/segment_image.h"
+#include "TensorRT/common.h"
+#include "TensorRT/tensorrt_utils.h"
+#include "pipeline.h"
+#include "solo_head.h"
+#include "buffer.h"
 
 
-struct InferDeleter{
-    template <typename T>
-    void operator()(T* obj) const{
-        if (obj)
-            obj->destroy();
-    }
-};
-
-class Infer {
+class InstanceSegmentor {
 public:
-    using Ptr = std::shared_ptr<Infer>;
-    Infer();
+    using Ptr = std::shared_ptr<InstanceSegmentor>;
+    InstanceSegmentor();
     std::tuple<std::vector<cv::Mat>,std::vector<InstInfo> > Forward(cv::Mat &img);
     void ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);
     void ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);
+    void ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);
 
     void VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts);
 
@@ -62,12 +54,8 @@ public:
         //queue_cond_.wait(lock,[&]{return !seg_img_list_.empty();});
         SegImage frame=std::move(seg_img_list_.front());
         seg_img_list_.pop_front();
-
         return frame;
     }
-
-
-
 private:
     MyBuffer::Ptr buffer;
     Pipeline::Ptr pipeline_;
@@ -86,4 +74,4 @@ private:
 };
 
 
-#endif //DYNAMIC_VINS_INFER_H
+#endif //DYNAMIC_VINS_INSTANCE_SEGMENTOR_H

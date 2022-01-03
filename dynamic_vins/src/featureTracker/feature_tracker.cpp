@@ -21,7 +21,7 @@
 #include <opencv2/cudaimgproc.hpp>
 
 #include "feature_tracker.h"
-#include "../utility/ViodeUtils.h"
+#include "../utility/viode_utils.h"
 
 
 FeatureTracker::FeatureTracker()

@@ -11,7 +11,7 @@
 #include <iostream>
 #include <tuple>
 
-#include "infer.h"
+#include "instance_segmentor.h"
 
 #include "../parameters.h"
 #include "../utils.h"
@@ -40,7 +40,7 @@ std::optional<int> GetQueueShapeIndex(int c, int h, int w)
 
 
 
-Infer::Infer()
+InstanceSegmentor::InstanceSegmentor()
 {
     if(Config::is_input_seg || Config::slam == SlamType::kRaw){
         auto msg="set input seg, the segmentor does not initial";
@@ -132,7 +132,7 @@ Infer::Infer()
 
 
 std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>>
-Infer::Forward(cv::Mat &img)
+InstanceSegmentor::Forward(cv::Mat &img)
 {
     TicToc ticToc,tt;
 
@@ -210,62 +210,12 @@ Infer::Forward(cv::Mat &img)
     return {mask_v,insts_info};
 }
 
-
-void Infer::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
-{
-    TicToc ticToc,tt;
-
-    ///将图片数据复制到输入buffer,同时实现了图像的归一化
-    //方式1
-    /*cv::Mat input=pipeline_->ProcessPad(img);
-    //cv::Mat input=pipeline_->ProcessPadCuda(img);
-    pipeline_->SetBufferWithNorm(input,buffer->cpu_buffer[0]);
-    buffer->cpyInputToGPU();*/
-
-    //方式2
-    /*cv::Mat input=pipeline_->ProcessPad(img);
-    pipeline_->setBufferWithTensor(input);
-    buffer->gpu_buffer[0] = pipeline_->input_tensor.data_ptr();*/
-
-    //方式3
-    //buffer->gpu_buffer[0] = pipeline_->SetInputTensor(img);
-    buffer->gpu_buffer[0] = pipeline_->SetInputTensorCuda(img);
-
-    //方式4 不做pad
-    /*pipeline_->SetBufferWithNorm(img,buffer->cpu_buffer[0]);
-    buffer->cpyInputToGPU();
-    solo_->is_resized_ = false;
-    pipeline_->image_info.rect_x=0;
-    pipeline_->image_info.rect_y=0;
-    pipeline_->image_info.rect_w= std::min(Config::kInputWidth,img.cols) ;
-    pipeline_->image_info.rect_h= std::min(Config::kInputHeight,img.rows) ;*/
-
-    /*cv::Mat input=pipeline_->ProcessPadCuda(img);
-    pipeline_->SetBufferWithNorm(input,buffer->cpu_buffer[0]);
-    buffer->cpyInputToGPU();*/
-
-    InfoS(fmt::format("ForwardTensor prepare:{} ms", tt.toc_then_tic()));
-
+void InstanceSegmentor::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts){
+    buffer->gpu_buffer[0] = pipeline_->ProcessInput(img);
     ///推断
     context_->enqueue(kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
 
-    InfoS(fmt::format("ForwardTensor enqueue:{} ms", tt.toc_then_tic()));
-
     std::vector<torch::Tensor> outputs(kTensorQueueShapes.size());
-
-
-    //方法1
-    /*buffer->cpyOutputToCPU();
-    for(int i=1;i<buffer->binding_num;++i){
-        torch::Tensor tensor=torch::from_blob(
-                buffer->cpu_buffer[i],
-                {buffer->dims[i].d[0],buffer->dims[i].d[1],buffer->dims[i].d[2],buffer->dims[i].d[3]},
-                torch::kFloat);
-        outputs.push_back(tensor.to(torch::kCUDA));
-        //cout<<tensor.sizes()<<endl;
-    }*/
-
-    //方法2
     auto opt=torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat);
     for(int i=1;i<buffer->binding_num;++i){
         torch::Tensor tensor=torch::from_blob(
@@ -277,28 +227,53 @@ void Infer::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<
             outputs[*index] = tensor.to(torch::kCUDA);
         }
         else{
-            auto msg=fmt::format("GetQueueShapeIndex failed:({},{},{},{})",buffer->dims[i].d[0],buffer->dims[i].d[1],buffer->dims[i].d[2],buffer->dims[i].d[3]);
+            auto msg=fmt::format("GetQueueShapeIndex failed:({},{},{},{})",buffer->dims[i].d[0],buffer->dims[i].d[1],
+                                 buffer->dims[i].d[2],buffer->dims[i].d[3]);
             sg_logger->error(msg);
             throw std::runtime_error(msg);
         }
-        //cout<<index<<" ("<<buffer->dims[i].d[1]<<buffer->dims[i].d[2]<<buffer->dims[i].d[3]<<")"<<endl;
     }
 
-    InfoS("ForwardTensor push_back:{} ms", tt.toc_then_tic());
-
     solo_->GetSegTensor(outputs, pipeline_->image_info, mask_tensor, insts);
-
-    InfoS("ForwardTensor GetSegTensor:{} ms", tt.toc_then_tic());
-    InfoS("ForwardTensor inst number:{}", insts.size());
+}
 
 
-    infer_time_ = ticToc.toc();
+void InstanceSegmentor::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
+{
+    ///将图片数据复制到输入buffer,同时实现了图像的归一化
+    /*
+    //方式1
+     cv::Mat input=pipeline_->ProcessPad(img);
+    //cv::Mat input=pipeline_->ProcessPadCuda(img);
+    pipeline_->SetBufferWithNorm(input,buffer->cpu_buffer[0]);
+    buffer->cpyInputToGPU();*/
+    /*
+    //方式2
+     cv::Mat input=pipeline_->ProcessPad(img);
+    pipeline_->setBufferWithTensor(input);
+    buffer->gpu_buffer[0] = pipeline_->input_tensor.data_ptr();*/
+    //方式3
+    //buffer->gpu_buffer[0] = pipeline_->SetInputTensor(img);
+    //buffer->gpu_buffer[0] = pipeline_->ProcessInput(img);
+    //方式4 不做pad
+    /*pipeline_->SetBufferWithNorm(img,buffer->cpu_buffer[0]);
+    buffer->cpyInputToGPU();
+    solo_->is_resized_ = false;
+    pipeline_->image_info.rect_x=0;
+    pipeline_->image_info.rect_y=0;
+    pipeline_->image_info.rect_w= std::min(Config::kInputWidth,img.cols) ;
+    pipeline_->image_info.rect_h= std::min(Config::kInputHeight,img.rows) ;*/
+    /*cv::Mat input=pipeline_->ProcessPadCuda(img);
+    pipeline_->SetBufferWithNorm(input,buffer->cpu_buffer[0]);
+    buffer->cpyInputToGPU();*/
 
+    auto tensor = Pipeline::ImageToTensor(img);
+    ForwardTensor(tensor,mask_tensor,insts);
 }
 
 
 
-void Infer::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
+void InstanceSegmentor::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
 {
     TicToc tic_toc,tt;
 
@@ -358,7 +333,7 @@ void Infer::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std
 
 
 
-void Infer::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts)
+void InstanceSegmentor::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts)
 {
     if(mask.empty()){
         cv::imshow("test",input);

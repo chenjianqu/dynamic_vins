@@ -16,6 +16,7 @@
 #include <map>
 #include <iostream>
 #include <exception>
+#include <tuple>
 
 #include <eigen3/Eigen/Dense>
 #include <opencv2/opencv.hpp>
@@ -34,6 +35,7 @@ using std::cerr;
 using std::string;
 using std::pair;
 using std::vector;
+using std::tuple;
 
 using namespace std::chrono_literals;
 namespace fs=std::filesystem;
@@ -223,7 +225,14 @@ public:
 
     inline static int VISUAL_INST_DURATION;
 
-    inline static std::string EXTRACTOR_MODEL_PATH;
+    inline static std::string kExtractorModelPath;
+
+    inline static std::string kRaftFnetOnnxPath;
+    inline static std::string kRaftFnetTensorrtPath;
+    inline static std::string kRaftCnetOnnxPath;
+    inline static std::string kRaftCnetTensorrtPath;
+    inline static std::string kRaftUpdateOnnxPath;
+    inline static std::string kRaftUpdateTensorrtPath;
 
     inline static int kSoloNmsPre;
     inline static int kSoloMaxPerImg;

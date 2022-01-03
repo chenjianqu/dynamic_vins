@@ -11,7 +11,7 @@
 #include <cuda_runtime_api.h>
 
 #include "buffer.h"
-#include "common.h"
+#include "../TensorRT/common.h"
 #include "../parameters.h"
 
 

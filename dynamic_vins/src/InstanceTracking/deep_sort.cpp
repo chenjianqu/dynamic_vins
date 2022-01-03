@@ -10,9 +10,9 @@
 
 #include <algorithm>
 
-#include "DeepSORT.h"
-#include "Extractor.h"
-#include "TrackerManager.h"
+#include "deep_sort.h"
+#include "extractor.h"
+#include "tracker_manager.h"
 
 using namespace std;
 using namespace cv;

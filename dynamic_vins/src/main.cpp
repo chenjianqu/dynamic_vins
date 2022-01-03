@@ -17,17 +17,16 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include <cstdio>
 #include <memory>
 #include <queue>
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <future>
 
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
-
 #include <spdlog/spdlog.h>
 
 #include "parameters.h"
@@ -35,17 +34,18 @@
 #include "utility/visualization.h"
 #include "estimator/dynamic.h"
 #include "featureTracker/segment_image.h"
-#include "utility/ViodeUtils.h"
+#include "utility/viode_utils.h"
 #include "featureTracker/feature_tracker.h"
-
+#include "FlowEstimating/flow_estimator.h"
+#include "FlowEstimating/flow_visual.h"
 
 constexpr int kQueueSize=200;
 constexpr double kDelay=0.005;
 
 Estimator::Ptr estimator;
-Infer::Ptr infer;
+InstanceSegmentor::Ptr inst_segmentor;
 FeatureTracker::Ptr feature_tracker;
-
+FlowEstimator::Ptr flow_estimator;
 
 queue<sensor_msgs::ImuConstPtr> imu_buf;
 queue<sensor_msgs::PointCloudConstPtr> feature_buf;
@@ -96,16 +96,19 @@ inline cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
 }
 
 
-void SyncProcess()
+
+
+
+SegImage SyncProcess()
 {
-    int cnt = 0;
+    SegImage img;
+
     while(Config::ok.load(std::memory_order_seq_cst))
     {
-        if(infer->GetQueueSize() >= kInferImageListSize){
+        if(inst_segmentor->GetQueueSize() >= kInferImageListSize){
             std::this_thread::sleep_for(50ms);
             continue;
         }
-
         m_buf.lock();
         //等待图片
         if((Config::is_input_seg && (img0_buf.empty() || img1_buf.empty() || seg0_buf.empty() || seg1_buf.empty())) ||
@@ -115,19 +118,10 @@ void SyncProcess()
             continue;
         }
 
-        DebugS("sync_process img0_buf:{} img1_buf{} seg0_buf{} seg1_buf{}", img0_buf.size(), img1_buf.size(),
-               seg0_buf.size(), seg1_buf.size());
-
-        static TicToc ticToc;
-        ticToc.tic();
-
         ///下面以img0的时间戳为基准，找到与img0相近的图片
-        SegImage img;
         img.color0= GetImageFromMsg(img0_buf.front());
         img.time0=img0_buf.front()->header.stamp.toSec();
         img0_buf.pop();
-
-        //sg_logger->debug("sync_process color0");
 
         img.time1=img1_buf.front()->header.stamp.toSec();
         if(img.time0 + kDelay < img.time1){ //img0太早了
@@ -144,7 +138,6 @@ void SyncProcess()
         img.color1= GetImageFromMsg(img1_buf.front());
         img1_buf.pop();
 
-        //sg_logger->debug("sync_process color1");
 
         if(Config::is_input_seg)
         {
@@ -183,75 +176,85 @@ void SyncProcess()
 
         m_buf.unlock();
 
+        break;
+    }
+
+    return img;
+}
+
+
+
+void ImageProcess()
+{
+    int cnt = 0;
+    while(Config::ok.load(std::memory_order_seq_cst))
+    {
+        SegImage img = SyncProcess();
         WarnS("----------Time : {} ----------", img.time0);
 
         ///rgb to gray
         if(img.gray0.empty()){
-            if(Config::slam != SlamType::kRaw){
+            if(Config::slam != SlamType::kRaw)
                 img.SetGrayImageGpu();
-            }
-            else{
+            else
                 img.SetGrayImage();
-            }
         }
         else{
-            if(Config::slam != SlamType::kRaw){
+            if(Config::slam != SlamType::kRaw)
                 img.SetColorImageGpu();
-            }
-            else{
+            else
                 img.SetColorImage();
-            }
         }
 
         static TicToc tt;
+        torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
+        //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
 
-        ///set mask
+        ///异步检测光流
+        torch::Tensor flow;
+        std::thread flow_thread([&flow](torch::Tensor &img){
+            flow = flow_estimator->Forward(img);
+            },std::ref(img_tensor));
+
+        ///实例分割
         if(!Config::is_input_seg){
             if(Config::slam != SlamType::kRaw){
                 tt.tic();
-                infer->ForwardTensor(img.color0, img.mask_tensor, img.insts_info);
+                inst_segmentor->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
                 InfoS("sync_process forward: {}", tt.toc_then_tic());
-                if(Config::slam == SlamType::kNaive){
+                if(Config::slam == SlamType::kNaive)
                     img.SetMaskGpuSimple();
-                }
-                else if(Config::slam == SlamType::kDynamic){
-                    //img.SetMask();
+                else if(Config::slam == SlamType::kDynamic)
                     img.SetMaskGpu();
-                }
                 InfoS("sync_process SetMask: {}", tt.toc_then_tic());
             }
         }
         else{
             if(Config::dataset == DatasetType::kViode){
-                if(Config::slam == SlamType::kNaive){
+                if(Config::slam == SlamType::kNaive)
                     VIODE::SetViodeMaskSimple(img);
-                }
-                else if(Config::slam == SlamType::kDynamic){
+                else if(Config::slam == SlamType::kDynamic)
                     VIODE::SetViodeMask(img);
-                    //kViode::SetViodeMaskSimple(img);
-                }
             }
             InfoS("sync_process SetMask: {}", tt.toc_then_tic());
         }
 
-        infer->PushBack(img);
-        InfoS("sync_process all:{} ms\n", ticToc.toc());
+        flow_thread.join();
+
+        img.flow = flow;
+
+        //inst_segmentor->PushBack(img);
 
         /*cv::Mat show;
         cv::scaleAdd(img.color0,0.5,img.seg0,show);*/
-        /*cv::imshow("show",img.merge_mask);
-        cv::waitKey(1);*/
-
-        /*cnt++;
-        if(cnt==5){
-            cv::imwrite("color0.png",img.color0);
-            cv::imwrite("color1.png",img.color1);
-        }*/
+        cv::Mat show = visual_flow_image(flow);
+        cv::imshow("show",show);
+        cv::waitKey(1);
     }
 
-    WarnS("sync_process 线程退出");
-}
+    WarnS("ImageProcess 线程退出");
 
+}
 
 
 
@@ -260,7 +263,7 @@ void FeatureTrack()
     static TicToc tt;
     int cnt;
     while(Config::ok.load(std::memory_order_seq_cst)){
-        if(auto img = infer->WaitForResult();img){
+        if(auto img = inst_segmentor->WaitForResult();img){
             tt.tic();
             if(Config::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
@@ -291,7 +294,7 @@ void FeatureTrack()
             InfoT("**************feature_track:{} ms****************\n", tt.toc());
         }
     }
-    WarnT("feature_track 线程退出");
+    WarnT("FeatureTrack 线程退出");
 }
 
 
@@ -369,8 +372,9 @@ int main(int argc, char **argv)
     try{
         Config cfg(config_file);
         estimator.reset(new Estimator());
-        infer.reset(new Infer);
+        inst_segmentor.reset(new InstanceSegmentor);
         feature_tracker = std::make_unique<FeatureTracker>();
+        flow_estimator = std::make_unique<FlowEstimator>();
     }
     catch(std::runtime_error &e){
         vio_logger->critical(e.what());
@@ -407,7 +411,7 @@ int main(int argc, char **argv)
     vio_logger->flush();
 
     std::thread vio_thread{&Estimator::ProcessMeasurements, estimator};
-    std::thread sync_thread{SyncProcess};
+    std::thread sync_thread{ImageProcess};
     std::thread fk_thread{FeatureTrack};
 
     ros::spin();

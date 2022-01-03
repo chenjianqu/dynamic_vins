@@ -12,8 +12,8 @@
 #include <NvInfer.h>
 #include <NvOnnxParser.h>
 
-#include "InstanceSegment/logger.h"
-#include "InstanceSegment/common.h"
+#include "TensorRT/logger.h"
+#include "TensorRT/common.h"
 
 #include "parameters.h"
 
@@ -61,9 +61,9 @@ int Build()
 
     ///读取模型文件
 
-    cout << "parseFromFile:" << Config::DETECTOR_ONNX_PATH << endl;
+    cout << "parseFromFile:" << Config::kDetectorOnnxPath << endl;
     auto verbosity=sample::gLogger.getReportableSeverity();
-    auto parsed=parser->parseFromFile(Config::DETECTOR_ONNX_PATH.c_str(), static_cast<int>(verbosity));
+    auto parsed=parser->parseFromFile(Config::kDetectorOnnxPath.c_str(), static_cast<int>(verbosity));
     if(!parsed)
         return -1;
 
@@ -97,7 +97,7 @@ int Build()
     serialize_str.resize(serializeModel->size());
     memcpy((void*)serialize_str.data(),serializeModel->data(),serializeModel->size());
     //将字符串输出到文件中
-    std::ofstream serialize_stream(Config::DETECTOR_SERIALIZE_PATH);
+    std::ofstream serialize_stream(Config::kDetectorSerializePath);
     serialize_stream<<serialize_str;
     serialize_stream.close();
 

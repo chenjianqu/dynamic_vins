@@ -17,10 +17,9 @@
 #include <spdlog/logger.h>
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
+#include <NvInfer.h>
 
 #include "parameters.h"
-
-
 
 
 class TicToc{
@@ -54,7 +53,10 @@ private:
     std::chrono::time_point<std::chrono::system_clock> start, end;
 };
 
-
+struct Track {
+    int id;
+    cv::Rect2f box;
+};
 
 struct InstInfo{
     std::string name;
@@ -72,8 +74,6 @@ struct InstInfo{
     torch::Tensor mask_tensor;
 };
 
-
-
 struct SegImage{
     cv::Mat color0,seg0,color1,seg1;
     cv::cuda::GpuMat color0_gpu,color1_gpu;
@@ -87,6 +87,8 @@ struct SegImage{
     cv::Mat merge_mask,inv_merge_mask;
     cv::cuda::GpuMat merge_mask_gpu,inv_merge_mask_gpu;
 
+    torch::Tensor flow;
+
     void SetMask();
     void SetMaskGpu();
     void SetMaskGpuSimple();
@@ -97,15 +99,11 @@ struct SegImage{
     void SetColorImageGpu();
 };
 
-
-
 struct ImageInfo{
     int origin_h,origin_w;
     ///图像的裁切信息
     int rect_x, rect_y, rect_w, rect_h;
 };
-
-
 
 
 template <typename T>
@@ -115,6 +113,16 @@ static std::string DimsToStr(torch::ArrayRef<T> list){
     for(auto e : list) {
         if (i++ > 0) text+= ", ";
         text += std::to_string(e);
+    }
+    text += "]";
+    return text;
+}
+
+static std::string DimsToStr(nvinfer1::Dims list){
+    std::string text= "[";
+    for(int i=0;i<list.nbDims;++i){
+        if (i > 0) text+= ", ";
+        text += std::to_string(list.d[i]);
     }
     text += "]";
     return text;

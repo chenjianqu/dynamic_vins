@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "KalmanTracker.h"
+#include "kalman_tracker.h"
 #include "../parameters.h"
 
 using namespace cv;

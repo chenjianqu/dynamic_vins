@@ -10,7 +10,7 @@
 
 #include <fstream>
 
-#include "Extractor.h"
+#include "extractor.h"
 
 namespace nn = torch::nn;
 using namespace std;

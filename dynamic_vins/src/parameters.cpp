@@ -14,7 +14,7 @@
 
 #include "estimator/dynamic.h"
 #include "utils.h"
-#include "utility/ViodeUtils.h"
+#include "utility/viode_utils.h"
 
 
 
@@ -137,7 +137,6 @@ Config::Config(const std::string &file_name)
     }
     cout<<"dataset:"<<dataset_type_string<<endl;
 
-
     fs["estimator_log_path"] >> kEstimatorLogPath;
     fs["estimator_log_level"] >> kEstimatorLogLevel;
     fs["estimator_log_flush"] >> kEstimatorLogFlush;
@@ -148,31 +147,20 @@ Config::Config(const std::string &file_name)
     fs["segmentor_log_level"] >> kSegmentorLogLevel;
     fs["segmentor_log_flush"] >> kSegmentorLogFlush;
 
-    cout << "kEstimatorLogPath:" << kEstimatorLogPath << endl;
-    cout << "kEstimatorLogLevel:" << kEstimatorLogLevel << endl;
-    cout << "kEstimatorLogFlush:" << kEstimatorLogFlush << endl;
-    cout << "kFeatureTrackerLogPath:" << kFeatureTrackerLogPath << endl;
-    cout << "kFeatureTrackerLogLevel:" << kFeatureTrackerLogLevel << endl;
-    cout << "kFeatureTrackerLogFlush:" << kFeatureTrackerLogFlush << endl;
-    cout << "kSegmentorLogPath:" << kSegmentorLogPath << endl;
-    cout << "kSegmentorLogLevel:" << kSegmentorLogLevel << endl;
-    cout << "kSegmentorLogFlush:" << kSegmentorLogFlush << endl;
+    fs["fnet_onnx_path"] >> kRaftFnetOnnxPath;
+    fs["fnet_tensorrt_path"] >> kRaftFnetTensorrtPath;
+    fs["cnet_onnx_path"] >> kRaftCnetOnnxPath;
+    fs["cnet_tensorrt_path"] >> kRaftCnetTensorrtPath;
+    fs["update_onnx_path"] >> kRaftUpdateOnnxPath;
+    fs["update_tensorrt_path"] >> kRaftUpdateTensorrtPath;
 
     fs["image0_topic"] >> kImage0Topic;
     fs["image1_topic"] >> kImage1Topic;
     fs["image0_segmentation_topic"] >> kImage0SegTopic;
     fs["image1_segmentation_topic"] >> kImage1SegTopic;
 
-    cout << "kImage0Topic:" << kImage0Topic << endl;
-    cout << "kImage1Topic:" << kImage1Topic << endl;
-    cout << "kImage0SegTopic:" << kImage0SegTopic << endl;
-    cout << "kImage1SegTopic:" << kImage1SegTopic << endl;
-
-
     kRow = fs["image_height"];
     kCol = fs["image_width"];
-    cout << fmt::format("kRow:{},kCol:{}", kRow, kCol) << endl;
-
 
     kMaxCnt = fs["max_cnt"];
     kMaxDynamicCnt = fs["max_dynamic_cnt"];
@@ -192,7 +180,6 @@ Config::Config(const std::string &file_name)
 
     if(USE_IMU){
         fs["imu_topic"] >> kImuTopic;
-        cout << "kImuTopic:" << kImuTopic << endl;
         ACC_N = fs["acc_n"];
         ACC_W = fs["acc_w"];
         GYR_N = fs["gyr_n"];
@@ -202,8 +189,6 @@ Config::Config(const std::string &file_name)
 
     fs["output_path"] >> kOutputFolder;
     VINS_RESULT_PATH = kOutputFolder + "/vio.csv";
-    cout << "kOutputFolder:" << kOutputFolder << endl;
-    cout<<"VINS_RESULT_PATH:"<<VINS_RESULT_PATH<<endl;
 
     std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
     fout.close();
@@ -232,9 +217,7 @@ Config::Config(const std::string &file_name)
         TIC.emplace_back(T.block<3, 1>(0, 3));
     }
 
-
     kCamNum = fs["num_of_cam"];
-    cout << "kCamNum:" << kCamNum << endl;
     if(kCamNum != 1 && kCamNum != 2){
         throw std::runtime_error("num_of_cam should be 1 or 2");
     }
@@ -263,7 +246,7 @@ Config::Config(const std::string &file_name)
         TIC.emplace_back(T.block<3, 1>(0, 3));
     }
 
-    fs["kInitDepth"] >> kInitDepth;
+    fs["INIT_DEPTH"] >> kInitDepth;
     fs["BIAS_ACC_THRESHOLD"]>>BIAS_ACC_THRESHOLD;
     fs["BIAS_GYR_THRESHOLD"]>>BIAS_GYR_THRESHOLD;
 
@@ -275,7 +258,6 @@ Config::Config(const std::string &file_name)
     else{
         cout<<"Synchronized sensors, fix time offset:"<<TD<<endl;
     }
-
 
     if(!USE_IMU){
         ESTIMATE_EXTRINSIC = 0;
@@ -299,20 +281,19 @@ Config::Config(const std::string &file_name)
     if(slam != SlamType::kRaw && dataset != DatasetType::kViode){
         fs["onnx_path"] >> kDetectorOnnxPath;
         fs["serialize_path"] >> kDetectorSerializePath;
-
-        fs["kSoloNmsPre"] >> kSoloNmsPre;
-        fs["kSoloMaxPerImg"] >> kSoloMaxPerImg;
-        fs["kSoloNmsKernel"] >> kSoloNmsKernel;
-        fs["kSoloNmsSigma"] >> kSoloNmsSigma;
-        fs["kSoloScoreThr"] >> kSoloScoreThr;
-        fs["kSoloMaskThr"] >> kSoloMaskThr;
-        fs["kSoloUpdateThr"] >> kSoloUpdateThr;
+        fs["SOLO_NMS_PRE"] >> kSoloNmsPre;
+        fs["SOLO_MAX_PER_IMG"] >> kSoloMaxPerImg;
+        fs["SOLO_NMS_KERNEL"] >> kSoloNmsKernel;
+        fs["SOLO_NMS_SIGMA"] >> kSoloNmsSigma;
+        fs["SOLO_SCORE_THR"] >> kSoloScoreThr;
+        fs["SOLO_MASK_THR"] >> kSoloMaskThr;
+        fs["SOLO_UPDATE_THR"] >> kSoloUpdateThr;
     }
 
     if(slam == SlamType::kDynamic && dataset != DatasetType::kViode){
-        fs["EXTRACTOR_MODEL_PATH"]>>EXTRACTOR_MODEL_PATH;
-        fs["kTrackingNInit"] >> kTrackingNInit;
-        fs["kTrackingMaxAge"] >> kTrackingMaxAge;
+        fs["extractor_model_path"] >> kExtractorModelPath;
+        fs["tracking_n_init"] >> kTrackingNInit;
+        fs["tracking_max_age"] >> kTrackingMaxAge;
     }
 
     fs["VISUAL_INST_DURATION"]>>VISUAL_INST_DURATION;

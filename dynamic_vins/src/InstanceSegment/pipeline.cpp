@@ -20,23 +20,22 @@ using namespace torch::indexing;
 using InterpolateFuncOptions=torch::nn::functional::InterpolateFuncOptions;
 
 
-template<typename ImageType>
-std::tuple<float,float> Pipeline::GetXYWHS(const ImageType &img)
+std::tuple<float,float> Pipeline::GetXYWHS(int img_h,int img_w)
 {
-    image_info.origin_h = img.rows;
-    image_info.origin_w = img.cols;
+    image_info.origin_h = img_h;
+    image_info.origin_w = img_w;
 
     int w, h, x, y;
-    float r_w = Config::kInputWidth / (img.cols * 1.0f);
-    float r_h = Config::kInputHeight / (img.rows * 1.0f);
+    float r_w = Config::kInputWidth / (img_w * 1.0f);
+    float r_h = Config::kInputHeight / (img_h * 1.0f);
     if (r_h > r_w) {
         w = Config::kInputWidth;
-        h = r_w * img.rows;
+        h = r_w * img_h;
         if(h%2==1)h++;//这里确保h为偶数，便于后面的使用
         x = 0;
         y = (Config::kInputHeight - h) / 2;
     } else {
-        w = r_h* img.cols;
+        w = r_h* img_w;
         if(w%2==1)w++;
         h = Config::kInputHeight;
         x = (Config::kInputWidth - w) / 2;
@@ -58,7 +57,7 @@ cv::Mat Pipeline::ReadImage(const std::string& fileName)
     if (img.empty())
         return cv::Mat();
 
-    auto [r_h,r_w] = GetXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
 
     //将img resize为(INPUT_W,INPUT_H)
     cv::Mat re(image_info.rect_h, image_info.rect_w, CV_8UC3);
@@ -77,7 +76,7 @@ cv::Mat Pipeline::ProcessPad(cv::Mat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = GetXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
 
     //将img resize为(INPUT_W,INPUT_H)
     cv::Mat re(image_info.rect_h, image_info.rect_w, CV_8UC3);
@@ -96,12 +95,11 @@ cv::Mat Pipeline::ProcessPad(cv::Mat &img)
 }
 
 
-
 cv::Mat Pipeline::ProcessPadCuda(cv::Mat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = GetXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
 
     static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
 
@@ -129,7 +127,7 @@ cv::Mat Pipeline::ProcessPadCuda(cv::cuda::GpuMat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = GetXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
 
     static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
 
@@ -153,17 +151,16 @@ cv::Mat Pipeline::ProcessPadCuda(cv::cuda::GpuMat &img)
 }
 
 
-
 void* Pipeline::SetInputTensor(cv::Mat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = GetXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
 
     cv::Mat out;
     cv::resize(img,out,cv::Size(image_info.rect_w, image_info.rect_h));
 
-    sg_logger->debug("SetInputTensor resize:{} ms", tt.toc_then_tic());
+    DebugS("SetInputTensor resize:{} ms", tt.toc_then_tic());
 
     ///拼接图像边缘
     static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
@@ -181,77 +178,51 @@ void* Pipeline::SetInputTensor(cv::Mat &img)
         cv::hconcat(out,cat_img,out);
     }
 
-    sg_logger->debug("SetInputTensor concat:{} ms", tt.toc_then_tic());
+    DebugS("SetInputTensor concat:{} ms", tt.toc_then_tic());
 
     cv::cvtColor(out,out,CV_BGR2RGB);
 
-    sg_logger->debug("SetInputTensor cvtColor:{} ms", tt.toc_then_tic());
+    DebugS("SetInputTensor cvtColor:{} ms", tt.toc_then_tic());
 
 
     cv::Mat img_float;
     out.convertTo(img_float,CV_32FC3);
 
-    sg_logger->debug("SetInputTensor convertTo:{} ms", tt.toc_then_tic());
+    DebugS("SetInputTensor convertTo:{} ms", tt.toc_then_tic());
 
 
     torch::Tensor input_tensor_cpu = torch::from_blob(img_float.data, { img_float.rows,img_float.cols ,3 }, torch::kFloat32);
     input_tensor = input_tensor_cpu.to(torch::kCUDA).permute({2,0,1});
 
-    sg_logger->debug("SetInputTensor from_blob:{} ms", tt.toc_then_tic());
+    DebugS("SetInputTensor from_blob:{} ms", tt.toc_then_tic());
 
     static torch::Tensor mean_t=torch::from_blob(kSoloImgMean, {3, 1, 1}, torch::kFloat).to(torch::kCUDA).expand({3, img_float.rows, img_float.cols});
     static torch::Tensor std_t=torch::from_blob(kSoloImgStd, {3, 1, 1}, torch::kFloat).to(torch::kCUDA).expand({3, img_float.rows, img_float.cols});
 
     input_tensor = ((input_tensor-mean_t)/std_t).contiguous();
 
-    sg_logger->debug("SetInputTensor norm:{} ms", tt.toc_then_tic());
+    DebugS("SetInputTensor norm:{} ms", tt.toc_then_tic());
 
     return input_tensor.data_ptr();
 }
 
-
-void* Pipeline::SetInputTensorCuda(cv::Mat &img)
-{
-    TicToc tt;
-
-    auto [r_h,r_w] = GetXYWHS(img);
-
-    /*cv::cuda::GpuMat img_gpu(img);
-    img_gpu.convertTo(img_gpu,CV_32FC3);
-    input_tensor = torch::from_blob(img_gpu.data, { image_info.origin_h,image_info.origin_w ,3 },torch::TensorOptions(torch::kCUDA).dtype(torch::kFloat32));*/
-
-    cv::Mat img_float;
-    img.convertTo(img_float,CV_32FC3);
-    sg_logger->debug("SetInputTensorCuda convertTo: {} ms", tt.toc_then_tic());
-    input_tensor = torch::from_blob(img_float.data, {image_info.origin_h, image_info.origin_w , 3 }, torch::kFloat32).to(torch::kCUDA);
-
-
-    sg_logger->debug("SetInputTensorCuda from_blob:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
-
-    ///bgr->rgb
-    input_tensor = torch::cat({
-        input_tensor.index({"...",2}).unsqueeze(2),
-        input_tensor.index({"...",1}).unsqueeze(2),
-        input_tensor.index({"...",0}).unsqueeze(2)
-        },2);
-    sg_logger->debug("SetInputTensorCuda bgr->rgb:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
-
-    ///hwc->chw
-    input_tensor = input_tensor.permute({2,0,1});
-    sg_logger->debug("SetInputTensorCuda hwc->chw:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
-
-    ///norm
-    static torch::Tensor mean_t=torch::from_blob(kSoloImgMean, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).expand({3, image_info.origin_h, image_info.origin_w});
-    static torch::Tensor std_t=torch::from_blob(kSoloImgStd, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).expand({3, image_info.origin_h, image_info.origin_w});
+/**
+ * 输入预处理
+ * @param img 未经处理的图像张量，shape=[3,h,w],值范围[0-255]，数据类型Float32
+ * @return
+ */
+void* Pipeline::ProcessInput(torch::Tensor &img){
+    auto [r_h,r_w] = GetXYWHS(img.sizes()[1],img.sizes()[2]);
+    input_tensor= img;
+    static torch::Tensor mean_t=torch::from_blob(kSoloImgMean, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).
+            expand({3, image_info.origin_h, image_info.origin_w});
+    static torch::Tensor std_t=torch::from_blob(kSoloImgStd, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).
+            expand({3, image_info.origin_h, image_info.origin_w});
     input_tensor = ((input_tensor-mean_t)/std_t);
-    sg_logger->debug("SetInputTensorCuda norm:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
-
     ///resize
-    static auto options=InterpolateFuncOptions().mode(torch::kBilinear).align_corners(true);
+    auto options=InterpolateFuncOptions().mode(torch::kBilinear).align_corners(true);
     options=options.size(std::vector<int64_t>({image_info.rect_h, image_info.rect_w}));
     input_tensor = torch::nn::functional::interpolate(input_tensor.unsqueeze(0),options).squeeze(0);
-    sg_logger->debug("SetInputTensorCuda resize:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
-
     ///拼接图像边缘
     static auto op = torch::TensorOptions(torch::kCUDA).dtype(torch::kFloat32);
     static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
@@ -266,11 +237,7 @@ void* Pipeline::SetInputTensorCuda(cv::Mat &img)
         torch::Tensor cat_t = torch::zeros({3,cat_h,cat_w},op);
         input_tensor = torch::cat({cat_t,input_tensor,cat_t},2);
     }
-    sg_logger->debug("SetInputTensorCuda cat:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
-
     input_tensor = input_tensor.contiguous();
-    sg_logger->debug("SetInputTensorCuda contiguous:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
-
     return input_tensor.data_ptr();
 }
 
@@ -410,5 +377,44 @@ void Pipeline::SetBufferWithNorm(const cv::Mat &img, float *buffer)
 
 }
 
+
+torch::Tensor Pipeline::ImageToTensor(cv::Mat &img) {
+    if(img.empty()){
+        return torch::Tensor();
+    }
+    cv::Mat img_float;
+    img.convertTo(img_float,CV_32FC3);
+    auto input_tensor = torch::from_blob(img_float.data, {img.rows,img.cols ,3 }, torch::kFloat32).to(torch::kCUDA);
+    ///bgr->rgb
+    input_tensor = torch::cat({
+        input_tensor.index({"...",2}).unsqueeze(2),
+        input_tensor.index({"...",1}).unsqueeze(2),
+        input_tensor.index({"...",0}).unsqueeze(2)
+        },2);
+
+    ///hwc->chw
+    input_tensor = input_tensor.permute({2,0,1});
+    return input_tensor;
+}
+
+torch::Tensor Pipeline::ImageToTensor(cv::cuda::GpuMat &img){
+    if(img.empty()){
+        return torch::Tensor();
+    }
+    cv::Mat img_float;
+    img.convertTo(img_float,CV_32FC3);
+    auto input_tensor = torch::from_blob(img_float.data, {img.rows,img.cols ,3 }, torch::kFloat32).clone();
+    ///bgr->rgb
+    input_tensor = torch::cat({
+        input_tensor.index({"...",2}).unsqueeze(2),
+        input_tensor.index({"...",1}).unsqueeze(2),
+        input_tensor.index({"...",0}).unsqueeze(2)
+        },2);
+
+    ///hwc->chw
+    input_tensor = input_tensor.permute({2,0,1});
+    return input_tensor;
+
+}
 
 

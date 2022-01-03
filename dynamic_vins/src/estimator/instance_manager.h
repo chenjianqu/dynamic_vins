@@ -26,7 +26,7 @@
 #include "../factor/projectionFactorSimple.h"
 #include "../parameters.h"
 #include "../estimator/dynamic.h"
-#include "Instance.h"
+#include "instance.h"
 
 class Estimator;
 

@@ -1,50 +1,55 @@
-[2022-01-03 18:31:58.630] [estimator_log] [warning] set input seg, the segmentor does not initial
-[2022-01-03 18:31:58.630] [estimator_log] [info] init FeatureTracker
-[2022-01-03 18:32:01.777] [estimator_log] [info] setParameter extrinsic cam 0
-0 0 1
+[2022-01-04 01:00:21.423] [estimator_log] [info] 读取模型文件
+[2022-01-04 01:00:21.603] [estimator_log] [info] createInferRuntime
+[2022-01-04 01:00:22.014] [estimator_log] [info] deserializeCudaEngine
+[2022-01-04 01:00:24.913] [estimator_log] [info] createExecutionContext
+[2022-01-04 01:00:24.944] [estimator_log] [warning] warn up model
+[2022-01-04 01:00:24.991] [estimator_log] [info] infer init finished
+[2022-01-04 01:00:24.993] [estimator_log] [info] init FeatureTracker
+[2022-01-04 01:00:25.212] [estimator_log] [info] setParameter extrinsic cam 0
 1 0 0
 0 1 0
+0 0 1
 0 0 0
 
-[2022-01-03 18:32:01.777] [estimator_log] [info] setParameter extrinsic cam 1
-0 0 1
+[2022-01-04 01:00:25.212] [estimator_log] [info] setParameter extrinsic cam 1
 1 0 0
 0 1 0
-   0 0.05    0
+0 0 1
+0.537151        0        0
 
-[2022-01-03 18:32:01.777] [estimator_log] [info] setParameter set g       0       0 9.81007
+[2022-01-04 01:00:25.212] [estimator_log] [info] setParameter set g   0   0 9.8
 
-[2022-01-03 18:32:01.777] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/cam0_pinhole.yaml
-[2022-01-03 18:32:01.778] [estimator_log] [info] Camera Parameters:
+[2022-01-04 01:00:25.212] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/cam_09_30.yaml
+[2022-01-04 01:00:25.213] [estimator_log] [info] Camera Parameters:
     model_type PINHOLE
    camera_name camera
-   image_width 752
-  image_height 480
+   image_width 1226
+  image_height 370
 Distortion Parameters
             k1 0
             k2 0
             p1 0
             p2 0
 Projection Parameters
-            fx 376
-            fy 376
-            cx 376
-            cy 240
+            fx 707.091
+            fy 707.091
+            cx 601.887
+            cy 183.11
 
-[2022-01-03 18:32:01.778] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/cam1_pinhole.yaml
-[2022-01-03 18:32:01.778] [estimator_log] [info] Camera Parameters:
+[2022-01-04 01:00:25.213] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/cam_09_30.yaml
+[2022-01-04 01:00:25.213] [estimator_log] [info] Camera Parameters:
     model_type PINHOLE
    camera_name camera
-   image_width 752
-  image_height 480
+   image_width 1226
+  image_height 370
 Distortion Parameters
             k1 0
             k2 0
             p1 0
             p2 0
 Projection Parameters
-            fx 376
-            fy 376
-            cx 376
-            cy 240
+            fx 707.091
+            fy 707.091
+            cx 601.887
+            cy 183.11
 

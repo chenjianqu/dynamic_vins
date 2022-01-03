@@ -10,10 +10,12 @@
 #ifndef EXTRACTOR_H
 #define EXTRACTOR_H
 
-#include <torch/torch.h>
-#include <opencv2/opencv.hpp>
 #include <vector>
 #include <string>
+
+#include <torch/torch.h>
+#include <opencv2/opencv.hpp>
+
 
 struct NetImpl : torch::nn::Module {
 public:

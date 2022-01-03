@@ -15,10 +15,9 @@
 #include <vector>
 #include <memory>
 
-#include "Track.h"
-#include "Extractor.h"
-#include "TrackerManager.h"
-#include "../utils.h"
+#include "extractor.h"
+#include "tracker_manager.h"
+#include "utils.h"
 
 
 torch::Tensor CalIouDist(const std::vector<cv::Rect2f> &dets, const std::vector<cv::Rect2f> &trks);

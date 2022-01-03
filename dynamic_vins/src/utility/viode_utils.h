@@ -7,8 +7,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_VIODEUTILS_H
-#define DYNAMIC_VINS_VIODEUTILS_H
+#ifndef DYNAMIC_VINS_VIODE_UTILS_H
+#define DYNAMIC_VINS_VIODE_UTILS_H
 
 #include "../parameters.h"
 #include "../utils.h"
@@ -70,4 +70,4 @@ namespace VIODE{
 
 
 
-#endif //DYNAMIC_VINS_VIODEUTILS_H
+#endif //DYNAMIC_VINS_VIODE_UTILS_H

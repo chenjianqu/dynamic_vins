@@ -40,7 +40,7 @@
 #include "../estimator/dynamic.h"
 #include "instance_tracker.h"
 
-#include "../InstanceSegment/infer.h"
+#include "../InstanceSegment/instance_segmentor.h"
 
 using namespace std;
 using namespace camodocal;
