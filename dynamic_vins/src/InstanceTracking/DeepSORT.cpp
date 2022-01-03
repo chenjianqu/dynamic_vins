@@ -1,3 +1,13 @@
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
+
 #include <algorithm>
 
 #include "DeepSORT.h"
@@ -20,7 +30,7 @@ namespace {
     }
 }
 
-torch::Tensor iou_dist(const vector<Rect2f> &dets, const vector<Rect2f> &trks) {
+torch::Tensor CalIouDist(const vector<Rect2f> &dets, const vector<Rect2f> &trks) {
     auto trk_num = trks.size();
     auto det_num = dets.size();
     auto dist = torch::empty({int64_t(trk_num), int64_t(det_num)});
@@ -64,7 +74,7 @@ vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::M
                     boxes.push_back(ori_img(detections[d].rect));
                 }
 
-                auto iou_mat = iou_dist(dets, trks);
+                auto iou_mat = CalIouDist(dets, trks);
                 auto feat_mat = feat_metric->distance(extractor->extract(boxes), trk_ids);
                 feat_mat.masked_fill_((iou_mat > 0.8f).__ior__(feat_mat > 0.2f), INVALID_DIST);
                 return feat_mat;
@@ -78,7 +88,7 @@ vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::M
                 for (auto &d:det_ids) {
                     dets.push_back(detections[d].rect);
                 }
-                auto iou_mat = iou_dist(dets, trks);
+                auto iou_mat = CalIouDist(dets, trks);
                 iou_mat.masked_fill_(iou_mat > 0.7f, INVALID_DIST);
                 return iou_mat;
             });

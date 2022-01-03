@@ -206,7 +206,7 @@ void MarginalizationInfo::marginalize()
     {
         valid = false;
         printf("unstable tracking...\n");
-        vioLogger->error("marginalize unstable tracking...");
+        vio_logger->error("marginalize unstable tracking...");
         return;
     }
 

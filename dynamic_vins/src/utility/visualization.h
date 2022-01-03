@@ -7,6 +7,15 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #pragma once
 
 #include <ros/ros.h>
@@ -48,7 +57,7 @@ void registerPub(ros::NodeHandle &n);
 
 void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t);
 
-void pubTrackImage(const cv::Mat &imgTrack, const double t);
+void PubTrackImage(const cv::Mat &imgTrack, const double t);
 
 void printStatistics(const Estimator &estimator, double t);
 

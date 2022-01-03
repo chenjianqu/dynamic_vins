@@ -1,13 +1,18 @@
-//
-// Created by chen on 2021/12/21.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include "Instance.h"
 #include "estimator.h"
 
 
 
-void Instance::getBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
+void Instance::GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
     Eigen::Vector3d minPt,maxPt;
     minPt = - box;
     maxPt = box;
@@ -27,7 +32,7 @@ void Instance::getBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
     vertex[7].x()=minPt.x();vertex[7].y()=maxPt.y();vertex[7].z()=minPt.z();
 
     for(int i=0;i<8;++i){
-        vertex[i] = state[WINDOW_SIZE].R * vertex[i] + state[WINDOW_SIZE].P;
+        vertex[i] = state[kWindowSize].R * vertex[i] + state[kWindowSize].P;
     }
 }
 
@@ -36,11 +41,11 @@ void Instance::getBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
  * 根据速度推导滑动窗口中各个物体的位姿
  * @param e
  */
-void Instance::setWindowPose()
+void Instance::SetWindowPose()
 {
-    //debug_v("setWindowPose Inst:{} 起始位姿:<{}> 速度:v<{}> a{}>",id,vec2str(state[0].P),vec2str(vel.v),vec2str(vel.a) );
-    for(int i=1;i<=WINDOW_SIZE;i++){
-        state[i].time=e->Headers[i];
+    //DebugV("SetWindowPose Inst:{} 起始位姿:<{}> 速度:v<{}> a{}>",id,vec2str(state[0].P),vec2str(vel.v),VecToStr(vel.a) );
+    for(int i=1; i <= kWindowSize; i++){
+        state[i].time=e->headers[i];
         double time_ij=state[i].time - state[0].time;
         Eigen::Matrix3d Roioj=Sophus::SO3d::exp(vel.a*time_ij).matrix();
         Eigen::Vector3d Poioj=vel.v*time_ij;
@@ -55,12 +60,12 @@ void Instance::setWindowPose()
  * 由于动态物体的运动，因此选择某一帧中所有三角化的路标点的世界坐标作为初始P，初始R为单位阵
  * @param estimator
  */
-void Instance::initialPose()
+void Instance::InitialPose()
 {
-    if(isInitial) return;
+    if(is_initial) return;
 
     ///初始化的思路是找到某一帧，该帧拥有已经三角化的特征点的开始帧数量最多。
-    int cnt[WINDOW_SIZE + 1]={0};
+    int cnt[kWindowSize + 1]={0};
     for(auto &lm : landmarks){
         if(lm.depth > 0){
             cnt[lm.feats[0].frame]++;
@@ -69,7 +74,7 @@ void Instance::initialPose()
     int frame_cnt=-1;//将作为初始化位姿的帧号
     int cnt_max=0;
     int cnt_sum=0;
-    for(int i=0;i<=WINDOW_SIZE;++i){
+    for(int i=0; i <= kWindowSize; ++i){
         if(cnt[i]>cnt_max){
             cnt_max=cnt[i];
             frame_cnt=i;
@@ -102,22 +107,22 @@ void Instance::initialPose()
                 if(p.z() > maxPt.z()) maxPt.z()=p.z();
             }
         }
-        vel.setZero();
+        vel.SetZero();
 
         state[0].P=center/index;
         state[0].R=Eigen::Matrix3d::Identity();
-        state[0].time=e->Headers[0];
-        setWindowPose();
+        state[0].time=e->headers[0];
+        SetWindowPose();
 
 
         /*box.x()=(box_max_pt.x()-box_min_pt.x())/2.0;
         box.y()=(box_max_pt.y()-box_min_pt.y())/2.0;
         box.z()=(box_max_pt.z()-box_min_pt.z())/2.0;*/
         box = Vec3d::Ones();
-        isInitial=true;
+        is_initial=true;
 
-        debug_v("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
-                         id, cnt_max, frame_cnt, vec2str(center), vec2str(box));
+        DebugV("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
+               id, cnt_max, frame_cnt, VecToStr(center), VecToStr(box));
 
         ///删去初始化之前的观测
         for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
@@ -145,7 +150,7 @@ void Instance::initialPose()
 /**
  * 滑动窗口去除最老帧的位姿和点，并将估计的深度转移到次老帧,这个函数应该先于estimator的滑动窗口函数
  */
-int Instance::slideWindowOld()
+int Instance::SlideWindowOld()
 {
     ///为了加快速度，先计算用于求坐标系变换的临时矩阵.使用的公式来自附录的第12条，temp_x表示公式的第x项
     Mat3d R_margin;
@@ -240,13 +245,13 @@ int Instance::slideWindowOld()
     }
 
     ///将最老帧的相关变量去掉
-    for (int i = 0; i < WINDOW_SIZE; i++){
+    for (int i = 0; i < kWindowSize; i++){
         state[i].swap(state[i+1]);
     }
-    state[WINDOW_SIZE]=state[WINDOW_SIZE-1];
+    state[kWindowSize]=state[kWindowSize - 1];
 
     //state[0]=state[1];
-    //setWindowPose(e);
+    //SetWindowPose(e);
 
     return debug_num;
 }
@@ -255,7 +260,7 @@ int Instance::slideWindowOld()
 /**
  * 滑动窗口去除次新帧的位姿和观测，并将最新帧移到次新帧
  */
-int Instance::slideWindowNew()
+int Instance::SlideWindowNew()
 {
     int debug_num=0;
 
@@ -293,13 +298,13 @@ int Instance::slideWindowNew()
     }
 
 
-    state[WINDOW_SIZE-1] = state[WINDOW_SIZE];
+    state[kWindowSize - 1] = state[kWindowSize];
 
     return debug_num;
 }
 
 
-void Instance::setCurrentPoint3d()
+void Instance::SetCurrentPoint3d()
 {
     point3d_curr.clear();
 
@@ -352,7 +357,7 @@ void Instance::setCurrentPoint3d()
  * @param isStereo
  * @return
  */
-double Instance::reprojectionTwoFrameError(FeaturePoint &feat_j,FeaturePoint &feat_i,double depth,bool isStereo)
+double Instance::ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo)
 {
     Eigen::Vector2d delta_j((e->td - feat_j.td) * feat_j.vel);
     //Eigen::Vector3d pts_j_td = feat_j.point - Eigen::Vector3d(delta_j.x(),delta_j.y(),0);
@@ -383,12 +388,12 @@ double Instance::reprojectionTwoFrameError(FeaturePoint &feat_j,FeaturePoint &fe
 }
 
 
-void Instance::outlierRejection()
+void Instance::OutlierRejection()
 {
-    if(!isInitial || !isTracking)
+    if(!is_initial || !is_tracking)
         return;
     int num_delete=0,index=0;
-    debug_v("Inst:{} landmark_num:{} box:<{}>", id, landmarks.size(), vec2str(box));
+    DebugV("Inst:{} landmark_num:{} box:<{}>", id, landmarks.size(), VecToStr(box));
 
     std::string debug_msg;
     string lm_msg;
@@ -399,7 +404,7 @@ void Instance::outlierRejection()
         auto &lm=*it;
         if(lm.feats.empty() || lm.depth <= 0)
             continue;
-        if(int frame=lm.feats[0].frame; !inBox(
+        if(int frame=lm.feats[0].frame; !IsInBox(
                 e->Rs[frame], e->Ps[frame], e->ric[0], e->tic[0], state[frame].R,
                 state[frame].P, lm.depth, lm.feats[0].point, box)){
             debug_msg += fmt::format("lid:{} ", lm.id);
@@ -411,11 +416,11 @@ void Instance::outlierRejection()
         lm_msg += fmt::format("\nlid:{} depth:{:.2f} ", lm.id,lm.depth);
 
         double err = 0;
-        int errCnt = 0;
+        int err_cnt = 0;
         ///单目重投影误差
         for(int i=1;i<(int)lm.feats.size(); ++i){
-            //double repro_e= reprojectionTwoFrameError(lm.feats[0],lm.feats[i],e,lm.depth,false);
-            /*double repro_e=reprojectionError(e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame],e->ric[0], e->tic[0],
+            //double repro_e= ReprojectTwoFrameError(lm.feats[0],lm.feats[i],e,lm.depth,false);
+            /*double repro_e=ReprojectError(e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame],e->ric[0], e->tic[0],
                                              e->Rs[lm.feats[i].frame], e->Ps[lm.feats[i].frame],e->ric[0], e->tic[0],
                                              lm.depth,lm.feats[0].point,lm.feats[i].point);*/
             int imu_i = lm.feats[0].frame;
@@ -429,18 +434,18 @@ void Instance::outlierRejection()
             double re = residual.norm();
 
             err+=re;
-            errCnt++;
-            lm_msg += fmt::format("M({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * FOCAL_LENGTH);
+            err_cnt++;
+            lm_msg += fmt::format("M({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * kFocalLength);
         }
         if(lm.feats.size()>5) lm_msg+="\n";
         ///双目重投影误差
         for(int i=0;i<(int)lm.feats.size(); ++i){
-            if(lm.feats[i].isStereo){
-                //double repro_e= reprojectionTwoFrameError(lm.feats[0],lm.feats[i],e,lm.depth,true);
-                /*double repro_e=reprojectionError(e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame],e->ric[0], e->tic[0],
+            if(lm.feats[i].is_stereo){
+                //double repro_e= ReprojectTwoFrameError(lm.feats[0],lm.feats[i],e,lm.depth,true);
+                /*double repro_e=ReprojectError(e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame],e->ric[0], e->tic[0],
                                                  e->Rs[lm.feats[i].frame], e->Ps[lm.feats[i].frame],e->ric[1], e->tic[1],
                                                  lm.depth,lm.feats[0].point,lm.feats[i].point_right);*/
-                /*double re= reprojectionDynamicError(
+                /*double re= ReprojectDynamicError(
                         e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame], e->ric[0], e->tic[0],
                         state[lm.feats[0].frame].R, state[lm.feats[0].frame].P, e->Rs[lm.feats[i].frame],
                         e->Ps[lm.feats[i].frame], e->ric[1], e->tic[1], state[lm.feats[i].frame].R,
@@ -455,55 +460,55 @@ void Instance::outlierRejection()
                 double re = residual.norm();
 
                 err+=re;
-                errCnt++;
-                lm_msg += fmt::format("S({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * FOCAL_LENGTH);
+                err_cnt++;
+                lm_msg += fmt::format("S({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * kFocalLength);
             }
         }
-        double ave_err = err / errCnt * FOCAL_LENGTH;
+        double ave_err = err / err_cnt * kFocalLength;
         index++;
         if(ave_err > 10){
-            debug_v("del lid:{} ,avg:{:.2f},d:{:.2f}> ", lm.id, ave_err, lm.depth);
+            DebugV("del lid:{} ,avg:{:.2f},d:{:.2f}> ", lm.id, ave_err, lm.depth);
             landmarks.erase(it);
             num_delete++;
         }
     }
 
-    debug_v(lm_msg);
-    debug_v("outbox:{}",debug_msg);
-    debug_v("Inst:{} delete num:{}", id, num_delete);
+    DebugV(lm_msg);
+    DebugV("outbox:{}", debug_msg);
+    DebugV("Inst:{} delete num:{}", id, num_delete);
 }
 
 
 
 
-void Instance::setOptimizationParameters()
+void Instance::SetOptimizeParameters()
 {
-    para_Speed[0][0] = vel.v.x();
-    para_Speed[0][1] = vel.v.y();
-    para_Speed[0][2] = vel.v.z();
-    para_Speed[0][3] = vel.a.x();
-    para_Speed[0][4] = vel.a.y();
-    para_Speed[0][5] = vel.a.z();
-    para_Box[0][0]=box.x();
-    para_Box[0][1]=box.y();
-    para_Box[0][2]=box.z();
+    para_speed[0][0] = vel.v.x();
+    para_speed[0][1] = vel.v.y();
+    para_speed[0][2] = vel.v.z();
+    para_speed[0][3] = vel.a.x();
+    para_speed[0][4] = vel.a.y();
+    para_speed[0][5] = vel.a.z();
+    para_box[0][0]=box.x();
+    para_box[0][1]=box.y();
+    para_box[0][2]=box.z();
 
-    for(int i=0;i<=WINDOW_SIZE;++i){
-        para_State[i][0]=state[i].P.x();
-        para_State[i][1]=state[i].P.y();
-        para_State[i][2]=state[i].P.z();
+    for(int i=0; i <= kWindowSize; ++i){
+        para_state[i][0]=state[i].P.x();
+        para_state[i][1]=state[i].P.y();
+        para_state[i][2]=state[i].P.z();
         Eigen::Quaterniond q(state[i].R);
-        para_State[i][3]=q.x();
-        para_State[i][4]=q.y();
-        para_State[i][5]=q.z();
-        para_State[i][6]=q.w();
+        para_state[i][3]=q.x();
+        para_state[i][4]=q.y();
+        para_state[i][5]=q.z();
+        para_state[i][6]=q.w();
     }
 
     int index=-1;
     for(auto &landmark : landmarks){
         if(landmark.depth > 0){
             index++;
-            para_InvDepth[index][0]=1.0/landmark.depth;
+            para_inv_depth[index][0]= 1.0 / landmark.depth;
         }
     }
 }
@@ -511,44 +516,44 @@ void Instance::setOptimizationParameters()
 
 
 
-void Instance::getOptimizationParameters()
+void Instance::GetOptimizationParameters()
 {
     last_vel=vel;
 
     if(opt_vel){
-        vel.v.x()=para_Speed[0][0];
-        vel.v.y()=para_Speed[0][1];
-        vel.v.z()=para_Speed[0][2];
-        vel.a.x()=para_Speed[0][3];
-        vel.a.y()=para_Speed[0][4];
-        vel.a.z()=para_Speed[0][5];
+        vel.v.x()=para_speed[0][0];
+        vel.v.y()=para_speed[0][1];
+        vel.v.z()=para_speed[0][2];
+        vel.a.x()=para_speed[0][3];
+        vel.a.y()=para_speed[0][4];
+        vel.a.z()=para_speed[0][5];
     }
-    box.x()=para_Box[0][0];
-    box.y()=para_Box[0][1];
-    box.z()=para_Box[0][2];
+    box.x()=para_box[0][0];
+    box.y()=para_box[0][1];
+    box.z()=para_box[0][2];
 
 
-    /*for(int i=0;i<=WINDOW_SIZE;++i){
-        state[i].P.x()=para_State[i][0];
-        state[i].P.y()=para_State[i][1];
-        state[i].P.z()=para_State[i][2];
-        Eigen::Quaterniond q(para_State[i][6],para_State[i][3],para_State[i][4],para_State[i][5]);
+    /*for(int i=0;i<=kWindowSize;++i){
+        state[i].P.x()=para_state[i][0];
+        state[i].P.y()=para_state[i][1];
+        state[i].P.z()=para_state[i][2];
+        Eigen::Quaterniond q(para_state[i][6],para_state[i][3],para_state[i][4],para_state[i][5]);
         q.normalize();
         state[i].R=q.toRotationMatrix();
     }*/
-    state[0].P.x()=para_State[0][0];
-    state[0].P.y()=para_State[0][1];
-    state[0].P.z()=para_State[0][2];
-    Eigen::Quaterniond q(para_State[0][6],para_State[0][3],para_State[0][4],para_State[0][5]);
+    state[0].P.x()=para_state[0][0];
+    state[0].P.y()=para_state[0][1];
+    state[0].P.z()=para_state[0][2];
+    Eigen::Quaterniond q(para_state[0][6], para_state[0][3], para_state[0][4], para_state[0][5]);
     q.normalize();
     state[0].R=q.toRotationMatrix();
-    setWindowPose();
+    SetWindowPose();
 
     int index=-1;
     for(auto &landmark : landmarks){
         if(landmark.depth > 0){
             index++;
-            landmark.depth= 1.0 / para_InvDepth[index][0];
+            landmark.depth= 1.0 / para_inv_depth[index][0];
         }
     }
 }

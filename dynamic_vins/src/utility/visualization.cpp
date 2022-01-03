@@ -7,6 +7,15 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #include "visualization.h"
 #include "../estimator/instance_manager.h"
 
@@ -81,7 +90,7 @@ void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, co
     pub_latest_odometry.publish(odometry);
 }
 
-void pubTrackImage(const cv::Mat &imgTrack, const double t)
+void PubTrackImage(const cv::Mat &imgTrack, const double t)
 {
     std_msgs::Header header;
     header.frame_id = "world";
@@ -95,13 +104,13 @@ void printStatistics(const Estimator &estimator, double t)
 {
     if (estimator.solver_flag != SolverFlag::NON_LINEAR)
         return;
-    //printf("position: %f, %f, %f\r", e.Ps[WINDOW_SIZE].x(), e.Ps[WINDOW_SIZE].y(), e.Ps[WINDOW_SIZE].z());
-    ROS_DEBUG_STREAM("position: " << estimator.Ps[WINDOW_SIZE].transpose());
-    ROS_DEBUG_STREAM("orientation: " << estimator.Vs[WINDOW_SIZE].transpose());
+    //printf("position: %f, %f, %f\r", e.Ps[kWindowSize].x(), e.Ps[kWindowSize].y(), e.Ps[kWindowSize].z());
+    ROS_DEBUG_STREAM("position: " << estimator.Ps[kWindowSize].transpose());
+    ROS_DEBUG_STREAM("orientation: " << estimator.Vs[kWindowSize].transpose());
     if (Config::ESTIMATE_EXTRINSIC)
     {
         cv::FileStorage fs(Config::EX_CALIB_RESULT_PATH, cv::FileStorage::WRITE);
-        for (int i = 0; i < Config::NUM_OF_CAM; i++)
+        for (int i = 0; i < Config::kCamNum; i++)
         {
             //ROS_DEBUG("calibration result for camera %d", i);
             ROS_DEBUG_STREAM("extirnsic tic: " << estimator.tic[i].transpose());
@@ -127,8 +136,8 @@ void printStatistics(const Estimator &estimator, double t)
     ROS_DEBUG("vo solver costs: %f ms", t);
     ROS_DEBUG("average of time %f ms", sum_of_time / sum_of_calculation);
 
-    sum_of_path += (estimator.Ps[WINDOW_SIZE] - last_path).norm();
-    last_path = estimator.Ps[WINDOW_SIZE];
+    sum_of_path += (estimator.Ps[kWindowSize] - last_path).norm();
+    last_path = estimator.Ps[kWindowSize];
     ROS_DEBUG("sum of path %f", sum_of_path);
     if (Config::ESTIMATE_TD)
         ROS_INFO("td %f", estimator.td);
@@ -143,17 +152,17 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
         odometry.header.frame_id = "world";
         odometry.child_frame_id = "world";
         Quaterniond tmp_Q;
-        tmp_Q = Quaterniond(estimator.Rs[WINDOW_SIZE]);
-        odometry.pose.pose.position.x = estimator.Ps[WINDOW_SIZE].x();
-        odometry.pose.pose.position.y = estimator.Ps[WINDOW_SIZE].y();
-        odometry.pose.pose.position.z = estimator.Ps[WINDOW_SIZE].z();
+        tmp_Q = Quaterniond(estimator.Rs[kWindowSize]);
+        odometry.pose.pose.position.x = estimator.Ps[kWindowSize].x();
+        odometry.pose.pose.position.y = estimator.Ps[kWindowSize].y();
+        odometry.pose.pose.position.z = estimator.Ps[kWindowSize].z();
         odometry.pose.pose.orientation.x = tmp_Q.x();
         odometry.pose.pose.orientation.y = tmp_Q.y();
         odometry.pose.pose.orientation.z = tmp_Q.z();
         odometry.pose.pose.orientation.w = tmp_Q.w();
-        odometry.twist.twist.linear.x = estimator.Vs[WINDOW_SIZE].x();
-        odometry.twist.twist.linear.y = estimator.Vs[WINDOW_SIZE].y();
-        odometry.twist.twist.linear.z = estimator.Vs[WINDOW_SIZE].z();
+        odometry.twist.twist.linear.x = estimator.Vs[kWindowSize].x();
+        odometry.twist.twist.linear.y = estimator.Vs[kWindowSize].y();
+        odometry.twist.twist.linear.z = estimator.Vs[kWindowSize].z();
         pub_odometry.publish(odometry);
 
         geometry_msgs::PoseStamped pose_stamped;
@@ -172,27 +181,27 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
         foutC.precision(0);
         foutC << header.stamp.toSec() * 1e9 << ",";
         foutC.precision(5);
-        foutC << e.Ps[WINDOW_SIZE].x() << ","
-              << e.Ps[WINDOW_SIZE].y() << ","
-              << e.Ps[WINDOW_SIZE].z() << ","
+        foutC << e.Ps[kWindowSize].x() << ","
+              << e.Ps[kWindowSize].y() << ","
+              << e.Ps[kWindowSize].z() << ","
               << tmp_Q.w() << ","
               << tmp_Q.x() << ","
               << tmp_Q.y() << ","
               << tmp_Q.z() << ","
-              << e.Vs[WINDOW_SIZE].x() << ","
-              << e.Vs[WINDOW_SIZE].y() << ","
-              << e.Vs[WINDOW_SIZE].z() << endl;
+              << e.Vs[kWindowSize].x() << ","
+              << e.Vs[kWindowSize].y() << ","
+              << e.Vs[kWindowSize].z() << endl;
             */
-            foutC  <<header.stamp << " "
-        <<estimator.Ps[WINDOW_SIZE].x()<<" "
-        <<estimator.Ps[WINDOW_SIZE].y()<<" "
-        <<estimator.Ps[WINDOW_SIZE].z()<<" "
+            foutC << header.stamp << " "
+                  << estimator.Ps[kWindowSize].x() << " "
+                  << estimator.Ps[kWindowSize].y() << " "
+                  << estimator.Ps[kWindowSize].z() << " "
         <<tmp_Q.x()<<" "
         <<tmp_Q.y()<<" "
         <<tmp_Q.z()<<" "
         <<tmp_Q.w()<<endl;
         foutC.close();
-        Eigen::Vector3d tmp_T = estimator.Ps[WINDOW_SIZE];
+        Eigen::Vector3d tmp_T = estimator.Ps[kWindowSize];
         printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(), tmp_T.x(), tmp_T.y(), tmp_T.z(),
                                                           tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
     }
@@ -219,7 +228,7 @@ void pubKeyPoses(const Estimator &estimator, const std_msgs::Header &header)
     key_poses.color.r = 1.0;
     key_poses.color.a = 1.0;
 
-    for (int i = 0; i <= WINDOW_SIZE; i++)
+    for (int i = 0; i <= kWindowSize; i++)
     {
         geometry_msgs::Point pose_marker;
         Vector3d correct_pose;
@@ -234,7 +243,7 @@ void pubKeyPoses(const Estimator &estimator, const std_msgs::Header &header)
 
 void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
 {
-    int idx2 = WINDOW_SIZE - 1;
+    int idx2 = kWindowSize - 1;
 
     if (estimator.solver_flag == SolverFlag::NON_LINEAR)
     {
@@ -278,9 +287,9 @@ void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
     for (auto &it_per_id : estimator.f_manager.feature)
     {
         int used_num = (int)it_per_id.feature_per_frame.size();
-        if (!(used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
+        if (!(used_num >= 2 && it_per_id.start_frame < kWindowSize - 2))
             continue;
-        if (it_per_id.start_frame > WINDOW_SIZE * 3.0 / 4.0 || it_per_id.solve_flag != 1)
+        if (it_per_id.start_frame > kWindowSize * 3.0 / 4.0 || it_per_id.solve_flag != 1)
             continue;
         int imu_i = it_per_id.start_frame;
         Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
@@ -302,9 +311,9 @@ void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
     for (auto &it_per_id : estimator.f_manager.feature)
     { 
         int used_num = (int)it_per_id.feature_per_frame.size();
-        if (!(used_num >= 2 && it_per_id.start_frame < WINDOW_SIZE - 2))
+        if (!(used_num >= 2 && it_per_id.start_frame < kWindowSize - 2))
             continue;
-        //if (it_per_id->start_frame > WINDOW_SIZE * 3.0 / 4.0 || it_per_id->solve_flag != 1)
+        //if (it_per_id->start_frame > kWindowSize * 3.0 / 4.0 || it_per_id->solve_flag != 1)
         //        continue;
 
         if (it_per_id.start_frame == 0 && it_per_id.feature_per_frame.size() <= 2 
@@ -335,8 +344,8 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header)
     // body frame
     Vector3d correct_t;
     Quaterniond correct_q;
-    correct_t = estimator.Ps[WINDOW_SIZE];
-    correct_q = estimator.Rs[WINDOW_SIZE];
+    correct_t = estimator.Ps[kWindowSize];
+    correct_q = estimator.Rs[kWindowSize];
 
     transform.setOrigin(tf::Vector3(correct_t(0),
                                     correct_t(1),
@@ -378,15 +387,15 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header)
 void pubKeyframe(const Estimator &estimator)
 {
     // pub camera pose, 2D-3D points of keyframe
-    if (estimator.solver_flag == SolverFlag::NON_LINEAR && estimator.margin_flag == MarginFlag::MARGIN_OLD)
+    if (estimator.solver_flag == SolverFlag::NON_LINEAR && estimator.margin_flag == MarginFlag::kMarginOld)
     {
-        int i = WINDOW_SIZE - 2;
+        int i = kWindowSize - 2;
         //Vector3d P = e.Ps[i] + e.Rs[i] * e.tic[0];
         Vector3d P = estimator.Ps[i];
         auto R = Quaterniond(estimator.Rs[i]);
 
         nav_msgs::Odometry odometry;
-        odometry.header.stamp = ros::Time(estimator.Headers[WINDOW_SIZE - 2]);
+        odometry.header.stamp = ros::Time(estimator.headers[kWindowSize - 2]);
         odometry.header.frame_id = "world";
         odometry.pose.pose.position.x = P.x();
         odometry.pose.pose.position.y = P.y();
@@ -401,12 +410,12 @@ void pubKeyframe(const Estimator &estimator)
 
 
         sensor_msgs::PointCloud point_cloud;
-        point_cloud.header.stamp = ros::Time(estimator.Headers[WINDOW_SIZE - 2]);
+        point_cloud.header.stamp = ros::Time(estimator.headers[kWindowSize - 2]);
         point_cloud.header.frame_id = "world";
         for (auto &it_per_id : estimator.f_manager.feature)
         {
             int frame_size = (int)it_per_id.feature_per_frame.size();
-            if(it_per_id.start_frame < WINDOW_SIZE - 2 && it_per_id.start_frame + frame_size - 1 >= WINDOW_SIZE - 2 && it_per_id.solve_flag == 1)
+            if(it_per_id.start_frame < kWindowSize - 2 && it_per_id.start_frame + frame_size - 1 >= kWindowSize - 2 && it_per_id.solve_flag == 1)
             {
 
                 int imu_i = it_per_id.start_frame;
@@ -419,7 +428,7 @@ void pubKeyframe(const Estimator &estimator)
                 p.z = (float)w_pts_i(2);
                 point_cloud.points.push_back(p);
 
-                int imu_j = WINDOW_SIZE - 2 - it_per_id.start_frame;
+                int imu_j = kWindowSize - 2 - it_per_id.start_frame;
                 sensor_msgs::ChannelFloat32 p_2d;
                 p_2d.values.push_back(float(it_per_id.feature_per_frame[imu_j].point.x()));
                 p_2d.values.push_back(float(it_per_id.feature_per_frame[imu_j].point.y()));
@@ -438,14 +447,14 @@ void pubKeyframe(const Estimator &estimator)
 
 void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header)
 {
-    if(estimator.insts_manager.tracking_number<1)
+    if(estimator.insts_manager.tracking_number() < 1)
         return;
 
     visualization_msgs::MarkerArray markers;
     PointCloud pointCloud;
 
     for(auto &[key,inst] : estimator.insts_manager.instances){
-        if(!inst.isTracking || !inst.isInitial){
+        if(!inst.is_tracking || !inst.is_initial){
             continue;
         }
 
@@ -458,7 +467,7 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
         color_inv[1] = 1. - color_norm[1];
         color_inv[2] = 1. - color_norm[2];
         color_inv[3] = 1.;
-        //vioLogger->debug("inst:{} point3d_curr num:{}",inst.id,inst.point3d_curr.size());
+        //vio_logger->debug("inst:{} point3d_curr num:{}",inst.id,inst.point3d_curr.size());
 
         PointCloud cloud;
         for(auto &pt : inst.point3d_curr){
@@ -466,7 +475,7 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
             p.x = (float)pt(0);p.y = (float)pt(1);p.z = (float)pt(2);
             p.r=(uint8_t)inst.color[2];p.g=(uint8_t)inst.color[1];p.b=(uint8_t)inst.color[0];
             cloud.push_back(p);
-            //debug_v("({})", vec2str(pt));
+            //DebugV("({})", VecToStr(pt));
         }
 
         /*
@@ -479,37 +488,37 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
         double y_radius=abs(box_min_pt.y-box_max_pt.y)/2.0;
         double z_radius=abs(box_min_pt.z-box_max_pt.z)/2.0;
 
-        double x_center=inst.state[WINDOW_SIZE].P.x();
-        double y_center=inst.state[WINDOW_SIZE].P.y();
-        double z_center=inst.state[WINDOW_SIZE].P.z();
+        double x_center=inst.state[kWindowSize].P.x();
+        double y_center=inst.state[kWindowSize].P.y();
+        double z_center=inst.state[kWindowSize].P.z();
         box_min_pt.x=x_center-0.5;box_min_pt.y=y_center-0.5;box_min_pt.z=z_center-0.5;
         box_max_pt.x=x_center+0.5;box_max_pt.y=y_center+0.5;box_max_pt.z=z_center+0.5;
-         minPt.x=inst.state[WINDOW_SIZE].P.x() - inst.box.x();
-        minPt.y=inst.state[WINDOW_SIZE].P.y() - inst.box.y();
-        minPt.z=inst.state[WINDOW_SIZE].P.z() - inst.box.z();
-        maxPt.x=inst.state[WINDOW_SIZE].P.x() + inst.box.x();
-        maxPt.y=inst.state[WINDOW_SIZE].P.y() + inst.box.y();
-        maxPt.z=inst.state[WINDOW_SIZE].P.z() + inst.box.z();
+         minPt.x=inst.state[kWindowSize].P.x() - inst.box.x();
+        minPt.y=inst.state[kWindowSize].P.y() - inst.box.y();
+        minPt.z=inst.state[kWindowSize].P.z() - inst.box.z();
+        maxPt.x=inst.state[kWindowSize].P.x() + inst.box.x();
+        maxPt.y=inst.state[kWindowSize].P.y() + inst.box.y();
+        maxPt.z=inst.state[kWindowSize].P.z() + inst.box.z();
          */
 
         //各个时刻的位姿
-        for(int i=0;i<=WINDOW_SIZE;i++){
+        for(int i=0; i <= kWindowSize; i++){
             auto text_marker = BuildTextMarker(inst.state[i].P,i,to_string(i),color_transparent);
             markers.markers.push_back(text_marker);
         }
 
         //auto lineStripMarker = BuildLineStripMarker(maxPt,minPt,key,color_norm);
         EigenContainer<Eigen::Vector3d> vertex;
-        inst.getBoxVertex(vertex);
+        inst.GetBoxVertex(vertex);
         auto lineStripMarker = BuildLineStripMarker(vertex,key,color_norm);
 
         //计算可视化的速度
-        Eigen::Vector3d vel = hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
-        auto text=fmt::format("{}\n({})",inst.id, vec2str(vel));
-        auto textMarker = BuildTextMarker(inst.state[WINDOW_SIZE].P,key,text,color_inv,1.2);
+        Eigen::Vector3d vel = Hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
+        auto text=fmt::format("{}\n({})", inst.id, VecToStr(vel));
+        auto textMarker = BuildTextMarker(inst.state[kWindowSize].P, key, text, color_inv, 1.2);
 
-        Eigen::Vector3d end=inst.state[WINDOW_SIZE].P+vel.normalized()*4;
-        auto arrowMarker = BuildArrowMarker(inst.state[WINDOW_SIZE].P,end,key,color_norm);
+        Eigen::Vector3d end= inst.state[kWindowSize].P + vel.normalized() * 4;
+        auto arrowMarker = BuildArrowMarker(inst.state[kWindowSize].P, end, key, color_norm);
 
         markers.markers.push_back(lineStripMarker);
         markers.markers.push_back(textMarker);
@@ -533,15 +542,15 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
 
 void printInstanceData(const Estimator &estimator)
 {
-    if(estimator.insts_manager.tracking_number<1)
+    if(estimator.insts_manager.tracking_number() < 1)
         return;
 
-    printf("实例数量:%d\n",estimator.insts_manager.tracking_number);
+    printf("实例数量:%d\n",estimator.insts_manager.tracking_number());
     for(auto &pair : estimator.insts_manager.instances){
         auto &inst = pair.second;
         auto &key=pair.first;
 
-        if(!inst.isTracking)
+        if(!inst.is_tracking)
             continue;
 
         int num_triangular=0,num_feat=0;
@@ -551,19 +560,19 @@ void printInstanceData(const Estimator &estimator)
                 num_triangular++;
         }
 
-        printf("Instance:%d isInitial:%d isTracking:%d feats:%d landmarks:%ld num_triangle:%d | ",
-               key,inst.isInitial,inst.isTracking,num_feat,inst.landmarks.size(),num_triangular);
+        printf("Instance:%d is_initial:%d is_tracking:%d feats:%d landmarks:%ld num_triangle:%d | ",
+               key, inst.is_initial, inst.is_tracking, num_feat, inst.landmarks.size(), num_triangular);
 
-        int cnt[WINDOW_SIZE + 1]={0};
+        int cnt[kWindowSize + 1]={0};
         for(auto &landmark : inst.landmarks){
             cnt[landmark.feats[0].frame]++;
         }
-        for(int i=0;i<=WINDOW_SIZE;++i){
+        for(int i=0; i <= kWindowSize; ++i){
             printf("%d:%d  ",i,cnt[i]);
         }
 
         printf("\nInst:%d ",inst.id);
-        for(int i=0;i<=WINDOW_SIZE;++i){
+        for(int i=0; i <= kWindowSize; ++i){
             printf("%d:(%.2lf,%.2lf,%.2lf)  ",i,inst.state[i].P.x(),inst.state[i].P.y(),inst.state[i].P.z());
         }
 
@@ -575,11 +584,11 @@ void printInstanceData(const Estimator &estimator)
 
 void printInstancePose(Instance &inst)
 {
-    if(!inst.isTracking || !inst.isInitial){
+    if(!inst.is_tracking || !inst.is_initial){
         return;
     }
     //printf("Inst:%d | ",inst.id);
-    for(int i=0;i<=WINDOW_SIZE;++i){
+    for(int i=0; i <= kWindowSize; ++i){
         //Eigen::Quaterniond q(inst.state[i].R);
         //printf("%d:<%.2lf,%.2lf,%.2lf | %.2lf,%.2lf,%.2lf,%.2lf> ",i,inst.state[i].P.x(),inst.state[i].P.y(),inst.state[i].P.z(),q.x(),q.y(),q.z(),q.w());
         printf("%d:<%.2lf,%.2lf,%.2lf> ",i,inst.state[i].P.x(),inst.state[i].P.y(),inst.state[i].P.z());
@@ -590,7 +599,7 @@ void printInstancePose(Instance &inst)
 
 void printInstanceDepth(Instance &inst)
 {
-    if(!inst.isTracking || !inst.isInitial)
+    if(!inst.is_tracking || !inst.is_initial)
         return;
     //printf("Inst:%d | ",inst.id);
 

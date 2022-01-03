@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/10/11.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include "projectionSpeedFactor.h"
 
@@ -206,7 +211,7 @@ bool ProjectionSpeedFactor::Evaluate(double const *const *parameters, double *re
             Mat36d jaco_j;
             Mat3d temp=R_cb2 * R_biw * R_oioj;
             jaco_j.leftCols<3>() = temp;
-            jaco_j.rightCols<3>() = -(temp *R_wbj * hat(pts_imu_j));;
+            jaco_j.rightCols<3>() = -(temp * R_wbj * Hat(pts_imu_j));;
 
             Eigen::Map<Eigen::Matrix<double, 2, 7, Eigen::RowMajor>> jacobian_pose_j(jacobians[0]);
             jacobian_pose_j.leftCols<6>() = reduce * jaco_j;
@@ -217,7 +222,7 @@ bool ProjectionSpeedFactor::Evaluate(double const *const *parameters, double *re
         {
             Mat36d jaco_i;
             jaco_i.leftCols<3>() = -R_cb2 * R_biw;
-            jaco_i.rightCols<3>() = R_cb2 * hat(R_biw*(pts_wij-P_wbi));
+            jaco_i.rightCols<3>() = R_cb2 * Hat(R_biw * (pts_wij - P_wbi));
 
             Eigen::Map<Eigen::Matrix<double, 2, 7, Eigen::RowMajor>> jacobian_pose_i(jacobians[1]);
             jacobian_pose_i.leftCols<6>() = reduce * jaco_i;
@@ -228,8 +233,8 @@ bool ProjectionSpeedFactor::Evaluate(double const *const *parameters, double *re
         {
             Mat36d jaco_velocity;
             jaco_velocity.leftCols<3>() = R_cb2 * R_biw * time_ij;
-            //jaco_velocity.rightCols<3>() = R_cb2 * R_biw  * R_oioj * hat(pts_w_j) * hat(time_ij*Vec3d::Identity());
-            jaco_velocity.rightCols<3>() = R_cb2 * R_biw * (- hat(pts_w_j)) * time_ij;
+            //jaco_velocity.rightCols<3>() = R_cb2 * R_biw  * R_oioj * hat(pts_w_j) * Hat(time_ij*Vec3d::Identity());
+            jaco_velocity.rightCols<3>() = R_cb2 * R_biw * (-Hat(pts_w_j)) * time_ij;
 
             Eigen::Map<Eigen::Matrix<double, 2, 6, Eigen::RowMajor>> jacobian_v(jacobians[2]);
             jacobian_v = reduce * jaco_velocity;
@@ -301,8 +306,8 @@ bool ProjectionSpeedSimpleFactor::Evaluate(double const *const *parameters, doub
         {
             Mat36d jaco_velocity;
             jaco_velocity.leftCols<3>() = R_cb2 * R_biw * time_ij;
-            //jaco_velocity.rightCols<3>() = R_cb2 * R_biw  * R_oioj * hat(pts_w_j) * hat(time_ij*Vec3d::Identity());
-            jaco_velocity.rightCols<3>() = R_cb2 * R_biw * (- hat(pts_w_j)) * time_ij;
+            //jaco_velocity.rightCols<3>() = R_cb2 * R_biw  * R_oioj * hat(pts_w_j) * Hat(time_ij*Vec3d::Identity());
+            jaco_velocity.rightCols<3>() = R_cb2 * R_biw * (-Hat(pts_w_j)) * time_ij;
 
             Eigen::Map<Eigen::Matrix<double, 2, 6, Eigen::RowMajor>> jacobian_v(jacobians[0]);
             jacobian_v = reduce * jaco_velocity;
@@ -398,7 +403,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
         {
             Mat36d jaco_j;
             jaco_j.leftCols<3>() = temp;
-            jaco_j.rightCols<3>() = - temp * R_wbj * hat(pts_imu_j);;
+            jaco_j.rightCols<3>() = - temp * R_wbj * Hat(pts_imu_j);;
 
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_j(jacobians[0]);
             jacobian_pose_j.leftCols<6>() = jaco_j;
@@ -409,7 +414,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
         {
             Mat36d jaco_i;
             jaco_i.leftCols<3>() = temp * R_wbj;
-            jaco_i.rightCols<3>() = -temp * R_wbj * R_bc * hat(pts_cam_j);
+            jaco_i.rightCols<3>() = -temp * R_wbj * R_bc * Hat(pts_cam_j);
 
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_i(jacobians[1]);
             jacobian_pose_i.leftCols<6>() = jaco_i;
@@ -419,7 +424,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
         {
             Mat36d jaco_ex;
             jaco_ex.leftCols<3>() = - R_woi*R_ojw;
-            jaco_ex.rightCols<3>() = -R_woi + hat(R_ojw * (pts_w_j - P_woj)) ;
+            jaco_ex.rightCols<3>() = -R_woi + Hat(R_ojw * (pts_w_j - P_woj)) ;
 
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_ex_pose(jacobians[2]);
             jacobian_ex_pose.leftCols<6>() = jaco_ex;
@@ -429,7 +434,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
         {
             Mat36d jaco_ex;
             jaco_ex.leftCols<3>() = Mat3d::Identity();
-            jaco_ex.rightCols<3>() = -R_woi * hat(R_ojw*(pts_w_j-P_woj)) ;
+            jaco_ex.rightCols<3>() = -R_woi * Hat(R_ojw * (pts_w_j - P_woj)) ;
 
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_ex_pose(jacobians[3]);
             jacobian_ex_pose.leftCols<6>() = jaco_ex;
@@ -440,7 +445,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
         {
             Mat36d jaco_velocity;
             jaco_velocity.leftCols<3>() = - time_ij * Mat3d::Identity();
-            jaco_velocity.rightCols<3>() = time_ij * hat(pts_w_j);
+            jaco_velocity.rightCols<3>() = time_ij * Hat(pts_w_j);
 
             Eigen::Map<Eigen::Matrix<double, 3, 6, Eigen::RowMajor>> jacobian_v(jacobians[4]);
             jacobian_v =  jaco_velocity;
@@ -506,7 +511,7 @@ bool SpeedPoseSimpleFactor::Evaluate(double const *const *parameters, double *re
         {
             Mat36d jaco_ex;
             jaco_ex.leftCols<3>() = - R_woi*R_ojw;
-            jaco_ex.rightCols<3>() = -R_woi + hat(R_ojw * (pts_w_j - P_woj)) ;
+            jaco_ex.rightCols<3>() = -R_woi + Hat(R_ojw * (pts_w_j - P_woj)) ;
 
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_ex_pose(jacobians[0]);
             jacobian_ex_pose.leftCols<6>() = jaco_ex;
@@ -516,7 +521,7 @@ bool SpeedPoseSimpleFactor::Evaluate(double const *const *parameters, double *re
         {
             Mat36d jaco_ex;
             jaco_ex.leftCols<3>() = Mat3d::Identity();
-            jaco_ex.rightCols<3>() = -R_woi * hat(R_ojw*(pts_w_j-P_woj)) ;
+            jaco_ex.rightCols<3>() = -R_woi * Hat(R_ojw * (pts_w_j - P_woj)) ;
 
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_ex_pose(jacobians[1]);
             jacobian_ex_pose.leftCols<6>() = jaco_ex;
@@ -527,7 +532,7 @@ bool SpeedPoseSimpleFactor::Evaluate(double const *const *parameters, double *re
         {
             Mat36d jaco_velocity;
             jaco_velocity.leftCols<3>() = - time_ij * Mat3d::Identity();
-            jaco_velocity.rightCols<3>() = time_ij * hat(pts_w_j);
+            jaco_velocity.rightCols<3>() = time_ij * Hat(pts_w_j);
 
             Eigen::Map<Eigen::Matrix<double, 3, 6, Eigen::RowMajor>> jacobian_v(jacobians[2]);
             jacobian_v =  jaco_velocity;
@@ -579,7 +584,7 @@ bool ConstSpeedFactor::Evaluate(double const *const *parameters, double *residua
         {
             Mat36d jaco_velocity;
             jaco_velocity.leftCols<3>() = - time_ij * Mat3d::Identity();
-            jaco_velocity.rightCols<3>() = time_ij * hat(pts_w_j);
+            jaco_velocity.rightCols<3>() = time_ij * Hat(pts_w_j);
             Eigen::Map<Eigen::Matrix<double, 3, 6, Eigen::RowMajor>> jacobian_v(jacobians[0]);
             jacobian_v =  jaco_velocity;
         }

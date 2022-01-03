@@ -7,6 +7,16 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
+
 #include "feature_manager.h"
 
 int FeaturePerId::endFrame()
@@ -17,13 +27,13 @@ int FeaturePerId::endFrame()
 FeatureManager::FeatureManager(Matrix3d _Rs[])
     : Rs(_Rs)
 {
-    for (int i = 0; i < Config::NUM_OF_CAM; i++)
+    for (int i = 0; i < Config::kCamNum; i++)
         ric[i].setIdentity();
 }
 
 void FeatureManager::setRic(Matrix3d _ric[])
 {
-    for (int i = 0; i < Config::NUM_OF_CAM; i++)
+    for (int i = 0; i < Config::kCamNum; i++)
     {
         ric[i] = _ric[i];
     }
@@ -51,8 +61,8 @@ int FeatureManager::getFeatureCount()
 
 bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td)
 {
-    vioLogger->debug("addFeatureCheckParallax input feature: {}", (int)image.size());
-    vioLogger->debug("addFeatureCheckParallax factor of feature: {}", getFeatureCount());
+    vio_logger->debug("addFeatureCheckParallax input feature: {}", (int)image.size());
+    vio_logger->debug("addFeatureCheckParallax factor of feature: {}", getFeatureCount());
     double parallax_sum = 0;
     int parallax_num = 0;
     last_track_num = 0;
@@ -99,10 +109,10 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const map<int, vec
         return true;
     }
     else{
-        vioLogger->debug("addFeatureCheckParallax parallax_sum: {}, parallax_num: {}", parallax_sum, parallax_num);
-        vioLogger->debug("addFeatureCheckParallax current parallax: {}", parallax_sum / parallax_num * FOCAL_LENGTH);
-        last_average_parallax = parallax_sum / parallax_num * FOCAL_LENGTH;
-        return parallax_sum / parallax_num >= Config::MIN_PARALLAX;
+        vio_logger->debug("addFeatureCheckParallax parallax_sum: {}, parallax_num: {}", parallax_sum, parallax_num);
+        vio_logger->debug("addFeatureCheckParallax current parallax: {}", parallax_sum / parallax_num * kFocalLength);
+        last_average_parallax = parallax_sum / parallax_num * kFocalLength;
+        return parallax_sum / parallax_num >= Config::kMinParallax;
     }
 }
 
@@ -214,7 +224,7 @@ bool FeatureManager::solvePoseByPnP(Eigen::Matrix3d &R, Eigen::Vector3d &P,
     if (int(pts2D.size()) < 4)
     {
         printf("feature tracking not enough, please slowly move you device! \n");
-        vioLogger->error("solvePoseByPnP feature tracking not enough, please slowly move you device! ");
+        vio_logger->error("solvePoseByPnP feature tracking not enough, please slowly move you device! ");
         return false;
     }
     cv::Mat r, rvec, t, D, tmp_r;
@@ -228,7 +238,7 @@ bool FeatureManager::solvePoseByPnP(Eigen::Matrix3d &R, Eigen::Vector3d &P,
 
     if(!pnp_succ)
     {
-        vioLogger->error("solvePoseByPnP pnp failed ! ");
+        vio_logger->error("solvePoseByPnP pnp failed ! ");
         return false;
     }
     cv::Rodrigues(rvec, r);
@@ -266,7 +276,7 @@ void FeatureManager::initFramePoseByPnP(int frameCnt, Vector3d Ps[], Matrix3d Rs
             }
         }
 
-        vioLogger->debug("initFramePoseByPnP pts2D.size:{}",pts2D.size());
+        vio_logger->debug("initFramePoseByPnP pts2D.size:{}", pts2D.size());
 
         Eigen::Matrix3d RCam;
         Eigen::Vector3d PCam;
@@ -325,7 +335,7 @@ void FeatureManager::triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vec
             if (depth > 0)
                 it_per_id.estimated_depth = depth;
             else
-                it_per_id.estimated_depth = Config::INIT_DEPTH;
+                it_per_id.estimated_depth = Config::kInitDepth;
             /*
             Vector3d ptsGt = pts_gt[it_per_id.feature_id];
             printf("stereo %d pts: %f %f %f gt: %f %f %f \n",it_per_id.feature_id, point3d.x(), point3d.y(), point3d.z(),
@@ -360,7 +370,7 @@ void FeatureManager::triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vec
             if (depth > 0)
                 it_per_id.estimated_depth = depth;
             else
-                it_per_id.estimated_depth = Config::INIT_DEPTH;
+                it_per_id.estimated_depth = Config::kInitDepth;
             /*
             Vector3d ptsGt = pts_gt[it_per_id.feature_id];
             printf("motion  %d pts: %f %f %f gt: %f %f %f \n",it_per_id.feature_id, point3d.x(), point3d.y(), point3d.z(),
@@ -408,11 +418,11 @@ void FeatureManager::triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vec
         //it_per_id->depth = svd_V[2] / svd_V[3];
 
         it_per_id.estimated_depth = svd_method;
-        //it_per_id->depth = INIT_DEPTH;
+        //it_per_id->depth = kInitDepth;
 
         if (it_per_id.estimated_depth < 0.1)
         {
-            it_per_id.estimated_depth = Config::INIT_DEPTH;
+            it_per_id.estimated_depth = Config::kInitDepth;
         }
 
     }
@@ -462,12 +472,12 @@ void FeatureManager::removeBackShiftDepth(Eigen::Matrix3d marg_R, Eigen::Vector3
                 if (dep_j > 0)
                     it->estimated_depth = dep_j;
                 else
-                    it->estimated_depth = Config::INIT_DEPTH;
+                    it->estimated_depth = Config::kInitDepth;
             }
         }
         // remove tracking-lost feature after marginalize
         /*
-        if (it->endFrame() < WINDOW_SIZE - 1)
+        if (it->endFrame() < kWindowSize - 1)
         {
             feature.erase(it);
         }
@@ -505,7 +515,7 @@ void FeatureManager::removeFront(int frame_count)
         }
         else
         {
-            int j = WINDOW_SIZE - 1 - it->start_frame;
+            int j = kWindowSize - 1 - it->start_frame;
             if (it->endFrame() < frame_count - 1)
                 continue;
             it->feature_per_frame.erase(it->feature_per_frame.begin() + j);

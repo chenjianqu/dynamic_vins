@@ -1,3 +1,12 @@
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #include "KalmanTracker.h"
 #include "../parameters.h"
 
@@ -59,7 +68,7 @@ void KalmanTracker::update(cv::Rect2f stateMat) {
     time_since_update = 0;
     ++hits;
 
-    if (_state == TrackState::Tentative && hits > Config::TRACKING_N_INIT) {
+    if (_state == TrackState::Tentative && hits > Config::kTrackingNInit) {
         _state = TrackState::Confirmed;
         _id = count++;
     }
@@ -77,7 +86,7 @@ void KalmanTracker::update(cv::Rect2f stateMat) {
 void KalmanTracker::miss() {
     if (_state == TrackState::Tentative) {
         _state = TrackState::Deleted;
-    } else if (time_since_update > Config::TRACKING_MAX_AGE) {
+    } else if (time_since_update > Config::kTrackingMaxAge) {
         _state = TrackState::Deleted;
     }
 }

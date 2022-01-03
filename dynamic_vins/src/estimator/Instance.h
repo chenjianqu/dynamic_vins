@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/12/21.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #ifndef DYNAMIC_VINS_INSTANCE_H
 #define DYNAMIC_VINS_INSTANCE_H
@@ -23,38 +28,35 @@ class Instance{
 public:
     using Ptr=std::shared_ptr<Instance>;
     Instance()=default;
-    Instance(const unsigned int frame_id_,const unsigned int &id_,Estimator* estimator):id(id_),e(estimator){
+    Instance(const unsigned int frame_id,const unsigned int &id,Estimator* estimator): id(id),e(estimator){
     }
 
-    int slideWindowOld();
-    int slideWindowNew();
+    int SlideWindowOld();
+    int SlideWindowNew();
 
-    void initialPose();
-    void setCurrentPoint3d();
+    void InitialPose();
+    void SetCurrentPoint3d();
 
-    void setOptimizationParameters();
-    void getOptimizationParameters();
-    void setWindowPose();
-    void outlierRejection();
+    void SetOptimizeParameters();
+    void GetOptimizationParameters();
+    void SetWindowPose();
+    void OutlierRejection();
 
-    double reprojectionTwoFrameError(FeaturePoint &feat_j,FeaturePoint &feat_i,double depth,bool isStereo);
-
-
-    void getBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
+    double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo);
+    void GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
 
 
     vector<Eigen::Vector3d> point3d_curr;
-
     std::list<LandmarkPoint> landmarks;
 
     unsigned int id{0};
 
-    bool isInitial{false};//是否已经初始化位姿了
-    bool isTracking{true};//是否在滑动窗口中
+    bool is_initial{false};//是否已经初始化位姿了
+    bool is_tracking{true};//是否在滑动窗口中
     bool opt_vel{false};
 
     //物体的位姿
-    State state[(WINDOW_SIZE + 1)]{};
+    State state[(kWindowSize + 1)]{};
 
     //物体的速度
     Vel3d vel,last_vel;
@@ -63,10 +65,10 @@ public:
     cv::Scalar color;
 
     //优化过程中的变量
-    double para_State[WINDOW_SIZE + 1][SIZE_POSE]{};
-    double para_Speed[1][SIZE_SPEED]{};
-    double para_Box[1][SIZE_BOX]{};
-    double para_InvDepth[INSTANCE_FEATURE_SIZE][SIZE_FEATURE]{};//逆深度参数数组
+    double para_state[kWindowSize + 1][kSizePose]{};
+    double para_speed[1][kSpeedSize]{};
+    double para_box[1][kBoxSize]{};
+    double para_inv_depth[kInstFeatSize][kSizeFeature]{};//逆深度参数数组
 
     Estimator* e{nullptr};
 

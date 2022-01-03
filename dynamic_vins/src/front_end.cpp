@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/9/18.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include <cstdio>
 #include <queue>
@@ -33,7 +38,7 @@ queue<sensor_msgs::ImageConstPtr> img1_buf;
 queue<sensor_msgs::ImageConstPtr> seg1_buf;
 std::mutex m_buf;
 
-void img0_callback(const sensor_msgs::ImageConstPtr &img_msg)
+void Img0Callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
     m_buf.lock();
     if(img0_buf.size()<QUEUE_SIZE){
@@ -42,7 +47,7 @@ void img0_callback(const sensor_msgs::ImageConstPtr &img_msg)
     m_buf.unlock();
 }
 
-void seg0_callback(const sensor_msgs::ImageConstPtr &img_msg)
+void Seg0Callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
     m_buf.lock();
     if(seg0_buf.size()<QUEUE_SIZE)
@@ -50,7 +55,7 @@ void seg0_callback(const sensor_msgs::ImageConstPtr &img_msg)
     m_buf.unlock();
 }
 
-void img1_callback(const sensor_msgs::ImageConstPtr &img_msg)
+void Img1Callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
     m_buf.lock();
     if(img1_buf.size()<QUEUE_SIZE)
@@ -58,7 +63,7 @@ void img1_callback(const sensor_msgs::ImageConstPtr &img_msg)
     m_buf.unlock();
 }
 
-void seg1_callback(const sensor_msgs::ImageConstPtr &img_msg)
+void Seg1Callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
     m_buf.lock();
     if(seg1_buf.size()<QUEUE_SIZE)
@@ -67,7 +72,7 @@ void seg1_callback(const sensor_msgs::ImageConstPtr &img_msg)
 }
 
 
-cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
+cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
 {
     cv_bridge::CvImageConstPtr ptr= cv_bridge::toCvShare(img_msg, sensor_msgs::image_encodings::BGR8);
     return ptr->image.clone();
@@ -75,7 +80,7 @@ cv::Mat getImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
 
 
 
-[[noreturn]] void sync_process()
+[[noreturn]] void SyncProcess()
 {
     cout<<std::fixed;
     cout.precision(10);

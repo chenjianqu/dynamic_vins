@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/10/8.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #ifndef DYNAMIC_VINS_INSTANCE_TRACKER_H
 #define DYNAMIC_VINS_INSTANCE_TRACKER_H
@@ -26,7 +31,7 @@
 #include "camodocal/camera_models/CataCamera.h"
 #include "camodocal/camera_models/PinholeCamera.h"
 
-#include "SegmentImage.h"
+#include "segment_image.h"
 #include "../parameters.h"
 #include "../estimator/dynamic.h"
 
@@ -34,8 +39,7 @@
 
 using Slice = torch::indexing::Slice;
 
-class InstFeat{
-public:
+struct InstFeat{
     using Ptr=std::shared_ptr<InstFeat>;
     InstFeat();
     InstFeat(unsigned int id_, int class_id_);
@@ -83,7 +87,6 @@ public:
     float mask_area{0.};//当前帧中属于该物体的像素数量
 
     unsigned int last_frame_cnt{0};
-
 };
 
 
@@ -96,24 +99,36 @@ public:
     using Ptr=std::shared_ptr<InstsFeatManager>;
     InstsFeatManager();
 
-    void instsTrack(SegImage img);
-    InstancesFeatureMap setOutputFeature();
-    void addViodeInstances(SegImage &img);
-    cv::Mat addInstances(SegImage &img);
-    void addInstancesGPU(const SegImage &img);
-    void addInstancesByTracking( SegImage &img);
+    void InstsTrack(SegImage img);
+    InstancesFeatureMap SetOutputFeature();
+    void AddViodeInstances(SegImage &img);
+    cv::Mat AddInstances(SegImage &img);
+    void AddInstancesGPU(const SegImage &img);
+    void AddInstancesByTracking(SegImage &img);
+    void VisualizeInst(cv::Mat &img);
+    void DrawInsts(cv::Mat& img);
 
-    void visualizeInst(cv::Mat &img);
-    void drawInsts(cv::Mat& img);
+    void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
+    void set_camera(camodocal::CameraPtr& camera){camera_ = camera;}
+    void set_right_camera(camodocal::CameraPtr& right_camera){right_camera_ = right_camera;}
+    void set_is_stereo(bool is_stereo){is_stereo_=is_stereo;}
 
+private:
+    void ManageInstances();
+    vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
+
+    static void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr_un_pts, std::map<unsigned int, cv::Point2f> &prev_id_pts,
+                            std::map<unsigned int, cv::Point2f> &output_cur_id_pts, vector<cv::Point2f> &output_velocity);
+    static float GetMaskIoU(const torch::Tensor &mask1, const InstInfo &instInfo1, const float mask1_area,
+                            const torch::Tensor &mask2, const InstInfo &instInfo2, const float mask2_area);
+    std::tuple<int,float,float> GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor);
 
     std::unordered_map<unsigned int,InstFeat> instances;
-    std::unordered_map<unsigned int,Vel3d> vel_map;
+    std::unordered_map<unsigned int,Vel3d> vel_map_;
 
-    camodocal::CameraPtr camera;
-    camodocal::CameraPtr right_camera;
+    camodocal::CameraPtr camera_,right_camera_;
 
-    bool isStereo{false};
+    bool is_stereo_{false};
     unsigned int global_frame_id{0};
     cv::Mat mask_background;
     cv::cuda::GpuMat mask_background_gpu;
@@ -122,23 +137,13 @@ public:
     SegImage prev_img;
     bool isHaveInst{false};
 
-private:
-    void manageInstances();
-    vector<uchar> rejectWithF(InstFeat &inst, int col, int row) const;
-
-    static void ptsVelocity(double dt,vector<unsigned int> &ids,vector<cv::Point2f> &curr_un_pts,std::map<unsigned int, cv::Point2f> &prev_id_pts,
-                            std::map<unsigned int, cv::Point2f> &output_cur_id_pts,vector<cv::Point2f> &output_velocity);
-    static float getMaskIoU(const torch::Tensor &mask1,const InstInfo &instInfo1,const float mask1_area,
-                            const torch::Tensor &mask2,const InstInfo &instInfo2,const float mask2_area);
-    std::tuple<int,float,float> getMatchInst(InstInfo &instInfo,torch::Tensor &inst_mask_tensor);
-
     unsigned long global_id_count{0};//全局特征序号，注意与静态物体上的特征id不共用
     unsigned int global_instance_id{0};
 
     double curr_time{},last_time{};
 
-    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lkOpticalFlow;
-    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lkOpticalFlowBack;
+    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow;
+    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow_back;
     cv::Ptr<cv::cuda::CornersDetector> detector;
 
     DeepSORT::Ptr tracker;

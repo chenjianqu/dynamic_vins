@@ -1,10 +1,24 @@
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 
 #include "parameters.h"
+
+#include <filesystem>
+
 #include "estimator/dynamic.h"
 #include "utils.h"
 #include "utility/ViodeUtils.h"
 
-#include <filesystem>
+
+
+
 
 
 void initLogger()
@@ -37,33 +51,32 @@ void initLogger()
         }
     };
 
+    reset_log_file(Config::kEstimatorLogPath);
+    vio_logger = spdlog::basic_logger_mt("estimator_log", Config::kEstimatorLogPath);
+    vio_logger->set_level(get_log_level(Config::kEstimatorLogLevel)); ///设置日志级别，低于该级别将不输出
+    vio_logger->flush_on(get_log_level(Config::kEstimatorLogFlush));///遇到err级别，立马将缓存的日志写入
 
-    reset_log_file(Config::ESTIMATOR_LOG_PATH);
-    vioLogger = spdlog::basic_logger_mt("estimator_log", Config::ESTIMATOR_LOG_PATH);
-    vioLogger->set_level(get_log_level(Config::ESTIMATOR_LOG_LEVEL)); ///设置日志级别，低于该级别将不输出
-    vioLogger->flush_on(get_log_level(Config::ESTIMATOR_LOG_FLUSH));///遇到err级别，立马将缓存的日志写入
+    reset_log_file(Config::kFeatureTrackerLogPath);
+    tk_logger = spdlog::basic_logger_mt("tracker_log", Config::kFeatureTrackerLogPath);
+    tk_logger->set_level(get_log_level(Config::kFeatureTrackerLogLevel));
+    tk_logger->flush_on(get_log_level(Config::kFeatureTrackerLogFlush));
 
-    reset_log_file(Config::FEATURE_TRACKER_LOG_PATH);
-    tkLogger = spdlog::basic_logger_mt("tracker_log",Config::FEATURE_TRACKER_LOG_PATH);
-    tkLogger->set_level(get_log_level(Config::FEATURE_TRACKER_LOG_LEVEL));
-    tkLogger->flush_on(get_log_level(Config::FEATURE_TRACKER_LOG_FLUSH));
-
-    reset_log_file(Config::SEGMENTOR_LOG_PATH);
-    sgLogger = spdlog::basic_logger_mt("segmentor_log",Config::SEGMENTOR_LOG_PATH);
-    sgLogger->set_level(get_log_level(Config::SEGMENTOR_LOG_LEVEL));
-    sgLogger->flush_on(get_log_level(Config::SEGMENTOR_LOG_FLUSH));
+    reset_log_file(Config::kSegmentorLogPath);
+    sg_logger = spdlog::basic_logger_mt("segmentor_log", Config::kSegmentorLogPath);
+    sg_logger->set_level(get_log_level(Config::kSegmentorLogLevel));
+    sg_logger->flush_on(get_log_level(Config::kSegmentorLogFlush));
 }
 
 /**
  * 读取VIODE数据集的rgb_ids.txt
- * @param rgb2label_file
+ * @param rgb_to_label_file
  * @return
  */
-auto ReadViodeRgbIds(const string &rgb2label_file){
+auto ReadViodeRgbIds(const string &rgb_to_label_file){
     vector<vector<int>> label_data;
-    std::ifstream fp(rgb2label_file); //定义声明一个ifstream对象，指定文件路径
+    std::ifstream fp(rgb_to_label_file); //定义声明一个ifstream对象，指定文件路径
     if(!fp.is_open()){
-        throw std::runtime_error(fmt::format("Can not open:{}",rgb2label_file));
+        throw std::runtime_error(fmt::format("Can not open:{}", rgb_to_label_file));
     }
     string line;
     getline(fp,line); //跳过列名，第一行不做处理
@@ -79,11 +92,11 @@ auto ReadViodeRgbIds(const string &rgb2label_file){
     }
     fp.close();
 
-    std::unordered_map<unsigned int,int> RGB2Key;
+    std::unordered_map<unsigned int,int> rgb_to_key;
     for(const auto& v : label_data){
-        RGB2Key.insert(std::make_pair(VIODE::pixel2key(v[1], v[2], v[3]), v[0]));
+        rgb_to_key.insert(std::make_pair(VIODE::PixelToKey(v[1], v[2], v[3]), v[0]));
     }
-    return RGB2Key;
+    return rgb_to_key;
 }
 
 
@@ -98,88 +111,88 @@ Config::Config(const std::string &file_name)
     int slam_type_index;
     fs["slam_type"]>>slam_type_index;
     if(slam_type_index==0){
-        SLAM=SlamType::RAW;
-        cout<<"SlamType::RAW"<<endl;
+        slam=SlamType::kRaw;
+        cout<<"SlamType::kRaw"<<endl;
     }
     else if(slam_type_index==1){
-        SLAM=SlamType::NAIVE;
-        cout<<"SlamType::NAIVE"<<endl;
+        slam=SlamType::kNaive;
+        cout<<"SlamType::kNaive"<<endl;
     }
     else{
-        SLAM=SlamType::DYNAMIC;
-        cout<<"SlamType::DYNAMIC"<<endl;
+        slam=SlamType::kDynamic;
+        cout<<"SlamType::kDynamic"<<endl;
     }
 
     std::string dataset_type_string;
     fs["dataset_type"]>>dataset_type_string;
     std::transform(dataset_type_string.begin(),dataset_type_string.end(),dataset_type_string.begin(),::tolower);//
     if(dataset_type_string=="kitti"){
-        Dataset = DatasetType::KITTI;
+        dataset = DatasetType::kKitti;
     }
     else if(dataset_type_string=="viode"){
-        Dataset = DatasetType::VIODE;
+        dataset = DatasetType::kViode;
     }
     else{
-        Dataset = DatasetType::VIODE;
+        dataset = DatasetType::kViode;
     }
-    cout<<"Dataset:"<<dataset_type_string<<endl;
+    cout<<"dataset:"<<dataset_type_string<<endl;
 
 
-    fs["estimator_log_path"]>>ESTIMATOR_LOG_PATH;
-    fs["estimator_log_level"]>>ESTIMATOR_LOG_LEVEL;
-    fs["estimator_log_flush"]>>ESTIMATOR_LOG_FLUSH;
-    fs["feature_tracker_log_path"]>>FEATURE_TRACKER_LOG_PATH;
-    fs["feature_tracker_log_level"]>>FEATURE_TRACKER_LOG_LEVEL;
-    fs["feature_tracker_log_flush"]>>FEATURE_TRACKER_LOG_FLUSH;
-    fs["segmentor_log_path"]>>SEGMENTOR_LOG_PATH;
-    fs["segmentor_log_level"]>>SEGMENTOR_LOG_LEVEL;
-    fs["segmentor_log_flush"]>>SEGMENTOR_LOG_FLUSH;
+    fs["estimator_log_path"] >> kEstimatorLogPath;
+    fs["estimator_log_level"] >> kEstimatorLogLevel;
+    fs["estimator_log_flush"] >> kEstimatorLogFlush;
+    fs["feature_tracker_log_path"] >> kFeatureTrackerLogPath;
+    fs["feature_tracker_log_level"] >> kFeatureTrackerLogLevel;
+    fs["feature_tracker_log_flush"] >> kFeatureTrackerLogFlush;
+    fs["segmentor_log_path"] >> kSegmentorLogPath;
+    fs["segmentor_log_level"] >> kSegmentorLogLevel;
+    fs["segmentor_log_flush"] >> kSegmentorLogFlush;
 
-    cout<<"ESTIMATOR_LOG_PATH:"<<ESTIMATOR_LOG_PATH<<endl;
-    cout<<"ESTIMATOR_LOG_LEVEL:"<<ESTIMATOR_LOG_LEVEL<<endl;
-    cout<<"ESTIMATOR_LOG_FLUSH:"<<ESTIMATOR_LOG_FLUSH<<endl;
-    cout<<"FEATURE_TRACKER_LOG_PATH:"<<FEATURE_TRACKER_LOG_PATH<<endl;
-    cout<<"FEATURE_TRACKER_LOG_LEVEL:"<<FEATURE_TRACKER_LOG_LEVEL<<endl;
-    cout<<"FEATURE_TRACKER_LOG_FLUSH:"<<FEATURE_TRACKER_LOG_FLUSH<<endl;
-    cout<<"SEGMENTOR_LOG_PATH:"<<SEGMENTOR_LOG_PATH<<endl;
-    cout<<"SEGMENTOR_LOG_LEVEL:"<<SEGMENTOR_LOG_LEVEL<<endl;
-    cout<<"SEGMENTOR_LOG_FLUSH:"<<SEGMENTOR_LOG_FLUSH<<endl;
+    cout << "kEstimatorLogPath:" << kEstimatorLogPath << endl;
+    cout << "kEstimatorLogLevel:" << kEstimatorLogLevel << endl;
+    cout << "kEstimatorLogFlush:" << kEstimatorLogFlush << endl;
+    cout << "kFeatureTrackerLogPath:" << kFeatureTrackerLogPath << endl;
+    cout << "kFeatureTrackerLogLevel:" << kFeatureTrackerLogLevel << endl;
+    cout << "kFeatureTrackerLogFlush:" << kFeatureTrackerLogFlush << endl;
+    cout << "kSegmentorLogPath:" << kSegmentorLogPath << endl;
+    cout << "kSegmentorLogLevel:" << kSegmentorLogLevel << endl;
+    cout << "kSegmentorLogFlush:" << kSegmentorLogFlush << endl;
 
-    fs["image0_topic"] >> IMAGE0_TOPIC;
-    fs["image1_topic"] >> IMAGE1_TOPIC;
-    fs["image0_segmentation_topic"] >>IMAGE0_SEGMENTATION_TOPIC;
-    fs["image1_segmentation_topic"] >>IMAGE1_SEGMENTATION_TOPIC;
+    fs["image0_topic"] >> kImage0Topic;
+    fs["image1_topic"] >> kImage1Topic;
+    fs["image0_segmentation_topic"] >> kImage0SegTopic;
+    fs["image1_segmentation_topic"] >> kImage1SegTopic;
 
-    cout<<"IMAGE0_TOPIC:"<<IMAGE0_TOPIC<<endl;
-    cout<<"IMAGE1_TOPIC:"<<IMAGE1_TOPIC<<endl;
-    cout<<"IMAGE0_SEGMENTATION_TOPIC:"<<IMAGE0_SEGMENTATION_TOPIC<<endl;
-    cout<<"IMAGE1_SEGMENTATION_TOPIC:"<<IMAGE1_SEGMENTATION_TOPIC<<endl;
-
-
-    ROW = fs["image_height"];
-    COL = fs["image_width"];
-    cout<<fmt::format("ROW:{},COL:{}",ROW,COL)<<endl;
+    cout << "kImage0Topic:" << kImage0Topic << endl;
+    cout << "kImage1Topic:" << kImage1Topic << endl;
+    cout << "kImage0SegTopic:" << kImage0SegTopic << endl;
+    cout << "kImage1SegTopic:" << kImage1SegTopic << endl;
 
 
-    MAX_CNT = fs["max_cnt"];
-    MAX_DYNAMIC_CNT = fs["max_dynamic_cnt"];
-    MIN_DIST = fs["min_dist"];
-    MIN_DYNAMIC_DIST = fs["min_dynamic_dist"];
-    F_THRESHOLD = fs["F_threshold"];
-    SHOW_TRACK = fs["show_track"];
-    FLOW_BACK = fs["flow_back"];
+    kRow = fs["image_height"];
+    kCol = fs["image_width"];
+    cout << fmt::format("kRow:{},kCol:{}", kRow, kCol) << endl;
 
-    SOLVER_TIME = fs["max_solver_time"];
-    NUM_ITERATIONS = fs["max_num_iterations"];
-    MIN_PARALLAX = fs["keyframe_parallax"];
-    MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;
+
+    kMaxCnt = fs["max_cnt"];
+    kMaxDynamicCnt = fs["max_dynamic_cnt"];
+    kMinDist = fs["min_dist"];
+    kMinDynamicDist = fs["min_dynamic_dist"];
+    kFThreshold = fs["F_threshold"];
+    kShowTrack = fs["show_track"];
+    kFlowBack = fs["flow_back"];
+
+    kMaxSolverTime = fs["max_solver_time"];
+    KNumIter = fs["max_num_iterations"];
+    kMinParallax = fs["keyframe_parallax"];
+    kMinParallax = kMinParallax / kFocalLength;
 
     USE_IMU = fs["imu"];
     cout<<"USE_IMU:"<<USE_IMU<<endl;
 
     if(USE_IMU){
-        fs["imu_topic"] >> IMU_TOPIC;
-        cout<<"IMU_TOPIC:"<<IMU_TOPIC<<endl;
+        fs["imu_topic"] >> kImuTopic;
+        cout << "kImuTopic:" << kImuTopic << endl;
         ACC_N = fs["acc_n"];
         ACC_W = fs["acc_w"];
         GYR_N = fs["gyr_n"];
@@ -187,9 +200,9 @@ Config::Config(const std::string &file_name)
         G.z() = fs["g_norm"];
     }
 
-    fs["output_path"] >> OUTPUT_FOLDER;
-    VINS_RESULT_PATH = OUTPUT_FOLDER + "/vio.csv";
-    cout<<"OUTPUT_FOLDER:"<<OUTPUT_FOLDER<<endl;
+    fs["output_path"] >> kOutputFolder;
+    VINS_RESULT_PATH = kOutputFolder + "/vio.csv";
+    cout << "kOutputFolder:" << kOutputFolder << endl;
     cout<<"VINS_RESULT_PATH:"<<VINS_RESULT_PATH<<endl;
 
     std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
@@ -201,12 +214,12 @@ Config::Config(const std::string &file_name)
         cout<<"have no prior about extrinsic param, calibrate extrinsic param"<<endl;
         RIC.emplace_back(Eigen::Matrix3d::Identity());
         TIC.emplace_back(Eigen::Vector3d::Zero());
-        EX_CALIB_RESULT_PATH = OUTPUT_FOLDER + "/extrinsic_parameter.csv";
+        EX_CALIB_RESULT_PATH = kOutputFolder + "/extrinsic_parameter.csv";
     }
     else{
         if ( ESTIMATE_EXTRINSIC == 1){
             cout<<"Optimize extrinsic param around initial guess!"<<endl;
-            EX_CALIB_RESULT_PATH = OUTPUT_FOLDER + "/extrinsic_parameter.csv";
+            EX_CALIB_RESULT_PATH = kOutputFolder + "/extrinsic_parameter.csv";
         }
         else if (ESTIMATE_EXTRINSIC == 0){
             cout<<"fix extrinsic param"<<endl;
@@ -220,9 +233,9 @@ Config::Config(const std::string &file_name)
     }
 
 
-    NUM_OF_CAM = fs["num_of_cam"];
-    cout<<"NUM_OF_CAM:"<<NUM_OF_CAM<<endl;
-    if(NUM_OF_CAM != 1 && NUM_OF_CAM != 2){
+    kCamNum = fs["num_of_cam"];
+    cout << "kCamNum:" << kCamNum << endl;
+    if(kCamNum != 1 && kCamNum != 2){
         throw std::runtime_error("num_of_cam should be 1 or 2");
     }
 
@@ -233,14 +246,14 @@ Config::Config(const std::string &file_name)
     std::string cam0Calib;
     fs["cam0_calib"] >> cam0Calib;
     std::string cam0Path = configPath + "/" + cam0Calib;
-    CAM_NAMES.push_back(cam0Path);
+    kCamPath.push_back(cam0Path);
 
-    if(NUM_OF_CAM == 2){
+    if(kCamNum == 2){
         STEREO = 1;
         std::string cam1Calib;
         fs["cam1_calib"] >> cam1Calib;
         std::string cam1Path = configPath + "/" + cam1Calib;
-        CAM_NAMES.push_back(cam1Path);
+        kCamPath.push_back(cam1Path);
 
         cv::Mat cv_T;
         fs["body_T_cam1"] >> cv_T;
@@ -250,7 +263,7 @@ Config::Config(const std::string &file_name)
         TIC.emplace_back(T.block<3, 1>(0, 3));
     }
 
-    fs["INIT_DEPTH"]>>INIT_DEPTH;
+    fs["kInitDepth"] >> kInitDepth;
     fs["BIAS_ACC_THRESHOLD"]>>BIAS_ACC_THRESHOLD;
     fs["BIAS_GYR_THRESHOLD"]>>BIAS_GYR_THRESHOLD;
 
@@ -271,35 +284,35 @@ Config::Config(const std::string &file_name)
     }
 
     ///读取VIODE动态物体对应的Label Index
-    if(Dataset == DatasetType::VIODE){
+    if(dataset == DatasetType::kViode){
         cv::FileNode labelIDNode=fs["dynamic_label_id"];
         for(auto && it : labelIDNode){
-            VIODE_DynamicIndex.insert((int)it);
+            ViodeDynamicIndex.insert((int)it);
         }
         ///设置VIODE的RGB2Label
         string rgb2label_file;
         fs["rgb_to_label_file"]>>rgb2label_file;
-        VIODE_Key2Index = ReadViodeRgbIds(rgb2label_file);
+        ViodeKeyToIndex = ReadViodeRgbIds(rgb2label_file);
     }
 
 
-    if(SLAM != SlamType::RAW && Dataset!=DatasetType::VIODE){
-        fs["onnx_path"] >> DETECTOR_ONNX_PATH;
-        fs["serialize_path"] >> DETECTOR_SERIALIZE_PATH;
+    if(slam != SlamType::kRaw && dataset != DatasetType::kViode){
+        fs["onnx_path"] >> kDetectorOnnxPath;
+        fs["serialize_path"] >> kDetectorSerializePath;
 
-        fs["SOLO_NMS_PRE"]>>SOLO_NMS_PRE;
-        fs["SOLO_MAX_PER_IMG"]>>SOLO_MAX_PER_IMG;
-        fs["SOLO_NMS_KERNEL"]>>SOLO_NMS_KERNEL;
-        fs["SOLO_NMS_SIGMA"]>>SOLO_NMS_SIGMA;
-        fs["SOLO_SCORE_THR"]>>SOLO_SCORE_THR;
-        fs["SOLO_MASK_THR"]>>SOLO_MASK_THR;
-        fs["SOLO_UPDATE_THR"]>>SOLO_UPDATE_THR;
+        fs["kSoloNmsPre"] >> kSoloNmsPre;
+        fs["kSoloMaxPerImg"] >> kSoloMaxPerImg;
+        fs["kSoloNmsKernel"] >> kSoloNmsKernel;
+        fs["kSoloNmsSigma"] >> kSoloNmsSigma;
+        fs["kSoloScoreThr"] >> kSoloScoreThr;
+        fs["kSoloMaskThr"] >> kSoloMaskThr;
+        fs["kSoloUpdateThr"] >> kSoloUpdateThr;
     }
 
-    if(SLAM==SlamType::DYNAMIC && Dataset!=DatasetType::VIODE){
+    if(slam == SlamType::kDynamic && dataset != DatasetType::kViode){
         fs["EXTRACTOR_MODEL_PATH"]>>EXTRACTOR_MODEL_PATH;
-        fs["TRACKING_N_INIT"]>>TRACKING_N_INIT;
-        fs["TRACKING_MAX_AGE"]>>TRACKING_MAX_AGE;
+        fs["kTrackingNInit"] >> kTrackingNInit;
+        fs["kTrackingMaxAge"] >> kTrackingMaxAge;
     }
 
     fs["VISUAL_INST_DURATION"]>>VISUAL_INST_DURATION;
@@ -307,13 +320,33 @@ Config::Config(const std::string &file_name)
     fs.release();
 
 
-    if(Dataset == DatasetType::VIODE && ( SLAM == SlamType::DYNAMIC || Config::SLAM == SlamType::NAIVE)){
-        isInputSeg = true;
+    if(dataset == DatasetType::kViode && (slam == SlamType::kDynamic || Config::slam == SlamType::kNaive)){
+        is_input_seg = true;
     }
     else{
-        isInputSeg = false;
+        is_input_seg = false;
     }
-    cout<<"isInputSeg:"<<isInputSeg<<endl;
+    cout << "is_input_seg:" << is_input_seg << endl;
+
+
+    std::map<int,std::string> CocoLabelMap={
+            {1, "person"}, {2, "bicycle"}, {3, "car"}, {4, "motorcycle"}, {5, "airplane"},
+            {6, "bus"}, {7, "train"}, {8, "truck"}, {9, "boat"}, {10, "traffic light"},
+            {11, "fire hydrant"}, {13, "stop sign"}, {14, "parking meter"}, {15, "bench"},
+            {16, "bird"}, {17, "cat"}, {18, "dog"}, {19, "horse"}, {20, "sheep"}, {21, "cow"},
+            {22, "elephant"}, {23, "bear"}, {24, "zebra"}, {25, "giraffe"}, {27, "backpack"},
+            {28, "umbrella"}, {31, "handbag"}, {32, "tie"}, {33, "suitcase"}, {34, "frisbee"},
+            {35, "skis"}, {36, "snowboard"}, {37, "sports ball"}, {38, "kite"}, {39, "baseball bat"},
+            {40, "baseball glove"}, {41, "skateboard"}, {42, "surfboard"}, {43, "tennis racket"},
+            {44, "bottle"}, {46, "wine glass"}, {47, "cup"}, {48, "fork"}, {49, "knife"}, {50, "spoon"},
+            {51, "bowl"}, {52, "banana"}, {53, "apple"}, {54, "sandwich"}, {55, "orange"},
+            {56, "broccoli"}, {57, "carrot"}, {58, "hot dog"}, {59, "pizza"}, {60, "donut"},
+            {61, "cake"}, {62, "chair"}, {63, "couch"}, {64, "potted plant"}, {65, "bed"}, {67, "dining table"},
+            {70, "toilet"}, {72, "tv"}, {73, "laptop"}, {74, "mouse"}, {75, "remote"}, {76, "keyboard"},
+            {77, "cell phone"}, {78, "microwave"}, {79, "oven"}, {80, "toaster"},{ 81, "sink"},
+            {82, "refrigerator"}, {84, "book"}, {85, "clock"},{ 86, "vase"}, {87, "scissors"},
+            {88, "teddy bear"}, {89, "hair drier"}, {90, "toothbrush"}
+    };
 
     CocoLabelVector.reserve(CocoLabelMap.size());
     for(auto &pair : CocoLabelMap){

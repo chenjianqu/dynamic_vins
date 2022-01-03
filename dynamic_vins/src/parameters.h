@@ -1,3 +1,12 @@
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #ifndef DYNAMIC_VINS_PARAMETER_H
 #define DYNAMIC_VINS_PARAMETER_H
 
@@ -54,55 +63,34 @@ using VecVector3d = EigenContainer<Eigen::Vector3d>;
 using VecMatrix3d = EigenContainer<Eigen::Matrix3d>;
 
 
-constexpr int INFER_IMAGE_LIST_SIZE=30;
+constexpr int kInferImageListSize=30;
 
-constexpr double FOCAL_LENGTH = 460.0;
-constexpr int WINDOW_SIZE = 10;
-constexpr int NUM_OF_F = 1000;
+constexpr double kFocalLength = 460.0;
+constexpr int kWindowSize = 10;
+constexpr int kNumFeat = 1000;
 
-constexpr int INSTANCE_FEATURE_SIZE=500;
-constexpr int SIZE_SPEED=6;
-constexpr int SIZE_BOX=3;
+constexpr int kInstFeatSize=500;
+constexpr int kSpeedSize=6;
+constexpr int kBoxSize=3;
 
 
 //图像归一化参数，注意是以RGB的顺序排序
-inline float SOLO_IMG_MEAN[3]={123.675, 116.28, 103.53};
-inline float SOLO_IMG_STD[3]={58.395, 57.12, 57.375};
+inline float kSoloImgMean[3]={123.675, 116.28, 103.53};
+inline float kSoloImgStd[3]={58.395, 57.12, 57.375};
 
-constexpr int BATCH_SIZE=1;
-constexpr int SOLO_TENSOR_CHANNEL=128;//张量的输出通道数应该是128
+constexpr int kBatchSize=1;
+constexpr int kSoloTensorChannel=128;//张量的输出通道数应该是128
 
-inline std::vector<float> SOLO_NUM_GRIDS={40, 36, 24, 16, 12};//各个层级划分的网格数
-inline std::vector<float> SOLO_STRIDES={8, 8, 16, 32, 32};//各个层级的预测结果的stride
-
-
-inline std::map<int,std::string> CocoLabelMap={
-        {1, "person"}, {2, "bicycle"}, {3, "car"}, {4, "motorcycle"}, {5, "airplane"},
-        {6, "bus"}, {7, "train"}, {8, "truck"}, {9, "boat"}, {10, "traffic light"},
-        {11, "fire hydrant"}, {13, "stop sign"}, {14, "parking meter"}, {15, "bench"},
-        {16, "bird"}, {17, "cat"}, {18, "dog"}, {19, "horse"}, {20, "sheep"}, {21, "cow"},
-        {22, "elephant"}, {23, "bear"}, {24, "zebra"}, {25, "giraffe"}, {27, "backpack"},
-        {28, "umbrella"}, {31, "handbag"}, {32, "tie"}, {33, "suitcase"}, {34, "frisbee"},
-        {35, "skis"}, {36, "snowboard"}, {37, "sports ball"}, {38, "kite"}, {39, "baseball bat"},
-        {40, "baseball glove"}, {41, "skateboard"}, {42, "surfboard"}, {43, "tennis racket"},
-        {44, "bottle"}, {46, "wine glass"}, {47, "cup"}, {48, "fork"}, {49, "knife"}, {50, "spoon"},
-        {51, "bowl"}, {52, "banana"}, {53, "apple"}, {54, "sandwich"}, {55, "orange"},
-        {56, "broccoli"}, {57, "carrot"}, {58, "hot dog"}, {59, "pizza"}, {60, "donut"},
-        {61, "cake"}, {62, "chair"}, {63, "couch"}, {64, "potted plant"}, {65, "bed"}, {67, "dining table"},
-        {70, "toilet"}, {72, "tv"}, {73, "laptop"}, {74, "mouse"}, {75, "remote"}, {76, "keyboard"},
-        {77, "cell phone"}, {78, "microwave"}, {79, "oven"}, {80, "toaster"},{ 81, "sink"},
-        {82, "refrigerator"}, {84, "book"}, {85, "clock"},{ 86, "vase"}, {87, "scissors"},
-        {88, "teddy bear"}, {89, "hair drier"}, {90, "toothbrush"}
-};
+inline std::vector<float> kSoloNumGrids={40, 36, 24, 16, 12};//各个层级划分的网格数
+inline std::vector<float> kSoloStrides={8, 8, 16, 32, 32};//各个层级的预测结果的stride
 
 
-inline std::shared_ptr<spdlog::logger> vioLogger;
-inline std::shared_ptr<spdlog::logger> tkLogger;
-inline std::shared_ptr<spdlog::logger> sgLogger;
+inline std::shared_ptr<spdlog::logger> vio_logger;
+inline std::shared_ptr<spdlog::logger> tk_logger;
+inline std::shared_ptr<spdlog::logger> sg_logger;
 
 
-
-inline std::vector<std::vector<int>> TENSOR_QUEUE_SHAPE{
+inline std::vector<std::vector<int>> kTensorQueueShapes{
         {1, 128, 12, 12},
         {1, 128, 16, 16},
         {1, 128, 24, 24},
@@ -118,10 +106,10 @@ inline std::vector<std::vector<int>> TENSOR_QUEUE_SHAPE{
 
 
 
-enum SIZE_PARAMETERIZATION{
-    SIZE_POSE = 7,
-    SIZE_SPEEDBIAS = 9,
-    SIZE_FEATURE = 1
+enum SizeParameterization{
+    kSizePose = 7,
+    kSizeSpeedBias = 9,
+    kSizeFeature = 1
 };
 
 
@@ -141,14 +129,14 @@ enum NoiseOrder{
 };
 
 enum class SlamType{
-    RAW,
-    NAIVE,
-    DYNAMIC
+    kRaw,
+    kNaive,
+    kDynamic
 };
 
 enum class DatasetType{
-    VIODE,
-    KITTI
+    kViode,
+    kKitti
 };
 
 
@@ -160,8 +148,8 @@ enum class SolverFlag{
 };
 
 enum class MarginFlag{
-    MARGIN_OLD = 0,
-    MARGIN_SECOND_NEW = 1
+    kMarginOld = 0,
+    kMarginSecondNew = 1
 };
 
 
@@ -172,8 +160,8 @@ public:
 
     explicit Config(const std::string &file_name);
 
-    inline static double INIT_DEPTH;
-    inline static double MIN_PARALLAX;
+    inline static double kInitDepth;
+    inline static double kMinParallax;
     inline static double ACC_N, ACC_W;
     inline static double GYR_N, GYR_W;
 
@@ -183,70 +171,70 @@ public:
     inline static Eigen::Vector3d G{0.0, 0.0, 9.8};
 
     inline static double BIAS_ACC_THRESHOLD,BIAS_GYR_THRESHOLD;
-    inline static double SOLVER_TIME;
-    inline static int NUM_ITERATIONS;
+    inline static double kMaxSolverTime;
+    inline static int KNumIter;
     inline static int ESTIMATE_EXTRINSIC;
     inline static int ESTIMATE_TD;
     inline static int ROLLING_SHUTTER;
     inline static std::string EX_CALIB_RESULT_PATH;
     inline static std::string VINS_RESULT_PATH;
-    inline static std::string OUTPUT_FOLDER;
-    inline static std::string IMU_TOPIC;
-    inline static int ROW, COL;
+    inline static std::string kOutputFolder;
+    inline static std::string kImuTopic;
+    inline static int kRow, kCol;
     inline static double TD;
-    inline static int NUM_OF_CAM;
+    inline static int kCamNum;
     inline static int STEREO;
     inline static int USE_IMU;
     inline static std::map<int, Eigen::Vector3d> pts_gt;
-    inline static std::string IMAGE0_TOPIC, IMAGE1_TOPIC,IMAGE0_SEGMENTATION_TOPIC,IMAGE1_SEGMENTATION_TOPIC;
+    inline static std::string kImage0Topic, kImage1Topic,kImage0SegTopic,kImage1SegTopic;
     inline static std::string FISHEYE_MASK;
-    inline static std::vector<std::string> CAM_NAMES;
-    inline static int MAX_CNT; //每帧图像上的最多检测的特征数量
-    inline static int MAX_DYNAMIC_CNT;
-    inline static int MIN_DIST; //检测特征点时的最小距离
-    inline static int MIN_DYNAMIC_DIST; //检测特征点时的最小距离
-    inline static double F_THRESHOLD;
-    inline static int SHOW_TRACK;
-    inline static int FLOW_BACK; //是否反向计算光流，判断之前光流跟踪的特征点的质量
+    inline static std::vector<std::string> kCamPath;
+    inline static int kMaxCnt; //每帧图像上的最多检测的特征数量
+    inline static int kMaxDynamicCnt;
+    inline static int kMinDist; //检测特征点时的最小距离
+    inline static int kMinDynamicDist; //检测特征点时的最小距离
+    inline static double kFThreshold;
+    inline static int kShowTrack;
+    inline static int kFlowBack; //是否反向计算光流，判断之前光流跟踪的特征点的质量
 
-    inline static std::unordered_map<unsigned int,int> VIODE_Key2Index;
-    inline static std::set<int> VIODE_DynamicIndex;
+    inline static std::unordered_map<unsigned int,int> ViodeKeyToIndex;
+    inline static std::set<int> ViodeDynamicIndex;
 
-    inline static std::string DETECTOR_ONNX_PATH;
-    inline static std::string DETECTOR_SERIALIZE_PATH;
+    inline static std::string kDetectorOnnxPath;
+    inline static std::string kDetectorSerializePath;
 
-    inline static int inputH,inputW,inputC;
+    inline static int kInputHeight,kInputWidth,kInputChannel=3;
 
-    inline static SlamType SLAM;
-    inline static DatasetType Dataset;
-    inline static bool isInputSeg;
+    inline static SlamType slam;
+    inline static DatasetType dataset;
+    inline static bool is_input_seg;
 
     inline static std::vector<std::string> CocoLabelVector;
 
-    inline static std::string ESTIMATOR_LOG_PATH;
-    inline static std::string ESTIMATOR_LOG_LEVEL;
-    inline static std::string ESTIMATOR_LOG_FLUSH;
-    inline static std::string FEATURE_TRACKER_LOG_PATH;
-    inline static std::string FEATURE_TRACKER_LOG_LEVEL;
-    inline static std::string FEATURE_TRACKER_LOG_FLUSH;
-    inline static std::string SEGMENTOR_LOG_PATH;
-    inline static std::string SEGMENTOR_LOG_LEVEL;
-    inline static std::string SEGMENTOR_LOG_FLUSH;
+    inline static std::string kEstimatorLogPath;
+    inline static std::string kEstimatorLogLevel;
+    inline static std::string kEstimatorLogFlush;
+    inline static std::string kFeatureTrackerLogPath;
+    inline static std::string kFeatureTrackerLogLevel;
+    inline static std::string kFeatureTrackerLogFlush;
+    inline static std::string kSegmentorLogPath;
+    inline static std::string kSegmentorLogLevel;
+    inline static std::string kSegmentorLogFlush;
 
     inline static int VISUAL_INST_DURATION;
 
     inline static std::string EXTRACTOR_MODEL_PATH;
 
-    inline static int SOLO_NMS_PRE;
-    inline static int SOLO_MAX_PER_IMG;
-    inline static std::string SOLO_NMS_KERNEL;
-    inline static float SOLO_NMS_SIGMA;
-    inline static float SOLO_SCORE_THR;
-    inline static float SOLO_MASK_THR;
-    inline static float SOLO_UPDATE_THR;
+    inline static int kSoloNmsPre;
+    inline static int kSoloMaxPerImg;
+    inline static std::string kSoloNmsKernel;
+    inline static float kSoloNmsSigma;
+    inline static float kSoloScoreThr;
+    inline static float kSoloMaskThr;
+    inline static float kSoloUpdateThr;
 
-    inline static int TRACKING_MAX_AGE;
-    inline static int TRACKING_N_INIT;
+    inline static int kTrackingMaxAge;
+    inline static int kTrackingNInit;
 
     inline static std::atomic_bool ok{true};
 };

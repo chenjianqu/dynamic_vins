@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/11/7.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #ifndef DYNAMIC_VINS_INFER_H
 #define DYNAMIC_VINS_INFER_H
@@ -8,7 +13,7 @@
 #include <optional>
 #include <memory>
 
-#include "../featureTracker/SegmentImage.h"
+#include "../featureTracker/segment_image.h"
 
 #include "common.h"
 #include "pipeline.h"
@@ -31,32 +36,32 @@ class Infer {
 public:
     using Ptr = std::shared_ptr<Infer>;
     Infer();
-    std::tuple<std::vector<cv::Mat>,std::vector<InstInfo> > forward(cv::Mat &img);
-    void forward_tensor(cv::Mat &img,torch::Tensor &mask_tensor,std::vector<InstInfo> &insts);
-    void forward_tensor(cv::cuda::GpuMat &img,torch::Tensor &mask_tensor,std::vector<InstInfo> &insts);
+    std::tuple<std::vector<cv::Mat>,std::vector<InstInfo> > Forward(cv::Mat &img);
+    void ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);
+    void ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);
 
-    void visualizeResult(cv::Mat &input,cv::Mat &mask,std::vector<InstInfo> &insts);
+    void VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts);
 
-    void push_back(SegImage& img){
-        std::unique_lock<std::mutex> lock(queueMutex);
-        if(seg_img_list.size()< INFER_IMAGE_LIST_SIZE){
-            seg_img_list.push_back(img);
+    void PushBack(SegImage& img){
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        if(seg_img_list_.size() < kInferImageListSize){
+            seg_img_list_.push_back(img);
         }
-        queueCond.notify_one();
+        queue_cond_.notify_one();
     }
 
-    int get_queue_size(){
-        std::unique_lock<std::mutex> lock(queueMutex);
-        return (int)seg_img_list.size();
+    int GetQueueSize(){
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        return (int)seg_img_list_.size();
     }
 
-    std::optional<SegImage> wait_for_result() {
-        std::unique_lock<std::mutex> lock(queueMutex);
-        if(!queueCond.wait_for(lock,30ms,[&]{return !seg_img_list.empty();}))
+    std::optional<SegImage> WaitForResult() {
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        if(!queue_cond_.wait_for(lock, 30ms, [&]{return !seg_img_list_.empty();}))
             return std::nullopt;
-        //queueCond.wait(lock,[&]{return !seg_img_list.empty();});
-        SegImage frame=std::move(seg_img_list.front());
-        seg_img_list.pop_front();
+        //queue_cond_.wait(lock,[&]{return !seg_img_list_.empty();});
+        SegImage frame=std::move(seg_img_list_.front());
+        seg_img_list_.pop_front();
 
         return frame;
     }
@@ -65,18 +70,19 @@ public:
 
 private:
     MyBuffer::Ptr buffer;
-    Pipeline::Ptr pipeline;
-    Solov2::Ptr solo;
+    Pipeline::Ptr pipeline_;
 
-    std::unique_ptr<nvinfer1::IRuntime,InferDeleter> runtime;
-    std::shared_ptr<nvinfer1::ICudaEngine> engine;
-    std::unique_ptr<IExecutionContext, InferDeleter> context;
+    Solov2::Ptr solo_;
 
-    double infer_time{0};
+    std::unique_ptr<nvinfer1::IRuntime,InferDeleter> runtime_;
+    std::shared_ptr<nvinfer1::ICudaEngine> engine_;
+    std::unique_ptr<IExecutionContext, InferDeleter> context_;
 
-    std::mutex queueMutex;
-    std::condition_variable queueCond;
-    std::list<SegImage> seg_img_list;
+    double infer_time_{0};
+
+    std::mutex queue_mutex_;
+    std::condition_variable queue_cond_;
+    std::list<SegImage> seg_img_list_;
 };
 
 

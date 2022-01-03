@@ -1,12 +1,12 @@
-# The VIODE dataset
-This is a repository for the VIODE (Visual-Inertial Odometry in Dynamic Environments) dataset described in the paper:
+# The kViode dataset
+This is a repository for the kViode (Visual-Inertial Odometry in Dynamic Environments) dataset described in the paper:
 
-Koji Minoda, Fabian Schilling, Valentin Wüest, Dario Floreano, and Takehisa Yairi, **VIODE: A Simulated Dataset to Address the Challenges of Visual-Inertial Odometry in Dynamic Environments**, IEEE Robotics and Automation Letters (RA-L), 2021. [PDF](https://ieeexplore.ieee.org/document/9351597)
+Koji Minoda, Fabian Schilling, Valentin Wüest, Dario Floreano, and Takehisa Yairi, **kViode: A Simulated dataset to Address the Challenges of Visual-Inertial Odometry in Dynamic Environments**, IEEE Robotics and Automation Letters (RA-L), 2021. [PDF](https://ieeexplore.ieee.org/document/9351597)
 
-The overall documentation is available in the above RA-L paper. If you use VIODE in academic work, please cite:
+The overall documentation is available in the above RA-L paper. If you use kViode in academic work, please cite:
 ```
 @article{minodaRAL2021,
-  title={{VIODE}: A Simulated Dataset to Address the Challenges of Visual-Inertial Odometry in Dynamic Environments},
+  title={{kViode}: A Simulated dataset to Address the Challenges of Visual-Inertial Odometry in Dynamic Environments},
   author={Minoda, Koji, and Schilling, Fabian, and W\"{u}est, Valentin, and Floreano, Dario, and Yairi, Takehisa},
   journal={IEEE Robotics and Automation Letters},
   year={2021},
@@ -19,18 +19,18 @@ The overall documentation is available in the above RA-L paper. If you use VIODE
 
 
 
-A YouTube video for an introduction to the VIODE dataset:  
-[![VIODE](http://img.youtube.com/vi/LlFTyQf_dlo/0.jpg)](https://youtu.be/LlFTyQf_dlo "VIODE")
+A YouTube video for an introduction to the kViode dataset:  
+[![kViode](http://img.youtube.com/vi/LlFTyQf_dlo/0.jpg)](https://youtu.be/LlFTyQf_dlo "kViode")
 
 
-# Dataset Link
+# dataset Link
 Main ROS bag files are uploaded on Zenodo:  
 [Data download here (A link to Zenodo)](https://zenodo.org/record/4493401)
 
 The other two files can be downloaded from this repository.
 
 
-# Dataset Structure
+# dataset Structure
 The visual-inertial sensor data is provided in ROS bag format. Each bag contains the following topics.
 - `/cam0/image_raw`
 - `/cam1/image_raw`

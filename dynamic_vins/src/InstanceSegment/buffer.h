@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/11/7.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #ifndef DYNAMIC_VINS_BUFFER_H
 #define DYNAMIC_VINS_BUFFER_H
@@ -10,8 +15,7 @@
 #include <NvInfer.h>
 
 
-class MyBuffer{
-public:
+struct MyBuffer{
     using Ptr = std::shared_ptr<MyBuffer>;
     explicit MyBuffer(nvinfer1::ICudaEngine& engine);
     ~MyBuffer();

@@ -9,6 +9,15 @@
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
 
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #pragma once
 
 #include <cstdio>
@@ -43,11 +52,11 @@ class FeatureTracker
 public:
     using Ptr=std::unique_ptr<FeatureTracker>;
     FeatureTracker();
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImage(SegImage &img);
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImageNaive(SegImage &img);
+    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> TrackImage(SegImage &img);
+    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> TrackImageNaive(SegImage &img);
     FeatureMap trackSemanticImage(SegImage &img);
 
-    void readIntrinsicParameter(const vector<string> &calib_file);
+    void ReadIntrinsicParameter(const vector<string> &calib_file);
     void showUndistortion(const string &name);
     void rejectWithF();
     static vector<cv::Point2f> undistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam);
@@ -64,7 +73,7 @@ public:
 
 
     int row{}, col{};
-    cv::Mat imTrack;
+    cv::Mat img_track;
     cv::Mat mask,semantic_mask;
     cv::cuda::GpuMat mask_gpu,semantic_mask_gpu;
     cv::Mat fisheye_mask;

@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/12/3.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #ifndef DYNAMIC_VINS_VIODEUTILS_H
 #define DYNAMIC_VINS_VIODEUTILS_H
@@ -16,61 +21,51 @@ class ViodeUtils {
 namespace VIODE{
 
 
-
-    inline unsigned int pixel2key(uchar r, uchar g, uchar b){
+    inline unsigned int PixelToKey(uchar r, uchar g, uchar b){
         //key的计算公式r*1000000+g*1000*b
         return r*1000000+g*1000*b;
     }
 
-    inline unsigned int pixel2key(const cv::Point2f &pt,const cv::Mat &segImg){
-        return pixel2key(segImg.at<cv::Vec3b>(pt)[2], segImg.at<cv::Vec3b>(pt)[1], segImg.at<cv::Vec3b>(pt)[0]);
+    inline unsigned int PixelToKey(const cv::Point2f &pt, const cv::Mat &segImg){
+        return PixelToKey(segImg.at<cv::Vec3b>(pt)[2], segImg.at<cv::Vec3b>(pt)[1], segImg.at<cv::Vec3b>(pt)[0]);
     }
 
-    inline unsigned int pixel2key(uchar* row_ptr){
-        return pixel2key(row_ptr[2], row_ptr[1], row_ptr[0]);
+    inline unsigned int PixelToKey(uchar* row_ptr){
+        return PixelToKey(row_ptr[2], row_ptr[1], row_ptr[0]);
     }
 
 
     ////key的计算公式r*1000000+g*1000+b
-    inline cv::Scalar key2pixel(unsigned int key){
+    inline cv::Scalar KeyToPixel(unsigned int key){
         return {static_cast<double>(key%1000),static_cast<double>(static_cast<int>(key/1000)%1000),
                 static_cast<double>(key/1000000)};//set b g r
     }
 
 
     //判断该点是否是动态物体点
-    inline bool isDynamic(unsigned int key)
-    {
-        if(Config::VIODE_DynamicIndex.count(Config::VIODE_Key2Index[key]) != 0)
+    inline bool IsDynamic(unsigned int key){
+        if(Config::ViodeDynamicIndex.count(Config::ViodeKeyToIndex[key]) != 0)
             return true;
         else
             return false;
     }
 
-
-    inline bool isDynamic(const cv::Point2f &pt,const cv::Mat &segImg){
-        auto key = pixel2key(pt,segImg);
-        return isDynamic(key);
+    inline bool IsDynamic(const cv::Point2f &pt, const cv::Mat &seg_img){
+        auto key = PixelToKey(pt, seg_img);
+        return IsDynamic(key);
     }
 
-    inline bool isDynamic(uchar* row_ptr){
-        return isDynamic(pixel2key(row_ptr));
+    inline bool IsDynamic(uchar* row_ptr){
+        return IsDynamic(PixelToKey(row_ptr));
     }
 
-
-
-    inline bool onDynamicObject(const cv::Point2f &pt,const cv::Mat &labelImg,unsigned int key)
-    {
-        return pixel2key(pt,labelImg) == key;
+    inline bool OnDynamicObject(const cv::Point2f &pt, const cv::Mat &label_img, unsigned int key){
+        return PixelToKey(pt, label_img) == key;
     }
 
+    void SetViodeMaskSimple(SegImage &img);
 
-
-
-    void setViodeMaskSimple(SegImage &img);
-
-
-    void setViodeMask(SegImage &img);
+    void SetViodeMask(SegImage &img);
 }
 
 

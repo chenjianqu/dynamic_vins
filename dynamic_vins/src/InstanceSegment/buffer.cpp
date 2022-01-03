@@ -1,6 +1,12 @@
-//
-// Created by chen on 2021/11/7.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #include <spdlog/logger.h>
 #include <cuda_runtime_api.h>
 
@@ -31,7 +37,7 @@ MyBuffer::~MyBuffer(){
     cudaStreamDestroy(stream);
     for(int i=0;i<binding_num;++i){
         if(auto s=cudaFree(gpu_buffer[i]);s!=cudaSuccess)
-            sgLogger->error("cudaFree failed, status:{}",s);
+            sg_logger->error("cudaFree failed, status:{}", s);
         delete cpu_buffer[i];
     }
     delete[] cpu_buffer;

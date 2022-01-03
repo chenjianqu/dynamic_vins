@@ -1,10 +1,15 @@
-//
-// Created by chen on 2021/12/1.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include "utils.h"
 
-void SegImage::setMask(){
+void SegImage::SetMask(){
     cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);
 
     ///计算合并的mask
@@ -24,9 +29,9 @@ void SegImage::setMask(){
 }
 
 
-void SegImage::setMaskGpu(){
+void SegImage::SetMaskGpu(){
     if(insts_info.empty()){
-        sgLogger->warn("Can not detect any object in picture");
+        WarnS("Can not detect any object in picture");
         return;
     }
     cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);
@@ -44,9 +49,9 @@ void SegImage::setMaskGpu(){
 
     std::stringstream ss;
     ss<<merge_tensor.scalar_type();
-    sgLogger->debug("setMaskGpu merge_tensor:type:{}",ss.str());
-    sgLogger->debug("setMaskGpu merge_mask_gpu:({},{}) type:{}",merge_mask_gpu.rows,merge_mask_gpu.cols,merge_mask_gpu.type());
-    sgLogger->debug("setMaskGpu inv_merge_mask_gpu:({},{}) type:{}",inv_merge_mask_gpu.rows,inv_merge_mask_gpu.cols,inv_merge_mask_gpu.type());
+    DebugS("SetMaskGpu merge_tensor:type:{}",ss.str());
+    DebugS("SetMaskGpu merge_mask_gpu:({},{}) type:{}",merge_mask_gpu.rows,merge_mask_gpu.cols,merge_mask_gpu.type());
+    DebugS("SetMaskGpu inv_merge_mask_gpu:({},{}) type:{}",inv_merge_mask_gpu.rows,inv_merge_mask_gpu.cols,inv_merge_mask_gpu.type());
 
     for(int i=0; i < (int)insts_info.size(); ++i){
         auto inst_mask_tensor = mask_tensor[i];
@@ -62,9 +67,9 @@ void SegImage::setMaskGpu(){
 
 
 
-void SegImage::setMaskGpuSimple(){
+void SegImage::SetMaskGpuSimple(){
     if(insts_info.empty()){
-        sgLogger->warn("Can not detect any object in picture");
+        WarnS("Can not detect any object in picture");
         return;
     }
     cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);
@@ -84,13 +89,13 @@ void SegImage::setMaskGpuSimple(){
 
 
 
-void SegImage::setGrayImage(){
+void SegImage::SetGrayImage(){
     cv::cvtColor(color0, gray0, CV_BGR2GRAY);
     if(!color1.empty())
         cv::cvtColor(color1, gray1, CV_BGR2GRAY);
 }
 
-void SegImage::setGrayImageGpu(){
+void SegImage::SetGrayImageGpu(){
     if(color0_gpu.empty()){
         color0_gpu.upload(color0);
     }
@@ -103,14 +108,14 @@ void SegImage::setGrayImageGpu(){
     }
 }
 
-void SegImage::setColorImage(){
+void SegImage::SetColorImage(){
     cv::cvtColor(gray0, color0, CV_GRAY2BGR);
     if(!gray1.empty())
         cv::cvtColor(gray1, color1, CV_GRAY2BGR);
 }
 
 
-void SegImage::setColorImageGpu(){
+void SegImage::SetColorImageGpu(){
     if(gray0_gpu.empty()){
         gray0_gpu.upload(gray0);
     }
@@ -123,7 +128,7 @@ void SegImage::setColorImageGpu(){
     }
 }
 
-void draw_text(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos,  float scale, int thickness,bool reverse) {
+void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos, float scale, int thickness, bool reverse) {
     auto t_size = cv::getTextSize(str, cv::FONT_HERSHEY_SIMPLEX, scale, thickness, nullptr);
     cv::Point bottom_left, upper_right;
     if (reverse) {
@@ -138,16 +143,16 @@ void draw_text(cv::Mat &img, const std::string &str, const cv::Scalar &color, co
     cv::putText(img, str, bottom_left, cv::FONT_HERSHEY_SIMPLEX, scale, cv::Scalar(255, 255, 255),thickness);
 }
 
-void draw_bbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label, const cv::Scalar &color) {
+void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label, const cv::Scalar &color) {
     cv::rectangle(img, bbox, color);
     if (!label.empty()) {
-        draw_text(img, label, color, bbox.tl());
+        DrawText(img, label, color, bbox.tl());
     }
 }
 
 
 
-float getBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
+float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
                 const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt){
 
     cv::Point2f center1 = (box1_minPt+box1_maxPt)/2.f;
@@ -174,7 +179,7 @@ float getBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
  * @param bb_gt
  * @return
  */
-float getBoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt) {
+float CalBoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt) {
     auto in = (bb_test & bb_gt).area();
     auto un = bb_test.area() + bb_gt.area() - in;
     if (un <  DBL_EPSILON)

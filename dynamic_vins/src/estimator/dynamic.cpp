@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/10/8.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include "dynamic.h"
 
@@ -22,9 +27,9 @@
  * @param uvj 归一化坐标 j
  * @return
  */
-double reprojectionError(Eigen::Matrix3d &Ri, Eigen::Vector3d &Pi, Eigen::Matrix3d &rici, Eigen::Vector3d &tici,
-                         Eigen::Matrix3d &Rj, Eigen::Vector3d &Pj, Eigen::Matrix3d &ricj, Eigen::Vector3d &ticj,
-                         double depth, Eigen::Vector3d &uvi, Eigen::Vector3d &uvj){
+double ReprojectError(Eigen::Matrix3d &Ri, Eigen::Vector3d &Pi, Eigen::Matrix3d &rici, Eigen::Vector3d &tici,
+                      Eigen::Matrix3d &Rj, Eigen::Vector3d &Pj, Eigen::Matrix3d &ricj, Eigen::Vector3d &ticj,
+                      double depth, Eigen::Vector3d &uvi, Eigen::Vector3d &uvj){
     Eigen::Vector3d pts_w = Ri * (rici * (depth * uvi) + tici) + Pi;
     Eigen::Vector3d pts_cj = ricj.transpose() * (Rj.transpose() * (pts_w - Pj) - ticj);
     Eigen::Vector2d residual = (pts_cj / pts_cj.z()).head<2>() - uvj.head<2>();
@@ -53,7 +58,7 @@ double reprojectionError(Eigen::Matrix3d &Ri, Eigen::Vector3d &Pi, Eigen::Matrix
  * @param uvj
  * @return
  */
-double reprojectionDynamicError(
+double ReprojectDynamicError(
         Eigen::Matrix3d &Ri, Eigen::Vector3d &Pi, Eigen::Matrix3d &rici, Eigen::Vector3d &tici,
         Eigen::Matrix3d &Roi, Eigen::Vector3d &Poi,Eigen::Matrix3d &Rj, Eigen::Vector3d &Pj,
         Eigen::Matrix3d &ricj, Eigen::Vector3d &ticj,Eigen::Matrix3d &Roj, Eigen::Vector3d &Poj,
@@ -70,7 +75,7 @@ double reprojectionDynamicError(
 
 
 
-double reprojectionDynamicRightError(
+double ReprojectDynamicRightError(
         Eigen::Matrix3d &Ri, Eigen::Vector3d &Pi, Eigen::Matrix3d &rici, Eigen::Vector3d &tici,
         Eigen::Matrix3d &Roi, Eigen::Vector3d &Poi,Eigen::Matrix3d &Rj, Eigen::Vector3d &Pj,
         Eigen::Matrix3d &ricj, Eigen::Vector3d &ticj,Eigen::Matrix3d &Roj, Eigen::Vector3d &Poj,
@@ -89,9 +94,9 @@ double reprojectionDynamicRightError(
 
 
 
-Eigen::Vector3d getDelta(Eigen::Vector3d &pts_j,Eigen::Vector3d &pts_i,double depth,Eigen::Matrix3d &R_bc,Eigen::Vector3d &P_bc,
-                         Eigen::Matrix3d &R_wbj,Eigen::Vector3d &P_wbj,Eigen::Matrix3d &R_wbi,Eigen::Vector3d &P_wbi,
-                         double td,double td_j,double td_i,Eigen::Vector2d &velocity_j,Eigen::Vector2d &velocity_i){
+Eigen::Vector3d CalDelta(Eigen::Vector3d &pts_j, Eigen::Vector3d &pts_i, double depth, Eigen::Matrix3d &R_bc, Eigen::Vector3d &P_bc,
+                         Eigen::Matrix3d &R_wbj, Eigen::Vector3d &P_wbj, Eigen::Matrix3d &R_wbi, Eigen::Vector3d &P_wbi,
+                         double td, double td_j, double td_i, Eigen::Vector2d &velocity_j, Eigen::Vector2d &velocity_i){
     Eigen::Vector3d pts_i_td, pts_j_td;
     pts_i_td = pts_i - (td - td_i) * Eigen::Vector3d(velocity_i.x(),velocity_i.y(),1);
     pts_j_td = pts_j - (td - td_j) * Eigen::Vector3d(velocity_j.x(),velocity_j.y(),1);
@@ -126,7 +131,7 @@ Eigen::Vector3d getDelta(Eigen::Vector3d &pts_j,Eigen::Vector3d &pts_i,double de
  * @param point1
  * @param point_3d
  */
-void triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,Eigen::Vector2d &point0, Eigen::Vector2d &point1, Eigen::Vector3d &point_3d)
+void TriangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1, Eigen::Vector2d &point0, Eigen::Vector2d &point1, Eigen::Vector3d &point_3d)
 {
     Eigen::Matrix4d design_matrix = Eigen::Matrix4d::Zero();
     design_matrix.row(0) = point0[0] * Pose0.row(2) - Pose0.row(0);//
@@ -153,9 +158,9 @@ void triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 
  * @param delta_t
  * @param point_3d
  */
-void triangulateDynamicPoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
+void TriangulateDynamicPoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
                              Eigen::Vector2d &point0, Eigen::Vector2d &point1,
-                             Eigen::Vector3d &v,Eigen::Vector3d &a,double delta_t,
+                             Eigen::Vector3d &v, Eigen::Vector3d &a, double delta_t,
                              Eigen::Vector3d &point_3d){
     //构造T_delta
     Eigen::Matrix4d Ma;
@@ -183,10 +188,10 @@ void triangulateDynamicPoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<d
 }
 
 
-void triangulateDynamicPoint(const Eigen::Matrix<double, 3, 4> &Pose0, const Eigen::Matrix<double, 3, 4> &Pose1,
-                             const Eigen::Vector2d &point0,const  Eigen::Vector2d &point1,
-                             const Eigen::Matrix3d &R_woj,const Eigen::Vector3d &P_woj,
-                             const Eigen::Matrix3d &R_woi,const Eigen::Vector3d &P_woi,
+void TriangulateDynamicPoint(const Eigen::Matrix<double, 3, 4> &Pose0, const Eigen::Matrix<double, 3, 4> &Pose1,
+                             const Eigen::Vector2d &point0, const  Eigen::Vector2d &point1,
+                             const Eigen::Matrix3d &R_woj, const Eigen::Vector3d &P_woj,
+                             const Eigen::Matrix3d &R_woi, const Eigen::Vector3d &P_woi,
                              Eigen::Vector3d &point_3d){
     //构造T_delta
     Eigen::Matrix4d Ma;
@@ -217,7 +222,7 @@ void triangulateDynamicPoint(const Eigen::Matrix<double, 3, 4> &Pose0, const Eig
 
 
 
-void imageTranslate(const cv::Mat &src,cv::Mat &dst,int rows_shift,int cols_shift)
+void ImageTranslate(const cv::Mat &src, cv::Mat &dst, int rows_shift, int cols_shift)
 {
     dst=cv::Mat(src.rows,src.cols,src.type(),cv::Scalar(0));
     cv::Mat src_rect,dst_rect;

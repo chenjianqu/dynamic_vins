@@ -1,6 +1,12 @@
-//
-// Created by chen on 2021/11/9.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #include <ros/ros.h>
 
 #include <cv_bridge/cv_bridge.h>
@@ -19,7 +25,7 @@ DeepSORT::Ptr tracker;
 ros::Publisher pub_image_track;
 
 
-void img0_callback(const sensor_msgs::ImageConstPtr &img_msg)
+void Img0Callback(const sensor_msgs::ImageConstPtr &img_msg)
 {
     cv_bridge::CvImageConstPtr ptr= cv_bridge::toCvShare(img_msg, sensor_msgs::image_encodings::BGR8);
     cv::Mat img= ptr->image.clone();

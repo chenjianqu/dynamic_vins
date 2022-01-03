@@ -1,3 +1,13 @@
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
+
 #ifndef DEEPSORT_H
 #define DEEPSORT_H
 
@@ -11,7 +21,7 @@
 #include "../utils.h"
 
 
-torch::Tensor iou_dist(const std::vector<cv::Rect2f> &dets, const std::vector<cv::Rect2f> &trks);
+torch::Tensor CalIouDist(const std::vector<cv::Rect2f> &dets, const std::vector<cv::Rect2f> &trks);
 
 // save features of the track in GPU
 class FeatureBundle {

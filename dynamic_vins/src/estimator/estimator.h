@@ -7,6 +7,15 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 #pragma once
  
 #include <thread>
@@ -46,7 +55,7 @@ class Estimator
 
     Estimator();
     ~Estimator();
-    void setParameter();
+    void SetParameter();
 
     // interface
     void initFirstPose(Vec3d p, Eigen::Matrix3d r);
@@ -54,14 +63,14 @@ class Estimator
     void processIMU(double t, double dt, const Vector3d &linear_acceleration, const Vector3d &angular_velocity);
     void processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const double header);
 
-    void push_back(double time,FeatureMap &feats);
-    void push_back(double time, FeatureMap &feats, InstancesFeatureMap &insts);
+    void PushBack(double time, FeatureMap &feats);
+    void PushBack(double time, FeatureMap &feats, InstancesFeatureMap &insts);
 
-    void processMeasurements();
-    void changeSensorType(int use_imu, int use_stereo);
+    void ProcessMeasurements();
+    void ChangeSensorType(int use_imu, int use_stereo);
 
     // internal
-    void clearState();
+    void ClearState();
     bool initialStructure();
     bool visualInitialAlign();
     bool relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l);
@@ -86,8 +95,6 @@ class Estimator
     bool IMUAvailable(double t);
     void initFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
 
-
-
     std::mutex mProcess;
     std::mutex mBuf;
     std::mutex mPropagate;
@@ -95,8 +102,6 @@ class Estimator
     queue<pair<double, Vec3d>> gyrBuf;
     queue<FeatureFrame> featureBuf;
     queue<InstancesFeatureMap> instancesBuf;
-
-
     double prevTime{}, curTime{};
     bool openExEstimation{};
 
@@ -110,23 +115,23 @@ class Estimator
     Matrix3d ric[2];
     Vector3d tic[2];
 
-    Vector3d        Ps[(WINDOW_SIZE + 1)];
-    Vector3d        Vs[(WINDOW_SIZE + 1)];
-    Matrix3d        Rs[(WINDOW_SIZE + 1)];
-    Vector3d        Bas[(WINDOW_SIZE + 1)];
-    Vector3d        Bgs[(WINDOW_SIZE + 1)];
+    Vector3d        Ps[(kWindowSize + 1)];
+    Vector3d        Vs[(kWindowSize + 1)];
+    Matrix3d        Rs[(kWindowSize + 1)];
+    Vector3d        Bas[(kWindowSize + 1)];
+    Vector3d        Bgs[(kWindowSize + 1)];
     double td{};
 
     Matrix3d back_R0, last_R, last_R0;
     Vector3d back_P0, last_P, last_P0;
-    double Headers[(WINDOW_SIZE + 1)]{};
+    double headers[(kWindowSize + 1)]{};
 
-    IntegrationBase *pre_integrations[(WINDOW_SIZE + 1)] {nullptr};
+    IntegrationBase *pre_integrations[(kWindowSize + 1)] {nullptr};
     Vector3d acc_0, gyr_0;
 
-    vector<double> dt_buf[(WINDOW_SIZE + 1)];
-    vector<Vector3d> linear_acceleration_buf[(WINDOW_SIZE + 1)];
-    vector<Vector3d> angular_velocity_buf[(WINDOW_SIZE + 1)];
+    vector<double> dt_buf[(kWindowSize + 1)];
+    vector<Vector3d> linear_acceleration_buf[(kWindowSize + 1)];
+    vector<Vector3d> angular_velocity_buf[(kWindowSize + 1)];
 
     int frame_count{};
     int sum_of_outlier{}, sum_of_back{}, sum_of_front{}, sum_of_invalid{};
@@ -145,12 +150,11 @@ class Estimator
     vector<Vector3d> key_poses;
     double initial_timestamp{};
 
-
-    double para_Pose[WINDOW_SIZE + 1][SIZE_POSE]{};
-    double para_SpeedBias[WINDOW_SIZE + 1][SIZE_SPEEDBIAS]{};
-    double para_Feature[NUM_OF_F][SIZE_FEATURE]{};
-    double para_Ex_Pose[2][SIZE_POSE]{};
-    double para_Retrive_Pose[SIZE_POSE]{};
+    double para_Pose[kWindowSize + 1][kSizePose]{};
+    double para_SpeedBias[kWindowSize + 1][kSizeSpeedBias]{};
+    double para_Feature[kNumFeat][kSizeFeature]{};
+    double para_ex_pose[2][kSizePose]{};
+    double para_Retrive_Pose[kSizePose]{};
     double para_Td[1][1]{};
     double para_Tr[1][1]{};
 

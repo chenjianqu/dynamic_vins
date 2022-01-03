@@ -1,12 +1,18 @@
-//
-// Created by chen on 2021/11/7.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include "pipeline.h"
+
 #include <iostream>
 #include <opencv2/cudaimgproc.hpp>
 
-#include "../featureTracker/SegmentImage.h"
+#include "../featureTracker/segment_image.h"
 #include "../utils.h"
 
 using namespace std;
@@ -14,78 +20,75 @@ using namespace torch::indexing;
 using InterpolateFuncOptions=torch::nn::functional::InterpolateFuncOptions;
 
 
-
-
-
 template<typename ImageType>
-std::tuple<float,float> Pipeline::getXYWHS(const ImageType &img)
+std::tuple<float,float> Pipeline::GetXYWHS(const ImageType &img)
 {
-    imageInfo.originH = img.rows;
-    imageInfo.originW = img.cols;
+    image_info.origin_h = img.rows;
+    image_info.origin_w = img.cols;
 
     int w, h, x, y;
-    float r_w = Config::inputW / (img.cols*1.0f);
-    float r_h = Config::inputH / (img.rows*1.0f);
+    float r_w = Config::kInputWidth / (img.cols * 1.0f);
+    float r_h = Config::kInputHeight / (img.rows * 1.0f);
     if (r_h > r_w) {
-        w = Config::inputW;
+        w = Config::kInputWidth;
         h = r_w * img.rows;
         if(h%2==1)h++;//这里确保h为偶数，便于后面的使用
         x = 0;
-        y = (Config::inputH - h) / 2;
+        y = (Config::kInputHeight - h) / 2;
     } else {
         w = r_h* img.cols;
         if(w%2==1)w++;
-        h = Config::inputH;
-        x = (Config::inputW - w) / 2;
+        h = Config::kInputHeight;
+        x = (Config::kInputWidth - w) / 2;
         y = 0;
     }
 
-    imageInfo.rect_x = x;
-    imageInfo.rect_y = y;
-    imageInfo.rect_w = w;
-    imageInfo.rect_h = h;
+    image_info.rect_x = x;
+    image_info.rect_y = y;
+    image_info.rect_w = w;
+    image_info.rect_h = h;
 
     return {r_h,r_w};
 }
 
 
-cv::Mat Pipeline::readImage(const std::string& fileName)
+cv::Mat Pipeline::ReadImage(const std::string& fileName)
 {
     cv::Mat img = cv::imread(fileName, cv::IMREAD_COLOR);
     if (img.empty())
         return cv::Mat();
 
-    auto [r_h,r_w] = getXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img);
 
     //将img resize为(INPUT_W,INPUT_H)
-    cv::Mat re(imageInfo.rect_h, imageInfo.rect_w, CV_8UC3);
+    cv::Mat re(image_info.rect_h, image_info.rect_w, CV_8UC3);
     cv::resize(img, re, re.size(), 0, 0, cv::INTER_LINEAR);
     //resizeByNN(img.data, re.data, img.rows, img.cols, img.channels(), re.rows, re.cols);
 
     //将图片复制到out中
-    cv::Mat out(Config::inputH, Config::inputW, CV_8UC3, cv::Scalar(128, 128, 128));
-    re.copyTo(out(cv::Rect(imageInfo.rect_x, imageInfo.rect_y, re.cols, re.rows)));
+    cv::Mat out(Config::kInputHeight, Config::kInputWidth, CV_8UC3, cv::Scalar(128, 128, 128));
+    re.copyTo(out(cv::Rect(image_info.rect_x, image_info.rect_y, re.cols, re.rows)));
 
     return out;
 }
 
 
-cv::Mat Pipeline::processPad(cv::Mat &img)
+cv::Mat Pipeline::ProcessPad(cv::Mat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = getXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img);
 
     //将img resize为(INPUT_W,INPUT_H)
-    cv::Mat re(imageInfo.rect_h, imageInfo.rect_w, CV_8UC3);
+    cv::Mat re(image_info.rect_h, image_info.rect_w, CV_8UC3);
     cv::resize(img, re, re.size(), 0, 0, cv::INTER_LINEAR);
     //resizeByNN(img.data, re.data, img.rows, img.cols, img.channels(), re.rows, re.cols);
 
     tt.toc_print_tic("resize");
 
     //将图片复制到out中
-    cv::Mat out(Config::inputH, Config::inputW, CV_8UC3, cv::Scalar(128, 128, 128));
-    re.copyTo(out(cv::Rect(imageInfo.rect_x, imageInfo.rect_y, re.cols, re.rows)));
+    cv::Mat out(Config::kInputHeight, Config::kInputWidth, CV_8UC3, cv::Scalar(128, 128, 128));
+    re.copyTo(out(cv::Rect(image_info.rect_x, image_info.rect_y, re.cols, re.rows)));
 
     tt.toc_print_tic("copyTo out");
 
@@ -94,25 +97,25 @@ cv::Mat Pipeline::processPad(cv::Mat &img)
 
 
 
-cv::Mat Pipeline::processPadCuda(cv::Mat &img)
+cv::Mat Pipeline::ProcessPadCuda(cv::Mat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = getXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img);
 
-    static cv::Scalar mag_color(SOLO_IMG_MEAN[2],SOLO_IMG_MEAN[1],SOLO_IMG_MEAN[0]);
+    static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
 
     cv::Mat out;
-    cv::resize(img,out,cv::Size(imageInfo.rect_w,imageInfo.rect_h));
+    cv::resize(img,out,cv::Size(image_info.rect_w, image_info.rect_h));
     if (r_h > r_w) { //在图像顶部和下部拼接空白图像
-        int cat_h= (Config::inputH-imageInfo.rect_h)/2;
-        int cat_w=Config::inputW;
+        int cat_h= (Config::kInputHeight - image_info.rect_h) / 2;
+        int cat_w=Config::kInputWidth;
         cv::Mat cat_img=cv::Mat(cat_h, cat_w, CV_8UC3,mag_color);
         cv::vconcat(cat_img,out,out);
         cv::vconcat(out,cat_img,out);
     } else {
-        int cat_w= (Config::inputW-imageInfo.rect_w)/2;
-        int cat_h=Config::inputH;
+        int cat_w= (Config::kInputWidth - image_info.rect_w) / 2;
+        int cat_h=Config::kInputHeight;
         cv::Mat cat_img=cv::Mat(cat_h, cat_w, CV_8UC3,mag_color);
         cv::hconcat(cat_img,out,out);
         cv::hconcat(out,cat_img,out);
@@ -122,25 +125,25 @@ cv::Mat Pipeline::processPadCuda(cv::Mat &img)
 }
 
 
-cv::Mat Pipeline::processPadCuda(cv::cuda::GpuMat &img)
+cv::Mat Pipeline::ProcessPadCuda(cv::cuda::GpuMat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = getXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img);
 
-    static cv::Scalar mag_color(SOLO_IMG_MEAN[2],SOLO_IMG_MEAN[1],SOLO_IMG_MEAN[0]);
+    static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
 
     cv::Mat out;
-    cv::resize(img,out,cv::Size(imageInfo.rect_w,imageInfo.rect_h));
+    cv::resize(img,out,cv::Size(image_info.rect_w, image_info.rect_h));
     if (r_h > r_w) { //在图像顶部和下部拼接空白图像
-        int cat_h = (Config::inputH-imageInfo.rect_h)/2;
-        int cat_w = Config::inputW;
+        int cat_h = (Config::kInputHeight - image_info.rect_h) / 2;
+        int cat_w = Config::kInputWidth;
         cv::Mat cat_img=cv::Mat(cat_h, cat_w, CV_8UC3,mag_color);
         cv::vconcat(cat_img,out,out);
         cv::vconcat(out,cat_img,out);
     } else {
-        int cat_w= (Config::inputW-imageInfo.rect_w)/2;
-        int cat_h=Config::inputH;
+        int cat_w= (Config::kInputWidth - image_info.rect_w) / 2;
+        int cat_h=Config::kInputHeight;
         cv::Mat cat_img=cv::Mat(cat_h, cat_w, CV_8UC3,mag_color);
         cv::hconcat(cat_img,out,out);
         cv::hconcat(out,cat_img,out);
@@ -151,79 +154,79 @@ cv::Mat Pipeline::processPadCuda(cv::cuda::GpuMat &img)
 
 
 
-void* Pipeline::setInputTensor(cv::Mat &img)
+void* Pipeline::SetInputTensor(cv::Mat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = getXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img);
 
     cv::Mat out;
-    cv::resize(img,out,cv::Size(imageInfo.rect_w,imageInfo.rect_h));
+    cv::resize(img,out,cv::Size(image_info.rect_w, image_info.rect_h));
 
-    sgLogger->debug("setInputTensor resize:{} ms",tt.toc_then_tic());
+    sg_logger->debug("SetInputTensor resize:{} ms", tt.toc_then_tic());
 
     ///拼接图像边缘
-    static cv::Scalar mag_color(SOLO_IMG_MEAN[2],SOLO_IMG_MEAN[1],SOLO_IMG_MEAN[0]);
+    static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
     if (r_h > r_w) { //在图像顶部和下部拼接空白图像
-        int cat_h = (Config::inputH-imageInfo.rect_h)/2;
-        int cat_w = Config::inputW;
+        int cat_h = (Config::kInputHeight - image_info.rect_h) / 2;
+        int cat_w = Config::kInputWidth;
         cv::Mat cat_img=cv::Mat(cat_h, cat_w, CV_8UC3,mag_color);
         cv::vconcat(cat_img,out,out);
         cv::vconcat(out,cat_img,out);
     } else {
-        int cat_w= (Config::inputW-imageInfo.rect_w)/2;
-        int cat_h=Config::inputH;
+        int cat_w= (Config::kInputWidth - image_info.rect_w) / 2;
+        int cat_h=Config::kInputHeight;
         cv::Mat cat_img=cv::Mat(cat_h, cat_w, CV_8UC3,mag_color);
         cv::hconcat(cat_img,out,out);
         cv::hconcat(out,cat_img,out);
     }
 
-    sgLogger->debug("setInputTensor concat:{} ms",tt.toc_then_tic());
+    sg_logger->debug("SetInputTensor concat:{} ms", tt.toc_then_tic());
 
     cv::cvtColor(out,out,CV_BGR2RGB);
 
-    sgLogger->debug("setInputTensor cvtColor:{} ms",tt.toc_then_tic());
+    sg_logger->debug("SetInputTensor cvtColor:{} ms", tt.toc_then_tic());
 
 
     cv::Mat img_float;
     out.convertTo(img_float,CV_32FC3);
 
-    sgLogger->debug("setInputTensor convertTo:{} ms",tt.toc_then_tic());
+    sg_logger->debug("SetInputTensor convertTo:{} ms", tt.toc_then_tic());
 
 
     torch::Tensor input_tensor_cpu = torch::from_blob(img_float.data, { img_float.rows,img_float.cols ,3 }, torch::kFloat32);
     input_tensor = input_tensor_cpu.to(torch::kCUDA).permute({2,0,1});
 
-    sgLogger->debug("setInputTensor from_blob:{} ms",tt.toc_then_tic());
+    sg_logger->debug("SetInputTensor from_blob:{} ms", tt.toc_then_tic());
 
-    static torch::Tensor mean_t=torch::from_blob(SOLO_IMG_MEAN,{3,1,1},torch::kFloat).to(torch::kCUDA).expand({3,img_float.rows,img_float.cols});
-    static torch::Tensor std_t=torch::from_blob(SOLO_IMG_STD,{3,1,1},torch::kFloat).to(torch::kCUDA).expand({3,img_float.rows,img_float.cols});
+    static torch::Tensor mean_t=torch::from_blob(kSoloImgMean, {3, 1, 1}, torch::kFloat).to(torch::kCUDA).expand({3, img_float.rows, img_float.cols});
+    static torch::Tensor std_t=torch::from_blob(kSoloImgStd, {3, 1, 1}, torch::kFloat).to(torch::kCUDA).expand({3, img_float.rows, img_float.cols});
 
     input_tensor = ((input_tensor-mean_t)/std_t).contiguous();
 
-    sgLogger->debug("setInputTensor norm:{} ms",tt.toc_then_tic());
+    sg_logger->debug("SetInputTensor norm:{} ms", tt.toc_then_tic());
 
     return input_tensor.data_ptr();
 }
 
 
-void* Pipeline::setInputTensorCuda(cv::Mat &img)
+void* Pipeline::SetInputTensorCuda(cv::Mat &img)
 {
     TicToc tt;
 
-    auto [r_h,r_w] = getXYWHS(img);
+    auto [r_h,r_w] = GetXYWHS(img);
 
     /*cv::cuda::GpuMat img_gpu(img);
     img_gpu.convertTo(img_gpu,CV_32FC3);
-    input_tensor = torch::from_blob(img_gpu.data, { imageInfo.originH,imageInfo.originW ,3 },torch::TensorOptions(torch::kCUDA).dtype(torch::kFloat32));*/
+    input_tensor = torch::from_blob(img_gpu.data, { image_info.origin_h,image_info.origin_w ,3 },torch::TensorOptions(torch::kCUDA).dtype(torch::kFloat32));*/
 
     cv::Mat img_float;
     img.convertTo(img_float,CV_32FC3);
-    sgLogger->debug("setInputTensorCuda convertTo: {} ms",tt.toc_then_tic());
-    input_tensor = torch::from_blob(img_float.data, { imageInfo.originH,imageInfo.originW ,3 }, torch::kFloat32).to(torch::kCUDA);
+    sg_logger->debug("SetInputTensorCuda convertTo: {} ms", tt.toc_then_tic());
+    input_tensor = torch::from_blob(img_float.data, {image_info.origin_h, image_info.origin_w , 3 }, torch::kFloat32).to(torch::kCUDA);
 
 
-    sgLogger->debug("setInputTensorCuda from_blob:{} {} ms",dims2str(input_tensor.sizes()),tt.toc_then_tic());
+    sg_logger->debug("SetInputTensorCuda from_blob:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
 
     ///bgr->rgb
     input_tensor = torch::cat({
@@ -231,42 +234,42 @@ void* Pipeline::setInputTensorCuda(cv::Mat &img)
         input_tensor.index({"...",1}).unsqueeze(2),
         input_tensor.index({"...",0}).unsqueeze(2)
         },2);
-    sgLogger->debug("setInputTensorCuda bgr->rgb:{} {} ms",dims2str(input_tensor.sizes()),tt.toc_then_tic());
+    sg_logger->debug("SetInputTensorCuda bgr->rgb:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
 
     ///hwc->chw
     input_tensor = input_tensor.permute({2,0,1});
-    sgLogger->debug("setInputTensorCuda hwc->chw:{} {} ms",dims2str(input_tensor.sizes()),tt.toc_then_tic());
+    sg_logger->debug("SetInputTensorCuda hwc->chw:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
 
     ///norm
-    static torch::Tensor mean_t=torch::from_blob(SOLO_IMG_MEAN,{3,1,1},torch::kFloat32).to(torch::kCUDA).expand({3,imageInfo.originH,imageInfo.originW});
-    static torch::Tensor std_t=torch::from_blob(SOLO_IMG_STD,{3,1,1},torch::kFloat32).to(torch::kCUDA).expand({3,imageInfo.originH,imageInfo.originW});
+    static torch::Tensor mean_t=torch::from_blob(kSoloImgMean, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).expand({3, image_info.origin_h, image_info.origin_w});
+    static torch::Tensor std_t=torch::from_blob(kSoloImgStd, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).expand({3, image_info.origin_h, image_info.origin_w});
     input_tensor = ((input_tensor-mean_t)/std_t);
-    sgLogger->debug("setInputTensorCuda norm:{} {} ms",dims2str(input_tensor.sizes()),tt.toc_then_tic());
+    sg_logger->debug("SetInputTensorCuda norm:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
 
     ///resize
     static auto options=InterpolateFuncOptions().mode(torch::kBilinear).align_corners(true);
-    options=options.size(std::vector<int64_t>({imageInfo.rect_h,imageInfo.rect_w}));
+    options=options.size(std::vector<int64_t>({image_info.rect_h, image_info.rect_w}));
     input_tensor = torch::nn::functional::interpolate(input_tensor.unsqueeze(0),options).squeeze(0);
-    sgLogger->debug("setInputTensorCuda resize:{} {} ms",dims2str(input_tensor.sizes()),tt.toc_then_tic());
+    sg_logger->debug("SetInputTensorCuda resize:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
 
     ///拼接图像边缘
     static auto op = torch::TensorOptions(torch::kCUDA).dtype(torch::kFloat32);
-    static cv::Scalar mag_color(SOLO_IMG_MEAN[2],SOLO_IMG_MEAN[1],SOLO_IMG_MEAN[0]);
+    static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
     if (r_h > r_w) { //在图像顶部和下部拼接空白图像
-        int cat_w = Config::inputW;
-        int cat_h = (Config::inputH-imageInfo.rect_h)/2;
+        int cat_w = Config::kInputWidth;
+        int cat_h = (Config::kInputHeight - image_info.rect_h) / 2;
         torch::Tensor cat_t = torch::zeros({3,cat_h,cat_w},op);
         input_tensor = torch::cat({cat_t,input_tensor,cat_t},1);
     } else {
-        int cat_w= (Config::inputW-imageInfo.rect_w)/2;
-        int cat_h=Config::inputH;
+        int cat_w= (Config::kInputWidth - image_info.rect_w) / 2;
+        int cat_h=Config::kInputHeight;
         torch::Tensor cat_t = torch::zeros({3,cat_h,cat_w},op);
         input_tensor = torch::cat({cat_t,input_tensor,cat_t},2);
     }
-    sgLogger->debug("setInputTensorCuda cat:{} {} ms",dims2str(input_tensor.sizes()),tt.toc_then_tic());
+    sg_logger->debug("SetInputTensorCuda cat:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
 
     input_tensor = input_tensor.contiguous();
-    sgLogger->debug("setInputTensorCuda contiguous:{} {} ms",dims2str(input_tensor.sizes()),tt.toc_then_tic());
+    sg_logger->debug("SetInputTensorCuda contiguous:{} {} ms", DimsToStr(input_tensor.sizes()), tt.toc_then_tic());
 
     return input_tensor.data_ptr();
 }
@@ -274,20 +277,20 @@ void* Pipeline::setInputTensorCuda(cv::Mat &img)
 
 
 
-cv::Mat Pipeline::processMask(cv::Mat &mask,std::vector<InstInfo> &insts)
+cv::Mat Pipeline::ProcessMask(cv::Mat &mask, std::vector<InstInfo> &insts)
 {
-    cv::Mat rect_img = mask(cv::Rect(imageInfo.rect_x, imageInfo.rect_y, imageInfo.rect_w, imageInfo.rect_h));
+    cv::Mat rect_img = mask(cv::Rect(image_info.rect_x, image_info.rect_y, image_info.rect_w, image_info.rect_h));
     cv::Mat out;
-    cv::resize(rect_img, out, cv::Size(imageInfo.originW,imageInfo.originH), 0, 0, cv::INTER_LINEAR);
+    cv::resize(rect_img, out, cv::Size(image_info.origin_w, image_info.origin_h), 0, 0, cv::INTER_LINEAR);
 
     ///调整包围框
     float factor_x = out.cols *1.f / rect_img.cols;
     float factor_y = out.rows *1.f / rect_img.rows;
     for(auto &inst : insts){
-        inst.min_pt.x -= imageInfo.rect_x;
-        inst.min_pt.y -= imageInfo.rect_y;
-        inst.max_pt.x -= imageInfo.rect_x;
-        inst.max_pt.y -= imageInfo.rect_y;
+        inst.min_pt.x -= image_info.rect_x;
+        inst.min_pt.y -= image_info.rect_y;
+        inst.max_pt.x -= image_info.rect_x;
+        inst.max_pt.y -= image_info.rect_y;
 
         inst.min_pt.x *= factor_x;
         inst.min_pt.y *= factor_y;
@@ -300,13 +303,13 @@ cv::Mat Pipeline::processMask(cv::Mat &mask,std::vector<InstInfo> &insts)
 }
 
 
-void Pipeline::processKitti(cv::Mat &input,cv::Mat &output0,cv::Mat &output1)
+void Pipeline::ProcessKitti(cv::Mat &input, cv::Mat &output0, cv::Mat &output1)
 {
-    int inputH=448;
-    int inputW=672;
+    int input_h=448;
+    int input_w=672;
 
     ///将输入图片划分为两个图片
-    int resize_h = inputH;
+    int resize_h = input_h;
     float h_factor = resize_h *1.f / input.rows;
     int resize_w = input.cols * h_factor;
 
@@ -329,22 +332,22 @@ void Pipeline::processKitti(cv::Mat &input,cv::Mat &output0,cv::Mat &output1)
 
     cout<<"new_img:"<<new_img.size<<endl;
 
-    imageInfo.originH = img0.rows;
-    imageInfo.originW = img0.cols;
+    image_info.origin_h = img0.rows;
+    image_info.origin_w = img0.cols;
 
     ///将两个半图像进行缩放
     int w, h, x, y;
-    float r_w = inputW / (img0.cols*1.0f);
-    float r_h = inputH / (img0.rows*1.0f);
+    float r_w = input_w / (img0.cols * 1.0f);
+    float r_h = input_h / (img0.rows * 1.0f);
     if (r_h > r_w) {
-        w = inputW;
+        w = input_w;
         h = r_w * img0.rows;
         x = 0;
-        y = (inputH - h) / 2;
+        y = (input_h - h) / 2;
     } else {
         w = r_h* img0.cols;
-        h = inputH;
-        x = (inputW - w) / 2;
+        h = input_h;
+        x = (input_w - w) / 2;
         y = 0;
     }
     //将img resize为(INPUT_W,INPUT_H)
@@ -354,17 +357,17 @@ void Pipeline::processKitti(cv::Mat &input,cv::Mat &output0,cv::Mat &output1)
     cv::resize(img1, re1, re1.size(), 0, 0, cv::INTER_LINEAR);
 
     //将图片复制到out中
-    output0=cv::Mat(inputH, inputW, CV_8UC3, cv::Scalar(128, 128, 128));
+    output0=cv::Mat(input_h, input_w, CV_8UC3, cv::Scalar(128, 128, 128));
     re0.copyTo(output0(cv::Rect(x, y, re0.cols, re0.rows)));
 
-    output1=cv::Mat(inputH, inputW, CV_8UC3, cv::Scalar(128, 128, 128));
+    output1=cv::Mat(input_h, input_w, CV_8UC3, cv::Scalar(128, 128, 128));
     re1.copyTo(output1(cv::Rect(x, y, re1.cols, re1.rows)));
 }
 
 
-cv::Mat Pipeline::processCut(cv::Mat &img)
+cv::Mat Pipeline::ProcessCut(cv::Mat &img)
 {
-    int resize_h = Config::inputH;
+    int resize_h = Config::kInputHeight;
     float h_factor = resize_h *1.f / img.rows;
     int resize_w = img.cols * h_factor;
 
@@ -373,33 +376,33 @@ cv::Mat Pipeline::processCut(cv::Mat &img)
 
     cout<<new_img.size<<endl;
 
-    cv::Mat out(cv::Size(Config::inputW,Config::inputH),CV_8UC3, cv::Scalar(128, 128, 128));
+    cv::Mat out(cv::Size(Config::kInputWidth, Config::kInputHeight), CV_8UC3, cv::Scalar(128, 128, 128));
 
-    out=new_img(cv::Rect(0, 0, Config::inputW, Config::inputH));
+    out=new_img(cv::Rect(0, 0, Config::kInputWidth, Config::kInputHeight));
 
     cout<<out.size<<endl;
 
-    imageInfo.originH = out.rows;
-    imageInfo.originW = out.cols;
+    image_info.origin_h = out.rows;
+    image_info.origin_w = out.cols;
 
     return out;
 }
 
 
-void Pipeline::setBufferWithNorm(const cv::Mat &img,float *buffer)
+void Pipeline::SetBufferWithNorm(const cv::Mat &img, float *buffer)
 {
-    //assert(Config::inputH==img.rows);
-    //assert(Config::inputW==img.cols);
+    //assert(Config::kInputHeight==img.rows);
+    //assert(Config::kInputWidth==img.cols);
 
     int i = 0,b_cnt=0;
-    auto rows = std::min(img.rows,Config::inputH);
-    auto cols = std::min(img.cols,Config::inputW);
+    auto rows = std::min(img.rows,Config::kInputHeight);
+    auto cols = std::min(img.cols,Config::kInputWidth);
     for (int row = 0; row < rows; ++row) {
         uchar* uc_pixel = img.data + row * img.step;
         for (int col = 0; col < cols; ++col) {
-            buffer[b_cnt* 3 * Config::inputH * Config::inputW + i] = (uc_pixel[2]-SOLO_IMG_MEAN[0])/SOLO_IMG_STD[0];
-            buffer[b_cnt* 3 * Config::inputH * Config::inputW + i + Config::inputH * Config::inputW] = (uc_pixel[1]-SOLO_IMG_MEAN[1])/SOLO_IMG_STD[1];
-            buffer[b_cnt* 3 * Config::inputH * Config::inputW + i + 2 * Config::inputH * Config::inputW] = (uc_pixel[0]-SOLO_IMG_MEAN[2])/SOLO_IMG_STD[2];
+            buffer[b_cnt * 3 * Config::kInputHeight * Config::kInputWidth + i] = (uc_pixel[2] - kSoloImgMean[0]) / kSoloImgStd[0];
+            buffer[b_cnt * 3 * Config::kInputHeight * Config::kInputWidth + i + Config::kInputHeight * Config::kInputWidth] = (uc_pixel[1] - kSoloImgMean[1]) / kSoloImgStd[1];
+            buffer[b_cnt * 3 * Config::kInputHeight * Config::kInputWidth + i + 2 * Config::kInputHeight * Config::kInputWidth] = (uc_pixel[0] - kSoloImgMean[2]) / kSoloImgStd[2];
             uc_pixel += 3;
             ++i;
         }

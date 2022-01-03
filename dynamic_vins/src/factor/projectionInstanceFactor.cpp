@@ -1,6 +1,11 @@
-//
-// Created by chen on 2021/10/8.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include "projectionInstanceFactor.h"
 
@@ -36,7 +41,7 @@ double ProjInst22SimpleFactor::sum_t;
 /**
  * 计算残差、Jacobian
  * @param parameters 优化变量，是参数数组.包括:
- * para_State[frame_i],para_State[frame_j],para_Ex_Pose[0],inst.para_State[frame_i],inst.para_State[frame_j], inst.para_Depth[depth_index]);
+ * para_state[frame_i],para_state[frame_j],para_ex_pose[0],inst.para_state[frame_i],inst.para_state[frame_j], inst.para_Depth[depth_index]);
  * @param residuals 计算完成的残差
  * @param jacobians 计算完成的雅可比矩阵
  * @return
@@ -270,7 +275,7 @@ bool ProjectionInstanceFactor::Evaluate(double const *const *parameters, double 
             jaco_ex.rightCols<3>() = -tmp_r * Utility::skewSymmetric(pts_camera_i) + Utility::skewSymmetric(tmp_r * pts_camera_i) +
                     Utility::skewSymmetric(ric.transpose() * (Rj.transpose() * (Ri * tic + Pi - Pj) - tic));
             jacobian_ex_pose.leftCols<6>() = reduce * jaco_ex;
-            jacobian_ex_pose.rightCols<1>().setZero();
+            jacobian_ex_pose.rightCols<1>().SetZero();
         }
         if (jacobians[3])
         {
@@ -1093,7 +1098,7 @@ bool InstanceInitPowFactorSpeed::Evaluate(double const *const *parameters, doubl
         if(jacobians[1]){
             Mat36d jaco_velocity;
             jaco_velocity.leftCols<3>() = Mat3d::Identity() * time_js;
-            jaco_velocity.rightCols<3>() = -(hat(P_wos))*time_js ;
+            jaco_velocity.rightCols<3>() = -(Hat(P_wos)) * time_js ;
 
             Eigen::Map<Eigen::Matrix<double, 3, 6, Eigen::RowMajor>> jacobian_v(jacobians[1]);
             jacobian_v = jaco_init * jaco_velocity;
