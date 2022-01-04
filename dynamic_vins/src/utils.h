@@ -58,46 +58,6 @@ struct Track {
     cv::Rect2f box;
 };
 
-struct InstInfo{
-    std::string name;
-    int label_id;
-    int id;
-    int track_id;
-    cv::Point2f min_pt,max_pt;
-    cv::Rect2f rect;
-    float prob;
-
-    cv::Point2f mask_center;
-
-    cv::Mat mask_cv;
-    cv::cuda::GpuMat mask_gpu;
-    torch::Tensor mask_tensor;
-};
-
-struct SegImage{
-    cv::Mat color0,seg0,color1,seg1;
-    cv::cuda::GpuMat color0_gpu,color1_gpu;
-    double time0,seg0_time,time1,seg1_time;
-    cv::Mat gray0,gray1;
-    cv::cuda::GpuMat gray0_gpu,gray1_gpu;
-
-    torch::Tensor mask_tensor;
-    std::vector<InstInfo> insts_info;
-
-    cv::Mat merge_mask,inv_merge_mask;
-    cv::cuda::GpuMat merge_mask_gpu,inv_merge_mask_gpu;
-
-    torch::Tensor flow;
-
-    void SetMask();
-    void SetMaskGpu();
-    void SetMaskGpuSimple();
-
-    void SetGrayImage();
-    void SetGrayImageGpu();
-    void SetColorImage();
-    void SetColorImageGpu();
-};
 
 struct ImageInfo{
     int origin_h,origin_w;

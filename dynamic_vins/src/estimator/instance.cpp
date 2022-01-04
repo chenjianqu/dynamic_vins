@@ -11,7 +11,6 @@
 #include "estimator.h"
 
 
-
 void Instance::GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
     Eigen::Vector3d minPt,maxPt;
     minPt = - box;

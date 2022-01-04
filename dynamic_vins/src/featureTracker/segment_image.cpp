@@ -9,257 +9,128 @@
 
 
 #include "segment_image.h"
-#include "../parameters.h"
-#include "../utils.h"
-#include "../estimator/dynamic.h"
+
+#include "parameters.h"
+#include "utils.h"
 
 
-std::vector<uchar> FlowTrack(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2)
-{
-    std::vector<uchar> status;
-    std::vector<float> err;
+void SegImage::SetMask(){
+    cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);
 
-    if(img1.empty() || img2.empty() || pts1.empty()){
-        std::string msg="flowTrack() input wrong, received at least one of parameter are empty";
-        tk_logger->error(msg);
-        throw std::runtime_error(msg);
+    ///计算合并的mask
+    auto merger_tensor = (mask_tensor.sum(0).to(torch::kInt8) * 255);
+    merge_mask = cv::Mat(mask_size, CV_8UC1, merger_tensor.to(torch::kCPU).data_ptr()).clone();
+    mask_tensor = mask_tensor.to(torch::kInt8);
+
+    for(int i=0; i < (int)insts_info.size(); ++i)
+    {
+        auto inst_mask_tensor = mask_tensor[i];
+        insts_info[i].mask_cv = std::move(cv::Mat(mask_size, CV_8UC1, (inst_mask_tensor * 255).to(torch::kCPU).data_ptr()).clone());
+        ///cal center
+        auto inds=inst_mask_tensor.nonzero();
+        auto center_inds = inds.sum(0) / inds.sizes()[0];
+        insts_info[i].mask_center=cv::Point2f(center_inds.index({1}).item().toFloat(),center_inds.index({0}).item().toFloat());
     }
+}
 
-    cv::calcOpticalFlowPyrLK(img1, img2, pts1, pts2,status, err, cv::Size(21, 21), 3);
 
-    //反向光流计算 判断之前光流跟踪的特征点的质量
-    if(Config::kFlowBack){
-        vector<uchar> reverse_status;
-        std::vector<cv::Point2f> reverse_pts = pts1;
-        cv::calcOpticalFlowPyrLK(img2, img1, pts2, reverse_pts,
-                                 reverse_status, err, cv::Size(21, 21), 1,
-                                 cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
-                                 cv::OPTFLOW_USE_INITIAL_FLOW);
-        //cv::calcOpticalFlowPyrLK(cur_img, prev_img, cur_pts, reverse_pts, reverse_status, err, cv::Size(21, 21), 3);
-        for(size_t i = 0; i < status.size(); i++){
-            if(status[i] && reverse_status[i] && distance(pts1[i], reverse_pts[i]) <= 0.5)
-                status[i] = 1;
-            else
-                status[i] = 0;
+void SegImage::SetMaskGpu(){
+    if(insts_info.empty()){
+        WarnS("Can not detect any object in picture");
+        return;
+    }
+    cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);
+
+    mask_tensor = mask_tensor.to(torch::kInt8).abs().clamp(0,1);
+
+    ///计算合并的mask
+    auto merge_tensor = (mask_tensor.sum(0).clamp(0,1)*255).to(torch::kUInt8);
+
+    merge_mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1, merge_tensor.data_ptr()).clone();///一定要clone，不然tensor内存的数据会被改变
+    merge_mask_gpu.download(merge_mask);
+
+    cv::cuda::bitwise_not(merge_mask_gpu,inv_merge_mask_gpu);
+    inv_merge_mask_gpu.download(inv_merge_mask);
+
+    std::stringstream ss;
+    ss<<merge_tensor.scalar_type();
+    DebugS("SetMaskGpu merge_tensor:type:{}",ss.str());
+    DebugS("SetMaskGpu merge_mask_gpu:({},{}) type:{}",merge_mask_gpu.rows,merge_mask_gpu.cols,merge_mask_gpu.type());
+    DebugS("SetMaskGpu inv_merge_mask_gpu:({},{}) type:{}",inv_merge_mask_gpu.rows,inv_merge_mask_gpu.cols,inv_merge_mask_gpu.type());
+
+    for(int i=0; i < (int)insts_info.size(); ++i){
+        auto inst_mask_tensor = mask_tensor[i];
+        insts_info[i].mask_tensor = inst_mask_tensor;
+        insts_info[i].mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1, (inst_mask_tensor * 255).to(torch::kUInt8).data_ptr()).clone();
+        insts_info[i].mask_gpu.download(insts_info[i].mask_cv);
+        ///cal center
+        auto inds=inst_mask_tensor.nonzero();
+        auto center_inds = inds.sum(0) / inds.sizes()[0];
+        insts_info[i].mask_center=cv::Point2f(center_inds.index({1}).item().toFloat(),center_inds.index({0}).item().toFloat());
+    }
+}
+
+
+
+void SegImage::SetMaskGpuSimple(){
+    if(insts_info.empty()){
+        WarnS("Can not detect any object in picture");
+        return;
+    }
+    cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);
+
+    mask_tensor = mask_tensor.to(torch::kInt8).abs().clamp(0,1);
+
+    ///计算合并的mask
+    auto merge_tensor = (mask_tensor.sum(0).clamp(0,1)*255).to(torch::kUInt8);
+
+    merge_mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1, merge_tensor.data_ptr()).clone();///一定要clone，不然tensor内存的数据会被改变
+    merge_mask_gpu.download(merge_mask);
+
+    cv::cuda::bitwise_not(merge_mask_gpu,inv_merge_mask_gpu);
+    inv_merge_mask_gpu.download(inv_merge_mask);
+}
+
+
+void SegImage::SetGrayImage(){
+    cv::cvtColor(color0, gray0, CV_BGR2GRAY);
+    if(!color1.empty())
+        cv::cvtColor(color1, gray1, CV_BGR2GRAY);
+}
+
+
+void SegImage::SetGrayImageGpu(){
+    if(color0_gpu.empty()){
+        color0_gpu.upload(color0);
+    }
+    cv::cuda::cvtColor(color0_gpu,gray0_gpu,CV_BGR2GRAY);
+    if(!color1.empty()){
+        if(color1_gpu.empty()){
+            color1_gpu.upload(color1);
         }
+        cv::cuda::cvtColor(color1_gpu,gray1_gpu,CV_BGR2GRAY);
     }
+}
 
-    ///将落在图像外面的特征点的状态删除
-    for (size_t i = 0; i < pts2.size(); ++i){
-        if (status[i] && !InBorder(pts2[i], img2.rows, img2.cols))
-            status[i] = 0;
+
+void SegImage::SetColorImage(){
+    cv::cvtColor(gray0, color0, CV_GRAY2BGR);
+    if(!gray1.empty())
+        cv::cvtColor(gray1, color1, CV_GRAY2BGR);
+}
+
+
+void SegImage::SetColorImageGpu(){
+    if(gray0_gpu.empty()){
+        gray0_gpu.upload(gray0);
     }
-    return status;
-}
-
-/**
- * 将gpu mat转换为point2f
- * @param d_mat
- * @param vec
- */
- void GpuMat2Points(const cv::cuda::GpuMat& d_mat, std::vector<cv::Point2f>& vec)
-{
-     std::vector<cv::Point2f> points(d_mat.cols);
-     cv::Mat mat(1, d_mat.cols, CV_32FC2, (void*)&points[0]);
-     d_mat.download(mat);
-     vec = points;
-}
-
- void GpuMat2Status(const cv::cuda::GpuMat& d_mat, std::vector<uchar>& vec)
-{
-     std::vector<uchar> points(d_mat.cols);
-     cv::Mat mat(1, d_mat.cols, CV_8UC1, (void*)&points[0]);
-    d_mat.download(mat);
-    vec=points;
-}
-
-/**
- * 将point2f转换为gpu mat
- * @param vec
- * @param d_mat
- */
- void Points2GpuMat(const std::vector<cv::Point2f>& vec, cv::cuda::GpuMat& d_mat)
-{
-    cv::Mat mat(1, vec.size(), CV_32FC2, (void*)&vec[0]);
-    d_mat=cv::cuda::GpuMat(mat);
-}
-
- void Status2GpuMat(const std::vector<uchar>& vec, cv::cuda::GpuMat& d_mat)
-{
-    cv::Mat mat(1, vec.size(), CV_8UC1, (void*)&vec[0]);
-    d_mat=cv::cuda::GpuMat(mat);
-}
-
-
-std::vector<uchar> FlowTrackGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
-                                const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
-                                const cv::cuda::GpuMat &img_prev, const cv::cuda::GpuMat &img_next,
-                                std::vector<cv::Point2f> &pts_prev, std::vector<cv::Point2f> &pts_next){
-     if(img_prev.empty() || img_next.empty() || pts_prev.empty()){
-         std::string msg="flowTrack() input wrong, received at least one of parameter are empty";
-         tk_logger->error(msg);
-         throw std::runtime_error(msg);
-     }
-
-     static auto getValidStatusSize=[](const std::vector<uchar> &stu){
-         int cnt=0;
-         for(const auto s : stu) if(s)cnt++;
-         return cnt;
-     };
-
-    std::vector<float> err;
-
-    cv::cuda::GpuMat d_prevPts;
-    Points2GpuMat(pts_prev, d_prevPts);
-    cv::cuda::GpuMat d_nextPts;
-    cv::cuda::GpuMat d_status;
-
-    lkOpticalFlow->calc(img_prev,img_next,d_prevPts,d_nextPts,d_status);
-
-    std::vector<uchar> status;
-    GpuMat2Status(d_status, status);
-    GpuMat2Points(d_nextPts, pts_next);
-
-    int forward_success=getValidStatusSize(status);
-    DebugT("flowTrackGpu forward success:{}", forward_success);
-
-    //反向光流计算 判断之前光流跟踪的特征点的质量
-    if(Config::kFlowBack){
-        cv::cuda::GpuMat d_reverse_status;
-        cv::cuda::GpuMat d_reverse_pts = d_prevPts;
-
-        lkOpticalFlowBack->calc(img_next,img_prev,d_nextPts,d_reverse_pts,d_reverse_status);
-
-        std::vector<uchar> reverse_status;
-        GpuMat2Status(d_reverse_status, reverse_status);
-
-        std::vector<cv::Point2f> pts_prev_reverse;
-        GpuMat2Points(d_reverse_pts, pts_prev_reverse);
-
-        //constexpr float SAVE_RATIO=0.2f;
-        //if(int inv_success = getValidStatusSize(reverse_status); inv_success*1.0 / forward_success > SAVE_RATIO){
-            for(size_t i = 0; i < reverse_status.size(); i++){
-                if(status[i] && reverse_status[i] && distance(pts_prev[i], pts_prev_reverse[i]) <= 1.)
-                    status[i] = 1;
-                else
-                    status[i] = 0;
-            }
-        DebugT("flowTrackGpu backward success:{}", getValidStatusSize(status));
-        //}
-        /*else{
-            std::vector<std::tuple<int,float>> feats_dis(status.size());
-            for(int i=0;i<status.size();++i){
-                float d = distance(pts_prev[i], pts_prev_reverse[i]);
-                feats_dis[i] = {i,d};
-            }
-            std::sort(feats_dis.begin(),feats_dis.end(),[](auto &a,auto &b){
-                return std::get<1>(a) < std::get<1>(b);//根据dis低到高排序
-            });
-            const int SAVE_FEAT_NUM = forward_success * SAVE_RATIO;
-            for(int i=0,cnt=0;i<status.size();++i){
-                int j=std::get<0>(feats_dis[i]);
-                if(status[j] && cnt<SAVE_FEAT_NUM){
-                    cnt++;
-                }
-                else{
-                    status[j]=0;
-                }
-            }
-            tk_logger->warn("flowTrackGpu backward success:{},so save:{}",getValidStatusSize(reverse_status),getValidStatusSize(status));
-        }*/
-
-    }
-
-    ///将落在图像外面的特征点的状态删除
-    for (size_t i = 0; i < pts_next.size(); ++i){
-        if (status[i] && !InBorder(pts_next[i], img_next.rows, img_next.cols))
-            status[i] = 0;
-    }
-
-    DebugT("flowTrackGpu input:{} final_success:{}", status.size(), getValidStatusSize(status));
-
-    return status;
-}
-
-
-
-
-std::vector<cv::Point2f> DetectNewFeaturesGPU(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask)
-{
-    auto detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, detect_num, 0.01, Config::kMinDist);
-    DebugT("start detect new feat,size:{}", detect_num);
-
-    cv::cuda::GpuMat d_new_pts;
-    detector->detect(img,d_new_pts,mask);
-
-    DebugT("end detect new feat,size:{}", d_new_pts.cols);
-
-    std::vector<cv::Point2f> points;
-    GpuMat2Points(d_new_pts, points);
-
-    DebugT("gpuMat2Points points:{}", points.size());
-
-    return points;
-}
-
-/**
- * 叠加两个mask，结果写入到第一个maks中
- * @param mask1
- * @param mask2
- */
-void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2)
-{
-    for (int i = 0; i < mask1.rows; i++) {
-        uchar* mask1_ptr=mask1.data+i*mask1.step;
-        uchar* mask2_ptr=mask2.data+i*mask2.step;
-        for (int j = 0; j < mask1.cols; j++) {
-            if(mask1_ptr[0]==255 && mask2_ptr[0]<128){
-                mask1_ptr[0]=0;
-            }
-            mask1_ptr+=1;
-            mask2_ptr+=1;
+    cv::cuda::cvtColor(gray0_gpu, color0_gpu, CV_GRAY2BGR);
+    if(!gray1.empty()){
+        if(gray1_gpu.empty()){
+            gray1_gpu.upload(gray1);
         }
+        cv::cuda::cvtColor(gray1_gpu, color1_gpu, CV_GRAY2BGR);
     }
 }
-
-
-
-void SetMask(const cv::Mat &init_mask, cv::Mat &mask_out, std::vector<cv::Point2f> &points){
-    mask_out = init_mask.clone();
-    for(const auto& pt : points){
-        cv::circle(mask_out, pt, Config::kMinDist, 0, -1);
-    }
-}
-
-
-void setMaskGpu(const cv::cuda::GpuMat &init_mask,cv::cuda::GpuMat &mask_out){
-
-}
-
-
-
-
-
-
-
-
-/**
- * 对特征点进行去畸变,返回归一化特征点
- * @param pts
- * @param cam
- * @return
- */
-vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam)
-{
-    vector<cv::Point2f> un_pts;
-    for (auto & pt : pts){
-        Eigen::Vector2d a(pt.x, pt.y);
-        Eigen::Vector3d b;
-        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
-        un_pts.emplace_back(b.x() / b.z(), b.y() / b.z());
-    }
-    return un_pts;
-}
-
 
 

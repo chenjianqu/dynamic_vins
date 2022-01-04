@@ -19,7 +19,7 @@ using Slice = torch::indexing::Slice;
  * 构造colorwheel
  * @return
  */
-Tensor make_colorwheel(){
+Tensor MakeColorwheel(){
     static auto gpu = torch::TensorOptions(torch::kCUDA);
 
     int RY = 15,YG = 6,GC = 4,CB = 11,BM = 13,MR = 6;
@@ -73,8 +73,8 @@ Tensor make_colorwheel(){
  * @param v [H,W]的张量，值[0,1],type=Float32
  * @return [H,W,3]的张量，值[0,255],type=UInt8
  */
-Tensor flow_uv_to_colors(Tensor &u,Tensor &v){
-    static Tensor colorwheel = make_colorwheel();//[55,3]
+Tensor FlowUvToColors(Tensor &u, Tensor &v){
+    static Tensor colorwheel = MakeColorwheel();//[55,3]
     Tensor flow_img = torch::zeros({u.sizes()[0],u.sizes()[1],3},
                                    torch::TensorOptions(torch::kCUDA).dtype(torch::kUInt8));
 
@@ -117,20 +117,17 @@ Tensor flow_uv_to_colors(Tensor &u,Tensor &v){
  * @param flow_uv 光流张量，shape=[2,H,W]
  * @return
  */
-Tensor flow_to_image(torch::Tensor &flow_uv)
+Tensor FlowToImage(torch::Tensor &flow_uv)
 {
     Tensor u = flow_uv[0];
     Tensor v = flow_uv[1];
-
     //归一化uv
     Tensor rad = torch::sqrt(torch::square(u)+torch::square(v));
     float rad_max = torch::max(rad).item().toFloat();
     float epsilon = 1e-5;
-    //debug_s("flow_to_image rad_max:{}",rad_max);
     u /= (rad_max+epsilon);
     v /= (rad_max+epsilon);
-
-    return flow_uv_to_colors(u,v);
+    return FlowUvToColors(u, v);
 }
 
 
@@ -140,22 +137,22 @@ Tensor flow_to_image(torch::Tensor &flow_uv)
  * @param flow_uv 光流张量，shape=[2,H,W]
  * @return 可视化图像
  */
-cv::Mat visual_flow_image(torch::Tensor &img,torch::Tensor &flow_uv)
+cv::Mat VisualFlow(torch::Tensor &img, torch::Tensor &flow_uv)
 {
     //chw -> hwc
     Tensor image = img.permute({1,2,0});
     image = (image*255).to(torch::kUInt8);
-    torch::Tensor flow = flow_to_image(flow_uv);
+    torch::Tensor flow = FlowToImage(flow_uv);
     torch::Tensor show_tensor = (flow*0.5 + image*0.5).to(torch::kUInt8);
     show_tensor = show_tensor.to(torch::kCPU);
     cv::Mat img_show = cv::Mat(img.sizes()[1],img.sizes()[2],CV_8UC3,show_tensor.data_ptr()).clone();
     return img_show;
 }
 
-cv::Mat visual_flow_image(torch::Tensor &flow_uv)
+cv::Mat VisualFlow(torch::Tensor &flow_uv)
 {
     //[H,W,3]的张量，值[0,255],type=UInt8
-    torch::Tensor flow = flow_to_image(flow_uv);
+    torch::Tensor flow = FlowToImage(flow_uv);
     return cv::Mat(flow.sizes()[0],flow.sizes()[1],CV_8UC3,flow.to(torch::kCPU).data_ptr()).clone();
 }
 

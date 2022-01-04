@@ -11,13 +11,12 @@
 #include <iostream>
 #include <tuple>
 
-#include "instance_segmentor.h"
-
-#include "../parameters.h"
-#include "../utils.h"
-
 #include <NvOnnxParser.h>
 #include <NvInferPlugin.h>
+
+#include "instance_segmentor.h"
+#include "parameters.h"
+#include "utils.h"
 
 
 using namespace std;

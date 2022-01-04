@@ -21,12 +21,10 @@
 #include <eigen3/Eigen/Dense>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
-
 #include <pcl/point_cloud.h>
 #include <pcl/common/common.h>
-
-
 #include <spdlog/spdlog.h>
+
 #include "utility/utility.h"
 
 using std::cout;

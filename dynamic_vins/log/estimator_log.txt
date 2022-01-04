@@ -1,26 +1,26 @@
-[2022-01-04 01:00:21.423] [estimator_log] [info] 读取模型文件
-[2022-01-04 01:00:21.603] [estimator_log] [info] createInferRuntime
-[2022-01-04 01:00:22.014] [estimator_log] [info] deserializeCudaEngine
-[2022-01-04 01:00:24.913] [estimator_log] [info] createExecutionContext
-[2022-01-04 01:00:24.944] [estimator_log] [warning] warn up model
-[2022-01-04 01:00:24.991] [estimator_log] [info] infer init finished
-[2022-01-04 01:00:24.993] [estimator_log] [info] init FeatureTracker
-[2022-01-04 01:00:25.212] [estimator_log] [info] setParameter extrinsic cam 0
+[2022-01-04 13:43:20.139] [estimator_log] [info] 读取模型文件
+[2022-01-04 13:43:20.317] [estimator_log] [info] createInferRuntime
+[2022-01-04 13:43:20.866] [estimator_log] [info] deserializeCudaEngine
+[2022-01-04 13:43:24.496] [estimator_log] [info] createExecutionContext
+[2022-01-04 13:43:24.536] [estimator_log] [warning] warn up model
+[2022-01-04 13:43:24.627] [estimator_log] [info] infer init finished
+[2022-01-04 13:43:24.630] [estimator_log] [info] init FeatureTracker
+[2022-01-04 13:43:24.850] [estimator_log] [info] setParameter extrinsic cam 0
 1 0 0
 0 1 0
 0 0 1
 0 0 0
 
-[2022-01-04 01:00:25.212] [estimator_log] [info] setParameter extrinsic cam 1
+[2022-01-04 13:43:24.850] [estimator_log] [info] setParameter extrinsic cam 1
 1 0 0
 0 1 0
 0 0 1
 0.537151        0        0
 
-[2022-01-04 01:00:25.212] [estimator_log] [info] setParameter set g   0   0 9.8
+[2022-01-04 13:43:24.850] [estimator_log] [info] setParameter set g   0   0 9.8
 
-[2022-01-04 01:00:25.212] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/cam_09_30.yaml
-[2022-01-04 01:00:25.213] [estimator_log] [info] Camera Parameters:
+[2022-01-04 13:43:24.850] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/cam_09_30.yaml
+[2022-01-04 13:43:24.851] [estimator_log] [info] Camera Parameters:
     model_type PINHOLE
    camera_name camera
    image_width 1226
@@ -36,8 +36,8 @@ Projection Parameters
             cx 601.887
             cy 183.11
 
-[2022-01-04 01:00:25.213] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/cam_09_30.yaml
-[2022-01-04 01:00:25.213] [estimator_log] [info] Camera Parameters:
+[2022-01-04 13:43:24.851] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/cam_09_30.yaml
+[2022-01-04 13:43:24.851] [estimator_log] [info] Camera Parameters:
     model_type PINHOLE
    camera_name camera
    image_width 1226

@@ -11,8 +11,8 @@
 #include <cuda_runtime_api.h>
 
 #include "buffer.h"
-#include "../TensorRT/common.h"
-#include "../parameters.h"
+#include "TensorRT/common.h"
+#include "parameters.h"
 
 
 MyBuffer::MyBuffer(nvinfer1::ICudaEngine& engine){

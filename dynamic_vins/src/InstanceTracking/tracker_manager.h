@@ -16,6 +16,7 @@
 
 #include "kalman_tracker.h"
 #include "utils.h"
+#include "featureTracker/segment_image.h"
 
 using DistanceMetricFunc = std::function<
         torch::Tensor(const std::vector<int> &trk_ids, const std::vector<int> &det_ids)>;

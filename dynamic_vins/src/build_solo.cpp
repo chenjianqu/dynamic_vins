@@ -14,7 +14,6 @@
 
 #include "TensorRT/logger.h"
 #include "TensorRT/common.h"
-
 #include "parameters.h"
 
 using namespace std;

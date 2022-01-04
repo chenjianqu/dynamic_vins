@@ -10,7 +10,6 @@
 #ifndef DYNAMIC_VINS_INSTANCE_MANAGER_H
 #define DYNAMIC_VINS_INSTANCE_MANAGER_H
 
-
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -19,18 +18,18 @@
 #include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
 
-#include "../factor/pose_local_parameterization.h"
-#include "../factor/projectionInstanceFactor.h"
-#include "../factor/projectionSpeedFactor.h"
-#include "../factor/projectionBoxFactor.h"
-#include "../factor/projectionFactorSimple.h"
-#include "../parameters.h"
-#include "../estimator/dynamic.h"
+#include "factor/pose_local_parameterization.h"
+#include "factor/projectionInstanceFactor.h"
+#include "factor/projectionSpeedFactor.h"
+#include "factor/projectionBoxFactor.h"
+#include "factor/projectionFactorSimple.h"
+#include "parameters.h"
+#include "estimator/dynamic.h"
 #include "instance.h"
+#include "landmark.h"
+
 
 class Estimator;
-
-
 
 class InstanceManager{
 public:

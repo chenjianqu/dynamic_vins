@@ -9,8 +9,8 @@
 
 #include "instance_tracker.h"
 #include "segment_image.h"
-#include "../utils.h"
-#include "../utility/viode_utils.h"
+#include "utils.h"
+#include "utility/viode_utils.h"
 
 
 using namespace torch::indexing;
@@ -45,7 +45,6 @@ void InstsFeatManager::InstsTrack(SegImage img)
 {
     TicToc ticToc;
     curr_time=img.time0;
-
 
 
     if(Config::dataset == DatasetType::kKitti){

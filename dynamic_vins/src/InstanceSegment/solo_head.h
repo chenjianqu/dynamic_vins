@@ -16,9 +16,9 @@
 #include <torch/torch.h>
 #include <torchvision/vision.h>
 
-#include "../parameters.h"
-#include "../featureTracker/segment_image.h"
-
+#include "parameters.h"
+#include "featureTracker/segment_image.h"
+#include "utils.h"
 
 class Solov2 {
 public:

@@ -10,7 +10,6 @@
 #ifndef DYNAMIC_VINS_INSTANCE_H
 #define DYNAMIC_VINS_INSTANCE_H
 
-
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -20,6 +19,8 @@
 #include <ceres/ceres.h>
 
 #include "dynamic.h"
+#include "landmark.h"
+
 
 class Estimator;
 

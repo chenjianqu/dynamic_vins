@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <fstream>
+
 #include <ros/ros.h>
 #include <std_msgs/Header.h>
 #include <std_msgs/Float32.h>
@@ -32,16 +34,17 @@
 #include <geometry_msgs/PointStamped.h>
 #include <visualization_msgs/Marker.h>
 #include <tf/transform_broadcaster.h>
-#include "CameraPoseVisualization.h"
-#include <eigen3/Eigen/Dense>
-#include "../estimator/estimator.h"
-#include "../parameters.h"
-#include <fstream>
-
 #include <sensor_msgs/PointCloud2.h>
+
+#include <eigen3/Eigen/Dense>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/common/common.h>
+
+#include "camera_pose_visualization.h"
+#include "estimator/estimator.h"
+#include "parameters.h"
+
 
 extern ros::Publisher pub_odometry;
 extern ros::Publisher pub_path, pub_pose;

@@ -23,16 +23,16 @@
 #include <algorithm>
 #include <vector>
 #include <numeric>
-using namespace std;
 
 #include <eigen3/Eigen/Dense>
-using namespace Eigen;
-
 #include <ros/console.h>
 #include <ros/assert.h>
 
-#include "../parameters.h"
-#include "../utils.h"
+#include "parameters.h"
+#include "utils.h"
+
+using namespace std;
+using namespace Eigen;
 
 class FeaturePerFrame
 {

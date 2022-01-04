@@ -29,24 +29,24 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-#include "../parameters.h"
+#include "parameters.h"
 #include "feature_manager.h"
-#include "../utility/utility.h"
-#include "../initial/solve_5pts.h"
-#include "../initial/initial_sfm.h"
-#include "../initial/initial_alignment.h"
-#include "../initial/initial_ex_rotation.h"
-#include "../factor/imu_factor.h"
-#include "../factor/pose_local_parameterization.h"
-#include "../factor/marginalization_factor.h"
-#include "../factor/projectionTwoFrameOneCamFactor.h"
-#include "../factor/projectionTwoFrameTwoCamFactor.h"
-#include "../factor/projectionOneFrameTwoCamFactor.h"
-#include "../featureTracker/feature_tracker.h"
-
+#include "utility/utility.h"
+#include "initial/solve_5pts.h"
+#include "initial/initial_sfm.h"
+#include "initial/initial_alignment.h"
+#include "initial/initial_ex_rotation.h"
+#include "factor/imu_factor.h"
+#include "factor/pose_local_parameterization.h"
+#include "factor/marginalization_factor.h"
+#include "factor/projectionTwoFrameOneCamFactor.h"
+#include "factor/projectionTwoFrameTwoCamFactor.h"
+#include "factor/projectionOneFrameTwoCamFactor.h"
+#include "featureTracker/feature_tracker.h"
 #include "dynamic.h"
 #include "instance_manager.h"
-#include "../utils.h"
+#include "utils.h"
+#include "landmark.h"
 
 class Estimator
 {
@@ -59,7 +59,7 @@ class Estimator
 
     // interface
     void initFirstPose(Vec3d p, Eigen::Matrix3d r);
-    void inputIMU(double t, const Vector3d &linearAcceleration, const Vector3d &angularVelocity);
+    void InputIMU(double t, const Vector3d &linearAcceleration, const Vector3d &angularVelocity);
     void processIMU(double t, double dt, const Vector3d &linear_acceleration, const Vector3d &angular_velocity);
     void processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const double header);
 

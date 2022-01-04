@@ -8,7 +8,6 @@
  *
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
-
 /*******************************************************
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
@@ -35,12 +34,12 @@
 #include <camodocal/camera_models/CataCamera.h>
 #include <camodocal/camera_models/PinholeCamera.h>
 
-#include "../parameters.h"
-#include "../utils.h"
-#include "../estimator/dynamic.h"
+#include "parameters.h"
+#include "utils.h"
+#include "estimator/dynamic.h"
 #include "instance_tracker.h"
-
-#include "../InstanceSegment/instance_segmentor.h"
+#include "InstanceSegment/instance_segmentor.h"
+#include "feature_utils.h"
 
 using namespace std;
 using namespace camodocal;
@@ -54,7 +53,7 @@ public:
     FeatureTracker();
     map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> TrackImage(SegImage &img);
     map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> TrackImageNaive(SegImage &img);
-    FeatureMap trackSemanticImage(SegImage &img);
+    FeatureMap TrackSemanticImage(SegImage &img);
 
     void ReadIntrinsicParameter(const vector<string> &calib_file);
     void showUndistortion(const string &name);

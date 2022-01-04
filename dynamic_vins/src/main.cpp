@@ -242,18 +242,17 @@ void ImageProcess()
         flow_thread.join();
 
         img.flow = flow;
-
-        //inst_segmentor->PushBack(img);
+        inst_segmentor->PushBack(img);
 
         /*cv::Mat show;
-        cv::scaleAdd(img.color0,0.5,img.seg0,show);*/
-        cv::Mat show = visual_flow_image(flow);
+        cv::cvtColor(img.merge_mask,show,CV_GRAY2BGR);
+        cv::scaleAdd(img.color0,0.5,show,show);
+        //cv::Mat show = VisualFlow(flow);
         cv::imshow("show",show);
-        cv::waitKey(1);
+        cv::waitKey(1);*/
     }
 
     WarnS("ImageProcess 线程退出");
-
 }
 
 
@@ -267,7 +266,7 @@ void FeatureTrack()
             tt.tic();
             if(Config::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
-                FeatureMap features = feature_tracker->trackSemanticImage(*img);
+                FeatureMap features = feature_tracker->TrackSemanticImage(*img);
                 auto instances= feature_tracker->insts_tracker->SetOutputFeature();
                 estimator->PushBack(img->time0, features, instances);
             }
@@ -307,7 +306,7 @@ void ImuCallback(const sensor_msgs::ImuConstPtr &imu_msg)
     double t = imu_msg->header.stamp.toSec();
     Vector3d acc(imu_msg->linear_acceleration.x, imu_msg->linear_acceleration.y, imu_msg->linear_acceleration.z);
     Vector3d gyr(imu_msg->angular_velocity.x, imu_msg->angular_velocity.y, imu_msg->angular_velocity.z);
-    estimator->inputIMU(t, acc, gyr);
+    estimator->InputIMU(t, acc, gyr);
 }
 
 void RestartCallback(const std_msgs::BoolConstPtr &restart_msg)

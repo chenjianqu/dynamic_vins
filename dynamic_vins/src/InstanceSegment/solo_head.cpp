@@ -8,7 +8,7 @@
  *******************************************************/
 
 #include "solo_head.h"
-#include "../utils.h"
+#include "utils.h"
 
 using namespace std;
 using Slice=torch::indexing::Slice;

@@ -11,7 +11,6 @@
 #define DYNAMIC_VINS_INSTANCE_TRACKER_H
 
 
-
 #include <queue>
 #include <vector>
 #include <unordered_map>
@@ -32,10 +31,11 @@
 #include "camodocal/camera_models/PinholeCamera.h"
 
 #include "segment_image.h"
-#include "../parameters.h"
-#include "../estimator/dynamic.h"
-
-#include "../InstanceTracking/deep_sort.h"
+#include "parameters.h"
+#include "estimator/dynamic.h"
+#include "estimator/landmark.h"
+#include "InstanceTracking/deep_sort.h"
+#include "feature_utils.h"
 
 using Slice = torch::indexing::Slice;
 

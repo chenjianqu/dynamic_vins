@@ -8,7 +8,6 @@
  *
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
-
 /*******************************************************
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
@@ -21,7 +20,7 @@
 #include <opencv2/cudaimgproc.hpp>
 
 #include "feature_tracker.h"
-#include "../utility/viode_utils.h"
+#include "utility/viode_utils.h"
 
 
 FeatureTracker::FeatureTracker()
@@ -631,7 +630,7 @@ void FeatureTracker::removeOutliers(set<int> &removePtsIds)
 
 
 
-FeatureMap FeatureTracker::trackSemanticImage(SegImage &img)
+FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 {
     WarnT("----------Time : {} ----------", img.time0);
 
@@ -836,9 +835,9 @@ FeatureMap FeatureTracker::trackSemanticImage(SegImage &img)
 
     }*/
 
-    InfoT("trackSemanticImage 动态检测线程总时间:{} ms", t_i.toc_then_tic());
+    InfoT("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.toc_then_tic());
     if(Config::kShowTrack)insts_tracker->DrawInsts(img_track);
-    InfoT("trackSemanticImage drawInsts:{} ms", t_i.toc_then_tic());
+    InfoT("TrackSemanticImage drawInsts:{} ms", t_i.toc_then_tic());
 
 
     prev_img = cur_img;
@@ -901,7 +900,7 @@ FeatureMap FeatureTracker::trackSemanticImage(SegImage &img)
         ReduceVector(track_cnt, status);
     }
     for (auto &cnt : track_cnt) cnt++; //将各个特征点的跟踪次数++
-    InfoT("trackSemanticImage 跟踪特征点:{} ms",t_r.toc_then_tic());
+    InfoT("TrackSemanticImage 跟踪特征点:{} ms",t_r.toc_then_tic());
 
     /// 检测新的角点
     //RejectWithF();
@@ -978,7 +977,7 @@ FeatureMap FeatureTracker::trackSemanticImage(SegImage &img)
 
     ///光流跟踪的可视化
     if(Config::kShowTrack) drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
-    info_t("trackSemanticImage 光流跟踪的可视化");//0.9ms
+    info_t("TrackSemanticImage 光流跟踪的可视化");//0.9ms
 
     //t_inst_track.join();
 

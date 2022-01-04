@@ -16,11 +16,6 @@
 #include "utils.h"
 #include "utility/viode_utils.h"
 
-
-
-
-
-
 void initLogger()
 {
     auto reset_log_file=[](const std::string &path){

@@ -12,8 +12,8 @@
 #include <iostream>
 #include <opencv2/cudaimgproc.hpp>
 
-#include "../featureTracker/segment_image.h"
-#include "../utils.h"
+#include "featureTracker/segment_image.h"
+#include "utils.h"
 
 using namespace std;
 using namespace torch::indexing;

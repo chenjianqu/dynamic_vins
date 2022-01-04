@@ -11,9 +11,8 @@
 #include <algorithm>
 
 #include "estimator.h"
-#include "../utility/visualization.h"
-#include "../utils.h"
-
+#include "utility/visualization.h"
+#include "utils.h"
 
 void InstanceManager::set_estimator(Estimator* estimator){
     e_=estimator;

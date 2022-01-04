@@ -21,8 +21,8 @@
 #include <cstdio>
 
 #include "estimator.h"
-#include "../utility/visualization.h"
-#include "../utils.h"
+#include "utility/visualization.h"
+#include "utils.h"
 
 
 
@@ -565,7 +565,7 @@ void Estimator::ChangeSensorType(int use_imu, int use_stereo)
 }
 
 
-void Estimator::inputIMU(double t, const Vector3d &linearAcceleration, const Vector3d &angularVelocity)
+void Estimator::InputIMU(double t, const Vector3d &linearAcceleration, const Vector3d &angularVelocity)
 {
     mBuf.lock();
     accBuf.push(make_pair(t, linearAcceleration));

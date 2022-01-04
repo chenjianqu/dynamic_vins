@@ -10,8 +10,6 @@
 #include "dynamic.h"
 
 
-
-
 /**
  * 计算两个归一化坐标i和j的重投影误差
  * @param Ri
