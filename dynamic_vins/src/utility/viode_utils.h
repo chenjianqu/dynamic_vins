@@ -14,9 +14,8 @@
 #include "utils.h"
 #include "featureTracker/segment_image.h"
 
-class ViodeUtils {
 
-};
+namespace dynamic_vins{\
 
 
 namespace VIODE{
@@ -69,6 +68,6 @@ namespace VIODE{
     void SetViodeMask(SegImage &img);
 }
 
-
+}
 
 #endif //DYNAMIC_VINS_VIODE_UTILS_H

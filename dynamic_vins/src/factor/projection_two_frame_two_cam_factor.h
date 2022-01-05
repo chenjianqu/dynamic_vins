@@ -14,16 +14,20 @@
 #include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-#include "../utility/utility.h"
-#include "../utils.h"
-#include "../parameters.h"
+#include "utility/utility.h"
+#include "utils.h"
+#include "parameters.h"
 
-class ProjectionTwoFrameOneCamFactor : public ceres::SizedCostFunction<2, 7, 7, 7, 1, 1>
+
+namespace dynamic_vins{\
+
+
+class ProjectionTwoFrameTwoCamFactor : public ceres::SizedCostFunction<2, 7, 7, 7, 7, 1, 1>
 {
   public:
-    ProjectionTwoFrameOneCamFactor(const Eigen::Vector3d &_pts_i, const Eigen::Vector3d &_pts_j,
-    				   const Eigen::Vector2d &_velocity_i, const Eigen::Vector2d &_velocity_j,
-    				   const double _td_i, const double _td_j);
+    ProjectionTwoFrameTwoCamFactor(const Eigen::Vector3d &_pts_i, const Eigen::Vector3d &_pts_j,
+    							   const Eigen::Vector2d &_velocity_i, const Eigen::Vector2d &_velocity_j,
+    				   			   const double _td_i, const double _td_j);
     virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
     void check(double **parameters);
 
@@ -34,3 +38,5 @@ class ProjectionTwoFrameOneCamFactor : public ceres::SizedCostFunction<2, 7, 7, 
     static Eigen::Matrix2d sqrt_info;
     static double sum_t;
 };
+
+}

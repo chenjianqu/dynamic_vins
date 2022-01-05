@@ -36,8 +36,10 @@
 #include "estimator/landmark.h"
 #include "InstanceTracking/deep_sort.h"
 #include "feature_utils.h"
+#include "FlowEstimating/flow_estimator.h"
 
-using Slice = torch::indexing::Slice;
+namespace dynamic_vins{\
+
 
 struct InstFeat{
     using Ptr=std::shared_ptr<InstFeat>;
@@ -100,6 +102,7 @@ public:
     InstsFeatManager();
 
     void InstsTrack(SegImage img);
+    void InstsFlowTrack(SegImage img);
     InstancesFeatureMap SetOutputFeature();
     void AddViodeInstances(SegImage &img);
     cv::Mat AddInstances(SegImage &img);
@@ -108,11 +111,18 @@ public:
     void VisualizeInst(cv::Mat &img);
     void DrawInsts(cv::Mat& img);
 
+    void StartFlowEstimating(torch::Tensor &img){
+        while(flow_estimator_->is_running()){
+            std::this_thread::sleep_for(5ms);
+            DebugS("flow_estimator is_running");
+        }
+        flow_estimator_->StartForward(img);
+    }
+
     void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
     void set_camera(camodocal::CameraPtr& camera){camera_ = camera;}
     void set_right_camera(camodocal::CameraPtr& right_camera){right_camera_ = right_camera;}
     void set_is_stereo(bool is_stereo){is_stereo_=is_stereo;}
-
 private:
     void ManageInstances();
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
@@ -123,7 +133,7 @@ private:
                             const torch::Tensor &mask2, const InstInfo &instInfo2, const float mask2_area);
     std::tuple<int,float,float> GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor);
 
-    std::unordered_map<unsigned int,InstFeat> instances;
+    std::unordered_map<unsigned int,InstFeat> instances_;
     std::unordered_map<unsigned int,Vel3d> vel_map_;
 
     camodocal::CameraPtr camera_,right_camera_;
@@ -133,9 +143,9 @@ private:
     cv::Mat mask_background;
     cv::cuda::GpuMat mask_background_gpu;
 
-    std::vector<cv::Point2f> visual_new_points;
+    std::vector<cv::Point2f> visual_new_points_;
     SegImage prev_img;
-    bool isHaveInst{false};
+    bool exist_inst_{false};
 
     unsigned long global_id_count{0};//全局特征序号，注意与静态物体上的特征id不共用
     unsigned int global_instance_id{0};
@@ -146,9 +156,10 @@ private:
     cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow_back;
     cv::Ptr<cv::cuda::CornersDetector> detector;
 
-    DeepSORT::Ptr tracker;
+    DeepSORT::Ptr mot_tracker;
+    FlowEstimator::Ptr flow_estimator_;
 };
 
-
+}
 
 #endif //DYNAMIC_VINS_INSTANCE_TRACKER_H

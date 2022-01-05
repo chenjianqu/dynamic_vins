@@ -7,8 +7,9 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "projectionSpeedFactor.h"
+#include "projection_speed_factor.h"
 
+namespace dynamic_vins{\
 
 
 Eigen::Matrix2d ProjectionSpeedFactor::sqrt_info;
@@ -409,7 +410,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
             jacobian_pose_j.leftCols<6>() = jaco_j;
             jacobian_pose_j.rightCols<1>().setZero();
         }
-       // 计算残差相对于p_bc和q_bc的雅可比
+        // 计算残差相对于p_bc和q_bc的雅可比
         if (jacobians[1])
         {
             Mat36d jaco_i;
@@ -617,4 +618,7 @@ bool ConstSpeedSimpleFactor::Evaluate(double const *const *parameters, double *r
     }
 
     return true;
+}
+
+
 }

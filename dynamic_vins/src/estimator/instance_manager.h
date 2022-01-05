@@ -19,14 +19,17 @@
 #include <ceres/ceres.h>
 
 #include "factor/pose_local_parameterization.h"
-#include "factor/projectionInstanceFactor.h"
-#include "factor/projectionSpeedFactor.h"
-#include "factor/projectionBoxFactor.h"
-#include "factor/projectionFactorSimple.h"
+#include "factor/projection_instance_factor.h"
+#include "factor/projection_speed_factor.h"
+#include "factor/projection_box_factor.h"
+#include "factor/projection_factor_simple.h"
 #include "parameters.h"
 #include "estimator/dynamic.h"
 #include "instance.h"
 #include "landmark.h"
+
+
+namespace dynamic_vins{\
 
 
 class Estimator;
@@ -124,6 +127,6 @@ private:
     int tracking_number_{0};//正在跟踪的物体数量
 };
 
-
+}
 
 #endif //DYNAMIC_VINS_INSTANCE_MANAGER_H

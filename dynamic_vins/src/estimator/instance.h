@@ -21,6 +21,8 @@
 #include "dynamic.h"
 #include "landmark.h"
 
+namespace dynamic_vins{\
+
 
 class Estimator;
 
@@ -75,6 +77,6 @@ public:
 
 };
 
-
+}
 
 #endif //DYNAMIC_VINS_DYNAMICFEATURE_H

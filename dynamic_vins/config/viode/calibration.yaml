@@ -19,10 +19,6 @@ cam1_calib: "cam1_pinhole.yaml"
 image_width: 752
 image_height: 480
 
-pose_graph_save_path: "/home/chen/ws/vio_ws/output/" # save and load path
-
-   
-
 # Extrinsic parameter between IMU and Camera.
 estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
                         # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
@@ -80,17 +76,8 @@ BIAS_GYR_THRESHOLD: 0.1
 load_previous_pose_graph: 0        # load and reuse previous pose graph; load from 'pose_graph_save_path'
 save_image: 1                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
 
-
 min_dynamic_dist: 10
 max_dynamic_cnt: 50
-
-
-#rgb to semantic label
-rgb_to_label_file: "/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/VIODE-master/segmentation/rgb_ids.txt"
-dynamic_label_id: [241,242,243,244,245,246,247,248,249,250,251,254,255]
-
-
-
 
 vins_vio_topic: "/dynamic_vins/odometry"
 vins_keyframe_pose_topic: "/dynamic_vins/keyframe_pose"
@@ -98,33 +85,37 @@ vins_extrinsic_topic: "/dynamic_vins/extrinsic"
 vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
 vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
 
-output_path: "/home/chen/ws/vio_ws/output/"
+pose_graph_save_path: "/home/chen/ws/vio_ws/output/" # save and load path
 
+
+basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
+
+#rgb to semantic label
+rgb_to_label_file: "config/viode/VIODE-master/segmentation/rgb_ids.txt"
+dynamic_label_id: [241,242,243,244,245,246,247,248,249,250,251,254,255]
+
+output_path: "output/"
 
 #log
-estimator_log_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/log/estimator_log.txt"
+estimator_log_path: "output/estimator_log.txt"
 estimator_log_level: "debug"
 estimator_log_flush: "debug"
-feature_tracker_log_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/log/tracker_log.txt"
+feature_tracker_log_path: "output/tracker_log.txt"
 feature_tracker_log_level: "debug"
 feature_tracker_log_flush: "debug"
-segmentor_log_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/log/segmentor_log.txt"
+segmentor_log_path: "output/segmentor_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
 
-fnet_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_fnet.onnx"
-fnet_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_fnet.bin"
-
-cnet_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_cnet.onnx"
-cnet_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_cnet.bin"
-
-update_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_update.onnx"
-update_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_update.bin"
-
-
+fnet_onnx_path: "weights/raft/viode_fnet.onnx"
+fnet_tensorrt_path: "weights/raft/viode_fnet.bin"
+cnet_onnx_path: "weights/raft/viode_cnet.onnx"
+cnet_tensorrt_path: "weights/raft/viode_cnet.bin"
+update_onnx_path: "weights/raft/viode_update.onnx"
+update_tensorrt_path: "weights/raft/viode_update.bin"
 
 #物体可视化的持续时间
-VISUAL_INST_DURATION: 120
+visual_inst_duration: 120
 
 #0表示raw,1表示naive,2表示dynamic
 slam_type: 2

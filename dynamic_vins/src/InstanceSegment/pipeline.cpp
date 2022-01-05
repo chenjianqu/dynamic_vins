@@ -15,10 +15,11 @@
 #include "featureTracker/segment_image.h"
 #include "utils.h"
 
-using namespace std;
-using namespace torch::indexing;
-using InterpolateFuncOptions=torch::nn::functional::InterpolateFuncOptions;
+namespace dynamic_vins{\
 
+
+using InterpolateFuncOptions=torch::nn::functional::InterpolateFuncOptions;
+namespace idx=torch::indexing;
 
 std::tuple<float,float> Pipeline::GetXYWHS(int img_h,int img_w)
 {
@@ -358,9 +359,6 @@ cv::Mat Pipeline::ProcessCut(cv::Mat &img)
 
 void Pipeline::SetBufferWithNorm(const cv::Mat &img, float *buffer)
 {
-    //assert(Config::kInputHeight==img.rows);
-    //assert(Config::kInputWidth==img.cols);
-
     int i = 0,b_cnt=0;
     auto rows = std::min(img.rows,Config::kInputHeight);
     auto cols = std::min(img.cols,Config::kInputWidth);
@@ -414,7 +412,7 @@ torch::Tensor Pipeline::ImageToTensor(cv::cuda::GpuMat &img){
     ///hwc->chw
     input_tensor = input_tensor.permute({2,0,1});
     return input_tensor;
-
 }
 
 
+}

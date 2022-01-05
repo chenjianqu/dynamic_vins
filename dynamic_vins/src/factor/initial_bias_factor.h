@@ -14,9 +14,12 @@
 #include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-#include "../utility/utility.h"
-#include "../utils.h"
-#include "../parameters.h"
+#include "utility/utility.h"
+#include "utils.h"
+#include "parameters.h"
+
+namespace dynamic_vins{\
+
 
 class InitialBiasFactor : public ceres::SizedCostFunction<6, 9>
 {
@@ -54,3 +57,6 @@ class InitialBiasFactor : public ceres::SizedCostFunction<6, 9>
     Eigen::Vector3d init_Ba, init_Bg;
     Eigen::Matrix<double, 6, 6> sqrt_info;
 };
+
+
+}

@@ -29,6 +29,8 @@
 
 #include "parameters.h"
 
+namespace dynamic_vins{\
+
 
 struct Vel3d{
     Vel3d(){
@@ -127,5 +129,6 @@ struct State{
     double time;
 };
 
+}
 
 #endif //DYNAMIC_VINS_LANDMARK_H

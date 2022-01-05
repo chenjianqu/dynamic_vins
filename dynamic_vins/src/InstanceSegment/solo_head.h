@@ -20,6 +20,9 @@
 #include "featureTracker/segment_image.h"
 #include "utils.h"
 
+namespace dynamic_vins{\
+
+
 class Solov2 {
 public:
     using Ptr=std::shared_ptr<Solov2>;
@@ -39,5 +42,7 @@ private:
     bool output_split_mask_{true};
 };
 
+
+}
 
 #endif //DYNAMIC_VINS_SOLO_HEAD_H

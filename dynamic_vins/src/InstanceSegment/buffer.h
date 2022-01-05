@@ -15,6 +15,8 @@
 
 #include <NvInfer.h>
 
+namespace dynamic_vins{\
+
 
 struct MyBuffer{
     using Ptr = std::shared_ptr<MyBuffer>;
@@ -33,5 +35,6 @@ struct MyBuffer{
     void *gpu_buffer[12]{}; //定义指针数组，用于指定GPU上的输入输出缓冲区
 };
 
+}
 
 #endif //DYNAMIC_VINS_BUFFER_H

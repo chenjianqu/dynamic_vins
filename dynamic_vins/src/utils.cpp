@@ -9,6 +9,9 @@
 
 #include "utils.h"
 
+namespace dynamic_vins{\
+
+
 void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos, float scale, int thickness, bool reverse) {
     auto t_size = cv::getTextSize(str, cv::FONT_HERSHEY_SIMPLEX, scale, thickness, nullptr);
     cv::Point bottom_left, upper_right;
@@ -32,10 +35,8 @@ void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label, co
 }
 
 
-
 float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
                 const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt){
-
     cv::Point2f center1 = (box1_minPt+box1_maxPt)/2.f;
     cv::Point2f center2 = (box2_minPt+box2_maxPt)/2.f;
     float w1 = box1_maxPt.x - (float)box1_minPt.x;
@@ -49,7 +50,6 @@ float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
 
     float inter_w = w1 + w2 - (std::max(center1.x + w1, center2.x + w2) - std::min(center1.x, center2.x));
     float inter_h = h1 + h2 - (std::max(center1.y + h1, center2.y + h2) - std::min(center1.y, center2.y));
-
     return (inter_h*inter_w) / (w1*h1 + w2*h2 - inter_h*inter_w);
 }
 
@@ -83,4 +83,8 @@ cv::Scalar color_map(int64_t n) {
         i >>= 3;
     }
     return cv::Scalar(b, g, r);
+}
+
+
+
 }

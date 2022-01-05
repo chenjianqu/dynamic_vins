@@ -41,18 +41,15 @@
 #include "InstanceSegment/instance_segmentor.h"
 #include "feature_utils.h"
 
-using namespace std;
-using namespace camodocal;
-using namespace Eigen;
-
+namespace dynamic_vins{\
 
 class FeatureTracker
 {
 public:
     using Ptr=std::unique_ptr<FeatureTracker>;
     FeatureTracker();
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> TrackImage(SegImage &img);
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> TrackImageNaive(SegImage &img);
+    std::map<int, vector<pair<int, Vec7d>>> TrackImage(SegImage &img);
+    std::map<int, vector<pair<int, Vec7d>>> TrackImageNaive(SegImage &img);
     FeatureMap TrackSemanticImage(SegImage &img);
 
     void ReadIntrinsicParameter(const vector<string> &calib_file);
@@ -60,19 +57,25 @@ public:
     void rejectWithF();
     static vector<cv::Point2f> undistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam);
     vector<cv::Point2f> ptsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
-                                    map<int, cv::Point2f> &cur_id_pts, map<int, cv::Point2f> &prev_id_pts) const;
+                                    std::map<int, cv::Point2f> &cur_id_pts,
+                                    std::map<int, cv::Point2f> &prev_id_pts) const;
     void drawTrack(const SegImage &img,
                    vector<int> &curLeftIds,
                    vector<cv::Point2f> &curLeftPts,
                    vector<cv::Point2f> &curRightPts,
-                   map<int, cv::Point2f> &prevLeftPts);
-    void setPrediction(map<int, Eigen::Vector3d> &predictPts);
-    void removeOutliers(set<int> &removePtsIds);
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> setOutputFeats();
+                   std::map<int, cv::Point2f> &prevLeftPts);
+    void setPrediction(std::map<int, Eigen::Vector3d> &predictPts);
+    void removeOutliers(std::set<int> &removePtsIds);
+    std::map<int, vector<pair<int, Vec7d>>> setOutputFeats();
 
+    cv::Mat img_track(){return img_track_;}
+
+    InstsFeatManager::Ptr insts_tracker;
+private:
+    void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, std::vector<int> &ids);
 
     int row{}, col{};
-    cv::Mat img_track;
+    cv::Mat img_track_;
     cv::Mat mask,semantic_mask;
     cv::cuda::GpuMat mask_gpu,semantic_mask_gpu;
     cv::Mat fisheye_mask;
@@ -85,25 +88,21 @@ public:
     vector<cv::Point2f> pts_velocity, right_pts_velocity;
     vector<int> ids, ids_right;
     vector<int> track_cnt;
-    map<int, cv::Point2f> cur_un_pts_map, prev_un_pts_map;
-    map<int, cv::Point2f> cur_un_right_pts_map, prev_un_right_pts_map;
-    map<int, cv::Point2f> prevLeftPtsMap;
+    std::map<int, cv::Point2f> cur_un_pts_map, prev_un_pts_map;
+    std::map<int, cv::Point2f> cur_un_right_pts_map, prev_un_right_pts_map;
+    std::map<int, cv::Point2f> prevLeftPtsMap;
     vector<camodocal::CameraPtr> m_camera;
     double cur_time{};
     double prev_time{};
     bool stereo_cam;
     int n_id;
 
-    InstsFeatManager::Ptr insts_tracker;
-
     std::vector<cv::Point2f> visual_new_pts;
 
-private:
-    void sortPoints(std::vector<cv::Point2f> &cur_pts,std::vector<int> &track_cnt,std::vector<int> &ids);
-
-    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lkOpticalFlow;
-    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lkOpticalFlowBack;
+    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow;
+    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow_back;
     cv::Ptr<cv::cuda::CornersDetector> detector;
-
-    cv::Ptr<cv::cuda::Filter> erode_filter;
 };
+
+
+}

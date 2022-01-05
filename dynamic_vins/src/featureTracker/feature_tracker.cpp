@@ -18,9 +18,10 @@
  *******************************************************/
 
 #include <opencv2/cudaimgproc.hpp>
-
 #include "feature_tracker.h"
 #include "utility/viode_utils.h"
+
+namespace dynamic_vins{\
 
 
 FeatureTracker::FeatureTracker()
@@ -30,26 +31,22 @@ FeatureTracker::FeatureTracker()
     vio_logger->info("init FeatureTracker");
     insts_tracker.reset(new InstsFeatManager);
 
-    lkOpticalFlow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30);
-    lkOpticalFlowBack = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21),3,30,true);
-
-
-    auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
-    erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
+    lk_optical_flow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30);
+    lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30, true);
 }
 
 
-void FeatureTracker::sortPoints(std::vector<cv::Point2f> &cur_pts,std::vector<int> &track_cnt,std::vector<int> &ids)
+void FeatureTracker::SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, std::vector<int> &ids)
 {
     // prefer to keep features that are tracked for long time
     vector<pair<int, pair<cv::Point2f, int>>> cnt_pts_id;
 
     for (unsigned int i = 0; i < cur_pts.size(); i++)
-        cnt_pts_id.emplace_back(track_cnt[i], make_pair(cur_pts[i], ids[i]));
+        cnt_pts_id.emplace_back(track_cnt[i], std::make_pair(cur_pts[i], ids[i]));
 
     sort(cnt_pts_id.begin(), cnt_pts_id.end(),
          [](const pair<int, pair<cv::Point2f, int>> &a, const pair<int, pair<cv::Point2f, int>> &b){
-            return a.first > b.first;
+        return a.first > b.first;
     });
 
     cur_pts.clear();
@@ -63,10 +60,6 @@ void FeatureTracker::sortPoints(std::vector<cv::Point2f> &cur_pts,std::vector<in
         track_cnt.push_back(t_cnt);
     }
 }
-
-
-
-
 
 
 FeatureMap FeatureTracker::TrackImage(SegImage &img)
@@ -87,7 +80,7 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
     cur_pts.clear();
 
     if (!prev_pts.empty()){
-        vector<uchar> status = FlowTrack(prev_img.gray0, img.gray0, prev_pts, cur_pts);
+        vector<uchar> status = FeatureTrackByLK(prev_img.gray0, img.gray0, prev_pts, cur_pts);
         ReduceVector(prev_pts, status);
         ReduceVector(cur_pts, status);
         ReduceVector(ids, status);
@@ -99,15 +92,15 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
 
     //RejectWithF();
     TicToc t_m;
-    sortPoints(cur_pts,track_cnt,ids);
+    SortPoints(cur_pts, track_cnt, ids);
     mask = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
     for(const auto& pt : cur_pts){
-        cv::circle(mask, pt, Config::kMinDist, 0, -1);
+        cv::circle(mask, pt, cfg::kMinDist, 0, -1);
     }
     TicToc t_t;
-    int n_max_cnt = Config::kMaxCnt - static_cast<int>(cur_pts.size());
+    int n_max_cnt = cfg::kMaxCnt - static_cast<int>(cur_pts.size());
     if (n_max_cnt > 0)
-        cv::goodFeaturesToTrack(cur_img.gray0, n_pts, Config::kMaxCnt - cur_pts.size(), 0.01, Config::kMinDist, mask);
+        cv::goodFeaturesToTrack(cur_img.gray0, n_pts, cfg::kMaxCnt - cur_pts.size(), 0.01, cfg::kMinDist, mask);
     else
         n_pts.clear();
 
@@ -133,7 +126,7 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
         cur_un_right_pts_map.clear();
         if(!cur_pts.empty())
         {
-            vector<uchar> status= FlowTrack(cur_img.gray0, cur_img.gray1, cur_pts, cur_right_pts);
+            vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, cur_pts, cur_right_pts);
 
             ids_right = ids;
             ReduceVector(cur_right_pts, status);
@@ -154,7 +147,7 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
         InfoT("TrackImage | flowTrack right:{}", tt.toc_then_tic());
     }
 
-    if(Config::kShowTrack)
+    if(cfg::kShowTrack)
         drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
 
     InfoT("TrackImage | drawTrack right:{}", tt.toc_then_tic());
@@ -175,7 +168,7 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
 
 FeatureMap FeatureTracker::setOutputFeats()
 {
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame;
+    std::map<int, vector<pair<int, Vec7d>>> featureFrame;
     for (size_t i = 0; i < ids.size(); i++){
         int feature_id = ids[i];
         double x = cur_un_pts[i].x;
@@ -186,7 +179,7 @@ FeatureMap FeatureTracker::setOutputFeats()
         constexpr int camera_id = 0;
         double velocity_x = pts_velocity[i].x;
         double velocity_y = pts_velocity[i].y;
-        Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
+        Vec7d xyz_uv_velocity;
         xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
         featureFrame[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
     }
@@ -204,7 +197,7 @@ FeatureMap FeatureTracker::setOutputFeats()
             constexpr int camera_id = 1;
             double velocity_x = right_pts_velocity[i].x;
             double velocity_y = right_pts_velocity[i].y;
-            Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
+            Vec7d xyz_uv_velocity;
             xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
             featureFrame[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
         }
@@ -236,17 +229,17 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     cur_img.gray0_gpu.download(cur_img.gray0);
     cur_img.gray1_gpu.download(cur_img.gray1);
 
-
     ///形态学运算
-    erode_filter->apply(img.inv_merge_mask_gpu,img.inv_merge_mask_gpu);
+    Erode10Gpu(img.inv_merge_mask_gpu,img.inv_merge_mask_gpu);
     img.inv_merge_mask_gpu.download(img.inv_merge_mask);
 
     if (!prev_pts.empty())
     {
         DebugT("trackImageNaive | prev_pts.size:{}", prev_pts.size());
         //vector<uchar> status = flowTrack(prev_img.gray0,cur_img.gray0,prev_pts, cur_pts);
-        vector<uchar> status= FlowTrackGpu(lkOpticalFlow, lkOpticalFlowBack, prev_img.gray0_gpu, cur_img.gray0_gpu,
-                                           prev_pts, cur_pts);
+        vector<uchar> status= FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, prev_img.gray0_gpu,
+                                                  cur_img.gray0_gpu,
+                                                  prev_pts, cur_pts);
         if(!cur_img.inv_merge_mask.empty()){
             for(int i=0;i<status.size();++i){
                 if(status[i] && cur_img.inv_merge_mask.at<uchar>(cur_pts[i]) == 0 )
@@ -274,22 +267,22 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     TicToc t_t;
 
 
-    sortPoints(cur_pts,track_cnt,ids);
+    SortPoints(cur_pts, track_cnt, ids);
     if(!cur_img.inv_merge_mask.empty())
         mask = cur_img.inv_merge_mask.clone();
     else
         mask = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
 
     for(const auto& pt : cur_pts){
-        cv::circle(mask, pt, Config::kMinDist, 0, -1);
+        cv::circle(mask, pt, cfg::kMinDist, 0, -1);
     }
 
     //cv::threshold(mask,mask,128,255,cv::THRESH_BINARY);
     mask_gpu.upload(mask);
 
-    if (int n_max_cnt = Config::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10){
+    if (int n_max_cnt = cfg::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10){
         //if(cur_img.gray0.empty()) cur_img.gray0_gpu.download(cur_img.gray0);
-        //cv::goodFeaturesToTrack(cur_img.gray0, n_pts, n_max_cnt, 0.01, Config::kMinDist, mask);
+        //cv::goodFeaturesToTrack(cur_img.gray0, n_pts, n_max_cnt, 0.01, cfg::kMinDist, mask);
         /*debug_t("trackImageNaive | semantic_mask size:{}x{} type:{} ",semantic_mask.rows,semantic_mask.cols,semantic_mask.type());
         DebugT("trackImageNaive | mask size:{}x{} type:{} ",mask.rows,mask.cols,mask.type());
         debug_t("trackImageNaive | mask_gpu size:{}x{} type:{} ",mask_gpu.rows,mask_gpu.cols,mask_gpu.type());
@@ -299,7 +292,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
 
         WarnT("trackImageNaive | n_max_cnt:{}", n_max_cnt);
 
-        n_pts = DetectNewFeaturesGPU(n_max_cnt, cur_img.gray0_gpu, mask_gpu);
+        n_pts = DetectShiTomasiCornersGpu(n_max_cnt, cur_img.gray0_gpu, mask_gpu);
         //n_pts = detectNewFeaturesGPU(n_max_cnt,cur_img.gray0_gpu,mask);
 
         visual_new_pts = n_pts;
@@ -331,10 +324,11 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         DebugT("trackImageNaive | flowTrack right start");
 
         //std::vector<uchar> status= flowTrack(cur_img.gray0,cur_img.gray1,cur_pts, cur_right_pts);
-        vector<uchar> status= FlowTrackGpu(lkOpticalFlow, lkOpticalFlowBack, cur_img.gray0_gpu, cur_img.gray1_gpu,
-                                           cur_pts, cur_right_pts);
+        vector<uchar> status= FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, cur_img.gray0_gpu,
+                                                  cur_img.gray1_gpu,
+                                                  cur_pts, cur_right_pts);
         DebugT("trackImageNaive | flowTrack right finish");
-        if(Config::dataset == DatasetType::kViode){
+        if(cfg::dataset == DatasetType::kViode){
             for(int i=0;i<(int)status.size();++i){
                 if(status[i] && VIODE::IsDynamic(cur_right_pts[i], cur_img.seg1))
                     status[i]=0;
@@ -367,7 +361,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     }
 
 
-    if(Config::kShowTrack)
+    if(cfg::kShowTrack)
         drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
 
     prev_img = cur_img;
@@ -407,7 +401,7 @@ void FeatureTracker::rejectWithF()
         }
 
         vector<uchar> status;
-        cv::findFundamentalMat(un_cur_pts, un_prev_pts, cv::FM_RANSAC, Config::kFThreshold, 0.99, status);
+        cv::findFundamentalMat(un_cur_pts, un_prev_pts, cv::FM_RANSAC, cfg::kFThreshold, 0.99, status);
         int size_a = cur_pts.size();
         ReduceVector(prev_pts, status);
         ReduceVector(cur_pts, status);
@@ -425,7 +419,7 @@ void FeatureTracker::ReadIntrinsicParameter(const vector<string> &calib_file)
 {
     for (const auto & i : calib_file){
         vio_logger->info(fmt::format("readIntrinsicParameter() Reading parameter of camera:{}", i));
-        camodocal::CameraPtr camera = CameraFactory::instance()->generateCameraFromYamlFile(i);
+        camodocal::CameraPtr camera = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(i);
         vio_logger->info(camera->parametersToString());
         m_camera.push_back(camera);
     }
@@ -493,13 +487,14 @@ vector<cv::Point2f> FeatureTracker::undistortedPts(vector<cv::Point2f> &pts, cam
     return un_pts;
 }
 
-vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
-                                                map<int, cv::Point2f> &cur_id_pts, map<int, cv::Point2f> &prev_id_pts) const
-{
+vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &id_vec,
+                                                vector<cv::Point2f> &pts,
+                                                std::map<int, cv::Point2f> &cur_id_pts,
+                                                std::map<int, cv::Point2f> &prev_id_pts) const{
     vector<cv::Point2f> pts_vel;
     cur_id_pts.clear();
     for (unsigned int i = 0; i < id_vec.size(); i++){
-        cur_id_pts.insert(make_pair(id_vec[i], pts[i]));
+        cur_id_pts.insert({id_vec[i], pts[i]});
     }
     // caculate points velocity
     if (!prev_id_pts.empty())
@@ -525,64 +520,64 @@ vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &id_vec, vector<cv::
         }
     }
     return pts_vel;
-}
+                                                }
 
 
 
 
-void FeatureTracker::drawTrack(const SegImage &img,
-                               vector<int> &curLeftIds,
-                               vector<cv::Point2f> &curLeftPts,
-                               vector<cv::Point2f> &curRightPts,
-                               map<int, cv::Point2f> &prevLeftPts){
+                                                void FeatureTracker::drawTrack(const SegImage &img,
+                                                                               vector<int> &curLeftIds,
+                                                                               vector<cv::Point2f> &curLeftPts,
+                                                                               vector<cv::Point2f> &curRightPts,
+                                                                               std::map<int, cv::Point2f> &prevLeftPts){
 
     if(!img.inv_merge_mask_gpu.empty()){
         cv::cuda::GpuMat img_show_gpu;
         cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
         //cv::cuda::cvtColor(mask_gpu,img_show_gpu,CV_GRAY2BGR);
         cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
-        img_show_gpu.download(img_track);
+        img_show_gpu.download(img_track_);
     }
     else{
-        img_track = img.color0;
+        img_track_ = img.color0;
     }
 
     if (!img.color1.empty() && stereo_cam){
-        if(Config::dataset == DatasetType::kKitti){
-            cv::vconcat(img_track, img.color1, img_track);
+        if(cfg::dataset == DatasetType::kKitti){
+            cv::vconcat(img_track_, img.color1, img_track_);
         }else{
-            cv::hconcat(img_track, img.color1, img_track);
+            cv::hconcat(img_track_, img.color1, img_track_);
         }
     }
     //cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
 
     for (size_t j = 0; j < curLeftPts.size(); j++){
         double len = std::min(1.0, 1.0 * track_cnt[j] / 20);
-        cv::circle(img_track, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
+        cv::circle(img_track_, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
     }
 
     for (size_t j = 0; j < visual_new_pts.size(); j++){
-        cv::circle(img_track, visual_new_pts[j], 2, cv::Scalar(255, 255, 255), 2);
+        cv::circle(img_track_, visual_new_pts[j], 2, cv::Scalar(255, 255, 255), 2);
     }
 
     if (!img.color1.empty() && stereo_cam){
-        if(Config::dataset == DatasetType::kKitti){
+        if(cfg::dataset == DatasetType::kKitti){
             for (auto &rightPt : curRightPts){
                 rightPt.y += (float)img.color0.rows;
-                cv::circle(img_track, rightPt, 2, cv::Scalar(0, 255, 0), 2);
+                cv::circle(img_track_, rightPt, 2, cv::Scalar(0, 255, 0), 2);
             }
         }
         else{
             for (auto &rightPt : curRightPts){
                 rightPt.x += (float)img.color0.cols;
-                cv::circle(img_track, rightPt, 2, cv::Scalar(0, 255, 0), 2);
+                cv::circle(img_track_, rightPt, 2, cv::Scalar(0, 255, 0), 2);
             }
         }
     }
 
     for (size_t i = 0; i < curLeftIds.size(); i++){
         if(auto it = prevLeftPts.find(curLeftIds[i]); it != prevLeftPts.end()){
-            cv::arrowedLine(img_track, curLeftPts[i], it->second, cv::Scalar(0, 255, 0), 1, 8, 0, 0.2);
+            cv::arrowedLine(img_track_, curLeftPts[i], it->second, cv::Scalar(0, 255, 0), 1, 8, 0, 0.2);
         }
     }
 }
@@ -590,11 +585,11 @@ void FeatureTracker::drawTrack(const SegImage &img,
 
 
 
-void FeatureTracker::setPrediction(map<int, Eigen::Vector3d> &predictPts)
+void FeatureTracker::setPrediction(std::map<int, Eigen::Vector3d> &predictPts)
 {
     predict_pts.clear();
     predict_pts_debug.clear();
-    map<int, Eigen::Vector3d>::iterator itPredict;
+    std::map<int, Eigen::Vector3d>::iterator itPredict;
     for (size_t i = 0; i < ids.size(); i++)
     {
         //printf("prevLeftId size %d prevLeftPts size %d\n",(int)prevLeftIds.size(), (int)prevLeftPts.size());
@@ -613,7 +608,7 @@ void FeatureTracker::setPrediction(map<int, Eigen::Vector3d> &predictPts)
 }
 
 
-void FeatureTracker::removeOutliers(set<int> &removePtsIds)
+void FeatureTracker::removeOutliers(std::set<int> &removePtsIds)
 {
     vector<uchar> status;
     for (int & id : ids){
@@ -656,23 +651,22 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     cur_img.gray0_gpu.download(cur_img.gray0);
     cur_img.gray1_gpu.download(cur_img.gray1);
 
-    bool isHaveInsts = !cur_img.insts_info.empty();
+    bool is_exist_inst = !cur_img.insts_info.empty();
 
     ///开启另一个线程检测动态特征点
     TicToc t_i;
-    std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
+    //std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
+    std::thread t_inst_track(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
 
-    if(isHaveInsts){
-        ///形态学运算
-        erode_filter->apply(cur_img.inv_merge_mask_gpu,cur_img.inv_merge_mask_gpu);
+    if(is_exist_inst){
+        Erode10Gpu(cur_img.inv_merge_mask_gpu,cur_img.inv_merge_mask_gpu);///形态学运算
         cur_img.inv_merge_mask_gpu.download(cur_img.inv_merge_mask);
     }
-
 
     if (!prev_pts.empty())
     {
         DebugT("trackImageNaive | prev_pts.size:{}", prev_pts.size());
-        vector<uchar> status = FlowTrack(prev_img.gray0, cur_img.gray0, prev_pts, cur_pts);
+        vector<uchar> status = FeatureTrackByLK(prev_img.gray0, cur_img.gray0, prev_pts, cur_pts);
         //vector<uchar> status=flowTrackGpu(lk_optical_flow,lk_optical_flow_back,prev_img.gray0_gpu,cur_img.gray0_gpu,prev_pts,cur_pts);
         if(!cur_img.inv_merge_mask.empty()){
             for(int i=0;i<(int)status.size();++i){
@@ -689,7 +683,6 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         ReduceVector(track_cnt, status);
         DebugT("trackImageNaive | cur_pts.size:{}", cur_pts.size());
     }
-
     InfoT("trackImageNaive | flowTrack left:{}", tt.toc_then_tic());
 
     for (auto &n : track_cnt) n++;
@@ -698,25 +691,18 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     TicToc t_m;
     TicToc t_t;
 
-
-    sortPoints(cur_pts,track_cnt,ids);
+    SortPoints(cur_pts, track_cnt, ids);
     if(!cur_img.inv_merge_mask.empty())
         mask = cur_img.inv_merge_mask.clone();
     else
         mask = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
 
-    for(const auto& pt : cur_pts){
-        cv::circle(mask, pt, Config::kMinDist, 0, -1);
-    }
-
-    //cv::threshold(mask,mask,128,255,cv::THRESH_BINARY);
+    for(const auto& pt : cur_pts) cv::circle(mask, pt, cfg::kMinDist, 0, -1);
     mask_gpu.upload(mask);
 
-    if (int n_max_cnt = Config::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10)
+    if (int n_max_cnt = cfg::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10)
     {
         WarnT("trackImageNaive | n_max_cnt:{}", n_max_cnt);
-
-
         //if(cur_img.gray0.empty()) cur_img.gray0_gpu.download(cur_img.gray0);
         DebugT("trackImageNaive | semantic_mask size:{}x{} type:{} ", semantic_mask.rows, semantic_mask.cols,
                semantic_mask.type());
@@ -724,15 +710,12 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         DebugT("trackImageNaive | mask_gpu size:{}x{} type:{} ", mask_gpu.rows, mask_gpu.cols, mask_gpu.type());
         DebugT("trackImageNaive | img.gray0_gpu size:{}x{} type:{} ", cur_img.gray0_gpu.rows, cur_img.gray0_gpu.cols,
                cur_img.gray0_gpu.type());
-
         //n_pts = detectNewFeaturesGPU(n_max_cnt,cur_img.gray0_gpu,mask_gpu);
-        n_pts = DetectNewFeaturesCPU(n_max_cnt, cur_img.gray0, mask);
+        n_pts = DetectShiTomasiCorners(n_max_cnt, cur_img.gray0, mask);
 
         /*cv::imshow("cur_img.gray0",cur_img.gray0);
         cv::waitKey(1);*/
-
         visual_new_pts = n_pts;
-
         for (auto &p : n_pts){
             cur_pts.push_back(p);
             ids.push_back(n_id++);
@@ -759,20 +742,18 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         cur_un_right_pts_map.clear();
         DebugT("trackImageNaive | flowTrack right start");
 
-        std::vector<uchar> status= FlowTrack(cur_img.gray0, cur_img.gray1, cur_pts, cur_right_pts);
+        std::vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, cur_pts, cur_right_pts);
         //vector<uchar> status=flowTrackGpu(lk_optical_flow,lk_optical_flow_back,cur_img.gray0_gpu,cur_img.gray1_gpu,cur_pts,cur_right_pts);
         DebugT("trackImageNaive | flowTrack right finish");
-        if(Config::dataset == DatasetType::kViode){
-            for(int i=0;i<(int)status.size();++i){
+        if(cfg::dataset == DatasetType::kViode){
+            for(int i=0;i<(int)status.size();++i)
                 if(status[i] && VIODE::IsDynamic(cur_right_pts[i], cur_img.seg1))
                     status[i]=0;
-            }
         }
         else if(!cur_img.seg1.empty()){
-            for(int i=0;i<(int)status.size();++i){
+            for(int i=0;i<(int)status.size();++i)
                 if(status[i] && cur_img.seg1.at<uchar>(cur_right_pts[i]) >0 )
                     status[i]=0;
-            }
         }
 
         ids_right = ids;
@@ -789,44 +770,40 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         cur_un_right_pts = undistortedPts(cur_right_pts, m_camera[1]);
         right_pts_velocity = ptsVelocity(ids_right, cur_un_right_pts, cur_un_right_pts_map, prev_un_right_pts_map);
         prev_un_right_pts_map = cur_un_right_pts_map;
-
         DebugT("trackImageNaive | cur_right_pts.size:{}", cur_right_pts.size());
         InfoT("trackImageNaive | flow_track right:{}", tt.toc_then_tic());
     }
-
-
-    if(Config::kShowTrack)
+    if(cfg::kShowTrack)
         drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
 
     t_inst_track.join();
 
-
     /*static int cnt=0;
     cnt++;
     if(cnt==5){
-        *//*cv::Mat inst_mask = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC3,cv::Scalar(0));
-        for(auto &[key,inst] : insts_tracker->instances){
-            if(inst.lost_num>0)continue;
-            debug_t("inst.mask_tensor.sizes():{}", dims2str(inst.mask_tensor.sizes()));
-            cv::Mat m;
-            torch::Tensor t = inst.mask_tensor.unsqueeze(0);
-            debug_t("t.sizes:{}", dims2str(t.sizes()));
-            t = t.expand({3,inst.mask_tensor.sizes()[0],inst.mask_tensor.sizes()[1]});
-            debug_t("t.sizes:{}", DimsToStr(t.sizes()));
-            int color_array[3]={(int)inst.color[0],(int)inst.color[1],(int)inst.color[2]};
-            torch::Tensor color = torch::from_blob(color_array,{3,1,1}).expand({3,inst.mask_tensor.sizes()[0],inst.mask_tensor.sizes()[1]});
-            debug_t("1");
-            torch::Tensor result = color * t.to(torch::kCPU) ;
-            DebugT("2");
+    *//*cv::Mat inst_mask = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC3,cv::Scalar(0));
+    for(auto &[key,inst] : insts_tracker->instances){
+        if(inst.lost_num>0)continue;
+        debug_t("inst.mask_tensor.sizes():{}", dims2str(inst.mask_tensor.sizes()));
+        cv::Mat m;
+        torch::Tensor t = inst.mask_tensor.unsqueeze(0);
+        debug_t("t.sizes:{}", dims2str(t.sizes()));
+        t = t.expand({3,inst.mask_tensor.sizes()[0],inst.mask_tensor.sizes()[1]});
+        debug_t("t.sizes:{}", DimsToStr(t.sizes()));
+        int color_array[3]={(int)inst.color[0],(int)inst.color[1],(int)inst.color[2]};
+        torch::Tensor color = torch::from_blob(color_array,{3,1,1}).expand({3,inst.mask_tensor.sizes()[0],inst.mask_tensor.sizes()[1]});
+        debug_t("1");
+        torch::Tensor result = color * t.to(torch::kCPU) ;
+        DebugT("2");
 
-            m = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC3,result.data_ptr()).clone();
-            debug_t("3");
+        m = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC3,result.data_ptr()).clone();
+        debug_t("3");
 
-            //cv::cvtColor(inst.mask_img,m,CV_GRAY2BGR);
-            inst_mask += m;
-            DebugT("4");
+        //cv::cvtColor(inst.mask_img,m,CV_GRAY2BGR);
+        inst_mask += m;
+        DebugT("4");
 
-        }*//*
+    }*//*
         cv::imwrite("inst_mask.png",img.merge_mask);
         cv::imwrite("background_track.png",img_track);
         cv::Mat inst_show = img.color0.clone();
@@ -836,9 +813,8 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     }*/
 
     InfoT("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.toc_then_tic());
-    if(Config::kShowTrack)insts_tracker->DrawInsts(img_track);
+    if(cfg::kShowTrack)insts_tracker->DrawInsts(img_track_);
     InfoT("TrackSemanticImage drawInsts:{} ms", t_i.toc_then_tic());
-
 
     prev_img = cur_img;
     prev_pts = cur_pts;
@@ -849,7 +825,6 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     prevLeftPtsMap.clear();
     for(size_t i = 0; i < cur_pts.size(); i++)
         prevLeftPtsMap[ids[i]] = cur_pts[i];
-
 
     //cv::imshow("img_track",img_track);
     //cv::waitKey(1);
@@ -904,7 +879,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     /// 检测新的角点
     //RejectWithF();
-    if (int n_max_cnt = Config::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10){
+    if (int n_max_cnt = cfg::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10){
         /*if(!semantic_mask.empty()){
             static cv::Mat mask_element=cv::getStructuringElement(cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));///对semantic_mask进行腐蚀，扩大黑色区域,防止检测的特征点落在动态物体的边缘
             cv::erode(semantic_mask,semantic_mask,mask_element,cv::Point(-1,-1));
@@ -917,12 +892,12 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         else
             mask = cv::Mat(row,col,CV_8UC1,cv::Scalar(255));
         for(const auto& pt : cur_pts){
-            cv::circle(mask, pt, Config::kMinDist, 0, -1);
+            cv::circle(mask, pt, cfg::kMinDist, 0, -1);
         }
         mask_gpu.upload(mask);
 
         debug_t("trackSemanticImage start detect n_max_cnt,size:{}",n_max_cnt);
-        detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, n_max_cnt, 0.01, Config::kMinDist);
+        detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, n_max_cnt, 0.01, cfg::kMinDist);
         cv::cuda::GpuMat d_new_pts;
         detector->detect(cur_img.gray0_gpu,d_new_pts,mask_gpu);
         gpuMat2Points(d_new_pts,n_pts);
@@ -959,7 +934,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         //vector<uchar> status=flowTrack(cur_img.gray0,cur_img.gray1,cur_pts,cur_right_pts);
         vector<uchar> status = flowTrackGpu(lk_optical_flow,lk_optical_flow_back,cur_img.gray0_gpu,cur_img.gray1_gpu,cur_pts,cur_right_pts);
 
-        if(Config::dataset == DatasetType::kViode){
+        if(cfg::dataset == DatasetType::kViode){
             for(int i=0;i<cur_pts.size();i++){
                 if(status[i] && belongViodeDynamic(cur_right_pts[i], cur_img.seg1))
                     status[i]=0;
@@ -976,14 +951,14 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     }
 
     ///光流跟踪的可视化
-    if(Config::kShowTrack) drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
+    if(cfg::kShowTrack) drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
     info_t("TrackSemanticImage 光流跟踪的可视化");//0.9ms
 
     //t_inst_track.join();
 
     InfoT("trackSemanticImage 动态检测线程总时间:{} ms",t_i.toc_then_tic());
 
-    if(Config::kShowTrack)insts_tracker->drawInsts(img_track);
+    if(cfg::kShowTrack)insts_tracker->drawInsts(img_track);
     InfoT("trackSemanticImage drawInsts:{} ms",t_i.toc_then_tic());
 
 
@@ -1008,3 +983,5 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     */
 }
 
+
+}

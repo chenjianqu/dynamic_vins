@@ -79,8 +79,6 @@ vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
 output_path: "/home/chen/ws/dynamic_ws/output/"
 
 #SOLO
-onnx_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/weights/SOLOv2_light_R34_1152x384_cuda102.onnx"
-serialize_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/weights/tensorrt_model_1152x384.bin"
 SOLO_NMS_PRE: 500
 SOLO_MAX_PER_IMG: 100
 SOLO_NMS_KERNEL: "gaussian"
@@ -92,35 +90,37 @@ SOLO_UPDATE_THR: 0.2
 
 tracking_max_age: 30
 tracking_n_init: 3
-extractor_model_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/weights/ckpt.bin"
-
 
 min_dynamic_dist: 10
 max_dynamic_cnt: 50
 
+#物体可视化的持续时间
+visual_inst_duration: 120
+
+basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
+
+extractor_model_path: "weights/deepsort/ckpt.bin"
+
 #log
-estimator_log_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/log/estimator_log.txt"
+estimator_log_path: "output/estimator_log.txt"
 estimator_log_level: "debug"
 estimator_log_flush: "debug"
-feature_tracker_log_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/log/tracker_log.txt"
+feature_tracker_log_path: "output/tracker_log.txt"
 feature_tracker_log_level: "debug"
 feature_tracker_log_flush: "debug"
-segmentor_log_path: "/home/chen/ws/dynamic_ws/src/dynamic_vins/log/segmentor_log.txt"
+segmentor_log_path: "output/segmentor_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
 
-#物体可视化的持续时间
-VISUAL_INST_DURATION: 120
+fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
+fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
+cnet_onnx_path: "weights/raft/kitti_cnet.onnx"
+cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
+update_onnx_path: "weights/raft/kitti_update.onnx"
+update_tensorrt_path: "weights/raft/kitti_update.bin"
 
-
-fnet_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_fnet.onnx"
-fnet_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_fnet.bin"
-
-cnet_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_cnet.onnx"
-cnet_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_cnet.bin"
-
-update_onnx_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_update.onnx"
-update_tensorrt_path: "/home/chen/CLionProjects/RAFT_CPP/weights/kitti_update.bin"
+solo_onnx_path: "weights/SOLOv2_light_R34_1152x384_cuda102.onnx"
+solo_serialize_path: "weights/tensorrt_model_1152x384.bin"
 
 #0表示raw,1表示naive,2表示dynamic
 slam_type: 2

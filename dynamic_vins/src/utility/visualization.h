@@ -45,6 +45,8 @@
 #include "estimator/estimator.h"
 #include "parameters.h"
 
+namespace dynamic_vins{\
+
 
 extern ros::Publisher pub_odometry;
 extern ros::Publisher pub_path, pub_pose;
@@ -99,3 +101,4 @@ visualization_msgs::Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> 
 
 visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,int id,const cv::Scalar &color);
 
+}

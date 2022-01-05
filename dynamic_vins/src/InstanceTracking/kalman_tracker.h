@@ -12,6 +12,9 @@
 
 #include <opencv2/video/tracking.hpp>
 
+namespace dynamic_vins{\
+
+
 enum class TrackState {
     Tentative,
     Confirmed,
@@ -58,5 +61,7 @@ private:
     cv::KalmanFilter kf;
     cv::Mat measurement;
 };
+
+}
 
 #endif //KALMAN_H

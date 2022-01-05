@@ -31,8 +31,9 @@
 #include "parameters.h"
 #include "utils.h"
 
-using namespace std;
-using namespace Eigen;
+
+namespace dynamic_vins{\
+
 
 class FeaturePerFrame
 {
@@ -61,9 +62,9 @@ class FeaturePerFrame
         is_stereo = true;
     }
     double cur_td;
-    Vector3d point, pointRight;
-    Vector2d uv, uvRight;
-    Vector2d velocity, velocityRight;
+    Vec3d point, pointRight;
+    Vec2d uv, uvRight;
+    Vec2d velocity, velocityRight;
     bool is_stereo;
 };
 
@@ -89,29 +90,29 @@ class FeaturePerId
 class FeatureManager
 {
   public:
-    FeatureManager(Matrix3d _Rs[]);
+    FeatureManager(Mat3d _Rs[]);
 
-    void setRic(Matrix3d _ric[]);
+    void setRic(Mat3d _ric[]);
     void clearState();
     int getFeatureCount();
-    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td);
-    vector<pair<Vector3d, Vector3d>> getCorresponding(int frame_count_l, int frame_count_r);
+    bool addFeatureCheckParallax(int frame_count, const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td);
+    vector<pair<Vec3d, Vec3d>> getCorresponding(int frame_count_l, int frame_count_r);
     //void updateDepth(const VectorXd &x);
-    void setDepth(const VectorXd &x);
+    void setDepth(const Eigen::VectorXd &x);
     void removeFailures();
     void clearDepth();
-    VectorXd getDepthVector();
-    void triangulate(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vector3d tic[], Matrix3d ric[]);
-    void triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
-                            Eigen::Vector2d &point0, Eigen::Vector2d &point1, Eigen::Vector3d &point_3d);
-    void initFramePoseByPnP(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vector3d tic[], Matrix3d ric[]);
-    bool solvePoseByPnP(Eigen::Matrix3d &R_initial, Eigen::Vector3d &P_initial, 
+    Eigen::VectorXd getDepthVector();
+    void triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
+    void triangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
+                            Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
+    void initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
+    bool solvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial, 
                             vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
-    void removeBackShiftDepth(Eigen::Matrix3d marg_R, Eigen::Vector3d marg_P, Eigen::Matrix3d new_R, Eigen::Vector3d new_P);
+    void removeBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_R, Vec3d new_P);
     void removeBack();
     void removeFront(int frame_count);
-    void removeOutlier(set<int> &outlierIndex);
-    list<FeaturePerId> feature;
+    void removeOutlier(std::set<int> &outlierIndex);
+    std::list<FeaturePerId> feature;
     int last_track_num;
     double last_average_parallax;
     int new_feature_num;
@@ -119,8 +120,11 @@ class FeatureManager
 
   private:
     double compensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
-    const Matrix3d *Rs;
-    Matrix3d ric[2];
+    const Mat3d *Rs;
+    Mat3d ric[2];
 };
+
+
+}
 
 #endif

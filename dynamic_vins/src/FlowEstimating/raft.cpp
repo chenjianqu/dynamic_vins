@@ -16,9 +16,12 @@
 #include "TensorRT/common.h"
 #include "TensorRT/logger.h"
 
+namespace dynamic_vins{\
+
 
 namespace F = torch::nn::functional;
 using Tensor = torch::Tensor;
+using Slice = torch::indexing::Slice;
 
 /**
  * 图像预处理
@@ -58,8 +61,8 @@ Tensor RaftData::Process(cv::Mat &img)
 Tensor RaftData::Unpad(Tensor &tensor)
 {
     return tensor.index({"...",
-                         at::indexing::Slice(h_pad,at::indexing::None),
-                         at::indexing::Slice(w_pad,at::indexing::None)});
+                         Slice(h_pad,at::indexing::None),
+                         Slice(w_pad,at::indexing::None)});
 }
 
 
@@ -70,9 +73,9 @@ RAFT::RAFT(){
     InfoS("Read model param");
 
     auto CreateModel = [](std::unique_ptr<nvinfer1::IRuntime,InferDeleter> &runtime,
-                            std::shared_ptr<nvinfer1::ICudaEngine> &engine,
-                            std::unique_ptr<nvinfer1::IExecutionContext, InferDeleter> &context,
-                            const string& path){
+            std::shared_ptr<nvinfer1::ICudaEngine> &engine,
+            std::unique_ptr<nvinfer1::IExecutionContext, InferDeleter> &context,
+            const string& path){
         std::string model_str;
         if(std::ifstream ifs(path);ifs.is_open()){
             while(ifs.peek() != EOF){
@@ -349,4 +352,6 @@ vector<Tensor> RAFT::Forward(Tensor& tensor0, Tensor& tensor1) {
     return flow_prediction;
 }
 
+
+}
 

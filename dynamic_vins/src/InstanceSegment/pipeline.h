@@ -20,6 +20,8 @@
 #include "utils.h"
 #include "featureTracker/segment_image.h"
 
+namespace dynamic_vins{\
+
 class Pipeline {
 public:
     using Ptr=std::shared_ptr<Pipeline>;
@@ -54,6 +56,8 @@ public:
 
 private:
 };
+
+}
 
 
 #endif //DYNAMIC_VINS_PIPELINE_H

@@ -7,21 +7,18 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_PROJECTIONSPEEDFACTOR_H
-#define DYNAMIC_VINS_PROJECTIONSPEEDFACTOR_H
-
-
+#ifndef DYNAMIC_VINS_PROJECTION_SPEED_FACTOR_H
+#define DYNAMIC_VINS_PROJECTION_SPEED_FACTOR_H
 
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-
 #include <sophus/so3.hpp>
 
+#include "parameters.h"
+#include "utils.h"
+#include "estimator/dynamic.h"
 
-#include "../parameters.h"
-#include "../utils.h"
-#include "../estimator/dynamic.h"
-
+namespace dynamic_vins{\
 
 
 //优化变量:Twbj 7,Tbc 7,Twoj 7,Twoi 7,speed 6 ,逆深度 1,
@@ -175,8 +172,8 @@ class SpeedPoseSimpleFactor: public ceres::SizedCostFunction<3, 7,7,6,1>{
 public:
     SpeedPoseSimpleFactor(const Eigen::Vector3d &pts_j_, double time_j_, double time_i_, Eigen::Matrix3d &R_wbj_, Eigen::Vector3d &P_wbj_, Eigen::Matrix3d &R_bc_,
                           Eigen::Vector3d &P_bc_,const Eigen::Vector2d &vel_j_,const double td_j_, const double cur_td_):
-    pts_j(pts_j_),time_ij(time_i_-time_j_),td(cur_td_),td_j(td_j_)
-    {
+                          pts_j(pts_j_),time_ij(time_i_-time_j_),td(cur_td_),td_j(td_j_)
+                          {
         R_wbj=R_wbj_;
         R_bc=R_bc_;
         P_wbj=P_wbj_;
@@ -185,9 +182,9 @@ public:
         vel_j.y()=vel_j_.y();
         vel_j.z()=1;
 
-    }
+                          }
 
-    virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
+                          virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
 
     Eigen::Vector3d pts_j;//估计值（以前的观测值）
     double time_ij;
@@ -209,9 +206,9 @@ public:
     ConstSpeedFactor(const Eigen::Vector3d &pts_j_, double time_j_, double time_i_, Eigen::Matrix3d &R_wbj_,
                      Eigen::Vector3d &P_wbj_, Eigen::Matrix3d &R_bc_, Eigen::Vector3d &P_bc_, double inv_depth_,
                      Eigen::Vector3d &last_v_, Eigen::Vector3d &last_a_)
-                                       :
-    pts_j(pts_j_),time_ij(time_i_-time_j_)
-    {
+                     :
+                     pts_j(pts_j_),time_ij(time_i_-time_j_)
+                     {
         R_wbj=R_wbj_;
         R_bc=R_bc_;
         P_wbj=P_wbj_;
@@ -219,9 +216,9 @@ public:
         inv_depth=inv_depth_;
         last_v=last_v_;
         last_a=last_a_;
-    }
+                     }
 
-    virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
+                     virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
 
 
     Eigen::Vector3d pts_j;//估计值（以前的观测值）
@@ -258,7 +255,7 @@ public:
 
 
 
+}
 
 
-
-#endif //DYNAMIC_VINS_PROJECTIONSPEEDFACTOR_H
+#endif //DYNAMIC_VINS_PROJECTION_SPEED_FACTOR_H

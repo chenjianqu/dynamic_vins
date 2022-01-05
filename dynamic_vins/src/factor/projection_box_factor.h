@@ -7,16 +7,18 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_PROJECTIONBOXFACTOR_H
-#define DYNAMIC_VINS_PROJECTIONBOXFACTOR_H
+#ifndef DYNAMIC_VINS_PROJECTION_BOX_FACTOR_H
+#define DYNAMIC_VINS_PROJECTION_BOX_FACTOR_H
 
 
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
 #include <sophus/so3.hpp>
 
-#include "../parameters.h"
-#include "../utils.h"
+#include "parameters.h"
+#include "utils.h"
+
+namespace dynamic_vins{\
 
 
 /**
@@ -63,10 +65,10 @@ public:
 class BoxSqrtFactor: public ceres::SizedCostFunction<3,7,3,1>{
 public:
     BoxSqrtFactor(const Vec3d &pts_j_,const Eigen::Vector2d &velocity_j_,
-              const Mat3d &R_wbj_,const Vec3d &P_wbj_,
-              const Mat3d &R_bc_,const Vec3d &P_bc_,
-              const double td_j_,const double curr_td_):
-    pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_){
+                  const Mat3d &R_wbj_,const Vec3d &P_wbj_,
+                  const Mat3d &R_bc_,const Vec3d &P_bc_,
+                  const double td_j_,const double curr_td_):
+                  pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_){
         R_wbj=R_wbj_;
         P_wbj=P_wbj_;
         R_bc=R_bc_;
@@ -92,10 +94,10 @@ public:
 class BoxAbsFactor: public ceres::SizedCostFunction<3,7,3,1>{
 public:
     BoxAbsFactor(const Vec3d &pts_j_,const Eigen::Vector2d &velocity_j_,
-              const Mat3d &R_wbj_,const Vec3d &P_wbj_,
-              const Mat3d &R_bc_,const Vec3d &P_bc_,
-              const double td_j_,const double curr_td_):
-              pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_){
+                 const Mat3d &R_wbj_,const Vec3d &P_wbj_,
+                 const Mat3d &R_bc_,const Vec3d &P_bc_,
+                 const double td_j_,const double curr_td_):
+                 pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_){
         R_wbj=R_wbj_;
         P_wbj=P_wbj_;
         R_bc=R_bc_;
@@ -145,7 +147,7 @@ public:
     Vec3d P_wbj,P_bc,P_woj;
 };
 
+}
 
 
-
-#endif //DYNAMIC_VINS_PROJECTIONBOXFACTOR_H
+#endif //DYNAMIC_VINS_PROJECTION_BOX_FACTOR_H

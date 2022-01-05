@@ -9,7 +9,10 @@
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
 
-#include "projectionOneFrameTwoCamFactor.h"
+#include "projection_one_frame_two_cam_factor.h"
+
+namespace dynamic_vins{\
+
 
 Eigen::Matrix2d ProjectionOneFrameTwoCamFactor::sqrt_info;
 double ProjectionOneFrameTwoCamFactor::sum_t;
@@ -19,7 +22,7 @@ ProjectionOneFrameTwoCamFactor::ProjectionOneFrameTwoCamFactor(const Vec3d &_pts
                                                                const double _td_i, const double _td_j) : 
                                                                pts_i(_pts_i), pts_j(_pts_j), 
                                                                td_i(_td_i), td_j(_td_j)
-{
+                                                               {
     velocity_i.x() = _velocity_i.x();
     velocity_i.y() = _velocity_i.y();
     velocity_i.z() = 0;
@@ -37,7 +40,7 @@ ProjectionOneFrameTwoCamFactor::ProjectionOneFrameTwoCamFactor(const Vec3d &_pts
     tangent_base.block<1, 3>(0, 0) = b1.transpose();
     tangent_base.block<1, 3>(1, 0) = b2.transpose();
 #endif
-};
+                                                               };
 
 bool ProjectionOneFrameTwoCamFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
@@ -85,12 +88,12 @@ bool ProjectionOneFrameTwoCamFactor::Evaluate(double const *const *parameters, d
         x2 = pts_camera_j(1);
         x3 = pts_camera_j(2);
         norm_jaco << 1.0 / norm - x1 * x1 / pow(norm, 3), - x1 * x2 / pow(norm, 3),            - x1 * x3 / pow(norm, 3),
-                     - x1 * x2 / pow(norm, 3),            1.0 / norm - x2 * x2 / pow(norm, 3), - x2 * x3 / pow(norm, 3),
-                     - x1 * x3 / pow(norm, 3),            - x2 * x3 / pow(norm, 3),            1.0 / norm - x3 * x3 / pow(norm, 3);
+        - x1 * x2 / pow(norm, 3),            1.0 / norm - x2 * x2 / pow(norm, 3), - x2 * x3 / pow(norm, 3),
+        - x1 * x3 / pow(norm, 3),            - x2 * x3 / pow(norm, 3),            1.0 / norm - x3 * x3 / pow(norm, 3);
         reduce = tangent_base * norm_jaco;
 #else
         reduce << 1. / dep_j, 0, -pts_camera_j(0) / (dep_j * dep_j),
-            0, 1. / dep_j, -pts_camera_j(1) / (dep_j * dep_j);
+        0, 1. / dep_j, -pts_camera_j(1) / (dep_j * dep_j);
 #endif
         reduce = sqrt_info * reduce;
 
@@ -125,7 +128,7 @@ bool ProjectionOneFrameTwoCamFactor::Evaluate(double const *const *parameters, d
         {
             Eigen::Map<Vec2d> jacobian_td(jacobians[3]);
             jacobian_td = reduce * ric2.transpose() * ric * velocity_i / inv_dep_i * -1.0  +
-                          sqrt_info * velocity_j.head(2);
+                    sqrt_info * velocity_j.head(2);
         }
     }
     sum_t += tic_toc.toc();
@@ -147,15 +150,15 @@ void ProjectionOneFrameTwoCamFactor::check(double **parameters)
     puts("my");
 
     std::cout << Eigen::Map<Eigen::Matrix<double, 2, 1>>(res).transpose() << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Eigen::Matrix<double, 2, 7, Eigen::RowMajor>>(jaco[0]) << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Eigen::Matrix<double, 2, 7, Eigen::RowMajor>>(jaco[1]) << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Vec2d>(jaco[2]) << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Vec2d>(jaco[3]) << std::endl
-              << std::endl;
+    << std::endl;
 
     Vec3d tic(parameters[0][0], parameters[0][1], parameters[0][2]);
     Eigen::Quaterniond qic(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
@@ -245,4 +248,7 @@ void ProjectionOneFrameTwoCamFactor::check(double **parameters)
     std::cout << num_jacobian.block<2, 6>(0, 6) << std::endl;
     std::cout << num_jacobian.block<2, 1>(0, 12) << std::endl;
     std::cout << num_jacobian.block<2, 1>(0, 13) << std::endl;
+}
+
+
 }

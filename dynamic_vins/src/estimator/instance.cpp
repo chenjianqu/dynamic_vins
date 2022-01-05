@@ -10,6 +10,8 @@
 #include "instance.h"
 #include "estimator.h"
 
+namespace dynamic_vins{\
+
 
 void Instance::GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
     Eigen::Vector3d minPt,maxPt;
@@ -560,9 +562,5 @@ void Instance::GetOptimizationParameters()
 
 
 
-
-
-
-
-
+}
 

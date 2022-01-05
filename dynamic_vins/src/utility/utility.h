@@ -22,9 +22,11 @@
 #include <cstring>
 #include <eigen3/Eigen/Dense>
 
+namespace dynamic_vins{\
+
 class Utility
 {
-  public:
+public:
     template <typename Derived>
     static Eigen::Quaternion<typename Derived::Scalar> deltaQ(const Eigen::MatrixBase<Derived> &theta)
     {
@@ -45,8 +47,8 @@ class Utility
     {
         Eigen::Matrix<typename Derived::Scalar, 3, 3> ans;
         ans << typename Derived::Scalar(0), -q(2), q(1),
-            q(2), typename Derived::Scalar(0), -q(0),
-            -q(1), q(0), typename Derived::Scalar(0);
+        q(2), typename Derived::Scalar(0), -q(0),
+        -q(1), q(0), typename Derived::Scalar(0);
         return ans;
     }
 
@@ -108,18 +110,18 @@ class Utility
 
         Eigen::Matrix<Scalar_t, 3, 3> Rz;
         Rz << cos(y), -sin(y), 0,
-            sin(y), cos(y), 0,
-            0, 0, 1;
+        sin(y), cos(y), 0,
+        0, 0, 1;
 
         Eigen::Matrix<Scalar_t, 3, 3> Ry;
         Ry << cos(p), 0., sin(p),
-            0., 1., 0.,
-            -sin(p), 0., cos(p);
+        0., 1., 0.,
+        -sin(p), 0., cos(p);
 
         Eigen::Matrix<Scalar_t, 3, 3> Rx;
         Rx << 1., 0., 0.,
-            0., cos(r), -sin(r),
-            0., sin(r), cos(r);
+        0., cos(r), -sin(r),
+        0., sin(r), cos(r);
 
         return Rz * Ry * Rx;
     }
@@ -128,8 +130,8 @@ class Utility
 
     template <size_t N>
     struct uint_
-    {
-    };
+            {
+            };
 
     template <size_t N, typename Lambda, typename IterT>
     void unroller(const Lambda &f, const IterT &iter, uint_<N>)
@@ -146,12 +148,13 @@ class Utility
 
     template <typename T>
     static T normalizeAngle(const T& angle_degrees) {
-      T two_pi(2.0 * 180);
-      if (angle_degrees > 0)
-      return angle_degrees -
-          two_pi * std::floor((angle_degrees + T(180)) / two_pi);
-      else
-        return angle_degrees +
+        T two_pi(2.0 * 180);
+        if (angle_degrees > 0)
+            return angle_degrees -
+            two_pi * std::floor((angle_degrees + T(180)) / two_pi);
+        else
+            return angle_degrees +
             two_pi * std::floor((-angle_degrees + T(180)) / two_pi);
     };
 };
+}

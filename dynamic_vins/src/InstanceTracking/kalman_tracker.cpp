@@ -8,7 +8,10 @@
  *******************************************************/
 
 #include "kalman_tracker.h"
-#include "../parameters.h"
+#include "parameters.h"
+
+namespace dynamic_vins{\
+
 
 using namespace cv;
 
@@ -94,4 +97,7 @@ void KalmanTracker::miss() {
 // Return the current state vector
 cv::Rect2f KalmanTracker::rect() const {
     return get_rect_xysr(kf.statePost);
+}
+
+
 }

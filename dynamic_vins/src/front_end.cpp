@@ -31,7 +31,6 @@ constexpr double DELAY=0.005;
 std::shared_ptr<FeatureTracker> featureTracker;
 ros::Publisher pub_image_track;
 
-
 queue<sensor_msgs::ImageConstPtr> img0_buf;
 queue<sensor_msgs::ImageConstPtr> seg0_buf;
 queue<sensor_msgs::ImageConstPtr> img1_buf;

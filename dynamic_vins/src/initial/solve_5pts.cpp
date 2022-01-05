@@ -201,6 +201,9 @@ namespace cv {
 }
 
 
+namespace dynamic_vins{\
+
+
 bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &corres, Matrix3d &Rotation, Vector3d &Translation)
 {
     if (corres.size() >= 15)
@@ -235,6 +238,8 @@ bool MotionEstimator::solveRelativeRT(const vector<pair<Vector3d, Vector3d>> &co
             return false;
     }
     return false;
+}
+
 }
 
 

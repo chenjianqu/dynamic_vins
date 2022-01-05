@@ -7,14 +7,15 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "projectionBoxFactor.h"
+#include "projection_box_factor.h"
+
+namespace dynamic_vins{\
 
 double ProjBoxFactor::sum_t;
 double ProjBoxSimpleFactor::sum_t;
 double BoxAbsFactor::sum_t;
 double BoxSqrtFactor::sum_t;
 double BoxPowFactor::sum_t;
-
 
 
 //优化变量:Twbj 7,Tbc 7,Twoj 7,box 3 ,逆深度 1,
@@ -51,9 +52,9 @@ bool ProjBoxFactor::Evaluate(double const *const *parameters, double *residuals,
     residuals[1]=(pts_abs_y-box_y)*(pts_abs_y-box_y);
     residuals[2]=(pts_abs_z-box_z)*(pts_abs_z-box_z);
 
-/*    residuals[0]=std::max(pts_abs_x-box_x,0.);
-    residuals[1]=std::max(pts_abs_y-box_y,0.);
-    residuals[2]=std::max(pts_abs_z-box_z,0.);*/
+    /*    residuals[0]=std::max(pts_abs_x-box_x,0.);
+        residuals[1]=std::max(pts_abs_y-box_y,0.);
+        residuals[2]=std::max(pts_abs_z-box_z,0.);*/
 
     if (jacobians)
     {
@@ -62,9 +63,9 @@ bool ProjBoxFactor::Evaluate(double const *const *parameters, double *residuals,
         Mat3d R_woj = Q_woj.toRotationMatrix();
         Mat3d R_ojw=R_woj.transpose();
 
-/*        double reduce11=pts_abs_x-box_x>0? pts_obj_j.x()/pts_abs_x: 0.;
-        double reduce22=pts_abs_y-box_y>0? pts_obj_j.y()/pts_abs_y: 0.;
-        double reduce33=pts_abs_z-box_z>0? pts_obj_j.z()/pts_abs_z: 0.;*/
+        /*        double reduce11=pts_abs_x-box_x>0? pts_obj_j.x()/pts_abs_x: 0.;
+                double reduce22=pts_abs_y-box_y>0? pts_obj_j.y()/pts_abs_y: 0.;
+                double reduce33=pts_abs_z-box_z>0? pts_obj_j.z()/pts_abs_z: 0.;*/
         double reduce11=2* (pts_abs_x - box_x) * pts_obj_j.x() / pts_abs_x;
         double reduce22=2* (pts_abs_y - box_y) * pts_obj_j.y() / pts_abs_y;
         double reduce33=2* (pts_abs_z - box_z) * pts_obj_j.z() / pts_abs_z;
@@ -114,9 +115,9 @@ bool ProjBoxFactor::Evaluate(double const *const *parameters, double *residuals,
         }
         if (jacobians[3])
         {
-/*            double box11=pts_abs_x-box_x>0 ? -1 : 0;
-            double box22=pts_abs_y-box_y>0 ? -1 : 0;
-            double box33=pts_abs_z-box_z>0 ? -1 : 0;*/
+            /*            double box11=pts_abs_x-box_x>0 ? -1 : 0;
+                        double box22=pts_abs_y-box_y>0 ? -1 : 0;
+                        double box33=pts_abs_z-box_z>0 ? -1 : 0;*/
             double box11= -2 * (pts_abs_x - box_x);
             double box22= -2 * (pts_abs_y - box_y);
             double box33= -2 * (pts_abs_z - box_z);
@@ -398,7 +399,7 @@ bool BoxSqrtFactor::Evaluate(double const *const *parameters, double *residuals,
             jaco_box(1,1)=box22;
             jaco_box(2,2)=box33;
 
-             Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> jacobian_box(jacobians[1]);
+            Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> jacobian_box(jacobians[1]);
             jacobian_box = Mat3d::Zero();
         }
         if(jacobians[2])
@@ -522,7 +523,7 @@ bool BoxAbsFactor::Evaluate(double const *const *parameters, double *residuals, 
 
 
 
-
+}
 
 
 

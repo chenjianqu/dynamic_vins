@@ -22,6 +22,7 @@
 using namespace Eigen;
 using namespace std;
 
+namespace dynamic_vins{\
 
 
 struct SFMFeature
@@ -53,7 +54,7 @@ struct ReprojectionError3D
 	}
 
 	static ceres::CostFunction* Create(const double observed_x,
-	                                   const double observed_y) 
+	                                   const double observed_y)
 	{
 	  return (new ceres::AutoDiffCostFunction<
 	          ReprojectionError3D, 2, 4, 3, 3>(
@@ -77,9 +78,11 @@ private:
 
 	void triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
 							Vector2d &point0, Vector2d &point1, Vector3d &point_3d);
-	void triangulateTwoFrames(int frame0, Eigen::Matrix<double, 3, 4> &Pose0, 
+	void triangulateTwoFrames(int frame0, Eigen::Matrix<double, 3, 4> &Pose0,
 							  int frame1, Eigen::Matrix<double, 3, 4> &Pose1,
 							  vector<SFMFeature> &sfm_f);
 
 	int feature_num;
 };
+
+}

@@ -7,16 +7,17 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_PROJECTIONINSTANCEFACTOR_H
-#define DYNAMIC_VINS_PROJECTIONINSTANCEFACTOR_H
+#ifndef DYNAMIC_VINS_PROJECTION_INSTANCE_FACTOR_H
+#define DYNAMIC_VINS_PROJECTION_INSTANCE_FACTOR_H
 
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
 #include <sophus/so3.hpp>
 
+#include "parameters.h"
+#include "utils.h"
 
-#include "../parameters.h"
-#include "../utils.h"
+namespace dynamic_vins{\
 
 
 /**
@@ -30,10 +31,10 @@ public:
     :pts_j(_pts_j), pts_i(_pts_i){}
 
     ProjectionInstanceFactor(const Vec3d &_pts_j, const Vec3d &_pts_i,
-                                           const Vec2d &_velocity_j, const Vec2d &_velocity_i,
-                                           const double _td_j, const double _td_i,const double cur_td_) :
-                                           pts_j(_pts_j),pts_i(_pts_i),
-                                           td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
+                             const Vec2d &_velocity_j, const Vec2d &_velocity_i,
+                             const double _td_j, const double _td_i,const double cur_td_) :
+                             pts_j(_pts_j),pts_i(_pts_i),
+                             td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
         velocity_i.z() = 0;
@@ -60,7 +61,7 @@ public:
 class ProjInst12Factor : public ceres::SizedCostFunction<2, 7, 7, 1>{
 public:
     ProjInst12Factor(const Vec3d &_pts_j, const Vec3d &_pts_i) :
-                                           pts_i(_pts_i), pts_j(_pts_j){
+    pts_i(_pts_i), pts_j(_pts_j){
     };
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
@@ -104,8 +105,8 @@ public:
     ProjInst21Factor(const Vec3d &_pts_j, const Vec3d &_pts_i,
                      const Vec2d &_velocity_j, const Vec2d &_velocity_i,
                      const double _td_j, const double _td_i, const double cur_td_, int landmark_id) :
-                                           pts_i(_pts_i), pts_j(_pts_j),
-                                           td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
+                     pts_i(_pts_i), pts_j(_pts_j),
+                     td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
         velocity_i.z() = 0;
@@ -125,9 +126,9 @@ public:
     static Eigen::Matrix2d sqrt_info;
     static double sum_t;
 
-   static int debug_num;
+    static int debug_num;
 
-   int id;
+    int id;
 
 };
 
@@ -141,8 +142,8 @@ public:
                            const Mat3d &R_wbi_, const Vec3d &P_wbi_,
                            const Mat3d &R_bc_, const Vec3d &P_bc_,
                            const double _td_j, const double _td_i, const double cur_td_, int landmark_id) :
-                                           pts_i(_pts_i), pts_j(_pts_j),
-                                           td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
+                           pts_i(_pts_i), pts_j(_pts_j),
+                           td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
         velocity_i.z() = 0;
@@ -185,8 +186,8 @@ public:
     ProjInst22Factor(const Vec3d &_pts_j, const Vec3d &_pts_i,
                      const Vec2d &_velocity_j, const Vec2d &_velocity_i,
                      const double _td_j, const double _td_i, const double cur_td_) :
-                                           pts_i(_pts_i), pts_j(_pts_j),
-                                           td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
+                     pts_i(_pts_i), pts_j(_pts_j),
+                     td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
         velocity_i.z() = 0;
@@ -214,8 +215,8 @@ public:
                            const Mat3d &R_bc1_, const Vec3d &P_bc1_,
                            const Mat3d &R_bc2_, const Vec3d &P_bc2_,
                            const double _td_j, const double _td_i, const double cur_td_, int landmark_id) :
-                                               pts_i(_pts_i), pts_j(_pts_j),
-                                               td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
+                           pts_i(_pts_i), pts_j(_pts_j),
+                           td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
         velocity_i.z() = 0;
@@ -251,7 +252,7 @@ public:
 class InstancePositionFactor : public ceres::SizedCostFunction<1,6>{
 public:
     InstancePositionFactor(const Vec3d &_pts_j,const Mat3d &R_wbj_,const Vec3d &P_wbj_,
-                                           const Mat3d &R_bc_,const Vec3d &P_bc_,const double depth_){
+                           const Mat3d &R_bc_,const Vec3d &P_bc_,const double depth_){
         pts_j=_pts_j;
         R_wbj=R_wbj_;
         P_wbj=P_wbj_;
@@ -340,10 +341,10 @@ public:
     InstanceInitPowFactorSpeed(const Vec3d &pts_j_,const Vec2d &velocity_j_,
                                const Mat3d &R_wbj_,const Vec3d &P_wbj_,
                                const Mat3d &R_bc_,const Vec3d &P_bc_,
-                          const double td_j_,const double curr_td_,
-                          const double time_j,const double time_s,double factor_=0.01):
-                          pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_),
-                          time_js(time_j- time_s),factor(factor_){
+                               const double td_j_,const double curr_td_,
+                               const double time_j,const double time_s,double factor_=0.01):
+                               pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_),
+                               time_js(time_j- time_s),factor(factor_){
         R_wbj=R_wbj_;
         P_wbj=P_wbj_;
         R_bc=R_bc_;
@@ -367,6 +368,6 @@ public:
 };
 
 
+}
 
-
-#endif //DYNAMIC_VINS_PROJECTIONINSTANCEFACTOR_H
+#endif //DYNAMIC_VINS_PROJECTION_INSTANCE_FACTOR_H

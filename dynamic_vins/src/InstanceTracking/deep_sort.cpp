@@ -14,6 +14,8 @@
 #include "extractor.h"
 #include "tracker_manager.h"
 
+namespace dynamic_vins{\
+
 using namespace std;
 using namespace cv;
 
@@ -48,9 +50,9 @@ torch::Tensor CalIouDist(const vector<Rect2f> &dets, const vector<Rect2f> &trks)
 
 
 DeepSORT::DeepSORT(const array<int64_t, 2> &dim)
-        : extractor(make_unique<Extractor>()),
-          manager(make_unique<TrackerManager<TrackData>>(data, dim)),
-          feat_metric(make_unique<FeatureMetric<TrackData>>(data)) {
+: extractor(make_unique<Extractor>()),
+manager(make_unique<TrackerManager<TrackData>>(data, dim)),
+feat_metric(make_unique<FeatureMetric<TrackData>>(data)) {
 
 }
 
@@ -78,8 +80,8 @@ vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::M
                 auto feat_mat = feat_metric->distance(extractor->extract(boxes), trk_ids);
                 feat_mat.masked_fill_((iou_mat > 0.8f).__ior__(feat_mat > 0.2f), INVALID_DIST);
                 return feat_mat;
-            },
-            [this, &detections](const std::vector<int> &trk_ids, const std::vector<int> &det_ids) {
+                },
+                [this, &detections](const std::vector<int> &trk_ids, const std::vector<int> &det_ids) {
                 vector<cv::Rect2f> trks;
                 for (auto t : trk_ids) {
                     trks.push_back(data[t].kalman.rect());
@@ -105,4 +107,7 @@ vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::M
 
     //return manager->visible_tracks();
     return manager->visible_tracks_info();
+}
+
+
 }

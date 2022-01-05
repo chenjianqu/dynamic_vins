@@ -19,10 +19,11 @@
 #include "visualization.h"
 #include "../estimator/instance_manager.h"
 
+namespace dynamic_vins{\
+
+
 using namespace ros;
 using namespace Eigen;
-
-
 
 ros::Publisher pub_odometry, pub_latest_odometry;
 ros::Publisher pub_path;
@@ -102,15 +103,15 @@ void PubTrackImage(const cv::Mat &imgTrack, const double t)
 
 void printStatistics(const Estimator &estimator, double t)
 {
-    if (estimator.solver_flag != SolverFlag::NON_LINEAR)
+    if (estimator.solver_flag != SolverFlag::kNonLinear)
         return;
     //printf("position: %f, %f, %f\r", e.Ps[kWindowSize].x(), e.Ps[kWindowSize].y(), e.Ps[kWindowSize].z());
     ROS_DEBUG_STREAM("position: " << estimator.Ps[kWindowSize].transpose());
     ROS_DEBUG_STREAM("orientation: " << estimator.Vs[kWindowSize].transpose());
-    if (Config::ESTIMATE_EXTRINSIC)
+    if (cfg::ESTIMATE_EXTRINSIC)
     {
-        cv::FileStorage fs(Config::EX_CALIB_RESULT_PATH, cv::FileStorage::WRITE);
-        for (int i = 0; i < Config::kCamNum; i++)
+        cv::FileStorage fs(cfg::kExCalibResultPath, cv::FileStorage::WRITE);
+        for (int i = 0; i < cfg::kCamNum; i++)
         {
             //ROS_DEBUG("calibration result for camera %d", i);
             ROS_DEBUG_STREAM("extirnsic tic: " << estimator.tic[i].transpose());
@@ -139,13 +140,13 @@ void printStatistics(const Estimator &estimator, double t)
     sum_of_path += (estimator.Ps[kWindowSize] - last_path).norm();
     last_path = estimator.Ps[kWindowSize];
     ROS_DEBUG("sum of path %f", sum_of_path);
-    if (Config::ESTIMATE_TD)
+    if (cfg::ESTIMATE_TD)
         ROS_INFO("td %f", estimator.td);
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
 {
-    if (estimator.solver_flag == SolverFlag::NON_LINEAR)
+    if (estimator.solver_flag == SolverFlag::kNonLinear)
     {
         nav_msgs::Odometry odometry;
         odometry.header = header;
@@ -175,7 +176,7 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
         pub_path.publish(path);
 
         // write result to file
-        ofstream foutC(Config::VINS_RESULT_PATH, ios::app);
+        ofstream foutC(cfg::kVinsResultPath, ios::app);
         foutC.setf(ios::fixed, ios::floatfield);
         /*
         foutC.precision(0);
@@ -192,10 +193,10 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
               << e.Vs[kWindowSize].y() << ","
               << e.Vs[kWindowSize].z() << endl;
             */
-            foutC << header.stamp << " "
-                  << estimator.Ps[kWindowSize].x() << " "
-                  << estimator.Ps[kWindowSize].y() << " "
-                  << estimator.Ps[kWindowSize].z() << " "
+        foutC << header.stamp << " "
+        << estimator.Ps[kWindowSize].x() << " "
+        << estimator.Ps[kWindowSize].y() << " "
+        << estimator.Ps[kWindowSize].z() << " "
         <<tmp_Q.x()<<" "
         <<tmp_Q.y()<<" "
         <<tmp_Q.z()<<" "
@@ -203,7 +204,7 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
         foutC.close();
         Eigen::Vector3d tmp_T = estimator.Ps[kWindowSize];
         printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(), tmp_T.x(), tmp_T.y(), tmp_T.z(),
-                                                          tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
+               tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
     }
 }
 
@@ -245,7 +246,7 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
 {
     int idx2 = kWindowSize - 1;
 
-    if (estimator.solver_flag == SolverFlag::NON_LINEAR)
+    if (estimator.solver_flag == SolverFlag::kNonLinear)
     {
         int i = idx2;
         Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[0];
@@ -266,7 +267,7 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
 
         cameraposevisual.reset();
         cameraposevisual.add_pose(P, R);
-        if(Config::STEREO)
+        if(cfg::STEREO)
         {
             Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[1];
             Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[1]);
@@ -317,7 +318,7 @@ void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
         //        continue;
 
         if (it_per_id.start_frame == 0 && it_per_id.feature_per_frame.size() <= 2 
-            && it_per_id.solve_flag == 1 )
+        && it_per_id.solve_flag == 1 )
         {
             int imu_i = it_per_id.start_frame;
             Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
@@ -336,7 +337,7 @@ void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
 
 void pubTF(const Estimator &estimator, const std_msgs::Header &header)
 {
-    if( estimator.solver_flag != SolverFlag::NON_LINEAR)
+    if( estimator.solver_flag != SolverFlag::kNonLinear)
         return;
     static tf::TransformBroadcaster br;
     tf::Transform transform;
@@ -387,7 +388,7 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header)
 void pubKeyframe(const Estimator &estimator)
 {
     // pub camera pose, 2D-3D points of keyframe
-    if (estimator.solver_flag == SolverFlag::NON_LINEAR && estimator.margin_flag == MarginFlag::kMarginOld)
+    if (estimator.solver_flag == SolverFlag::kNonLinear && estimator.margin_flag == MarginFlag::kMarginOld)
     {
         int i = kWindowSize - 2;
         //Vector3d P = e.Ps[i] + e.Rs[i] * e.tic[0];
@@ -421,7 +422,7 @@ void pubKeyframe(const Estimator &estimator)
                 int imu_i = it_per_id.start_frame;
                 Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
                 Vector3d w_pts_i = estimator.Rs[imu_i] * (estimator.ric[0] * pts_i + estimator.tic[0])
-                                      + estimator.Ps[imu_i];
+                        + estimator.Ps[imu_i];
                 geometry_msgs::Point32 p;
                 p.x = (float)w_pts_i(0);
                 p.y = (float)w_pts_i(1);
@@ -606,7 +607,7 @@ void printInstanceDepth(Instance &inst)
     for(auto& landmark : inst.landmarks)
         if(landmark.depth > 0.)
             printf("<lid:%d:d:%.2lf> ",landmark.id,landmark.depth);
-    printf("\n");
+        printf("\n");
 }
 
 
@@ -651,7 +652,7 @@ visualization_msgs::Marker BuildLineStripMarker(geometry_msgs::Point p[8],int id
 
     //暂时使用类别代替这个ID
     msg.id=id * MarkerTypeNumber + 0;//当存在多个marker时用于标志出来
-    msg.lifetime=ros::Duration(Config::VISUAL_INST_DURATION);//持续时间，若为ros::Duration()表示一直持续
+    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
 
     msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
     msg.scale.x=0.01;//线宽
@@ -686,7 +687,7 @@ visualization_msgs::Marker BuildTextMarker(const Eigen::Vector3d &point,int id,c
 
     //暂时使用类别代替这个ID
     msg.id=id * MarkerTypeNumber + 1;//当存在多个marker时用于标志出来
-    msg.lifetime=ros::Duration(Config::VISUAL_INST_DURATION);//持续时间4s，若为ros::Duration()表示一直持续
+    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间4s，若为ros::Duration()表示一直持续
 
     msg.type=visualization_msgs::Marker::TEXT_VIEW_FACING;//marker的类型
     msg.scale.z=scale;//字体大小
@@ -723,7 +724,7 @@ visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,cons
 
     //暂时使用类别代替这个ID
     msg.id=id * MarkerTypeNumber + 2;//当存在多个marker时用于标志出来
-    msg.lifetime=ros::Duration(Config::VISUAL_INST_DURATION);
+    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);
 
     msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
     msg.scale.x=0.01;//线宽
@@ -769,3 +770,4 @@ visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,cons
 
 
 
+}

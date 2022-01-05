@@ -9,9 +9,10 @@
 
 
 #include "segment_image.h"
-
 #include "parameters.h"
 #include "utils.h"
+
+namespace dynamic_vins{\
 
 
 void SegImage::SetMask(){
@@ -131,6 +132,8 @@ void SegImage::SetColorImageGpu(){
         }
         cv::cuda::cvtColor(gray1_gpu, color1_gpu, CV_GRAY2BGR);
     }
+}
+
 }
 
 

@@ -15,7 +15,6 @@
 #include <unordered_map>
 #include <map>
 #include <chrono>
-
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 #include <opencv2/core/eigen.hpp>
@@ -23,13 +22,11 @@
 #include <pcl/point_cloud.h>
 #include <pcl/common/common.h>
 #include <sophus/so3.hpp>
-
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
-
 #include "parameters.h"
 
-
+namespace dynamic_vins{\
 
 //格式：{id, [(camera_id,feature1),...,(camera_id,featureN)]}
 using FeatureMap=std::map<int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>>;
@@ -57,9 +54,9 @@ inline Mat3d Hat(Vec3d v){
 template<typename T>
 void ReduceVector(std::vector<T> &v, std::vector<uchar> status){
     int j = 0;
-    for (int i = 0; i < (int)v.size(); i++){
-        if (status[i]) v[j++] = v[i];
-    }
+    for (int i = 0; i < (int)v.size(); i++)
+        if (status[i])
+            v[j++] = v[i];
     v.resize(j);
 }
 
@@ -113,6 +110,6 @@ void TriangulateDynamicPoint(const Mat34d &Pose0, const Mat34d &Pose1,
 void ImageTranslate(const cv::Mat &src, cv::Mat &dst, int rows_shift, int cols_shift);
 
 
-
+}
 
 #endif //DYNAMIC_VINS_DYNAMIC_H

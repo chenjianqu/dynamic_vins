@@ -15,6 +15,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 #include "camera_pose_visualization.h"
+namespace dynamic_vins{\
 
 const Eigen::Vector3d CameraPoseVisualization::imlt = Eigen::Vector3d(-1.0, -0.5, 1.0);
 const Eigen::Vector3d CameraPoseVisualization::imrt = Eigen::Vector3d( 1.0, -0.5, 1.0);
@@ -32,7 +33,7 @@ void Eigen2Point(const Eigen::Vector3d& v, geometry_msgs::Point& p) {
 }
 
 CameraPoseVisualization::CameraPoseVisualization(float r, float g, float b, float a)
-    : m_marker_ns("CameraPoseVisualization"), m_scale(0.2), m_line_width(0.01) {
+: m_marker_ns("CameraPoseVisualization"), m_scale(0.2), m_line_width(0.01) {
     m_image_boundary_color.r = r;
     m_image_boundary_color.g = g;
     m_image_boundary_color.b = b;
@@ -199,16 +200,20 @@ void CameraPoseVisualization::add_pose(const Eigen::Vector3d& p, const Eigen::Qu
 }
 
 void CameraPoseVisualization::reset() {
-	m_markers.clear();
+    m_markers.clear();
 }
 
 void CameraPoseVisualization::publish_by( ros::Publisher &pub, const std_msgs::Header &header ) {
-	visualization_msgs::MarkerArray markerArray_msg;
+    visualization_msgs::MarkerArray markerArray_msg;
 	
-	for(auto& marker : m_markers) {
-		marker.header = header;
-		markerArray_msg.markers.push_back(marker);
-	}
+    for(auto& marker : m_markers) {
+        marker.header = header;
+        markerArray_msg.markers.push_back(marker);
+    }
 
-	pub.publish(markerArray_msg);
+    pub.publish(markerArray_msg);
+}
+
+
+
 }

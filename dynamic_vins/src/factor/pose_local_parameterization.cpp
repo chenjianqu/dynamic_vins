@@ -9,6 +9,10 @@
 
 #include "pose_local_parameterization.h"
 
+
+namespace dynamic_vins{\
+
+
 bool PoseLocalParameterization::Plus(const double *x, const double *delta, double *x_plus_delta) const
 {
     Eigen::Map<const Eigen::Vector3d> _p(x);
@@ -33,4 +37,6 @@ bool PoseLocalParameterization::ComputeJacobian(const double *x, double *jacobia
     j.bottomRows<1>().setZero();
 
     return true;
+}
+
 }

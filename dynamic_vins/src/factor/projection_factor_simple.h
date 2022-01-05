@@ -7,17 +7,18 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_PROJECTIONFACTORSIMPLE_H
-#define DYNAMIC_VINS_PROJECTIONFACTORSIMPLE_H
-
-
+#ifndef DYNAMIC_VINS_PROJECTION_FACTOR_SIMPLE_H
+#define DYNAMIC_VINS_PROJECTION_FACTOR_SIMPLE_H
 
 #include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-#include "../utility/utility.h"
-#include "../utils.h"
-#include "../parameters.h"
+#include "utility/utility.h"
+#include "utils.h"
+#include "parameters.h"
+
+namespace dynamic_vins{\
+
 
 class ProjectionTwoFrameOneCamFactorSimple : public ceres::SizedCostFunction<2, 7, 7, 7, 1>{
 public:
@@ -71,6 +72,7 @@ public:
     static double sum_t;
 };
 
+}
 
 
-#endif //DYNAMIC_VINS_PROJECTIONFACTORSIMPLE_H
+#endif //DYNAMIC_VINS_PROJECTION_FACTOR_SIMPLE_H

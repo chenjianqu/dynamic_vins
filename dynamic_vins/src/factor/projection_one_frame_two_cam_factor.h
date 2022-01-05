@@ -14,9 +14,12 @@
 #include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-#include "../utility/utility.h"
-#include "../utils.h"
-#include "../parameters.h"
+#include "utility/utility.h"
+#include "utils.h"
+#include "parameters.h"
+
+namespace dynamic_vins{\
+
 
 class ProjectionOneFrameTwoCamFactor : public ceres::SizedCostFunction<2, 7, 7, 1, 1>
 {
@@ -34,3 +37,5 @@ class ProjectionOneFrameTwoCamFactor : public ceres::SizedCostFunction<2, 7, 7, 
     static Eigen::Matrix2d sqrt_info;
     static double sum_t;
 };
+
+}

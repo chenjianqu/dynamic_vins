@@ -27,6 +27,8 @@
 
 #include "utility/utility.h"
 
+namespace dynamic_vins{\
+
 using std::cout;
 using std::endl;
 using std::cerr;
@@ -47,6 +49,7 @@ using EigenContainer = std::vector< EigenType ,Eigen::aligned_allocator<EigenTyp
 
 using Vec2d = Eigen::Vector2d;
 using Vec3d = Eigen::Vector3d;
+using Vec7d = Eigen::Matrix<double, 7, 1>;
 using Mat2d = Eigen::Matrix2d;
 using Mat3d = Eigen::Matrix3d;
 using Mat4d = Eigen::Matrix4d;
@@ -140,11 +143,9 @@ enum class DatasetType{
 };
 
 
-
-
 enum class SolverFlag{
-    INITIAL,
-    NON_LINEAR
+    kInitial,
+    kNonLinear
 };
 
 enum class MarginFlag{
@@ -176,8 +177,8 @@ public:
     inline static int ESTIMATE_EXTRINSIC;
     inline static int ESTIMATE_TD;
     inline static int ROLLING_SHUTTER;
-    inline static std::string EX_CALIB_RESULT_PATH;
-    inline static std::string VINS_RESULT_PATH;
+    inline static std::string kExCalibResultPath;
+    inline static std::string kVinsResultPath;
     inline static std::string kOutputFolder;
     inline static std::string kImuTopic;
     inline static int kRow, kCol;
@@ -221,7 +222,7 @@ public:
     inline static std::string kSegmentorLogLevel;
     inline static std::string kSegmentorLogFlush;
 
-    inline static int VISUAL_INST_DURATION;
+    inline static int kVisualInstDuration;
 
     inline static std::string kExtractorModelPath;
 
@@ -243,11 +244,15 @@ public:
     inline static int kTrackingMaxAge;
     inline static int kTrackingNInit;
 
+    inline static std::string kBasicDir;
+
     inline static std::atomic_bool ok{true};
 };
 
+using cfg = Config;
 
 
+}
 
 #endif
 

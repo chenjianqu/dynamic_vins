@@ -9,6 +9,8 @@
 
 #include "dynamic.h"
 
+namespace dynamic_vins{\
+
 
 /**
  * 计算两个归一化坐标i和j的重投影误差
@@ -245,3 +247,4 @@ void ImageTranslate(const cv::Mat &src, cv::Mat &dst, int rows_shift, int cols_s
 
 
 
+}

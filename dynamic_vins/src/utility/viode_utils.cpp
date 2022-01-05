@@ -9,6 +9,7 @@
 
 #include "viode_utils.h"
 
+namespace dynamic_vins{\
 
 namespace VIODE{
 
@@ -188,4 +189,5 @@ void SetViodeMask(SegImage &img)
 }
 
 
+}
 }

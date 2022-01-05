@@ -18,6 +18,9 @@
 #include "utils.h"
 #include "featureTracker/segment_image.h"
 
+namespace dynamic_vins{\
+
+
 using DistanceMetricFunc = std::function<
         torch::Tensor(const std::vector<int> &trk_ids, const std::vector<int> &det_ids)>;
 
@@ -32,7 +35,7 @@ template<typename TrackData>
 class TrackerManager {
 public:
     explicit TrackerManager(std::vector<TrackData> &data, const std::array<int64_t, 2> &dim)
-            : data(data), img_box(0, 0, dim[1], dim[0]) {}
+    : data(data), img_box(0, 0, dim[1], dim[0]) {}
 
     void predict() {
         for (auto &t:data) {
@@ -43,18 +46,18 @@ public:
     void remove_nan() {
         data.erase(remove_if(data.begin(), data.end(),
                              [](const TrackData &t) {
-                                 auto bbox = t.kalman.rect();
-                                 return std::isnan(bbox.x) || std::isnan(bbox.y) ||
-                                        std::isnan(bbox.width) || std::isnan(bbox.height);
-                             }),
+            auto bbox = t.kalman.rect();
+            return std::isnan(bbox.x) || std::isnan(bbox.y) ||
+            std::isnan(bbox.width) || std::isnan(bbox.height);
+        }),
                    data.end());
     }
 
     void remove_deleted() {
         data.erase(remove_if(data.begin(), data.end(),
                              [this](const TrackData &t) {
-                                 return t.kalman.state() == TrackState::Deleted;
-                             }), data.end());
+            return t.kalman.state() == TrackState::Deleted;
+        }), data.end());
     }
 
     std::vector<std::tuple<int, int>>
@@ -112,7 +115,7 @@ public:
         for (auto &t : data) {
             auto bbox = t.kalman.rect();
             if (t.kalman.state() == TrackState::Confirmed &&
-                img_box.contains(bbox.tl()) && img_box.contains(bbox.br())) {
+            img_box.contains(bbox.tl()) && img_box.contains(bbox.br())) {
                 Track res{t.kalman.id(), bbox};
                 ret.push_back(res);
             }
@@ -138,5 +141,8 @@ private:
     std::vector<TrackData> &data;
     const cv::Rect2f img_box;
 };
+
+
+}
 
 #endif //TRACKER_H

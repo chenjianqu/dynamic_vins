@@ -19,6 +19,8 @@
 #include <torch/torch.h>
 #include <NvInfer.h>
 
+namespace dynamic_vins{\
+
 
 struct InstInfo{
     std::string name;
@@ -60,6 +62,8 @@ struct SegImage{
     void SetColorImage();
     void SetColorImageGpu();
 };
+
+}
 
 
 #endif //DYNAMIC_VINS_SEGMENT_IMAGE_H

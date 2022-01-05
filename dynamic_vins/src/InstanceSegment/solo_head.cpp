@@ -10,9 +10,12 @@
 #include "solo_head.h"
 #include "utils.h"
 
-using namespace std;
+namespace dynamic_vins{\
+
+
 using Slice=torch::indexing::Slice;
 using InterpolateFuncOptions=torch::nn::functional::InterpolateFuncOptions;
+namespace idx=torch::indexing;
 
 
 torch::Tensor Solov2::MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_labels,torch::Tensor &cate_scores,torch::Tensor &sum_mask)
@@ -66,10 +69,8 @@ torch::Tensor Solov2::MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_lab
 cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device device, std::vector<InstInfo> &insts)
 {
     TicToc ticToc;
-
     const int batch=0;
     const int level_num=5;//FPN共输出5个层级
-
     auto kernel_tensor=outputs[0][batch].view({kSoloTensorChannel, -1}).permute({1, 0});
     for(int i=1;i<level_num;++i){
         auto kt=outputs[i][batch].view({kSoloTensorChannel, -1}); //kt的维度是(128,h*w)
@@ -82,19 +83,13 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
         auto ct=outputs[i][batch].view({cate_channel,-1}); //kt的维度是(h*w, 80)
         cate_tensor = torch::cat({cate_tensor,ct.permute({1,0})},0);
     }
-
     auto feat_tensor=outputs[2*level_num][batch];
 
     const int feat_h=feat_tensor.sizes()[1];
     const int feat_w=feat_tensor.sizes()[2];
     const int pred_num=cate_tensor.sizes()[0];//所有的实例数量(3872)
 
-    //cout<<"kernel_tensor.sizes"<<kernel_tensor.sizes()<<endl;
-    //cout<<"cate_tensor.sizes"<<cate_tensor.sizes()<<endl;
-
     ticToc.toc_print_tic("input reshape:");
-
-
     ///过滤掉低于0.1置信度的实例
     auto inds= cate_tensor > Config::kSoloScoreThr;
     torch::IntArrayRef dims={0,1};
@@ -129,11 +124,11 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
 
     //计算各个层级上的实例的strides
     int index0=size_trans_[0].item().toInt();
-    strides.index_put_({torch::indexing::Slice(torch::indexing::None,index0)}, kSoloStrides[0]);
+    strides.index_put_({idx::Slice(idx::None,index0)}, kSoloStrides[0]);
     for(int i=1;i<n_stage;++i){
         int index_start=size_trans_[i - 1].item().toInt();
         int index_end=size_trans_[i].item().toInt();
-        strides.index_put_({torch::indexing::Slice(index_start,index_end)}, kSoloStrides[i]);
+        strides.index_put_({idx::Slice(index_start,index_end)}, kSoloStrides[i]);
     }
     //保留满足阈值的实例的strides
     strides=strides.index({pred_index});
@@ -167,7 +162,6 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
 
     ticToc.toc_print_tic("计算mask:");
 
-
     //cout<<"根据strides过滤掉像素点太少的实例"<<endl;
 
     ///根据strides过滤掉像素点太少的实例
@@ -197,7 +191,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     ///根据cate_score进行排序，用于NMS
     auto sort_inds = torch::argsort(cate_tensor,-1,true);
     if(sort_inds.sizes()[0] >  Config::kSoloNmsPre){
-        sort_inds=sort_inds.index({torch::indexing::Slice(torch::indexing::None,Config::kSoloNmsPre)});
+        sort_inds=sort_inds.index({idx::Slice(idx::None,Config::kSoloNmsPre)});
     }
     seg_masks=seg_masks.index({sort_inds,"..."});
     //cout<<"seg_masks.sizes"<<seg_masks.sizes()<<endl;
@@ -241,7 +235,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     ///再次根据置信度进行排序
     sort_inds = torch::argsort(cate_scores,-1,true);
     if(sort_inds.sizes()[0] >  Config::kSoloMaxPerImg){
-        sort_inds=sort_inds.index({torch::indexing::Slice(torch::indexing::None,Config::kSoloMaxPerImg)});
+        sort_inds=sort_inds.index({idx::Slice(idx::None,Config::kSoloMaxPerImg)});
     }
     seg_preds=seg_preds.index({sort_inds,"..."});
     //cout<<"seg_preds.sizes"<<seg_preds.sizes()<<endl;
@@ -261,7 +255,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     seg_preds = torch::nn::functional::interpolate(seg_preds.unsqueeze(0),options);
     //cout<<"seg_preds.sizes"<<seg_preds.sizes()<<endl;
 
-    seg_preds =seg_preds.index({"...", Slice(torch::indexing::None,Config::kInputHeight), Slice(torch::indexing::None, Config::kInputWidth)});
+    seg_preds =seg_preds.index({"...", Slice(idx::None,Config::kInputHeight), Slice(idx::None, Config::kInputWidth)});
     //cout<<"seg_preds.sizes"<<seg_preds.sizes()<<endl;
 
     //再次上采样到原始的图片大小
@@ -358,8 +352,8 @@ std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> Solov2::GetSingleSeg(std:
     ///过滤掉低于0.1置信度的实例
     cout<<"cate_tensor.sizes"<<cate_tensor.sizes()<<endl;
     auto inds= cate_tensor > Config::kSoloScoreThr;
-     if(inds.sum(torch::IntArrayRef({0,1})).item().toInt() == 0){
-         WarnS("inds.sum(dims) == 0");
+    if(inds.sum(torch::IntArrayRef({0,1})).item().toInt() == 0){
+        WarnS("inds.sum(dims) == 0");
         return {std::vector<cv::Mat>(),std::vector<InstInfo>()};
     }
     cout<<inds.sizes()<<endl;
@@ -381,11 +375,11 @@ std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> Solov2::GetSingleSeg(std:
 
     //计算各个层级上的实例的strides
     int index0=size_trans_[0].item().toInt();
-    strides.index_put_({torch::indexing::Slice(torch::indexing::None,index0)}, kSoloStrides[0]);
+    strides.index_put_({idx::Slice(idx::None,index0)}, kSoloStrides[0]);
     for(int i=1;i<n_stage;++i){
         int index_start=size_trans_[i - 1].item().toInt();
         int index_end=size_trans_[i].item().toInt();
-        strides.index_put_({torch::indexing::Slice(index_start,index_end)}, kSoloStrides[i]);
+        strides.index_put_({idx::Slice(index_start,index_end)}, kSoloStrides[i]);
     }
     //保留满足阈值的实例的strides
     strides=strides.index({pred_index});
@@ -421,7 +415,7 @@ std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> Solov2::GetSingleSeg(std:
     ///根据cate_score进行排序，用于NMS
     auto sort_inds = torch::argsort(cate_tensor,-1,true);
     if(sort_inds.sizes()[0] >  Config::kSoloNmsPre){
-        sort_inds=sort_inds.index({torch::indexing::Slice(torch::indexing::None,Config::kSoloNmsPre)});
+        sort_inds=sort_inds.index({idx::Slice(idx::None,Config::kSoloNmsPre)});
     }
     seg_masks=seg_masks.index({sort_inds,"..."});
     seg_preds=seg_preds.index({sort_inds,"..."});
@@ -446,7 +440,7 @@ std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> Solov2::GetSingleSeg(std:
     ///再次根据置信度进行排序
     sort_inds = torch::argsort(cate_scores,-1,true);
     if(sort_inds.sizes()[0] >  Config::kSoloMaxPerImg){
-        sort_inds=sort_inds.index({torch::indexing::Slice(torch::indexing::None,Config::kSoloMaxPerImg)});
+        sort_inds=sort_inds.index({idx::Slice(idx::None,Config::kSoloMaxPerImg)});
     }
     seg_preds=seg_preds.index({sort_inds,"..."});
     cate_scores=cate_scores.index({sort_inds});
@@ -542,8 +536,8 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
 
     ///过滤掉低于0.1置信度的实例
     auto inds= cate_tensor > Config::kSoloScoreThr;
-     if(inds.sum(torch::IntArrayRef({0,1})).item().toInt() == 0){
-         WarnS("inds.sum(dims) == 0");
+    if(inds.sum(torch::IntArrayRef({0,1})).item().toInt() == 0){
+        WarnS("inds.sum(dims) == 0");
         return;
     }
     cate_tensor=cate_tensor.masked_select(inds);
@@ -562,11 +556,11 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
 
     //计算各个层级上的实例的strides
     int index0=size_trans_[0].item().toInt();
-    strides.index_put_({torch::indexing::Slice(torch::indexing::None,index0)}, kSoloStrides[0]);
+    strides.index_put_({idx::Slice(idx::None,index0)}, kSoloStrides[0]);
     for(int i=1; i < kNumStage; ++i){
         int index_start=size_trans_[i - 1].item().toInt();
         int index_end=size_trans_[i].item().toInt();
-        strides.index_put_({torch::indexing::Slice(index_start,index_end)}, kSoloStrides[i]);
+        strides.index_put_({idx::Slice(index_start,index_end)}, kSoloStrides[i]);
     }
     //保留满足阈值的实例的strides
     strides=strides.index({pred_index});
@@ -602,7 +596,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     ///根据cate_score进行排序，用于NMS
     auto sort_inds = torch::argsort(cate_tensor,-1,true);
     if(sort_inds.sizes()[0] >  Config::kSoloNmsPre){
-        sort_inds=sort_inds.index({torch::indexing::Slice(torch::indexing::None,Config::kSoloNmsPre)});
+        sort_inds=sort_inds.index({idx::Slice(idx::None,Config::kSoloNmsPre)});
     }
     seg_masks=seg_masks.index({sort_inds,"..."});
     seg_preds=seg_preds.index({sort_inds,"..."});
@@ -635,7 +629,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     ///再次根据置信度进行排序
     sort_inds = torch::argsort(cate_scores,-1,true);
     if(sort_inds.sizes()[0] >  Config::kSoloMaxPerImg){
-        sort_inds=sort_inds.index({torch::indexing::Slice(torch::indexing::None,Config::kSoloMaxPerImg)});
+        sort_inds=sort_inds.index({idx::Slice(idx::None,Config::kSoloMaxPerImg)});
     }
     seg_preds=seg_preds.index({sort_inds,"..."});
     cate_scores=cate_scores.index({sort_inds});
@@ -688,3 +682,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     }
     //cout<<"masks_tensor.sizes"<<mask_tensor.sizes()<<endl;
 }
+
+
+}
+

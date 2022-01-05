@@ -12,11 +12,12 @@
 #include "utils.h"
 #include "utility/viode_utils.h"
 
+namespace dynamic_vins{\
 
-using namespace torch::indexing;
 using std::unordered_map;
 using std::make_pair;
 using std::map;
+namespace idx = torch::indexing;
 
 
 std::default_random_engine randomEngine;
@@ -35,49 +36,42 @@ InstsFeatManager::InstsFeatManager()
     lk_optical_flow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30);
     lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(
             cv::Size(21, 21),1,30,true);
-
-    std::array<int64_t, 2> orig_dim{int64_t(Config::kRow), int64_t(Config::kCol)};
-    tracker = std::make_unique<DeepSORT>(orig_dim);
+    std::array<int64_t, 2> orig_dim{int64_t(cfg::kRow), int64_t(cfg::kCol)};
+    mot_tracker = std::make_unique<DeepSORT>(orig_dim);
+    flow_estimator_ = std::make_unique<FlowEstimator>();
 }
 
 
 void InstsFeatManager::InstsTrack(SegImage img)
 {
-    TicToc ticToc;
+    TicToc tic_toc;
     curr_time=img.time0;
 
-
-    if(Config::dataset == DatasetType::kKitti){
+    if(cfg::dataset == DatasetType::kKitti){
         //AddInstancesGPU(img);
         AddInstancesByTracking(img);
-        InfoT("instsTrack AddInstances:{} ms", ticToc.toc_then_tic());
-        isHaveInst = !img.insts_info.empty();
+        InfoT("instsTrack AddInstances:{} ms", tic_toc.toc_then_tic());
+        exist_inst_ = !img.insts_info.empty();
     }
-    else if(Config::dataset == DatasetType::kViode){
+    else if(cfg::dataset == DatasetType::kViode){
         AddViodeInstances(img);
-        InfoT("instsTrack addViodeInstancesBySegImg:{} ms", ticToc.toc_then_tic());
+        InfoT("instsTrack addViodeInstancesBySegImg:{} ms", tic_toc.toc_then_tic());
     }
     else{
         string msg="Have not this dataset Type";
-        tk_logger->critical(msg);
+        CriticalT(msg);
         throw std::runtime_error(msg);
     }
 
-
-    if(isHaveInst){
-
+    if(exist_inst_){
         ///形态学运算
-        static auto erode_kernel = cv::getStructuringElement(
-                cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
-        static auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
-        erode_filter->apply(img.merge_mask_gpu,img.merge_mask_gpu);
+        Erode10Gpu(img.merge_mask_gpu,img.merge_mask_gpu);
         img.merge_mask_gpu.download(img.merge_mask);
-
 
         //img.gray0_gpu.download(img.gray0);
         //img.gray1_gpu.download(img.gray1);
 
-        for(auto& [key,inst] : instances){
+        for(auto& [key,inst] : instances_){
             if(inst.last_frame_cnt < global_frame_id){
                 inst.lost_num++;
             }
@@ -85,22 +79,22 @@ void InstsFeatManager::InstsTrack(SegImage img)
                 inst.lost_num=0;
             }
             /*///将gpu图像传输到cpu，用于随机访问
-            if(inst.lost_num ==0 && Config::dataset != DatasetType::kViode){
+            if(inst.lost_num ==0 && cfg::dataset != DatasetType::kViode){
                 inst.mask_img_gpu.download(inst.mask_img);
             }*/
         }
 
-        InfoT("instsTrack set mask_img:{} ms", ticToc.toc_then_tic());
+        InfoT("instsTrack set mask_img:{} ms", tic_toc.toc_then_tic());
 
 
         /*if constexpr(false){
             static cv::Mat mask_element=cv::getStructuringElement(cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
-            ticToc.tic();
+            tic_toc.tic();
             for(auto& [key,inst] : instances){
                 if(inst.lost_num>0)continue;
                 cv::erode(inst.mask_img, inst.mask_img, mask_element, cv::Point(-1, -1));//腐蚀，缩小物体区域
             }
-            InfoT("instsTrack erode:{} ms",ticToc.toc_then_tic());
+            InfoT("instsTrack erode:{} ms",tic_toc.toc_then_tic());
         }*/
 
         DebugT("instsTrack prev_img.gray0_gpu:({}x{},type:{})",
@@ -110,7 +104,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
 
         //对每个目标进行光流跟踪
         //printf("光流跟踪: ");
-        for(auto & [ key,inst] : instances){
+        for(auto & [ key,inst] : instances_){
             if(inst.last_points.empty() || inst.lost_num>0)
                 continue;
 
@@ -126,8 +120,8 @@ void InstsFeatManager::InstsTrack(SegImage img)
 
             ///光流跟踪
             //auto status = flowTrack(prev_img.gray0,img.gray0,inst.last_points,inst.curr_points);
-            auto status = FlowTrackGpu(lk_optical_flow, lk_optical_flow_back, prev_img.gray0_gpu,
-                                       img.gray0_gpu, inst.last_points, inst.curr_points);
+            auto status = FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, prev_img.gray0_gpu,
+                                              img.gray0_gpu, inst.last_points, inst.curr_points);
 
             /*ImageTranslate(img.gray0,detect_img,row_shift,col_shift);
             vector<uchar> status = flowTrack(last_img.gray0,detect_img,inst.last_points,inst.curr_points);
@@ -135,7 +129,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
                 pt.y -= row_shift;
                 pt.x -= col_shift;
             }*/
-            if(Config::dataset == DatasetType::kViode){
+            if(cfg::dataset == DatasetType::kViode){
                 for(size_t i=0;i<status.size();++i){
                     //if(status[i] && kViode::PixelToKey(inst.curr_points[i],img.seg0)!=key) status[i]=0;
                     if(status[i] && inst.mask_img.at<uchar>(inst.curr_points[i]) == 0) status[i]=0;
@@ -152,11 +146,11 @@ void InstsFeatManager::InstsTrack(SegImage img)
             ReduceVector(inst.last_points, status);
 
         }
-        InfoT("instsTrack flowTrack:{} ms", ticToc.toc_then_tic());
+        InfoT("instsTrack flowTrack:{} ms", tic_toc.toc_then_tic());
 
 
         ///对每个特征点增加观测次数
-        for(auto & [ key,inst] : instances){
+        for(auto & [ key,inst] : instances_){
             if(inst.last_points.empty() || inst.lost_num>0)
                 continue;
             for (auto &n : inst.track_cnt) n++;
@@ -195,13 +189,14 @@ void InstsFeatManager::InstsTrack(SegImage img)
             }
         }*/
 
-        if(isHaveInst){
+
+        if(exist_inst_){
             ///添加新的特征点前的准备
             int max_new_detect=0;
-            for(auto & [key,inst] : instances){
-                if(inst.lost_num>0 || inst.curr_points.size()>= Config::kMaxDynamicCnt)
+            for(auto & [key,inst] : instances_){
+                if(inst.lost_num>0 || inst.curr_points.size()>= cfg::kMaxDynamicCnt)
                     continue;
-                max_new_detect += (Config::kMaxDynamicCnt - (int)inst.curr_points.size());
+                max_new_detect += (cfg::kMaxDynamicCnt - (int)inst.curr_points.size());
             }
 
             DebugT("instsTrack max_new_detect={}", max_new_detect);
@@ -209,8 +204,8 @@ void InstsFeatManager::InstsTrack(SegImage img)
             ///添加新的特征点
             if(max_new_detect > 0){
                 mask_background = img.merge_mask;
-                for(auto & [key,inst] : instances){
-                    if(inst.lost_num>0 || inst.curr_points.size()>=Config::kMaxDynamicCnt)
+                for(auto & [key,inst] : instances_){
+                    if(inst.lost_num>0 || inst.curr_points.size()>=cfg::kMaxDynamicCnt)
                         continue;
                     inst.visual_points_pair.clear();
                     inst.visual_right_points_pair.clear();
@@ -218,11 +213,11 @@ void InstsFeatManager::InstsTrack(SegImage img)
 
                     for(size_t i=0;i<inst.curr_points.size();++i){
                         inst.visual_points_pair.emplace_back(inst.last_points[i],inst.curr_points[i]);//用于可视化
-                        cv::circle(mask_background, inst.curr_points[i], Config::kMinDynamicDist, 0, -1);//设置mask
+                        cv::circle(mask_background, inst.curr_points[i], cfg::kMinDynamicDist, 0, -1);//设置mask
                     }
                 }
 
-                InfoT("instsTrack prepare detect:{} ms", ticToc.toc_then_tic());
+                InfoT("instsTrack prepare detect:{} ms", tic_toc.toc_then_tic());
 
                 /*cv::goodFeaturesToTrack(img.gray0, new_pts, (int)new_detect, 0.01, DYNAMIC_MIN_DIST, mask_bg_new); //检测新的角点
                 cv::imshow("mask_background",mask_background);
@@ -237,13 +232,13 @@ void InstsFeatManager::InstsTrack(SegImage img)
                 DebugT("instsTrack | img.gray0_gpu size:{}x{} type:{} ",
                        img.gray0_gpu.rows, img.gray0_gpu.cols, img.gray0_gpu.type());
 
-                auto new_pts = DetectNewFeaturesGPU(max_new_detect, img.gray0_gpu, mask_background_gpu);
-                visual_new_points = new_pts;
+                auto new_pts = DetectShiTomasiCornersGpu(max_new_detect, img.gray0_gpu, mask_background_gpu);
+                visual_new_points_ = new_pts;
                 DebugT("instsTrack actually detect num:{}", new_pts.size());
                 for(auto &pt : new_pts){
                     int index_inst=-1;
-                    for(auto &[key,inst] : instances){
-                        if(inst.lost_num>0 || inst.curr_points.size()>Config::kMaxDynamicCnt) continue;
+                    for(auto &[key,inst] : instances_){
+                        if(inst.lost_num>0 || inst.curr_points.size()>cfg::kMaxDynamicCnt) continue;
                         if(inst.mask_img.at<uchar>(pt) >= 1){
                             index_inst=(int)key;
                             break;
@@ -251,37 +246,38 @@ void InstsFeatManager::InstsTrack(SegImage img)
                     }
 
                     if(index_inst!=-1){
-                        instances[index_inst].curr_points.emplace_back(pt);
-                        instances[index_inst].ids.emplace_back(global_id_count++);
-                        instances[index_inst].visual_new_points.emplace_back(pt);
-                        instances[index_inst].track_cnt.push_back(1);
+                        instances_[index_inst].curr_points.emplace_back(pt);
+                        instances_[index_inst].ids.emplace_back(global_id_count++);
+                        instances_[index_inst].visual_new_points.emplace_back(pt);
+                        instances_[index_inst].track_cnt.push_back(1);
                     }
                 }
-                InfoT("instsTrack detectNewFeaturesGPU:{} ms", ticToc.toc_then_tic());
+                InfoT("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.toc_then_tic());
             }
 
         }
 
 
-        for(auto& [key,inst] : instances){
+        for(auto& [key,inst] : instances_){
             ///去畸变和计算归一化坐标
             inst.curr_un_points= UndistortedPts(inst.curr_points, camera_);
             ///计算特征点的速度
             PtsVelocity(curr_time - last_time, inst.ids, inst.curr_un_points,
                         inst.prev_id_pts, inst.curr_id_pts, inst.pts_velocity);
         }
-        InfoT("instsTrack undistortedPts & ptsVelocity:{} ms", ticToc.toc_then_tic());
+        InfoT("instsTrack undistortedPts & ptsVelocity:{} ms", tic_toc.toc_then_tic());
 
         /// 右边相机图像的跟踪
         if((!img.gray1.empty() || !img.gray1_gpu.empty()) && is_stereo_){
-            for(auto& [key,inst] : instances){
+            for(auto& [key,inst] : instances_){
                 inst.right_points.clear();
                 if(!inst.curr_points.empty() && inst.lost_num==0){
                     //auto status= flowTrack (img.gray0,img.gray1,inst.curr_points,inst.right_points);
-                    auto status = FlowTrackGpu(lk_optical_flow, lk_optical_flow_back, img.gray0_gpu, img.gray1_gpu,
-                                               inst.curr_points, inst.right_points);
+                    auto status = FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, img.gray0_gpu,
+                                                      img.gray1_gpu,
+                                                      inst.curr_points, inst.right_points);
 
-                    if(Config::dataset == DatasetType::kViode){
+                    if(cfg::dataset == DatasetType::kViode){
                         for(size_t i=0;i<status.size();++i){
                             if(status[i] && VIODE::PixelToKey(inst.right_points[i], img.seg1) != key)
                                 status[i]=0;
@@ -297,18 +293,18 @@ void InstsFeatManager::InstsTrack(SegImage img)
                 }
             }
         }
-        InfoT("instsTrack flowTrack right:{} ms", ticToc.toc_then_tic());
+        InfoT("instsTrack flowTrack right:{} ms", tic_toc.toc_then_tic());
 
         ManageInstances();
-        InfoT("instsTrack manageInstances:{} ms", ticToc.toc_then_tic());
+        InfoT("instsTrack manageInstances:{} ms", tic_toc.toc_then_tic());
 
         ///输出实例数据
-        DebugT("InstanceTracker:实例数量:{}", instances.size());
-        for(auto &[key,inst] : instances){
+        DebugT("InstanceTracker:实例数量:{}", instances_.size());
+        for(auto &[key,inst] : instances_){
             DebugT("Inst:{} size:{}", key, inst.curr_points.size());
         }
 
-        for(auto& [key,inst] : instances){
+        for(auto& [key,inst] : instances_){
             inst.last_points=inst.curr_points;
             inst.prev_id_pts=inst.curr_id_pts;
             inst.right_prev_id_pts=inst.right_curr_id_pts;
@@ -320,7 +316,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
         ManageInstances();
 
 
-        for(auto& [key,inst] : instances){
+        for(auto& [key,inst] : instances_){
             inst.curr_points.clear();
             inst.curr_un_points.clear();
             inst.last_points.clear();
@@ -346,6 +342,181 @@ void InstsFeatManager::InstsTrack(SegImage img)
 
 
 
+void InstsFeatManager::InstsFlowTrack(SegImage img)
+{
+    TicToc tic_toc;
+    curr_time=img.time0;
+
+    if(cfg::dataset == DatasetType::kKitti){
+        //AddInstancesGPU(img);
+        AddInstancesByTracking(img);
+        InfoT("instsTrack AddInstances:{} ms", tic_toc.toc_then_tic());
+        exist_inst_ = !img.insts_info.empty();
+    }
+    else if(cfg::dataset == DatasetType::kViode){
+        AddViodeInstances(img);
+        InfoT("instsTrack addViodeInstancesBySegImg:{} ms", tic_toc.toc_then_tic());
+    }
+    else{
+        string msg="Have not this dataset Type";
+        CriticalT(msg);
+        throw std::runtime_error(msg);
+    }
+
+    ///等待光流估计结果
+    auto flow_tensor = flow_estimator_->WaitingResult();
+    cv::Size  flow_size(flow_tensor.sizes()[2],flow_tensor.sizes()[1]);
+    cv::Mat flow_cv = cv::Mat(flow_size, CV_32FC2, flow_tensor.to(torch::kCPU).data_ptr()).clone();
+
+    if(exist_inst_){
+        ///形态学运算
+        Erode10Gpu(img.merge_mask_gpu,img.merge_mask_gpu);
+        img.merge_mask_gpu.download(img.merge_mask);
+        for(auto& [key,inst] : instances_){
+            if(inst.last_frame_cnt < global_frame_id)
+                inst.lost_num++;
+            else if(inst.last_frame_cnt == global_frame_id)
+                inst.lost_num=0;
+        }
+
+        ///对每个目标进行光流跟踪
+        for(auto & [ key,inst] : instances_){
+            if(inst.last_points.empty() || inst.lost_num>0)
+                continue;
+            inst.curr_points.clear();
+            ///光流跟踪
+            auto status = FeatureTrackByDenseFlow(flow_cv,inst.last_points, inst.curr_points);
+            SetStatusByMask(status,inst.curr_points,inst.mask_img);
+            ReduceVector(inst.curr_points, status);
+            ReduceVector(inst.ids, status);
+            ReduceVector(inst.last_points, status);
+        }
+        InfoT("instsTrack flowTrack:{} ms", tic_toc.toc_then_tic());
+
+        ///对每个特征点增加观测次数
+        for(auto & [ key,inst] : instances_){
+            if(inst.last_points.empty() || inst.lost_num>0)
+                continue;
+            for (auto &n : inst.track_cnt) n++;
+        }
+
+        if(exist_inst_){
+            ///添加新的特征点前的准备
+            int max_new_detect=0;
+            for(auto & [key,inst] : instances_){
+                if(inst.lost_num>0 || inst.curr_points.size()>= cfg::kMaxDynamicCnt)
+                    continue;
+                max_new_detect += (cfg::kMaxDynamicCnt - (int)inst.curr_points.size());
+            }
+            ///添加新的特征点
+            if(max_new_detect > 0){
+                mask_background = img.merge_mask;
+                vector<cv::Point2f> points_existed;
+                for(auto & [key,inst] : instances_){
+                    if(inst.lost_num>0 || inst.curr_points.size()>=cfg::kMaxDynamicCnt)continue;
+                    inst.visual_points_pair.clear();
+                    inst.visual_right_points_pair.clear();
+                    inst.visual_new_points.clear();
+                    for(size_t i=0;i<inst.curr_points.size();++i){
+                        inst.visual_points_pair.emplace_back(inst.last_points[i],inst.curr_points[i]);//用于可视化
+                        cv::circle(mask_background, inst.curr_points[i], cfg::kMinDynamicDist, 0, -1);//设置mask
+                    }
+                    points_existed.insert(points_existed.end(),inst.curr_points.begin(),inst.curr_points.end());
+                }
+                auto new_pts = DetectRegularCorners(max_new_detect,mask_background,points_existed);
+                visual_new_points_ = new_pts;
+                for(auto &pt : new_pts){
+                    int index_inst=-1;
+                    for(auto &[key,inst] : instances_){
+                        if(inst.lost_num>0 || inst.curr_points.size()>cfg::kMaxDynamicCnt) continue;
+                        if(inst.mask_img.at<uchar>(pt) >= 1){
+                            index_inst=(int)key;
+                            break;
+                        }
+                    }
+                    if(index_inst!=-1){
+                        instances_[index_inst].curr_points.emplace_back(pt);
+                        instances_[index_inst].ids.emplace_back(global_id_count++);
+                        instances_[index_inst].visual_new_points.emplace_back(pt);
+                        instances_[index_inst].track_cnt.push_back(1);
+                    }
+                }
+                InfoT("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.toc_then_tic());
+            }
+        }
+
+
+        for(auto& [key,inst] : instances_){
+            ///去畸变和计算归一化坐标
+            inst.curr_un_points= UndistortedPts(inst.curr_points, camera_);
+            ///计算特征点的速度
+            PtsVelocity(curr_time - last_time, inst.ids, inst.curr_un_points,
+                        inst.prev_id_pts, inst.curr_id_pts, inst.pts_velocity);
+        }
+        InfoT("instsTrack undistortedPts & ptsVelocity:{} ms", tic_toc.toc_then_tic());
+
+        /// 右边相机图像的跟踪
+        if((!img.gray1.empty() || !img.gray1_gpu.empty()) && is_stereo_){
+            for(auto& [key,inst] : instances_){
+                inst.right_points.clear();
+                if(!inst.curr_points.empty() && inst.lost_num==0){
+                    //auto status= flowTrack (img.gray0,img.gray1,inst.curr_points,inst.right_points);
+                    auto status = FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, img.gray0_gpu,
+                                                      img.gray1_gpu,
+                                                      inst.curr_points, inst.right_points);
+                    if(cfg::dataset == DatasetType::kViode){
+                        for(size_t i=0;i<status.size();++i)
+                            if(status[i] && VIODE::PixelToKey(inst.right_points[i], img.seg1) != key)
+                                status[i]=0;
+                    }
+                    inst.right_ids = inst.ids;
+                    ReduceVector(inst.right_points, status);
+                    ReduceVector(inst.right_ids, status);
+                    inst.right_un_points = UndistortedPts(inst.right_points, right_camera_);
+                    PtsVelocity(curr_time - last_time, inst.right_ids, inst.right_un_points,
+                                inst.right_prev_id_pts, inst.right_curr_id_pts, inst.right_pts_velocity);
+                }
+            }
+        }
+        ManageInstances();
+        ///输出实例数据
+        for(auto &[key,inst] : instances_){
+            DebugT("Inst:{} size:{}", key, inst.curr_points.size());
+        }
+        for(auto& [key,inst] : instances_){
+            inst.last_points=inst.curr_points;
+            inst.prev_id_pts=inst.curr_id_pts;
+            inst.right_prev_id_pts=inst.right_curr_id_pts;
+        }
+
+    }
+    else
+    {
+        ManageInstances();
+        for(auto& [key,inst] : instances_){
+            inst.curr_points.clear();
+            inst.curr_un_points.clear();
+            inst.last_points.clear();
+            inst.right_points.clear();
+            inst.right_un_points.clear();
+            inst.ids.clear();
+            inst.right_ids.clear();
+            inst.pts_velocity.clear();
+            inst.right_pts_velocity.clear();
+            inst.prev_id_pts.clear();
+            inst.visual_points_pair.clear();
+            inst.visual_right_points_pair.clear();
+            inst.visual_new_points.clear();
+            inst.track_cnt.clear();
+        }
+    }
+
+    last_time=curr_time;
+    global_frame_id++;
+
+    prev_img = img;
+}
+
 
 
 /**
@@ -353,7 +524,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
  */
 void InstsFeatManager::ManageInstances()
 {
-    for(auto it=instances.begin(),it_next=it; it!=instances.end();it=it_next)
+    for(auto it=instances_.begin(),it_next=it; it != instances_.end(); it=it_next)
     {
         it_next++;
         auto &inst=it->second;
@@ -365,7 +536,7 @@ void InstsFeatManager::ManageInstances()
         if(inst.lost_num > 0){
             inst.lost_num++;
             if(inst.lost_num > 3){ //删除该实例
-                instances.erase(it);
+                instances_.erase(it);
             }
         }
     }
@@ -379,7 +550,7 @@ void InstsFeatManager::ManageInstances()
 InstancesFeatureMap InstsFeatManager::SetOutputFeature()
 {
     InstancesFeatureMap result;
-    for(auto& [key,inst]: instances)
+    for(auto& [key,inst]: instances_)
     {
         if(inst.lost_num>0)continue;
         InstanceFeatureSimple  featuresMap;
@@ -423,7 +594,7 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
     cv::Mat seg = img.seg0;
     DebugT("start to addViodeInstancesBySegImg()");
 
-    for(auto &[key,inst] : instances){
+    for(auto &[key,inst] : instances_){
         inst.mask_area=0;
     }
 
@@ -431,23 +602,23 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
 
     for(auto &inst_info : img.insts_info){
         auto key = inst_info.track_id;
-        if(instances.count(key)==0){
+        if(instances_.count(key) == 0){
             InstFeat instanceFeature(key, 0);
-            instances.insert({key,instanceFeature});
+            instances_.insert({key, instanceFeature});
         }
 
-        auto &inst = instances[key];
+        auto &inst = instances_[key];
         inst.mask_img = inst_info.mask_cv;
         inst.box_vel = cv::Point2f(0,0);
         inst.last_frame_cnt = global_frame_id;
         inst.last_time = img.time0;
-        DebugT("inst:{} mask_img:({}x{}) local_mask:({}x{})", key, instances[key].mask_img.rows,
-               instances[key].mask_img.cols,
+        DebugT("inst:{} mask_img:({}x{}) local_mask:({}x{})", key, instances_[key].mask_img.rows,
+               instances_[key].mask_img.cols,
                inst.mask_img.rows, inst.mask_img.cols);
     }
 
 
-    for(auto &[key,inst]: instances){
+    for(auto &[key,inst]: instances_){
         if(inst.last_frame_cnt == global_frame_id){
             auto rect = cv::boundingRect(inst.mask_img);
             inst.box_min_pt= rect.tl();
@@ -457,14 +628,13 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
         }
     }
 
-    isHaveInst = !img.insts_info.empty();
+    exist_inst_ = !img.insts_info.empty();
 }
 
 
 
 float InstsFeatManager::GetMaskIoU(const torch::Tensor &mask1, const InstInfo &instInfo1, const float mask1_area,
-                                   const torch::Tensor &mask2, const InstInfo &instInfo2, const float mask2_area)
-{
+                                   const torch::Tensor &mask2, const InstInfo &instInfo2, const float mask2_area){
     auto intersection_mask=(mask1 * mask2);
     float intersection_area = intersection_mask.sum(torch::IntArrayRef({0,1})).item().toFloat();
     return intersection_area/(mask1_area + mask2_area - intersection_area);
@@ -490,7 +660,7 @@ std::tuple<int,float,float> InstsFeatManager::GetMatchInst(InstInfo &instInfo, t
 
     int id_match=-1;
     float iou_max=0;
-    for(const auto &[key, inst_j] : instances){
+    for(const auto &[key, inst_j] : instances_){
         ///根据速度计算当前的物体
         cv::Point2i delta = inst_j.box_vel * inst_j.delta_time;
         auto curr_min_pt = cv::Point2i(inst_j.box_min_pt) + delta;
@@ -504,20 +674,20 @@ std::tuple<int,float,float> InstsFeatManager::GetMatchInst(InstInfo &instInfo, t
         if(CalBoxIoU(instInfo.min_pt, instInfo.max_pt, curr_min_pt, curr_max_pt) > 0 || delta_pt_abs < 100){
             torch::Tensor intersection_mask;
             if(delta.x>=0 && delta.y>=0){
-                intersection_mask = inst_mask_tensor.index({Slice(delta.y,None),Slice(delta.x,None)}) *
-                        inst_j.mask_tensor.index({Slice(None,h-delta.y),Slice(None,w-delta.x)});
+                intersection_mask = inst_mask_tensor.index({idx::Slice(delta.y,idx::None),idx::Slice(delta.x,idx::None)}) *
+                        inst_j.mask_tensor.index({idx::Slice(idx::None,h-delta.y),idx::Slice(idx::None,w-delta.x)});
             }
             else if(delta.x<0 && delta.y>=0){
-                intersection_mask = inst_mask_tensor.index({Slice(delta.y,None),Slice(None,w+delta.x)}) *
-                        inst_j.mask_tensor.index({Slice(None,h-delta.y),Slice(-delta.x,None)});
+                intersection_mask = inst_mask_tensor.index({idx::Slice(delta.y,idx::None),idx::Slice(idx::None,w+delta.x)}) *
+                        inst_j.mask_tensor.index({idx::Slice(idx::None,h-delta.y),idx::Slice(-delta.x,idx::None)});
             }
             else if(delta.x>=0 && delta.y<0){
-                intersection_mask = inst_mask_tensor.index({Slice(None,h+delta.y),Slice(delta.x,None)}) *
-                        inst_j.mask_tensor.index({Slice(-delta.y,None),Slice(None,w-delta.x)});
+                intersection_mask = inst_mask_tensor.index({idx::Slice(idx::None,h+delta.y),idx::Slice(delta.x,idx::None)}) *
+                        inst_j.mask_tensor.index({idx::Slice(-delta.y,idx::None),idx::Slice(idx::None,w-delta.x)});
             }
             else if(delta.x<0 && delta.y<0){
-                intersection_mask = inst_mask_tensor.index({Slice(None,h+delta.y),Slice(None,w+delta.x)}) *
-                        inst_j.mask_tensor.index({Slice(-delta.y,None),Slice(-delta.x,None)});
+                intersection_mask = inst_mask_tensor.index({idx::Slice(idx::None,h+delta.y),idx::Slice(idx::None,w+delta.x)}) *
+                        inst_j.mask_tensor.index({idx::Slice(-delta.y,idx::None),idx::Slice(-delta.x,idx::None)});
             }
 
             float intersection_area = intersection_mask.sum(torch::IntArrayRef({0,1})).item().toFloat();
@@ -529,7 +699,6 @@ std::tuple<int,float,float> InstsFeatManager::GetMatchInst(InstInfo &instInfo, t
                 id_match = (int)inst_j.id;
             }
             //cout<<fmt::format("{}-{} iou:{} a:{} b:{} is:{}",instInfo.id,inst_j.id,iou,inst_mask_area,inst_j.mask_area,intersection_area)<<endl;
-
         }
         else{
             //cout<<fmt::format("{}-{} x",instInfo.id,inst_j.id)<<endl;
@@ -545,7 +714,7 @@ cv::Mat InstsFeatManager::AddInstances(SegImage &img)
     double current_time = img.time0;
     int n_inst = (int)img.insts_info.size();
     ///set inst time
-    for(auto &[key,inst] : instances){
+    for(auto &[key,inst] : instances_){
         inst.delta_time = current_time - inst.last_time;
         inst.last_time = current_time;
     }
@@ -570,18 +739,18 @@ cv::Mat InstsFeatManager::AddInstances(SegImage &img)
         auto [id_match,iou_max,inst_mask_area] = GetMatchInst(instInfo, inst_mask_tensor);
 
         ///更新实例
-        if(iou_max > 0.01 && instances[id_match].class_id == instInfo.label_id){
+        if(iou_max > 0.01 && instances_[id_match].class_id == instInfo.label_id){
             //instances[id_match].mask_img = img.inst_masks[i];
-            instances[id_match].mask_img_gpu = instInfo.mask_gpu;
-            instances[id_match].mask_tensor = inst_mask_tensor;
-            instances[id_match].box_min_pt = instInfo.min_pt;
-            instances[id_match].box_max_pt = instInfo.max_pt;
-            instances[id_match].mask_area = inst_mask_area;
-            instances[id_match].last_frame_cnt = global_frame_id;
-            if(instances[id_match].delta_time > 0){
-                instances[id_match].box_vel = (instInfo.mask_center - instances[id_match].box_center_pt)/instances[id_match].delta_time;
+            instances_[id_match].mask_img_gpu = instInfo.mask_gpu;
+            instances_[id_match].mask_tensor = inst_mask_tensor;
+            instances_[id_match].box_min_pt = instInfo.min_pt;
+            instances_[id_match].box_max_pt = instInfo.max_pt;
+            instances_[id_match].mask_area = inst_mask_area;
+            instances_[id_match].last_frame_cnt = global_frame_id;
+            if(instances_[id_match].delta_time > 0){
+                instances_[id_match].box_vel = (instInfo.mask_center - instances_[id_match].box_center_pt) / instances_[id_match].delta_time;
             }
-            instances[id_match].box_center_pt = instInfo.mask_center;
+            instances_[id_match].box_center_pt = instInfo.mask_center;
             //cout<<fmt::format("Update,id:{},iou_max:{}",instances[id_match].id,iou_max)<<endl;
         }
         ///创建实例
@@ -599,7 +768,7 @@ cv::Mat InstsFeatManager::AddInstances(SegImage &img)
             inst_feat.mask_area = inst_mask_area;
             inst_feat.last_time = current_time;
             inst_feat.last_frame_cnt = global_frame_id;
-            instances.insert({id,inst_feat});
+            instances_.insert({id, inst_feat});
             //cout<<fmt::format("Insert,id:{},iou_max:{}",id,iou_max)<<endl;
         }
     }
@@ -615,7 +784,7 @@ void InstsFeatManager:: AddInstancesGPU(const SegImage &img)
     double current_time = img.time0;
     int n_inst = (int)img.insts_info.size();
     ///set inst time
-    for(auto &[key,inst] : instances){
+    for(auto &[key,inst] : instances_){
         inst.delta_time = current_time - inst.last_time;
         inst.last_time = current_time;
     }
@@ -638,19 +807,19 @@ void InstsFeatManager:: AddInstancesGPU(const SegImage &img)
         auto [id_match,iou_max,inst_mask_area] = GetMatchInst(instInfo, inst_mask_tensor);
 
         ///更新实例
-        if(iou_max > 0.01 && instances[id_match].class_id == instInfo.label_id){
+        if(iou_max > 0.01 && instances_[id_match].class_id == instInfo.label_id){
             //instances[id_match].mask_img = img.inst_masks[i];
-            instances[id_match].mask_img_gpu = instInfo.mask_gpu;
-            instances[id_match].mask_img = instInfo.mask_cv;
-            instances[id_match].mask_tensor = inst_mask_tensor;
-            instances[id_match].box_min_pt = instInfo.min_pt;
-            instances[id_match].box_max_pt = instInfo.max_pt;
-            instances[id_match].mask_area = inst_mask_area;
-            instances[id_match].last_frame_cnt = global_frame_id;
-            if(instances[id_match].delta_time > 0){
-                instances[id_match].box_vel = (instInfo.mask_center - instances[id_match].box_center_pt)/instances[id_match].delta_time;
+            instances_[id_match].mask_img_gpu = instInfo.mask_gpu;
+            instances_[id_match].mask_img = instInfo.mask_cv;
+            instances_[id_match].mask_tensor = inst_mask_tensor;
+            instances_[id_match].box_min_pt = instInfo.min_pt;
+            instances_[id_match].box_max_pt = instInfo.max_pt;
+            instances_[id_match].mask_area = inst_mask_area;
+            instances_[id_match].last_frame_cnt = global_frame_id;
+            if(instances_[id_match].delta_time > 0){
+                instances_[id_match].box_vel = (instInfo.mask_center - instances_[id_match].box_center_pt) / instances_[id_match].delta_time;
             }
-            instances[id_match].box_center_pt = instInfo.mask_center;
+            instances_[id_match].box_center_pt = instInfo.mask_center;
             //cout<<fmt::format("Update,id:{},iou_max:{}",instances[id_match].id,iou_max)<<endl;
         }
         ///创建实例
@@ -669,7 +838,7 @@ void InstsFeatManager:: AddInstancesGPU(const SegImage &img)
             inst_feat.mask_area = inst_mask_area;
             inst_feat.last_time = current_time;
             inst_feat.last_frame_cnt = global_frame_id;
-            instances.insert({id,inst_feat});
+            instances_.insert({id, inst_feat});
             //cout<<fmt::format("Insert,id:{},iou_max:{}",id,iou_max)<<endl;
         }
     }
@@ -683,21 +852,17 @@ void InstsFeatManager:: AddInstancesByTracking(SegImage &img)
 {
     double current_time = img.time0;
     int n_inst = (int)img.insts_info.size();
-
-    if(img.insts_info.empty()){
+    if(img.insts_info.empty())
         return;
-    }
-
     assert(img.mask_tensor.sizes()[0] == img.insts_info.size());
-
     cv::Size mask_size((int)img.mask_tensor.sizes()[2],(int)img.mask_tensor.sizes()[1]);
     //mask_background = img.merge_mask;
 
-    auto trks = tracker->update(img.insts_info,img.color0);
+    auto trks = mot_tracker->update(img.insts_info,img.color0);
 
     for(auto &inst : trks){
         unsigned int id=inst.track_id;
-        if(instances.count(id)==0){
+        if(instances_.count(id) == 0){
             InstFeat inst_feat(id, inst.label_id);
             inst_feat.mask_img_gpu = inst.mask_gpu;
             inst_feat.mask_img = inst.mask_cv;
@@ -709,17 +874,17 @@ void InstsFeatManager:: AddInstancesByTracking(SegImage &img)
             inst_feat.class_id = inst.label_id;
             inst_feat.last_time = current_time;
             inst_feat.last_frame_cnt = global_frame_id;
-            instances.insert({id,inst_feat});
+            instances_.insert({id, inst_feat});
             DebugT("Create inst:{} cls:{}", id, inst.name);
         }
         else{
-            instances[id].mask_img_gpu = inst.mask_gpu;
-            instances[id].mask_img = inst.mask_cv;
-            instances[id].mask_tensor = inst.mask_tensor;
-            instances[id].box_min_pt = inst.min_pt;
-            instances[id].box_max_pt = inst.max_pt;
-            instances[id].last_frame_cnt = global_frame_id;
-            instances[id].box_center_pt = inst.mask_center;
+            instances_[id].mask_img_gpu = inst.mask_gpu;
+            instances_[id].mask_img = inst.mask_cv;
+            instances_[id].mask_tensor = inst.mask_tensor;
+            instances_[id].box_min_pt = inst.min_pt;
+            instances_[id].box_max_pt = inst.max_pt;
+            instances_[id].last_frame_cnt = global_frame_id;
+            instances_[id].box_center_pt = inst.mask_center;
             DebugT("Update inst:{} cls:{}", id, inst.name);
         }
     }
@@ -733,23 +898,24 @@ void InstsFeatManager:: AddInstancesByTracking(SegImage &img)
 
 vector<uchar> InstsFeatManager::RejectWithF(InstFeat &inst, int col, int row) const
 {
-        vector<cv::Point2f> un_cur_pts(inst.curr_points.size()), un_prev_pts(inst.last_points.size());
-        for (unsigned int i = 0; i < inst.curr_points.size(); i++)
-        {
-            Eigen::Vector3d tmp_p;
-            camera_->liftProjective(Eigen::Vector2d(inst.curr_points[i].x, inst.curr_points[i].y), tmp_p);
-            tmp_p.x() = kFocalLength * tmp_p.x() / tmp_p.z() + col / 2.0;
-            tmp_p.y() = kFocalLength * tmp_p.y() / tmp_p.z() + row / 2.0;
-            un_cur_pts[i] = cv::Point2f((float)(tmp_p.x()), (float)tmp_p.y());
+    vector<cv::Point2f> un_cur_pts(inst.curr_points.size()), un_prev_pts(inst.last_points.size());
+    for (unsigned int i = 0; i < inst.curr_points.size(); i++)
+    {
+        Eigen::Vector3d tmp_p;
+        camera_->liftProjective(Eigen::Vector2d(inst.curr_points[i].x, inst.curr_points[i].y), tmp_p);
+        tmp_p.x() = kFocalLength * tmp_p.x() / tmp_p.z() + col / 2.0;
+        tmp_p.y() = kFocalLength * tmp_p.y() / tmp_p.z() + row / 2.0;
+        un_cur_pts[i] = cv::Point2f((float)(tmp_p.x()), (float)tmp_p.y());
 
-            camera_->liftProjective(Eigen::Vector2d(inst.last_points[i].x, inst.last_points[i].y), tmp_p);
-            tmp_p.x() = kFocalLength * tmp_p.x() / tmp_p.z() + col / 2.0;
-            tmp_p.y() = kFocalLength * tmp_p.y() / tmp_p.z() + row / 2.0;
-            un_prev_pts[i] = cv::Point2f((float)tmp_p.x(), (float)tmp_p.y());
-        }
+        camera_->liftProjective(Eigen::Vector2d(inst.last_points[i].x, inst.last_points[i].y), tmp_p);
+        tmp_p.x() = kFocalLength * tmp_p.x() / tmp_p.z() + col / 2.0;
+        tmp_p.y() = kFocalLength * tmp_p.y() / tmp_p.z() + row / 2.0;
+        un_prev_pts[i] = cv::Point2f((float)tmp_p.x(), (float)tmp_p.y());
+    }
 
-        vector<uchar> status;
-        cv::findFundamentalMat(un_cur_pts, un_prev_pts, cv::FM_RANSAC, Config::kFThreshold, 0.99, status);
+    vector<uchar> status;
+    cv::findFundamentalMat(un_cur_pts, un_prev_pts, cv::FM_RANSAC, cfg::kFThreshold,
+                           0.99, status);
     return status;
 }
 
@@ -790,7 +956,7 @@ void InstsFeatManager::PtsVelocity(double dt, vector<unsigned int> &ids, vector<
 
 void InstsFeatManager::VisualizeInst(cv::Mat &img)
 {
-    for(const auto &[id,inst]: instances){
+    for(const auto &[id,inst]: instances_){
         if(inst.lost_num>0 || inst.curr_points.empty())
             continue;
 
@@ -823,8 +989,8 @@ void InstsFeatManager::VisualizeInst(cv::Mat &img)
 
 void InstsFeatManager::DrawInsts(cv::Mat& img)
 {
-    if(Config::slam == SlamType::kDynamic){
-        for(const auto &[id,inst]: instances){
+    if(cfg::slam == SlamType::kDynamic){
+        for(const auto &[id,inst]: instances_){
             if(inst.lost_num>0 || inst.curr_points.empty())
                 continue;
 
@@ -847,7 +1013,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
                 cv::putText(img, fmt::format("v:{:.2f} m/s",v_abs),anchor,cv::FONT_HERSHEY_SIMPLEX,1.0,inst.color,2);
             }*/
 
-            if(Config::dataset == DatasetType::kKitti){
+            if(cfg::dataset == DatasetType::kKitti){
                 float rows_offset = img.rows /2;
                 for(auto pt : inst.right_points){
                     pt.y+= rows_offset;
@@ -876,3 +1042,8 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
 
 
 
+
+
+
+
+}

@@ -9,16 +9,16 @@
 
 
 #include "parameters.h"
-
 #include <filesystem>
 
-#include "estimator/dynamic.h"
-#include "utils.h"
 #include "utility/viode_utils.h"
 
-void initLogger()
+namespace dynamic_vins{\
+
+
+void InitLogger()
 {
-    auto reset_log_file=[](const std::string &path){
+    auto resetLogFile=[](const std::string &path){
         if(!fs::exists(path)){
             std::ifstream file(path);//创建文件
             file.close();
@@ -29,7 +29,7 @@ void initLogger()
         }
     };
 
-    auto get_log_level=[](const std::string &level_str){
+    auto getLogLevel=[](const std::string &level_str){
         if(level_str=="debug")
             return spdlog::level::debug;
         else if(level_str=="info")
@@ -46,20 +46,20 @@ void initLogger()
         }
     };
 
-    reset_log_file(Config::kEstimatorLogPath);
+    resetLogFile(Config::kEstimatorLogPath);
     vio_logger = spdlog::basic_logger_mt("estimator_log", Config::kEstimatorLogPath);
-    vio_logger->set_level(get_log_level(Config::kEstimatorLogLevel)); ///设置日志级别，低于该级别将不输出
-    vio_logger->flush_on(get_log_level(Config::kEstimatorLogFlush));///遇到err级别，立马将缓存的日志写入
+    vio_logger->set_level(getLogLevel(Config::kEstimatorLogLevel));
+    vio_logger->flush_on(getLogLevel(Config::kEstimatorLogFlush));
 
-    reset_log_file(Config::kFeatureTrackerLogPath);
+    resetLogFile(Config::kFeatureTrackerLogPath);
     tk_logger = spdlog::basic_logger_mt("tracker_log", Config::kFeatureTrackerLogPath);
-    tk_logger->set_level(get_log_level(Config::kFeatureTrackerLogLevel));
-    tk_logger->flush_on(get_log_level(Config::kFeatureTrackerLogFlush));
+    tk_logger->set_level(getLogLevel(Config::kFeatureTrackerLogLevel));
+    tk_logger->flush_on(getLogLevel(Config::kFeatureTrackerLogFlush));
 
-    reset_log_file(Config::kSegmentorLogPath);
+    resetLogFile(Config::kSegmentorLogPath);
     sg_logger = spdlog::basic_logger_mt("segmentor_log", Config::kSegmentorLogPath);
-    sg_logger->set_level(get_log_level(Config::kSegmentorLogLevel));
-    sg_logger->flush_on(get_log_level(Config::kSegmentorLogFlush));
+    sg_logger->set_level(getLogLevel(Config::kSegmentorLogLevel));
+    sg_logger->flush_on(getLogLevel(Config::kSegmentorLogFlush));
 }
 
 /**
@@ -132,22 +132,33 @@ Config::Config(const std::string &file_name)
     }
     cout<<"dataset:"<<dataset_type_string<<endl;
 
+    fs["basic_dir"] >> kBasicDir;
+
     fs["estimator_log_path"] >> kEstimatorLogPath;
+    kEstimatorLogPath = kBasicDir + kEstimatorLogPath;
     fs["estimator_log_level"] >> kEstimatorLogLevel;
     fs["estimator_log_flush"] >> kEstimatorLogFlush;
     fs["feature_tracker_log_path"] >> kFeatureTrackerLogPath;
+    kFeatureTrackerLogPath = kBasicDir + kFeatureTrackerLogPath;
     fs["feature_tracker_log_level"] >> kFeatureTrackerLogLevel;
     fs["feature_tracker_log_flush"] >> kFeatureTrackerLogFlush;
     fs["segmentor_log_path"] >> kSegmentorLogPath;
+    kSegmentorLogPath = kBasicDir + kSegmentorLogPath;
     fs["segmentor_log_level"] >> kSegmentorLogLevel;
     fs["segmentor_log_flush"] >> kSegmentorLogFlush;
 
     fs["fnet_onnx_path"] >> kRaftFnetOnnxPath;
+    kRaftFnetOnnxPath = kBasicDir + kRaftFnetOnnxPath;
     fs["fnet_tensorrt_path"] >> kRaftFnetTensorrtPath;
+    kRaftFnetTensorrtPath = kBasicDir + kRaftFnetTensorrtPath;
     fs["cnet_onnx_path"] >> kRaftCnetOnnxPath;
+    kRaftCnetOnnxPath = kBasicDir + kRaftCnetOnnxPath;
     fs["cnet_tensorrt_path"] >> kRaftCnetTensorrtPath;
+    kRaftCnetTensorrtPath = kBasicDir + kRaftCnetTensorrtPath;
     fs["update_onnx_path"] >> kRaftUpdateOnnxPath;
+    kRaftUpdateOnnxPath = kBasicDir + kRaftUpdateOnnxPath;
     fs["update_tensorrt_path"] >> kRaftUpdateTensorrtPath;
+    kRaftUpdateTensorrtPath = kBasicDir + kRaftUpdateTensorrtPath;
 
     fs["image0_topic"] >> kImage0Topic;
     fs["image1_topic"] >> kImage1Topic;
@@ -183,9 +194,10 @@ Config::Config(const std::string &file_name)
     }
 
     fs["output_path"] >> kOutputFolder;
-    VINS_RESULT_PATH = kOutputFolder + "/vio.csv";
+    kOutputFolder = kBasicDir+kOutputFolder;
+    kVinsResultPath = kOutputFolder + "/vio.csv";
 
-    std::ofstream fout(VINS_RESULT_PATH, std::ios::out);
+    std::ofstream fout(kVinsResultPath, std::ios::out);
     fout.close();
 
     /// 设置 相机到IMU的外参矩阵
@@ -194,12 +206,12 @@ Config::Config(const std::string &file_name)
         cout<<"have no prior about extrinsic param, calibrate extrinsic param"<<endl;
         RIC.emplace_back(Eigen::Matrix3d::Identity());
         TIC.emplace_back(Eigen::Vector3d::Zero());
-        EX_CALIB_RESULT_PATH = kOutputFolder + "/extrinsic_parameter.csv";
+        kExCalibResultPath = kOutputFolder + "/extrinsic_parameter.csv";
     }
     else{
         if ( ESTIMATE_EXTRINSIC == 1){
             cout<<"Optimize extrinsic param around initial guess!"<<endl;
-            EX_CALIB_RESULT_PATH = kOutputFolder + "/extrinsic_parameter.csv";
+            kExCalibResultPath = kOutputFolder + "/extrinsic_parameter.csv";
         }
         else if (ESTIMATE_EXTRINSIC == 0){
             cout<<"fix extrinsic param"<<endl;
@@ -269,13 +281,16 @@ Config::Config(const std::string &file_name)
         ///设置VIODE的RGB2Label
         string rgb2label_file;
         fs["rgb_to_label_file"]>>rgb2label_file;
+        rgb2label_file = kBasicDir + rgb2label_file;
         ViodeKeyToIndex = ReadViodeRgbIds(rgb2label_file);
     }
 
 
     if(slam != SlamType::kRaw && dataset != DatasetType::kViode){
-        fs["onnx_path"] >> kDetectorOnnxPath;
-        fs["serialize_path"] >> kDetectorSerializePath;
+        fs["solo_onnx_path"] >> kDetectorOnnxPath;
+        kDetectorOnnxPath = kBasicDir + kDetectorOnnxPath;
+        fs["solo_serialize_path"] >> kDetectorSerializePath;
+        kDetectorSerializePath = kBasicDir + kDetectorSerializePath;
         fs["SOLO_NMS_PRE"] >> kSoloNmsPre;
         fs["SOLO_MAX_PER_IMG"] >> kSoloMaxPerImg;
         fs["SOLO_NMS_KERNEL"] >> kSoloNmsKernel;
@@ -287,11 +302,12 @@ Config::Config(const std::string &file_name)
 
     if(slam == SlamType::kDynamic && dataset != DatasetType::kViode){
         fs["extractor_model_path"] >> kExtractorModelPath;
+        kExtractorModelPath = kBasicDir + kExtractorModelPath;
         fs["tracking_n_init"] >> kTrackingNInit;
         fs["tracking_max_age"] >> kTrackingMaxAge;
     }
 
-    fs["VISUAL_INST_DURATION"]>>VISUAL_INST_DURATION;
+    fs["visual_inst_duration"] >> kVisualInstDuration;
 
     fs.release();
 
@@ -330,9 +346,12 @@ Config::Config(const std::string &file_name)
     }
 
 
-    initLogger();
+    InitLogger();
 }
 
 
+
+
+}
 
 

@@ -39,13 +39,14 @@
 #include "FlowEstimating/flow_estimator.h"
 #include "FlowEstimating/flow_visual.h"
 
+namespace dynamic_vins{\
+
 constexpr int kQueueSize=200;
 constexpr double kDelay=0.005;
 
 Estimator::Ptr estimator;
 InstanceSegmentor::Ptr inst_segmentor;
 FeatureTracker::Ptr feature_tracker;
-FlowEstimator::Ptr flow_estimator;
 
 queue<sensor_msgs::ImuConstPtr> imu_buf;
 queue<sensor_msgs::PointCloudConstPtr> feature_buf;
@@ -96,14 +97,11 @@ inline cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
 }
 
 
-
-
-
 SegImage SyncProcess()
 {
     SegImage img;
 
-    while(Config::ok.load(std::memory_order_seq_cst))
+    while(cfg::ok.load(std::memory_order_seq_cst))
     {
         if(inst_segmentor->GetQueueSize() >= kInferImageListSize){
             std::this_thread::sleep_for(50ms);
@@ -111,8 +109,8 @@ SegImage SyncProcess()
         }
         m_buf.lock();
         //等待图片
-        if((Config::is_input_seg && (img0_buf.empty() || img1_buf.empty() || seg0_buf.empty() || seg1_buf.empty())) ||
-           (!Config::is_input_seg && (img0_buf.empty() || img1_buf.empty()))) {
+        if((cfg::is_input_seg && (img0_buf.empty() || img1_buf.empty() || seg0_buf.empty() || seg1_buf.empty())) ||
+        (!cfg::is_input_seg && (img0_buf.empty() || img1_buf.empty()))) {
             m_buf.unlock();
             std::this_thread::sleep_for(2ms);
             continue;
@@ -139,7 +137,7 @@ SegImage SyncProcess()
         img1_buf.pop();
 
 
-        if(Config::is_input_seg)
+        if(cfg::is_input_seg)
         {
             img.seg0_time=seg0_buf.front()->header.stamp.toSec();
             if(img.time0 + kDelay < img.seg0_time){ //img0太早了
@@ -187,20 +185,20 @@ SegImage SyncProcess()
 void ImageProcess()
 {
     int cnt = 0;
-    while(Config::ok.load(std::memory_order_seq_cst))
+    while(cfg::ok.load(std::memory_order_seq_cst))
     {
         SegImage img = SyncProcess();
         WarnS("----------Time : {} ----------", img.time0);
 
         ///rgb to gray
         if(img.gray0.empty()){
-            if(Config::slam != SlamType::kRaw)
+            if(cfg::slam != SlamType::kRaw)
                 img.SetGrayImageGpu();
             else
                 img.SetGrayImage();
         }
         else{
-            if(Config::slam != SlamType::kRaw)
+            if(cfg::slam != SlamType::kRaw)
                 img.SetColorImageGpu();
             else
                 img.SetColorImage();
@@ -209,47 +207,41 @@ void ImageProcess()
         static TicToc tt;
         torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
         //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
-
-        ///异步检测光流
-        torch::Tensor flow;
-        std::thread flow_thread([&flow](torch::Tensor &img){
-            flow = flow_estimator->Forward(img);
-            },std::ref(img_tensor));
-
+        ///启动光流估计线程
+        if(cfg::slam == SlamType::kDynamic){
+            feature_tracker->insts_tracker->StartFlowEstimating(img_tensor);
+        }
         ///实例分割
-        if(!Config::is_input_seg){
-            if(Config::slam != SlamType::kRaw){
+        if(!cfg::is_input_seg){
+            if(cfg::slam != SlamType::kRaw){
                 tt.tic();
                 inst_segmentor->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
                 InfoS("sync_process forward: {}", tt.toc_then_tic());
-                if(Config::slam == SlamType::kNaive)
+                if(cfg::slam == SlamType::kNaive)
                     img.SetMaskGpuSimple();
-                else if(Config::slam == SlamType::kDynamic)
+                else if(cfg::slam == SlamType::kDynamic)
                     img.SetMaskGpu();
                 InfoS("sync_process SetMask: {}", tt.toc_then_tic());
             }
         }
         else{
-            if(Config::dataset == DatasetType::kViode){
-                if(Config::slam == SlamType::kNaive)
+            if(cfg::dataset == DatasetType::kViode){
+                if(cfg::slam == SlamType::kNaive)
                     VIODE::SetViodeMaskSimple(img);
-                else if(Config::slam == SlamType::kDynamic)
+                else if(cfg::slam == SlamType::kDynamic)
                     VIODE::SetViodeMask(img);
             }
             InfoS("sync_process SetMask: {}", tt.toc_then_tic());
         }
 
-        flow_thread.join();
-
-        img.flow = flow;
         inst_segmentor->PushBack(img);
 
-        /*cv::Mat show;
-        cv::cvtColor(img.merge_mask,show,CV_GRAY2BGR);
-        cv::scaleAdd(img.color0,0.5,show,show);
+        //cv::Mat show;
+        //cv::cvtColor(img.merge_mask,show,CV_GRAY2BGR);
+        //cv::scaleAdd(img.color0,0.5,show,show);
         //cv::Mat show = VisualFlow(flow);
-        cv::imshow("show",show);
-        cv::waitKey(1);*/
+        //cv::imshow("show",show);
+        //cv::waitKey(1);
     }
 
     WarnS("ImageProcess 线程退出");
@@ -261,16 +253,16 @@ void FeatureTrack()
 {
     static TicToc tt;
     int cnt;
-    while(Config::ok.load(std::memory_order_seq_cst)){
+    while(cfg::ok.load(std::memory_order_seq_cst)){
         if(auto img = inst_segmentor->WaitForResult();img){
             tt.tic();
-            if(Config::slam == SlamType::kDynamic){
+            if(cfg::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
                 FeatureMap features = feature_tracker->TrackSemanticImage(*img);
                 auto instances= feature_tracker->insts_tracker->SetOutputFeature();
-                estimator->PushBack(img->time0, features, instances);
+                //estimator->PushBack(img->time0, features, instances);
             }
-            else if(Config::slam == SlamType::kNaive){
+            else if(cfg::slam == SlamType::kNaive){
                 FeatureMap features = feature_tracker->TrackImageNaive(*img);
                 estimator->PushBack(img->time0, features);
             }
@@ -280,8 +272,8 @@ void FeatureTrack()
             }
 
             ///发布跟踪可视化图像
-            if (Config::kShowTrack){
-                PubTrackImage(feature_tracker->img_track, img->time0);
+            if (cfg::kShowTrack){
+                PubTrackImage(feature_tracker->img_track(), img->time0);
                 /*cv::imshow("img",feature_tracker->img_track);
                 cv::waitKey(1);*/
                 /*string label=to_string(img.time0)+".jpg";
@@ -295,9 +287,6 @@ void FeatureTrack()
     }
     WarnT("FeatureTrack 线程退出");
 }
-
-
-
 
 
 
@@ -323,7 +312,7 @@ void TerminalCallback(const std_msgs::BoolConstPtr &terminal_msg)
     if (terminal_msg->data == true){
         cerr<<"terminal the e!"<<endl;
         ros::shutdown();
-        Config::ok.store(false,std::memory_order_seq_cst);
+        cfg::ok.store(false,std::memory_order_seq_cst);
     }
 }
 
@@ -331,11 +320,11 @@ void ImuSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true){
         WarnV("use IMU!");
-        estimator->ChangeSensorType(1, Config::STEREO);
+        estimator->ChangeSensorType(1, cfg::STEREO);
     }
     else{
         WarnV("disable IMU!");
-        estimator->ChangeSensorType(0, Config::STEREO);
+        estimator->ChangeSensorType(0, cfg::STEREO);
     }
 }
 
@@ -343,37 +332,28 @@ void CamSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true){
         WarnV("use stereo!");
-        estimator->ChangeSensorType(Config::USE_IMU, 1);
+        estimator->ChangeSensorType(cfg::USE_IMU, 1);
     }
     else{
         WarnV("use mono camera (left)!");
-        estimator->ChangeSensorType(Config::USE_IMU, 0);
+        estimator->ChangeSensorType(cfg::USE_IMU, 0);
     }
 }
 
 
-
-
-int main(int argc, char **argv)
-{
-    if(argc != 2){
-        cerr<<"please input: rosrun vins vins_node [config file]"<<endl;
-        return 1;
-    }
-    string config_file = argv[1];
-    cout<<fmt::format("config_file:{}",argv[1])<<endl;
-
+int Run(int argc, char **argv){
     ros::init(argc, argv, "dynamic_vins");
     ros::NodeHandle n("~");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
+    string cfg_file = argv[1];
+    cout<<fmt::format("cfg_file:{}",argv[1])<<endl;
 
     try{
-        Config cfg(config_file);
+        cfg cfg(cfg_file);
         estimator.reset(new Estimator());
         inst_segmentor.reset(new InstanceSegmentor);
         feature_tracker = std::make_unique<FeatureTracker>();
-        flow_estimator = std::make_unique<FlowEstimator>();
     }
     catch(std::runtime_error &e){
         vio_logger->critical(e.what());
@@ -382,24 +362,19 @@ int main(int argc, char **argv)
     }
 
     estimator->SetParameter();
-    feature_tracker->ReadIntrinsicParameter(Config::kCamPath);
-
-
-#ifdef EIGEN_DONT_PARALLELIZE
-    ROS_DEBUG("EIGEN_DONT_PARALLELIZE");
-#endif
+    feature_tracker->ReadIntrinsicParameter(cfg::kCamPath);
 
     cout<<"waiting for image and imu..."<<endl;
     registerPub(n);
 
-    ros::Subscriber sub_imu = n.subscribe(Config::kImuTopic, 2000, ImuCallback, ros::TransportHints().tcpNoDelay());
-    ros::Subscriber sub_img0 = n.subscribe(Config::kImage0Topic, 100, Img0Callback);
-    ros::Subscriber sub_img1 = n.subscribe(Config::kImage1Topic, 100, Img1Callback);
+    ros::Subscriber sub_imu = n.subscribe(cfg::kImuTopic, 2000, ImuCallback, ros::TransportHints().tcpNoDelay());
+    ros::Subscriber sub_img0 = n.subscribe(cfg::kImage0Topic, 100, Img0Callback);
+    ros::Subscriber sub_img1 = n.subscribe(cfg::kImage1Topic, 100, Img1Callback);
 
     ros::Subscriber sub_seg0,sub_seg1;
-    if(Config::is_input_seg){
-        sub_seg0 = n.subscribe(Config::kImage0SegTopic, 100, Seg0Callback);
-        sub_seg1 = n.subscribe(Config::kImage1SegTopic, 100, Seg1Callback);
+    if(cfg::is_input_seg){
+        sub_seg0 = n.subscribe(cfg::kImage0SegTopic, 100, Seg0Callback);
+        sub_seg1 = n.subscribe(cfg::kImage1SegTopic, 100, Seg1Callback);
     }
 
     ros::Subscriber sub_restart = n.subscribe("/vins_restart", 100, RestartCallback);
@@ -422,7 +397,19 @@ int main(int argc, char **argv)
 
     cerr<<"vins结束"<<endl;
 
-    return 0;
+}
+
+
+}
+
+int main(int argc, char **argv)
+{
+    if(argc != 2){
+        cerr<<"please input: rosrun vins vins_node [cfg file]"<<endl;
+        return 1;
+    }
+
+    return dynamic_vins::Run(argc,argv);
 }
 
 

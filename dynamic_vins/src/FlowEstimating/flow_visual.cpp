@@ -11,6 +11,7 @@
 #include "flow_visual.h"
 #include "utils.h"
 
+namespace dynamic_vins{\
 
 using Tensor = torch::Tensor;
 using Slice = torch::indexing::Slice;
@@ -156,3 +157,5 @@ cv::Mat VisualFlow(torch::Tensor &flow_uv)
     return cv::Mat(flow.sizes()[0],flow.sizes()[1],CV_8UC3,flow.to(torch::kCPU).data_ptr()).clone();
 }
 
+
+}

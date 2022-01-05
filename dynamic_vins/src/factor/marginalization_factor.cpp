@@ -8,7 +8,10 @@
  *******************************************************/
 
 #include "marginalization_factor.h"
-#include "../parameters.h"
+#include "parameters.h"
+
+namespace dynamic_vins{\
+
 
 void ResidualBlockInfo::Evaluate()
 {
@@ -393,4 +396,6 @@ bool MarginalizationFactor::Evaluate(double const *const *parameters, double *re
         }
     }
     return true;
+}
+
 }

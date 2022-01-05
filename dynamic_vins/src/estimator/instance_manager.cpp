@@ -14,6 +14,9 @@
 #include "utility/visualization.h"
 #include "utils.h"
 
+namespace dynamic_vins{\
+
+
 void InstanceManager::set_estimator(Estimator* estimator){
     e_=estimator;
 }
@@ -62,7 +65,7 @@ void InstanceManager::Triangulate(int frame_cnt)
             if(lm.depth > 0 || lm.feats.empty())
                 continue;
             ///双目三角化
-            if(Config::STEREO && lm.feats[0].is_stereo)
+            if(cfg::STEREO && lm.feats[0].is_stereo)
             {
                 int imu_i = lm.feats[0].frame;
                 auto leftPose = getCamPose(imu_i,0);
@@ -203,30 +206,30 @@ void InstanceManager::PredictCurrentPose()
         inst.state[i].P=Roioj* inst.state[j].P + Poioj;
 
         DebugV("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
-/*      State new_pose;
-        new_pose.time=e->Headers[1];
-        double time_ij=new_pose.time - inst.state[0].time;
+        /*      State new_pose;
+                new_pose.time=e->Headers[1];
+                double time_ij=new_pose.time - inst.state[0].time;
 
-        printf("Time: new_pose_time:%.2lf\n",new_pose.time);
-        for(int i=0;i<=kWindowSize;i++){
-            printf("%d:%.2lf ",i,inst.state[i].time);
-        }
-        cout<<endl;
+                printf("Time: new_pose_time:%.2lf\n",new_pose.time);
+                for(int i=0;i<=kWindowSize;i++){
+                    printf("%d:%.2lf ",i,inst.state[i].time);
+                }
+                cout<<endl;
 
 
-        Mat3d Roioj=Sophus::SO3d::exp(inst.speed_a*time_ij).matrix();
-        Vec3d Poioj=inst.speed_v*time_ij;
-        new_pose.R=Roioj * inst.state[0].R;
-        new_pose.P=Roioj* inst.state[0].P + Poioj;
+                Mat3d Roioj=Sophus::SO3d::exp(inst.speed_a*time_ij).matrix();
+                Vec3d Poioj=inst.speed_v*time_ij;
+                new_pose.R=Roioj * inst.state[0].R;
+                new_pose.P=Roioj* inst.state[0].P + Poioj;
 
-        printf("Inst:%d old:(%.2lf,%.2lf,%.2lf) new:(%.2lf,%.2lf,%.2lf) \n",inst.id,inst.state[0].P.x(),
-        inst.state[0].P.y(),inst.state[0].P.z(),new_pose.P.x(),new_pose.P.y(),new_pose.P.z());
-        cout<<"time:"<<time_ij<<endl;
-        cout<<"Roioj:\n"<<Roioj.matrix()<<endl;
-        cout<<"Poioj:\n"<<Poioj.matrix()<<endl;
+                printf("Inst:%d old:(%.2lf,%.2lf,%.2lf) new:(%.2lf,%.2lf,%.2lf) \n",inst.id,inst.state[0].P.x(),
+                inst.state[0].P.y(),inst.state[0].P.z(),new_pose.P.x(),new_pose.P.y(),new_pose.P.z());
+                cout<<"time:"<<time_ij<<endl;
+                cout<<"Roioj:\n"<<Roioj.matrix()<<endl;
+                cout<<"Poioj:\n"<<Poioj.matrix()<<endl;
 
-        inst.state[0] = new_pose;
-        inst.SetWindowPose(e);*/
+                inst.state[0] = new_pose;
+                inst.SetWindowPose(e);*/
     }
 }
 
@@ -302,7 +305,7 @@ void InstanceManager::SlideWindow()
  */
 void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input_insts)
 {
-    if(e_->solver_flag == SolverFlag::INITIAL)
+    if(e_->solver_flag == SolverFlag::kInitial)
         return;
     DebugV("push_back current insts size:{}", instances.size());
 
@@ -334,7 +337,7 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
                 if (auto it = std::find_if(instances[instance_id].landmarks.begin(),
                                            instances[instance_id].landmarks.end(),
                                            [id=feat_id](const LandmarkPoint &it){ return it.id == id;});
-                    it == instances[instance_id].landmarks.end()){
+                it == instances[instance_id].landmarks.end()){
                     instances[instance_id].landmarks.emplace_back(feat_id);//创建Landmarrk
                     instances[instance_id].landmarks.back().feats.emplace_back(feat_point);//添加第一个观测
                     if(!instances[instance_id].is_tracking){
@@ -495,7 +498,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
             debug_msg += fmt::format("lid:{} depth:{} feats.size:{}\n", lm.id, lm.depth, lm.feats.size());
 
             ///第一个特征点只用来优化深度
-            if(Config::STEREO && feat_j.is_stereo){
+            if(cfg::STEREO && feat_j.is_stereo){
                 problem.AddResidualBlock(
                         new ProjInst12Factor(feat_j.point,feat_j.point_right),
                         loss_function,
@@ -542,9 +545,9 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                             inst.para_state[fj],
                             inst.para_inv_depth[depth_index]);*/
             problem.AddResidualBlock(new InstanceInitPowFactorSpeed(
-                                             feat_j.point, feat_j.vel, e_->Rs[fj], e_->Ps[fj],
-                                             e_->ric[0], e_->tic[0], feat_j.td, e_->td,
-                                             e_->headers[fj], e_->headers[0], 1.0),
+                    feat_j.point, feat_j.vel, e_->Rs[fj], e_->Ps[fj],
+                    e_->ric[0], e_->tic[0], feat_j.td, e_->td,
+                    e_->headers[fj], e_->headers[0], 1.0),
                                      loss_function,
                                      inst.para_state[0],
                                      inst.para_speed[0],
@@ -596,15 +599,15 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                          e->para_Pose[fi],
                                          inst.para_speed[0],
                                          inst.para_inv_depth[depth_index]);*/
-                    /*problem.AddResidualBlock(new ProjectionSpeedSimpleFactor(
-                            feat_j.point, feat_i.point,feat_j.vel, feat_i.vel,
-                            feat_j.td, feat_i.td, e->td, e->Headers[fj],e->Headers[fi],
-                            e->Rs[fj], e->Ps[fj],e->Rs[fi], e->Ps[fi],
-                            e->ric[0], e->tic[0],e->ric[0],e->tic[0],1.),
-                                             loss_function,
-                                             inst.para_speed[0],
-                                             inst.para_inv_depth[depth_index]
-                            );*/
+                /*problem.AddResidualBlock(new ProjectionSpeedSimpleFactor(
+                        feat_j.point, feat_i.point,feat_j.vel, feat_i.vel,
+                        feat_j.td, feat_i.td, e->td, e->Headers[fj],e->Headers[fi],
+                        e->Rs[fj], e->Ps[fj],e->Rs[fi], e->Ps[fi],
+                        e->ric[0], e->tic[0],e->ric[0],e->tic[0],1.),
+                                         loss_function,
+                                         inst.para_speed[0],
+                                         inst.para_inv_depth[depth_index]
+                        );*/
                 ///优化物体的速度和位姿
                 /*problem.AddResidualBlock(new SpeedPoseSimpleFactor(
                         feat_j.point, e->Headers[feat_j.frame], e->Headers[feat_i.frame],
@@ -617,7 +620,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                          inst.para_inv_depth[depth_index]);*/
 
 
-                if(Config::STEREO && feat_i.is_stereo){
+                if(cfg::STEREO && feat_i.is_stereo){
                     ///优化物体的位姿
                     /*problem.AddResidualBlock(
                             new ProjInst22SimpleFactor(
@@ -674,3 +677,4 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
 }
 
 
+}

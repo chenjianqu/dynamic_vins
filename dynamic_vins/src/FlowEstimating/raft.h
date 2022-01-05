@@ -23,6 +23,9 @@
 #include "TensorRT/tensorrt_utils.h"
 
 
+namespace dynamic_vins{\
+
+
 class RaftData {
 public:
     using Ptr = std::shared_ptr<RaftData>;
@@ -68,5 +71,6 @@ private:
     vector<Tensor> corr_pyramid; //相关性金字塔
 };
 
+}
 
 #endif //RAFT_CPP_RAFT_H

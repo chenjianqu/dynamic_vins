@@ -19,6 +19,8 @@
 #include "tracker_manager.h"
 #include "utils.h"
 
+namespace dynamic_vins{\
+
 
 torch::Tensor CalIouDist(const std::vector<cv::Rect2f> &dets, const std::vector<cv::Rect2f> &trks);
 
@@ -112,5 +114,7 @@ private:
     std::unique_ptr<FeatureMetric<TrackData>> feat_metric;
 };
 
+
+}
 
 #endif //DEEPSORT_H

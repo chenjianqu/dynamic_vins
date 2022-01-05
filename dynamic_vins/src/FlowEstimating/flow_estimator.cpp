@@ -10,6 +10,9 @@
 
 #include "flow_estimator.h"
 
+namespace dynamic_vins{\
+
+
 using Tensor = torch::Tensor;
 
 FlowEstimator::FlowEstimator(){
@@ -37,5 +40,7 @@ Tensor FlowEstimator::Forward(Tensor &img) {
     flow = data_->Unpad(flow);
     last_img_ = curr_img;
     return flow;
+}
+
 }
 

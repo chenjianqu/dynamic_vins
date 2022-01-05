@@ -39,14 +39,19 @@
 #include "factor/imu_factor.h"
 #include "factor/pose_local_parameterization.h"
 #include "factor/marginalization_factor.h"
-#include "factor/projectionTwoFrameOneCamFactor.h"
-#include "factor/projectionTwoFrameTwoCamFactor.h"
-#include "factor/projectionOneFrameTwoCamFactor.h"
+#include "factor/projection_two_frame_one_cam_factor.h"
+#include "factor/projection_two_frame_two_cam_factor.h"
+#include "factor/projection_one_frame_two_cam_factor.h"
 #include "featureTracker/feature_tracker.h"
 #include "dynamic.h"
 #include "instance_manager.h"
 #include "utils.h"
 #include "landmark.h"
+
+
+namespace dynamic_vins{\
+
+
 
 class Estimator
 {
@@ -81,7 +86,7 @@ class Estimator
     void vector2double();
     void double2vector();
     bool failureDetection();
-    bool getIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &accVector, 
+    bool getIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &accVector,
                                               vector<pair<double, Vec3d>> &gyrVector);
     void getPoseInWorldFrame(Eigen::Matrix4d &T);
     void getPoseInWorldFrame(int index, Eigen::Matrix4d &T);
@@ -183,3 +188,6 @@ private:
 
 
 };
+
+
+}

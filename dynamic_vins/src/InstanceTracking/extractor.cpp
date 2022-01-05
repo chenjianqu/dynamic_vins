@@ -7,10 +7,11 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-
 #include <fstream>
-
 #include "extractor.h"
+
+namespace dynamic_vins{\
+
 
 namespace nn = torch::nn;
 using namespace std;
@@ -22,8 +23,8 @@ namespace {
                     "conv",
                     nn::Sequential(
                             nn::Conv2d(nn::Conv2dOptions(c_in, c_out, 3)
-                                               .stride(is_downsample ? 2 : 1)
-                                               .padding(1).bias(false)),
+                            .stride(is_downsample ? 2 : 1)
+                            .padding(1).bias(false)),
                             nn::BatchNorm2d(c_out),
                             nn::Functional(torch::relu),
                             nn::Conv2d(nn::Conv2dOptions(c_out, c_out, 3)
@@ -100,8 +101,8 @@ NetImpl::NetImpl() {
     conv1 = register_module("conv1",
                             nn::Sequential(
                                     nn::Conv2d(nn::Conv2dOptions(3, 64, 3)
-                                                       .stride(1).padding(1)),
-                                                       nn::BatchNorm2d(64),
+                                    .stride(1).padding(1)),
+                                    nn::BatchNorm2d(64),
                                     nn::Functional(torch::relu)));
     conv2 = register_module("conv2", nn::Sequential());
     conv2->extend(*make_layers(64, 64, 2, false));
@@ -160,4 +161,7 @@ torch::Tensor Extractor::extract(vector<cv::Mat> input) {
     }
     auto tensor = torch::stack(resized).cuda().permute({0, 3, 1, 2}).sub_(MEAN).div_(STD);
     return net(tensor);
+}
+
+
 }

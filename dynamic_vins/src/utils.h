@@ -21,34 +21,31 @@
 
 #include "parameters.h"
 
+namespace dynamic_vins{\
+
 
 class TicToc{
 public:
     TicToc(){
         tic();
     }
-
     void tic(){
         start = std::chrono::system_clock::now();
     }
-
     double toc(){
         end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
         return elapsed_seconds.count() * 1000;
     }
-
     double toc_then_tic(){
         auto t=toc();
         tic();
         return t;
     }
-
     void toc_print_tic(const char* str){
         cout<<str<<":"<<toc()<<" ms"<<endl;
         tic();
     }
-
 private:
     std::chrono::time_point<std::chrono::system_clock> start, end;
 };
@@ -89,8 +86,7 @@ static std::string DimsToStr(nvinfer1::Dims list){
 }
 
 
-inline cv::Point2f operator*(const cv::Point2f &lp,const cv::Point2f &rp)
-{
+inline cv::Point2f operator*(const cv::Point2f &lp,const cv::Point2f &rp){
     return {lp.x * rp.x,lp.y * rp.y};
 }
 
@@ -98,11 +94,9 @@ template<typename MatrixType>
 inline std::string EigenToStr(const MatrixType &m){
     std::string text;
     for(int i=0;i<m.rows();++i){
-        for(int j=0;j<m.cols();++j){
+        for(int j=0;j<m.cols();++j)
             text+=fmt::format("{:.2f} ",m(i,j));
-        }
-        if(m.rows()>1)
-            text+="\n";
+        if(m.rows()>1) text+="\n";
     }
     return text;
 }
@@ -121,7 +115,6 @@ inline std::string QuaternionToStr(const Eigen::Quaternion<T> &q){
 void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos, float scale= 1.f, int thickness= 1, bool reverse = false);
 
 void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label = "", const cv::Scalar &color = {0, 0, 0});
-
 
 
 float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
@@ -144,7 +137,10 @@ template <typename Arg1, typename... Args>
 inline void WarnV(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::warn, fmt, arg1, args...);}
 template<typename T>
 inline void WarnV(const T& msg){vio_logger->log(spdlog::level::warn, msg);}
-
+template <typename Arg1, typename... Args>
+inline void CriticalV(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::critical, fmt, arg1, args...);}
+template<typename T>
+inline void CriticalV(const T& msg){vio_logger->log(spdlog::level::critical, msg);}
 
 template <typename Arg1, typename... Args>
 inline void DebugS(const char* fmt, const Arg1 &arg1, const Args&... args){ sg_logger->log(spdlog::level::debug, fmt, arg1, args...);}
@@ -158,7 +154,10 @@ template <typename Arg1, typename... Args>
 inline void WarnS(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::warn, fmt, arg1, args...);}
 template<typename T>
 inline void WarnS(const T& msg){sg_logger->log(spdlog::level::warn, msg);}
-
+template <typename Arg1, typename... Args>
+inline void CriticalS(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::critical, fmt, arg1, args...);}
+template<typename T>
+inline void CriticalS(const T& msg){sg_logger->log(spdlog::level::critical, msg);}
 
 template <typename Arg1, typename... Args>
 inline void DebugT(const char* fmt, const Arg1 &arg1, const Args&... args){ tk_logger->log(spdlog::level::debug, fmt, arg1, args...);}
@@ -172,6 +171,12 @@ template <typename Arg1, typename... Args>
 inline void WarnT(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::warn, fmt, arg1, args...);}
 template<typename T>
 inline void WarnT(const T& msg){tk_logger->log(spdlog::level::warn, msg);}
+template <typename Arg1, typename... Args>
+inline void CriticalT(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::critical, fmt, arg1, args...);}
+template<typename T>
+inline void CriticalT(const T& msg){tk_logger->log(spdlog::level::critical, msg);}
 
+
+}
 
 #endif //DYNAMIC_VINS_UTILS_H

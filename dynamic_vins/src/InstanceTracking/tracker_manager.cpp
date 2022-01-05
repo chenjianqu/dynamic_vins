@@ -13,6 +13,9 @@
 #include "tracker_manager.h"
 #include "hungarian.h"
 
+namespace dynamic_vins{\
+
+
 using namespace std;
 using namespace cv;
 
@@ -58,4 +61,6 @@ void associate_detections_to_trackers_idx(const DistanceMetricFunc &metric,
                    assignment.begin(), assignment.end(),
                    inserter(unmatched_dets_new, unmatched_dets_new.begin()));
     unmatched_dets = move(unmatched_dets_new);
+}
+
 }

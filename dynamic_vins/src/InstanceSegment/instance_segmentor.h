@@ -22,6 +22,8 @@
 #include "solo_head.h"
 #include "buffer.h"
 
+namespace dynamic_vins{\
+
 
 class InstanceSegmentor {
 public:
@@ -73,5 +75,6 @@ private:
     std::list<SegImage> seg_img_list_;
 };
 
+}
 
 #endif //DYNAMIC_VINS_INSTANCE_SEGMENTOR_H

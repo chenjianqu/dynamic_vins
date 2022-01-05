@@ -12,11 +12,14 @@
 #include <iostream>
 #include <eigen3/Eigen/Dense>
 
-#include "../utility/utility.h"
-#include "../parameters.h"
+#include "utility/utility.h"
+#include "parameters.h"
 #include "integration_base.h"
 
 #include <ceres/ceres.h>
+
+namespace dynamic_vins{\
+
 
 class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9>
 {
@@ -195,4 +198,7 @@ class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9>
     IntegrationBase* pre_integration;
 
 };
+
+
+}
 

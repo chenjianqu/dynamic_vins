@@ -7,7 +7,10 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "projectionFactorSimple.h"
+#include "projection_factor_simple.h"
+
+namespace dynamic_vins{\
+
 
 Eigen::Matrix2d ProjectionTwoFrameOneCamFactorSimple::sqrt_info;
 double ProjectionTwoFrameOneCamFactorSimple::sum_t;
@@ -21,7 +24,7 @@ double ProjectionTwoFrameTwoCamFactorSimple::sum_t;
 double ProjectionBoxFactorSimple::sum_t;
 
 ProjectionTwoFrameOneCamFactorSimple::ProjectionTwoFrameOneCamFactorSimple(const Eigen::Vector3d &_pts_i, const Eigen::Vector3d &_pts_j) :
-                                                               pts_i(_pts_i), pts_j(_pts_j){
+pts_i(_pts_i), pts_j(_pts_j){
 }
 
 bool ProjectionTwoFrameOneCamFactorSimple::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
@@ -229,8 +232,8 @@ bool ProjectionTwoFrameTwoCamFactorSimple::Evaluate(double const *const *paramet
 
 
 ProjectionOneFrameTwoCamFactorSimple::ProjectionOneFrameTwoCamFactorSimple(const Eigen::Vector3d &_pts_i, const Eigen::Vector3d &_pts_j) :
-                                                               pts_i(_pts_i), pts_j(_pts_j)
-                                                               {}
+pts_i(_pts_i), pts_j(_pts_j)
+{}
 
 bool ProjectionOneFrameTwoCamFactorSimple::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
@@ -423,3 +426,4 @@ bool ProjectionBoxFactorSimple::Evaluate(double const *const *parameters, double
 
 }
 
+}

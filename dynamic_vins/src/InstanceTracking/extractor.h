@@ -17,6 +17,9 @@
 #include <opencv2/opencv.hpp>
 
 
+namespace dynamic_vins{\
+
+
 struct NetImpl : torch::nn::Module {
 public:
     NetImpl();
@@ -41,5 +44,7 @@ private:
     Net net;
 };
 
+
+}
 
 #endif //EXTRACTOR_H

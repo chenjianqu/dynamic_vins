@@ -9,17 +9,21 @@
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
 
-#include "projectionTwoFrameOneCamFactor.h"
+#include "projection_two_frame_one_cam_factor.h"
+
+
+namespace dynamic_vins{\
+
 
 Eigen::Matrix2d ProjectionTwoFrameOneCamFactor::sqrt_info;
 double ProjectionTwoFrameOneCamFactor::sum_t;
 
 ProjectionTwoFrameOneCamFactor::ProjectionTwoFrameOneCamFactor(const Vec3d &_pts_i, const Vec3d &_pts_j, 
-                                       const Vec2d &_velocity_i, const Vec2d &_velocity_j,
-                                       const double _td_i, const double _td_j) : 
-                                       pts_i(_pts_i), pts_j(_pts_j), 
-                                       td_i(_td_i), td_j(_td_j)
-{
+                                                               const Vec2d &_velocity_i, const Vec2d &_velocity_j,
+                                                               const double _td_i, const double _td_j) :
+                                                               pts_i(_pts_i), pts_j(_pts_j),
+                                                               td_i(_td_i), td_j(_td_j)
+                                                               {
     velocity_i.x() = _velocity_i.x();
     velocity_i.y() = _velocity_i.y();
     velocity_i.z() = 0;
@@ -38,7 +42,7 @@ ProjectionTwoFrameOneCamFactor::ProjectionTwoFrameOneCamFactor(const Vec3d &_pts
     tangent_base.block<1, 3>(0, 0) = b1.transpose();
     tangent_base.block<1, 3>(1, 0) = b2.transpose();
 #endif
-};
+                                                               };
 
 bool ProjectionTwoFrameOneCamFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
@@ -89,12 +93,12 @@ bool ProjectionTwoFrameOneCamFactor::Evaluate(double const *const *parameters, d
         x2 = pts_camera_j(1);
         x3 = pts_camera_j(2);
         norm_jaco << 1.0 / norm - x1 * x1 / pow(norm, 3), - x1 * x2 / pow(norm, 3),            - x1 * x3 / pow(norm, 3),
-                     - x1 * x2 / pow(norm, 3),            1.0 / norm - x2 * x2 / pow(norm, 3), - x2 * x3 / pow(norm, 3),
-                     - x1 * x3 / pow(norm, 3),            - x2 * x3 / pow(norm, 3),            1.0 / norm - x3 * x3 / pow(norm, 3);
+        - x1 * x2 / pow(norm, 3),            1.0 / norm - x2 * x2 / pow(norm, 3), - x2 * x3 / pow(norm, 3),
+        - x1 * x3 / pow(norm, 3),            - x2 * x3 / pow(norm, 3),            1.0 / norm - x3 * x3 / pow(norm, 3);
         reduce = tangent_base * norm_jaco;
 #else
         reduce << 1. / dep_j, 0, -pts_camera_j(0) / (dep_j * dep_j),
-            0, 1. / dep_j, -pts_camera_j(1) / (dep_j * dep_j);
+        0, 1. / dep_j, -pts_camera_j(1) / (dep_j * dep_j);
 #endif
         reduce = sqrt_info * reduce;
 
@@ -128,7 +132,7 @@ bool ProjectionTwoFrameOneCamFactor::Evaluate(double const *const *parameters, d
             jaco_ex.leftCols<3>() = ric.transpose() * (Rj.transpose() * Ri - Eigen::Matrix3d::Identity());
             Eigen::Matrix3d tmp_r = ric.transpose() * Rj.transpose() * Ri * ric;
             jaco_ex.rightCols<3>() = -tmp_r * Utility::skewSymmetric(pts_camera_i) + Utility::skewSymmetric(tmp_r * pts_camera_i) +
-                                     Utility::skewSymmetric(ric.transpose() * (Rj.transpose() * (Ri * tic + Pi - Pj) - tic));
+                    Utility::skewSymmetric(ric.transpose() * (Rj.transpose() * (Ri * tic + Pi - Pj) - tic));
             jacobian_ex_pose.leftCols<6>() = reduce * jaco_ex;
             jacobian_ex_pose.rightCols<1>().setZero();
         }
@@ -141,7 +145,7 @@ bool ProjectionTwoFrameOneCamFactor::Evaluate(double const *const *parameters, d
         {
             Eigen::Map<Vec2d> jacobian_td(jacobians[4]);
             jacobian_td = reduce * ric.transpose() * Rj.transpose() * Ri * ric * velocity_i / inv_dep_i * -1.0  +
-                          sqrt_info * velocity_j.head(2);
+                    sqrt_info * velocity_j.head(2);
         }
     }
     sum_t += tic_toc.toc();
@@ -164,17 +168,17 @@ void ProjectionTwoFrameOneCamFactor::check(double **parameters)
     puts("my");
 
     std::cout << Eigen::Map<Eigen::Matrix<double, 2, 1>>(res).transpose() << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Eigen::Matrix<double, 2, 7, Eigen::RowMajor>>(jaco[0]) << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Eigen::Matrix<double, 2, 7, Eigen::RowMajor>>(jaco[1]) << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Eigen::Matrix<double, 2, 7, Eigen::RowMajor>>(jaco[2]) << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Vec2d>(jaco[3]) << std::endl
-              << std::endl;
+    << std::endl;
     std::cout << Eigen::Map<Vec2d>(jaco[4]) << std::endl
-              << std::endl;
+    << std::endl;
 
     Vec3d Pi(parameters[0][0], parameters[0][1], parameters[0][2]);
     Eigen::Quaterniond Qi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
@@ -269,4 +273,6 @@ void ProjectionTwoFrameOneCamFactor::check(double **parameters)
     std::cout << num_jacobian.block<2, 6>(0, 12) << std::endl;
     std::cout << num_jacobian.block<2, 1>(0, 18) << std::endl;
     std::cout << num_jacobian.block<2, 1>(0, 19) << std::endl;
+}
+
 }

@@ -18,8 +18,8 @@
 #include "parameters.h"
 #include "utils.h"
 
+namespace dynamic_vins{\
 
-using namespace std;
 
 
 std::optional<int> GetQueueShapeIndex(int c, int h, int w)
@@ -360,4 +360,6 @@ void InstanceSegmentor::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vect
         cv::imshow("test",image_test);
         cv::waitKey(1);
     }
+}
+
 }

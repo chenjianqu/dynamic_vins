@@ -16,8 +16,12 @@
 #include <ceres/ceres.h>
 #include <unordered_map>
 
-#include "../utility/utility.h"
-#include "../utils.h"
+#include "utility/utility.h"
+#include "utils.h"
+
+
+namespace dynamic_vins{\
+
 
 const int NUM_THREADS = 4;
 
@@ -90,3 +94,5 @@ class MarginalizationFactor : public ceres::CostFunction
 
     MarginalizationInfo* marginalization_info;
 };
+
+}

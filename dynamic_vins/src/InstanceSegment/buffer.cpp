@@ -13,6 +13,7 @@
 #include "buffer.h"
 #include "TensorRT/common.h"
 #include "parameters.h"
+namespace dynamic_vins{\
 
 
 MyBuffer::MyBuffer(nvinfer1::ICudaEngine& engine){
@@ -46,7 +47,7 @@ MyBuffer::~MyBuffer(){
 
 void MyBuffer::cpyInputToGPU(){
     if(auto status = cudaMemcpyAsync(gpu_buffer[0], cpu_buffer[0], size[0], cudaMemcpyHostToDevice, stream);
-        status != cudaSuccess)
+    status != cudaSuccess)
         throw std::runtime_error(fmt::format("cudaMemcpyAsync failed, status:{}",status));
 
 }
@@ -59,4 +60,5 @@ void MyBuffer::cpyOutputToCPU(){
     }
     if(auto status=cudaStreamSynchronize(stream);status != cudaSuccess)
         throw std::runtime_error(fmt::format("cudaStreamSynchronize failed, status:{}",status));
+}
 }

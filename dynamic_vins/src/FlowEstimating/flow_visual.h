@@ -14,9 +14,13 @@
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
 
+namespace dynamic_vins{\
+
+
 torch::Tensor FlowToImage(torch::Tensor &flow_uv);
 cv::Mat VisualFlow(torch::Tensor &img, torch::Tensor &flow_uv);
 cv::Mat VisualFlow(torch::Tensor &flow_uv);
 
+}
 
 #endif //RAFT_CPP_VISUALIZATION_H

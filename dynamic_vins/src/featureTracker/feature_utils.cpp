@@ -9,8 +9,11 @@
 
 #include "feature_utils.h"
 
+namespace dynamic_vins{\
 
-std::vector<uchar> FlowTrack(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2)
+using Tensor = torch::Tensor;
+
+std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2)
 {
     std::vector<uchar> status;
     std::vector<float> err;
@@ -48,49 +51,12 @@ std::vector<uchar> FlowTrack(const cv::Mat &img1, const cv::Mat &img2, vector<cv
     return status;
 }
 
-/**
- * 将gpu mat转换为point2f
- * @param d_mat
- * @param vec
- */
-void GpuMat2Points(const cv::cuda::GpuMat& d_mat, std::vector<cv::Point2f>& vec)
-{
-    std::vector<cv::Point2f> points(d_mat.cols);
-    cv::Mat mat(1, d_mat.cols, CV_32FC2, (void*)&points[0]);
-    d_mat.download(mat);
-    vec = points;
-}
-
-void GpuMat2Status(const cv::cuda::GpuMat& d_mat, std::vector<uchar>& vec)
-{
-    std::vector<uchar> points(d_mat.cols);
-    cv::Mat mat(1, d_mat.cols, CV_8UC1, (void*)&points[0]);
-    d_mat.download(mat);
-    vec=points;
-}
-
-/**
- * 将point2f转换为gpu mat
- * @param vec
- * @param d_mat
- */
-void Points2GpuMat(const std::vector<cv::Point2f>& vec, cv::cuda::GpuMat& d_mat)
-{
-    cv::Mat mat(1, vec.size(), CV_32FC2, (void*)&vec[0]);
-    d_mat=cv::cuda::GpuMat(mat);
-}
-
-void Status2GpuMat(const std::vector<uchar>& vec, cv::cuda::GpuMat& d_mat)
-{
-    cv::Mat mat(1, vec.size(), CV_8UC1, (void*)&vec[0]);
-    d_mat=cv::cuda::GpuMat(mat);
-}
 
 
-std::vector<uchar> FlowTrackGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
-                                const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
-                                const cv::cuda::GpuMat &img_prev, const cv::cuda::GpuMat &img_next,
-                                std::vector<cv::Point2f> &pts_prev, std::vector<cv::Point2f> &pts_next){
+std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
+                                       const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
+                                       const cv::cuda::GpuMat &img_prev, const cv::cuda::GpuMat &img_next,
+                                       std::vector<cv::Point2f> &pts_prev, std::vector<cv::Point2f> &pts_next){
     if(img_prev.empty() || img_next.empty() || pts_prev.empty()){
         std::string msg="flowTrack() input wrong, received at least one of parameter are empty";
         tk_logger->error(msg);
@@ -178,24 +144,6 @@ std::vector<uchar> FlowTrackGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>&
 }
 
 
-std::vector<cv::Point2f> DetectNewFeaturesGPU(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask)
-{
-    auto detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, detect_num, 0.01, Config::kMinDist);
-    DebugT("start detect new feat,size:{}", detect_num);
-
-    cv::cuda::GpuMat d_new_pts;
-    detector->detect(img,d_new_pts,mask);
-
-    DebugT("end detect new feat,size:{}", d_new_pts.cols);
-
-    std::vector<cv::Point2f> points;
-    GpuMat2Points(d_new_pts, points);
-
-    DebugT("gpuMat2Points points:{}", points.size());
-
-    return points;
-}
-
 /**
  * 叠加两个mask，结果写入到第一个maks中
  * @param mask1
@@ -217,19 +165,6 @@ void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2)
 }
 
 
-void SetMask(const cv::Mat &init_mask, cv::Mat &mask_out, std::vector<cv::Point2f> &points){
-    mask_out = init_mask.clone();
-    for(const auto& pt : points){
-        cv::circle(mask_out, pt, Config::kMinDist, 0, -1);
-    }
-}
-
-
-void setMaskGpu(const cv::cuda::GpuMat &init_mask,cv::cuda::GpuMat &mask_out){
-
-}
-
-
 /**
  * 对特征点进行去畸变,返回归一化特征点
  * @param pts
@@ -248,3 +183,56 @@ vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPt
     return un_pts;
 }
 
+
+vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
+                                      vector<cv::Point2f> &pts1,
+                                      vector<cv::Point2f> &pts2){
+    assert(flow.type()==CV_32FC2);
+    int n = pts1.size();
+    vector<uchar> status(n);
+    pts2.resize(n);
+    for(int i=0;i<n;++i){
+        auto delta = flow.at<cv::Vec2f>(pts1[i]);
+        pts2[i].x = pts1[i].x + delta[0];
+        pts2[i].y = pts1[i].y + delta[1];
+        if(0 <= pts2[i].x && pts2[i].x <= flow.cols && 0 <= pts2[i].y && pts2[i].y <= flow.rows)
+            status[i]=1;
+        else
+            status[i]=0;
+    }
+    return status;
+}
+
+
+
+std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask,
+                                              std::vector<cv::Point2f> &curr_pts, cv::Rect rect){
+    cv::Mat mask = inst_mask.clone();
+    for(int i=0;i<curr_pts.size();++i){
+        cv::circle(mask,curr_pts[i],5,0,-1);
+    }
+    int cnt=0;
+    int row_start=0,row_end=mask.rows,col_start=0,col_end=mask.cols;
+    if(!rect.empty()){
+        row_start = rect.tl().y;
+        col_start = rect.tl().x;
+        row_end = rect.br().y;
+        col_end = rect.br().x;
+    }
+    vector<cv::Point2f> output;
+    constexpr int kMinDist=5;
+    for(int i=row_start;i<row_end && cnt<detect_num;i+=kMinDist){
+        for(int j=col_start;j<col_end && cnt<detect_num;j+=kMinDist){
+            if(mask.at<uchar>(i,j) > 0){
+                output.push_back(cv::Point2f(j,i));
+                cnt++;
+            }
+        }
+    }
+    return output;
+}
+
+
+
+
+}

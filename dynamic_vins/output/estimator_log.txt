@@ -1,0 +1,50 @@
+[2022-01-04 23:23:23.700] [estimator_log] [warning] set input seg, the segmentor does not initial
+[2022-01-04 23:23:23.700] [estimator_log] [info] init FeatureTracker
+[2022-01-04 23:23:27.223] [estimator_log] [info] setParameter extrinsic cam 0
+0 0 1
+1 0 0
+0 1 0
+0 0 0
+
+[2022-01-04 23:23:27.223] [estimator_log] [info] setParameter extrinsic cam 1
+0 0 1
+1 0 0
+0 1 0
+   0 0.05    0
+
+[2022-01-04 23:23:27.223] [estimator_log] [info] setParameter set g       0       0 9.81007
+
+[2022-01-04 23:23:27.223] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/cam0_pinhole.yaml
+[2022-01-04 23:23:27.224] [estimator_log] [info] Camera Parameters:
+    model_type PINHOLE
+   camera_name camera
+   image_width 752
+  image_height 480
+Distortion Parameters
+            k1 0
+            k2 0
+            p1 0
+            p2 0
+Projection Parameters
+            fx 376
+            fy 376
+            cx 376
+            cy 240
+
+[2022-01-04 23:23:27.224] [estimator_log] [info] readIntrinsicParameter() Reading parameter of camera:/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/cam1_pinhole.yaml
+[2022-01-04 23:23:27.224] [estimator_log] [info] Camera Parameters:
+    model_type PINHOLE
+   camera_name camera
+   image_width 752
+  image_height 480
+Distortion Parameters
+            k1 0
+            k2 0
+            p1 0
+            p2 0
+Projection Parameters
+            fx 376
+            fy 376
+            cx 376
+            cy 240
+

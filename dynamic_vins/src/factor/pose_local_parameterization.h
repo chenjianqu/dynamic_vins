@@ -11,7 +11,10 @@
 
 #include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
-#include "../utility/utility.h"
+#include "utility/utility.h"
+
+namespace dynamic_vins{\
+
 
 class PoseLocalParameterization : public ceres::LocalParameterization
 {
@@ -20,3 +23,6 @@ class PoseLocalParameterization : public ceres::LocalParameterization
     virtual int GlobalSize() const { return 7; };
     virtual int LocalSize() const { return 6; };
 };
+
+
+}

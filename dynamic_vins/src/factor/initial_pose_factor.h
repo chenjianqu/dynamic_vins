@@ -14,9 +14,12 @@
 #include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-#include "../utility/utility.h"
-#include "../utils.h"
-#include "../parameters.h"
+#include "utility/utility.h"
+#include "utils.h"
+#include "parameters.h"
+
+namespace dynamic_vins{\
+
 
 class InitialPoseFactor : public ceres::SizedCostFunction<6, 7>
 {
@@ -110,3 +113,5 @@ class InitialPoseFactor : public ceres::SizedCostFunction<6, 7>
     Eigen::Quaterniond init_Q;
     Eigen::Matrix<double, 6, 6> sqrt_info;
 };
+
+}
