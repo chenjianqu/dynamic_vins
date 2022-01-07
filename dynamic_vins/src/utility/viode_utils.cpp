@@ -170,6 +170,7 @@ void SetViodeMask(SegImage &img)
         info.track_id=key;
 
         DebugS("id:{}", key);
+        DebugS("mask:{} {} {}", inst.mask.empty(),inst.mask.rows,inst.mask.cols);
 
         //info.mask_cv = inst.mask;
         info.mask_gpu.upload(inst.mask);

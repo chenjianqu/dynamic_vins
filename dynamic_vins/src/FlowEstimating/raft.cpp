@@ -328,7 +328,7 @@ vector<Tensor> RAFT::Forward(Tensor& tensor0, Tensor& tensor1) {
 
     vector<Tensor> flow_prediction;
     for(int i=0;i<num_iter;++i){
-        DebugS("{}",i);
+        //DebugS("{}",i);
         auto corr = IndexCorrVolume(coords1);//[batch*h*w, 1, 9, 9]
         auto flow = coords1 - coords0;//[1,2,47,154]
         auto [net1,up_mask,delta_flow] = ForwardUpdate(net,inp,corr,flow);

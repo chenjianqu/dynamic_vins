@@ -140,7 +140,7 @@ void printStatistics(const Estimator &estimator, double t)
     sum_of_path += (estimator.Ps[kWindowSize] - last_path).norm();
     last_path = estimator.Ps[kWindowSize];
     ROS_DEBUG("sum of path %f", sum_of_path);
-    if (cfg::ESTIMATE_TD)
+    if (cfg::is_estimate_td)
         ROS_INFO("td %f", estimator.td);
 }
 
@@ -267,7 +267,7 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
 
         cameraposevisual.reset();
         cameraposevisual.add_pose(P, R);
-        if(cfg::STEREO)
+        if(cfg::is_stereo)
         {
             Vector3d P = estimator.Ps[i] + estimator.Rs[i] * estimator.tic[1];
             Quaterniond R = Quaterniond(estimator.Rs[i] * estimator.ric[1]);

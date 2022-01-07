@@ -65,7 +65,7 @@ void InstanceManager::Triangulate(int frame_cnt)
             if(lm.depth > 0 || lm.feats.empty())
                 continue;
             ///双目三角化
-            if(cfg::STEREO && lm.feats[0].is_stereo)
+            if(cfg::is_stereo && lm.feats[0].is_stereo)
             {
                 int imu_i = lm.feats[0].frame;
                 auto leftPose = getCamPose(imu_i,0);
@@ -498,7 +498,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
             debug_msg += fmt::format("lid:{} depth:{} feats.size:{}\n", lm.id, lm.depth, lm.feats.size());
 
             ///第一个特征点只用来优化深度
-            if(cfg::STEREO && feat_j.is_stereo){
+            if(cfg::is_stereo && feat_j.is_stereo){
                 problem.AddResidualBlock(
                         new ProjInst12Factor(feat_j.point,feat_j.point_right),
                         loss_function,
@@ -620,7 +620,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                          inst.para_inv_depth[depth_index]);*/
 
 
-                if(cfg::STEREO && feat_i.is_stereo){
+                if(cfg::is_stereo && feat_i.is_stereo){
                     ///优化物体的位姿
                     /*problem.AddResidualBlock(
                             new ProjInst22SimpleFactor(

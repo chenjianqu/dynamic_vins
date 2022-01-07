@@ -181,10 +181,10 @@ Config::Config(const std::string &file_name)
     kMinParallax = fs["keyframe_parallax"];
     kMinParallax = kMinParallax / kFocalLength;
 
-    USE_IMU = fs["imu"];
-    cout<<"USE_IMU:"<<USE_IMU<<endl;
+    is_use_imu = fs["imu"];
+    cout << "USE_IMU:" << is_use_imu << endl;
 
-    if(USE_IMU){
+    if(is_use_imu){
         fs["imu_topic"] >> kImuTopic;
         ACC_N = fs["acc_n"];
         ACC_W = fs["acc_w"];
@@ -239,7 +239,7 @@ Config::Config(const std::string &file_name)
     kCamPath.push_back(cam0Path);
 
     if(kCamNum == 2){
-        STEREO = 1;
+        is_stereo = 1;
         std::string cam1Calib;
         fs["cam1_calib"] >> cam1Calib;
         std::string cam1Path = configPath + "/" + cam1Calib;
@@ -258,17 +258,17 @@ Config::Config(const std::string &file_name)
     fs["BIAS_GYR_THRESHOLD"]>>BIAS_GYR_THRESHOLD;
 
     TD = fs["td"];
-    ESTIMATE_TD = fs["estimate_td"];
-    if (ESTIMATE_TD){
+    is_estimate_td = fs["estimate_td"];
+    if (is_estimate_td){
         cout<<"Unsynchronized sensors, online estimate time offset, initial td: "<<TD<<endl;
     }
     else{
         cout<<"Synchronized sensors, fix time offset:"<<TD<<endl;
     }
 
-    if(!USE_IMU){
+    if(!is_use_imu){
         ESTIMATE_EXTRINSIC = 0;
-        ESTIMATE_TD = 0;
+        is_estimate_td = 0;
         cout<<"no imu, fix extrinsic param; no time offset calibration"<<endl;
     }
 

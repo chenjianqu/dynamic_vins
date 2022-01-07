@@ -11,6 +11,7 @@
 #include "segment_image.h"
 #include "utils.h"
 #include "utility/viode_utils.h"
+#include "FlowEstimating/flow_visual.h"
 
 namespace dynamic_vins{\
 
@@ -363,10 +364,12 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
         throw std::runtime_error(msg);
     }
 
-    ///等待光流估计结果
-    auto flow_tensor = flow_estimator_->WaitingResult();
-    cv::Size  flow_size(flow_tensor.sizes()[2],flow_tensor.sizes()[1]);
-    cv::Mat flow_cv = cv::Mat(flow_size, CV_32FC2, flow_tensor.to(torch::kCPU).data_ptr()).clone();
+    cv::Size  flow_size(img.flow.sizes()[2],img.flow.sizes()[1]);
+    cv::Mat flow_cv = cv::Mat(flow_size, CV_32FC2, img.flow.to(torch::kCPU).data_ptr()).clone();
+
+    //cv::Mat flow_show = VisualFlow(flow_tensor);
+    //cv::imshow("flow",flow_show);
+    //cv::waitKey(1);
 
     if(exist_inst_){
         ///形态学运算

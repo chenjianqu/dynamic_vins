@@ -96,10 +96,10 @@ void Estimator::optimization()
     for (int i = 0; i < frame_count + 1; i++){
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(para_Pose[i], kSizePose, local_parameterization);
-        if(cfg::USE_IMU)
+        if(cfg::is_use_imu)
             problem.AddParameterBlock(para_SpeedBias[i], kSizeSpeedBias);
     }
-    if(!cfg::USE_IMU)
+    if(!cfg::is_use_imu)
         problem.SetParameterBlockConstant(para_Pose[0]);
 
     for (int i = 0; i < cfg::kCamNum; i++)
@@ -125,7 +125,7 @@ void Estimator::optimization()
 
     problem.AddParameterBlock(para_Td[0], 1);
 
-    if (!cfg::ESTIMATE_TD || Vs[0].norm() < 0.2)
+    if (!cfg::is_estimate_td || Vs[0].norm() < 0.2)
         problem.SetParameterBlockConstant(para_Td[0]);
 
     if (last_marginalization_info && last_marginalization_info->valid)
@@ -135,7 +135,7 @@ void Estimator::optimization()
         problem.AddResidualBlock(marginalization_factor, nullptr,
                                  last_marginalization_parameter_blocks);
     }
-    if(cfg::USE_IMU)
+    if(cfg::is_use_imu)
     {
         for (int i = 0; i < frame_count; i++)
         {
@@ -172,7 +172,7 @@ void Estimator::optimization()
                 problem.AddResidualBlock(f_td, loss_function, para_Pose[imu_i], para_Pose[imu_j], para_ex_pose[0], para_Feature[feature_index], para_Td[0]);
             }
 
-            if(cfg::STEREO && it_per_frame.is_stereo)
+            if(cfg::is_stereo && it_per_frame.is_stereo)
             {
                 Vector3d pts_j_right = it_per_frame.pointRight;
                 if(imu_i != imu_j)
@@ -257,7 +257,7 @@ void Estimator::optimization()
             marginalization_info->addResidualBlockInfo(residual_block_info);
         }
 
-        if(cfg::USE_IMU)
+        if(cfg::is_use_imu)
         {
             if (pre_integrations[1]->sum_dt < 10.0)
             {
@@ -298,7 +298,7 @@ void Estimator::optimization()
                                                                           vector<int>{0, 3});
                         marginalization_info->addResidualBlockInfo(residual_block_info);
                     }
-                    if(cfg::STEREO && it_per_frame.is_stereo)
+                    if(cfg::is_stereo && it_per_frame.is_stereo)
                     {
                         Vector3d pts_j_right = it_per_frame.pointRight;
                         if(imu_i != imu_j)
@@ -336,7 +336,7 @@ void Estimator::optimization()
         for (int i = 1; i <= kWindowSize; i++)
         {
             addr_shift[reinterpret_cast<long>(para_Pose[i])] = para_Pose[i - 1];
-            if(cfg::USE_IMU)
+            if(cfg::is_use_imu)
                 addr_shift[reinterpret_cast<long>(para_SpeedBias[i])] = para_SpeedBias[i - 1];
         }
         for (int i = 0; i < cfg::kCamNum; i++)
@@ -395,13 +395,13 @@ void Estimator::optimization()
                 else if (i == kWindowSize)
                 {
                     addr_shift[reinterpret_cast<long>(para_Pose[i])] = para_Pose[i - 1];
-                    if(cfg::USE_IMU)
+                    if(cfg::is_use_imu)
                         addr_shift[reinterpret_cast<long>(para_SpeedBias[i])] = para_SpeedBias[i - 1];
                 }
                 else
                 {
                     addr_shift[reinterpret_cast<long>(para_Pose[i])] = para_Pose[i];
-                    if(cfg::USE_IMU)
+                    if(cfg::is_use_imu)
                         addr_shift[reinterpret_cast<long>(para_SpeedBias[i])] = para_SpeedBias[i];
                 }
             }
@@ -535,10 +535,10 @@ void Estimator::ChangeSensorType(int use_imu, int use_stereo)
         printf("at least use two sensors! \n");
     else
     {
-        if(cfg::USE_IMU != use_imu)
+        if(cfg::is_use_imu != use_imu)
         {
-            cfg::USE_IMU = use_imu;
-            if(cfg::USE_IMU)
+            cfg::is_use_imu = use_imu;
+            if(cfg::is_use_imu)
             {
                 // reuse imu; restart system
                 restart = true;
@@ -554,8 +554,8 @@ void Estimator::ChangeSensorType(int use_imu, int use_stereo)
             }
         }
 
-        cfg::STEREO = use_stereo;
-        printf("use imu %d use stereo %d\n", cfg::USE_IMU, cfg::STEREO);
+        cfg::is_stereo = use_stereo;
+        printf("use imu %d use stereo %d\n", cfg::is_use_imu, cfg::is_stereo);
     }
     mProcess.unlock();
     if(restart)
@@ -944,7 +944,7 @@ void Estimator::vector2double()
         para_Pose[i][5] = q.z();
         para_Pose[i][6] = q.w();
 
-        if(cfg::USE_IMU)
+        if(cfg::is_use_imu)
         {
             para_SpeedBias[i][0] = Vs[i].x();
             para_SpeedBias[i][1] = Vs[i].y();
@@ -998,7 +998,7 @@ void Estimator::double2vector()
         failure_occur = false;
     }
 
-    if(cfg::USE_IMU)
+    if(cfg::is_use_imu)
     {
         Vector3d origin_R00 = Utility::R2ypr(Quaterniond(para_Pose[0][6],
                                                          para_Pose[0][3],
@@ -1049,7 +1049,7 @@ void Estimator::double2vector()
         }
     }
 
-    if(cfg::USE_IMU)
+    if(cfg::is_use_imu)
     {
         for (int i = 0; i < cfg::kCamNum; i++)
         {
@@ -1068,7 +1068,7 @@ void Estimator::double2vector()
         dep(i) = para_Feature[i][0];
     f_manager.setDepth(dep);
 
-    if(cfg::USE_IMU)
+    if(cfg::is_use_imu)
         td = para_Td[0][0];
 
 
@@ -1148,7 +1148,7 @@ void Estimator::slideWindow()
                 headers[i] = headers[i + 1];
                 Rs[i].swap(Rs[i + 1]);
                 Ps[i].swap(Ps[i + 1]);
-                if(cfg::USE_IMU)
+                if(cfg::is_use_imu)
                 {
                     std::swap(pre_integrations[i], pre_integrations[i + 1]);
 
@@ -1165,7 +1165,7 @@ void Estimator::slideWindow()
             Ps[kWindowSize] = Ps[kWindowSize - 1];
             Rs[kWindowSize] = Rs[kWindowSize - 1];
 
-            if(cfg::USE_IMU)
+            if(cfg::is_use_imu)
             {
                 Vs[kWindowSize] = Vs[kWindowSize - 1];
                 Bas[kWindowSize] = Bas[kWindowSize - 1];
@@ -1197,7 +1197,7 @@ void Estimator::slideWindow()
             Ps[frame_count - 1] = Ps[frame_count];
             Rs[frame_count - 1] = Rs[frame_count];
 
-            if(cfg::USE_IMU)
+            if(cfg::is_use_imu)
             {
                 for (unsigned int i = 0; i < dt_buf[frame_count].size(); i++)
                 {
@@ -1343,7 +1343,7 @@ void Estimator::outliersRejection(set<int> &removeIndex)
                 //printf("tmp_error %f\n", kFocalLength / 1.5 * tmp_error);
             }
             // need to rewrite projecton factor.........
-            if(cfg::STEREO && it_per_frame.is_stereo)
+            if(cfg::is_stereo && it_per_frame.is_stereo)
             {
 
                 Vector3d pts_j_right = it_per_frame.pointRight;
@@ -1461,7 +1461,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     if (solver_flag == SolverFlag::kInitial)
     {
         // monocular + IMU initilization
-        if (!cfg::STEREO && cfg::USE_IMU){
+        if (!cfg::is_stereo && cfg::is_use_imu){
             if (frame_count == kWindowSize){
                 bool result = false;
                 if(cfg::ESTIMATE_EXTRINSIC != 2 && (header - initial_timestamp) > 0.1){
@@ -1481,7 +1481,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
             }
         }
         // stereo + IMU initilization
-        else if(cfg::STEREO && cfg::USE_IMU)
+        else if(cfg::is_stereo && cfg::is_use_imu)
         {
             f_manager.initFramePoseByPnP(frame_count, Ps, Rs, tic, ric);
             f_manager.triangulate(frame_count, Ps, Rs, tic, ric);
@@ -1505,7 +1505,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         }
 
         // stereo only initilization
-        else if(cfg::STEREO && !cfg::USE_IMU){
+        else if(cfg::is_stereo && !cfg::is_use_imu){
             f_manager.initFramePoseByPnP(frame_count, Ps, Rs, tic, ric);
             f_manager.triangulate(frame_count, Ps, Rs, tic, ric);
             optimization();
@@ -1534,7 +1534,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     {
         TicToc t_solve;
 
-        if(!cfg::USE_IMU)
+        if(!cfg::is_use_imu)
             f_manager.initFramePoseByPnP(frame_count, Ps, Rs, tic, ric);
 
         f_manager.triangulate(frame_count, Ps, Rs, tic, ric);
@@ -1603,7 +1603,7 @@ void Estimator::ProcessMeasurements(){
             feature_frame = featureBuf.front();
             curTime = feature_frame.time + td;
 
-            if(cfg::USE_IMU && !IMUAvailable(curTime)){
+            if(cfg::is_use_imu && !IMUAvailable(curTime)){
                 std::cerr<<"wait for imu ..."<<endl;
                 std::this_thread::sleep_for(5ms);
                 continue;
@@ -1618,7 +1618,7 @@ void Estimator::ProcessMeasurements(){
             tt.tic();
 
             mBuf.lock();
-            if(cfg::USE_IMU)
+            if(cfg::is_use_imu)
                 getIMUInterval(prevTime, curTime, accVector, gyrVector);
 
             featureBuf.pop();
@@ -1627,7 +1627,7 @@ void Estimator::ProcessMeasurements(){
 
             mBuf.unlock();
 
-            if(cfg::USE_IMU)
+            if(cfg::is_use_imu)
             {
                 if(!initFirstPoseFlag)
                     initFirstIMUPose(accVector);

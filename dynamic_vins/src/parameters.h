@@ -175,7 +175,7 @@ public:
     inline static double kMaxSolverTime;
     inline static int KNumIter;
     inline static int ESTIMATE_EXTRINSIC;
-    inline static int ESTIMATE_TD;
+    inline static int is_estimate_td;
     inline static int ROLLING_SHUTTER;
     inline static std::string kExCalibResultPath;
     inline static std::string kVinsResultPath;
@@ -184,8 +184,8 @@ public:
     inline static int kRow, kCol;
     inline static double TD;
     inline static int kCamNum;
-    inline static int STEREO;
-    inline static int USE_IMU;
+    inline static int is_stereo;
+    inline static int is_use_imu;
     inline static std::map<int, Eigen::Vector3d> pts_gt;
     inline static std::string kImage0Topic, kImage1Topic,kImage0SegTopic,kImage1SegTopic;
     inline static std::string FISHEYE_MASK;

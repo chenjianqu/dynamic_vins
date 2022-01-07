@@ -54,44 +54,39 @@ queue<sensor_msgs::ImageConstPtr> img0_buf;
 queue<sensor_msgs::ImageConstPtr> seg0_buf;
 queue<sensor_msgs::ImageConstPtr> img1_buf;
 queue<sensor_msgs::ImageConstPtr> seg1_buf;
-std::mutex m_buf;
 
-void Img0Callback(const sensor_msgs::ImageConstPtr &img_msg)
-{
-    m_buf.lock();
-    if(img0_buf.size() < kQueueSize){
+std::mutex m_buf;
+std::mutex img0_mutex,img1_mutex,seg0_mutex,seg1_mutex;
+
+void Img0Callback(const sensor_msgs::ImageConstPtr &img_msg){
+    img0_mutex.lock();
+    if(img0_buf.size() < kQueueSize)
         img0_buf.push(img_msg);
-    }
-    m_buf.unlock();
+    img0_mutex.unlock();
 }
 
-void Seg0Callback(const sensor_msgs::ImageConstPtr &img_msg)
-{
-    m_buf.lock();
+void Seg0Callback(const sensor_msgs::ImageConstPtr &img_msg){
+    seg0_mutex.lock();
     if(seg0_buf.size() < kQueueSize)
         seg0_buf.push(img_msg);
-    m_buf.unlock();
+    seg0_mutex.unlock();
 }
 
-void Img1Callback(const sensor_msgs::ImageConstPtr &img_msg)
-{
-    m_buf.lock();
+void Img1Callback(const sensor_msgs::ImageConstPtr &img_msg){
+    img1_mutex.lock();
     if(img1_buf.size() < kQueueSize)
         img1_buf.push(img_msg);
-    m_buf.unlock();
+    img1_mutex.unlock();
 }
 
-void Seg1Callback(const sensor_msgs::ImageConstPtr &img_msg)
-{
-    m_buf.lock();
+void Seg1Callback(const sensor_msgs::ImageConstPtr &img_msg){
+    seg1_mutex.lock();
     if(seg1_buf.size() < kQueueSize)
         seg1_buf.push(img_msg);
-    m_buf.unlock();
+    seg1_mutex.unlock();
 }
 
-
-inline cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
-{
+inline cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg){
     cv_bridge::CvImageConstPtr ptr= cv_bridge::toCvShare(img_msg, sensor_msgs::image_encodings::BGR8);
     return ptr->image.clone();
 }
@@ -100,83 +95,74 @@ inline cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg)
 SegImage SyncProcess()
 {
     SegImage img;
-
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(inst_segmentor->GetQueueSize() >= kInferImageListSize){
-            std::this_thread::sleep_for(50ms);
-            continue;
-        }
-        m_buf.lock();
-        //等待图片
-        if((cfg::is_input_seg && (img0_buf.empty() || img1_buf.empty() || seg0_buf.empty() || seg1_buf.empty())) ||
+        if((cfg::is_input_seg && (img0_buf.empty() || img1_buf.empty() || seg0_buf.empty() || seg1_buf.empty())) || //等待图片
         (!cfg::is_input_seg && (img0_buf.empty() || img1_buf.empty()))) {
-            m_buf.unlock();
             std::this_thread::sleep_for(2ms);
             continue;
         }
-
         ///下面以img0的时间戳为基准，找到与img0相近的图片
+        img0_mutex.lock();
         img.color0= GetImageFromMsg(img0_buf.front());
         img.time0=img0_buf.front()->header.stamp.toSec();
         img0_buf.pop();
+        img0_mutex.unlock();
 
+        img1_mutex.lock();
         img.time1=img1_buf.front()->header.stamp.toSec();
         if(img.time0 + kDelay < img.time1){ //img0太早了
-            m_buf.unlock();
+            img1_mutex.unlock();
             std::this_thread::sleep_for(2ms);
             continue;
         }
         else if(img.time1 + kDelay < img.time0){ //img1太早了
-            while(std::abs(img.time0 - img.time1) > kDelay){
+            while(img.time0 - img.time1 > kDelay){
                 img1_buf.pop();
                 img.time1=img1_buf.front()->header.stamp.toSec();
             }
         }
         img.color1= GetImageFromMsg(img1_buf.front());
         img1_buf.pop();
+        img1_mutex.unlock();
 
-
-        if(cfg::is_input_seg)
-        {
+        if(cfg::is_input_seg){
+            seg0_mutex.lock();
             img.seg0_time=seg0_buf.front()->header.stamp.toSec();
             if(img.time0 + kDelay < img.seg0_time){ //img0太早了
-                m_buf.unlock();
-                std::this_thread::sleep_for(std::chrono::milliseconds(2));
+                seg0_mutex.unlock();
+                std::this_thread::sleep_for(2ms);
                 continue;
             }
             else if(img.seg0_time + kDelay < img.time0){ //seg0太早了
-                while(std::abs(img.time0 - img.seg0_time) > kDelay){
+                while(img.time0 - img.seg0_time > kDelay){
                     seg0_buf.pop();
                     img.seg0_time=seg0_buf.front()->header.stamp.toSec();
                 }
             }
             img.seg0= GetImageFromMsg(seg0_buf.front());
             seg0_buf.pop();
-            //sg_logger->debug("sync_process seg0");
+            seg0_mutex.unlock();
 
+            seg1_mutex.lock();
             img.seg1_time=seg1_buf.front()->header.stamp.toSec();
             if(img.time0 + kDelay < img.seg1_time){ //img0太早了
-                m_buf.unlock();
+                seg1_mutex.unlock();
                 std::this_thread::sleep_for(2ms);
                 continue;
             }
             else if(img.seg1_time + kDelay < img.time0){ //seg1太早了
-                while(std::abs(img.time0 - img.seg1_time) > kDelay){
+                while(img.time0 - img.seg1_time > kDelay){
                     seg1_buf.pop();
                     img.seg1_time=seg1_buf.front()->header.stamp.toSec();
                 }
             }
             img.seg1= GetImageFromMsg(seg1_buf.front());
             seg1_buf.pop();
-            //sg_logger->debug("sync_process seg1");
+            seg1_mutex.unlock();
         }
-
-        m_buf.unlock();
-
         break;
     }
-
     return img;
 }
 
@@ -187,6 +173,11 @@ void ImageProcess()
     int cnt = 0;
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
+        if(inst_segmentor->GetQueueSize() >= kInferImageListSize){
+            std::this_thread::sleep_for(50ms);
+            continue;
+        }
+        DebugS("Start sync");
         SegImage img = SyncProcess();
         WarnS("----------Time : {} ----------", img.time0);
 
@@ -206,11 +197,13 @@ void ImageProcess()
 
         static TicToc tt;
         torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
+        //torch::Tensor img_clone = img_tensor.clone();
         //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
         ///启动光流估计线程
         if(cfg::slam == SlamType::kDynamic){
             feature_tracker->insts_tracker->StartFlowEstimating(img_tensor);
         }
+
         ///实例分割
         if(!cfg::is_input_seg){
             if(cfg::slam != SlamType::kRaw){
@@ -234,14 +227,18 @@ void ImageProcess()
             InfoS("sync_process SetMask: {}", tt.toc_then_tic());
         }
 
-        inst_segmentor->PushBack(img);
+        ///等待光流估计结果
+        auto flow_tensor = feature_tracker->insts_tracker->WaitingFlowEstimating();
+        img.flow = flow_tensor;
+
+        //inst_segmentor->PushBack(img);
 
         //cv::Mat show;
         //cv::cvtColor(img.merge_mask,show,CV_GRAY2BGR);
         //cv::scaleAdd(img.color0,0.5,show,show);
-        //cv::Mat show = VisualFlow(flow);
-        //cv::imshow("show",show);
-        //cv::waitKey(1);
+        cv::Mat show = VisualFlow(flow_tensor);
+        cv::imshow("show",show);
+        cv::waitKey(1);
     }
 
     WarnS("ImageProcess 线程退出");
@@ -320,11 +317,11 @@ void ImuSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true){
         WarnV("use IMU!");
-        estimator->ChangeSensorType(1, cfg::STEREO);
+        estimator->ChangeSensorType(1, cfg::is_stereo);
     }
     else{
         WarnV("disable IMU!");
-        estimator->ChangeSensorType(0, cfg::STEREO);
+        estimator->ChangeSensorType(0, cfg::is_stereo);
     }
 }
 
@@ -332,11 +329,11 @@ void CamSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true){
         WarnV("use stereo!");
-        estimator->ChangeSensorType(cfg::USE_IMU, 1);
+        estimator->ChangeSensorType(cfg::is_use_imu, 1);
     }
     else{
         WarnV("use mono camera (left)!");
-        estimator->ChangeSensorType(cfg::USE_IMU, 0);
+        estimator->ChangeSensorType(cfg::is_use_imu, 0);
     }
 }
 
@@ -384,15 +381,16 @@ int Run(int argc, char **argv){
 
     vio_logger->flush();
 
-    std::thread vio_thread{&Estimator::ProcessMeasurements, estimator};
     std::thread sync_thread{ImageProcess};
-    std::thread fk_thread{FeatureTrack};
+    //std::thread fk_thread{FeatureTrack};
+    //std::thread vio_thread{&Estimator::ProcessMeasurements, estimator};
+
 
     ros::spin();
 
     sync_thread.join();
-    fk_thread.join();
-    vio_thread.join();
+    //fk_thread.join();
+    //vio_thread.join();
     spdlog::drop_all();
 
     cerr<<"vins结束"<<endl;

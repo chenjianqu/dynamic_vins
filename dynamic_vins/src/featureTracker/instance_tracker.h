@@ -119,6 +119,10 @@ public:
         flow_estimator_->StartForward(img);
     }
 
+    torch::Tensor WaitingFlowEstimating(){
+        return flow_estimator_->WaitingResult();
+    }
+
     void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
     void set_camera(camodocal::CameraPtr& camera){camera_ = camera;}
     void set_right_camera(camodocal::CameraPtr& right_camera){right_camera_ = right_camera;}
