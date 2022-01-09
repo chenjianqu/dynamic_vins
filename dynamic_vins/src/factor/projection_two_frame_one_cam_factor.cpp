@@ -148,7 +148,7 @@ bool ProjectionTwoFrameOneCamFactor::Evaluate(double const *const *parameters, d
                     sqrt_info * velocity_j.head(2);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }

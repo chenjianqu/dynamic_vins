@@ -70,7 +70,7 @@ Tensor RaftData::Unpad(Tensor &tensor)
 RAFT::RAFT(){
     ///注册预定义的和自定义的插件
     initLibNvInferPlugins(&sample::gLogger.getTRTLogger(),"");
-    InfoS("Read model param");
+    Infos("Read model param");
 
     auto CreateModel = [](std::unique_ptr<nvinfer1::IRuntime,InferDeleter> &runtime,
             std::shared_ptr<nvinfer1::ICudaEngine> &engine,
@@ -90,19 +90,19 @@ RAFT::RAFT(){
             throw std::runtime_error(msg);
         }
 
-        InfoS("createInferRuntime");
+        Infos("createInferRuntime");
 
         ///创建runtime
         runtime=std::unique_ptr<nvinfer1::IRuntime,InferDeleter>(
                 nvinfer1::createInferRuntime(sample::gLogger.getTRTLogger()));
 
-        InfoS("deserializeCudaEngine");
+        Infos("deserializeCudaEngine");
 
         ///反序列化模型
         engine=std::shared_ptr<nvinfer1::ICudaEngine>(
                 runtime->deserializeCudaEngine(model_str.data(),model_str.size()) ,InferDeleter());
 
-        InfoS("createExecutionContext");
+        Infos("createExecutionContext");
 
         ///创建执行上下文
         context=std::unique_ptr<nvinfer1::IExecutionContext,InferDeleter>(
@@ -305,7 +305,7 @@ vector<Tensor> RAFT::Forward(Tensor& tensor0, Tensor& tensor1) {
     const int num_iter = 20;
 
     auto [fmat0,fmat1] = ForwardFNet(tensor0, tensor1);//fmat0和fmat1:[1, 256, 47, 154]
-    DebugS("ForwardFNet:{} ms",tt.toc_then_tic());
+        Debugs("ForwardFNet:{} ms", tt.TocThenTic());
 
     /**
      * [7238, 1, 47, 154]
@@ -314,13 +314,13 @@ vector<Tensor> RAFT::Forward(Tensor& tensor0, Tensor& tensor1) {
      * [7238, 1, 5, 19]
      */
     ComputeCorrPyramid(fmat0,fmat1);
-    DebugS("corr_pyramid:{} ms",tt.toc_then_tic());
+        Debugs("corr_pyramid:{} ms", tt.TocThenTic());
     //for(auto &p : corr_pyramid) DebugS("corr_pyramid.shape:{}", dims2str(p.sizes()));
     auto [net,inp] = ForwardCnet(tensor1);//net和inp:[1,128,47,154]
-    DebugS("forward_cnet:{} ms",tt.toc_then_tic());
+        Debugs("forward_cnet:{} ms", tt.TocThenTic());
 
     auto [coords0,coords1] = InitializeFlow(tensor1);//coords0和coords1：[1,2,47,154]
-    DebugS("initialize_flow:{} ms",tt.toc_then_tic());
+        Debugs("initialize_flow:{} ms", tt.TocThenTic());
 
     if(last_flow.defined()){
         coords1 = coords1 + last_flow;
@@ -345,7 +345,7 @@ vector<Tensor> RAFT::Forward(Tensor& tensor0, Tensor& tensor1) {
             last_flow = flow;
         }
     }
-    DebugS("iter all:{} ms",tt.toc_then_tic());
+        Debugs("iter all:{} ms", tt.TocThenTic());
 
     corr_pyramid.clear();
 

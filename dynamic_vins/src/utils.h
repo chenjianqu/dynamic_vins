@@ -27,27 +27,27 @@ namespace dynamic_vins{\
 class TicToc{
 public:
     TicToc(){
-        tic();
+        Tic();
     }
-    void tic(){
-        start = std::chrono::system_clock::now();
+    void Tic(){
+        start_ = std::chrono::system_clock::now();
     }
-    double toc(){
-        end = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_seconds = end - start;
+    double Toc(){
+        end_ = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end_ - start_;
         return elapsed_seconds.count() * 1000;
     }
-    double toc_then_tic(){
-        auto t=toc();
-        tic();
+    double TocThenTic(){
+        auto t= Toc();
+        Tic();
         return t;
     }
-    void toc_print_tic(const char* str){
-        cout<<str<<":"<<toc()<<" ms"<<endl;
-        tic();
+    void TocPrintTic(const char* str){
+        cout << str << ":" << Toc() << " ms" << endl;
+        Tic();
     }
 private:
-    std::chrono::time_point<std::chrono::system_clock> start, end;
+    std::chrono::time_point<std::chrono::system_clock> start_, end_;
 };
 
 struct Track {
@@ -126,55 +126,59 @@ cv::Scalar color_map(int64_t n);
 
 
 template <typename Arg1, typename... Args>
-inline void DebugV(const char* fmt, const Arg1 &arg1, const Args&... args){ vio_logger->log(spdlog::level::debug, fmt, arg1, args...);}
+inline void Debugv(const char* fmt, const Arg1 &arg1, const Args&... args){ vio_logger->log(spdlog::level::debug, fmt, arg1, args...);}
 template<typename T>
-inline void DebugV(const T& msg){vio_logger->log(spdlog::level::debug, msg); }
+inline void Debugv(const T& msg){vio_logger->log(spdlog::level::debug, msg); }
 template <typename Arg1, typename... Args>
-inline void InfoV(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::info, fmt, arg1, args...);}
+inline void Infov(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::info, fmt, arg1, args...);}
 template<typename T>
-inline void InfoV(const T& msg){vio_logger->log(spdlog::level::info, msg);}
+inline void Infov(const T& msg){vio_logger->log(spdlog::level::info, msg);}
 template <typename Arg1, typename... Args>
-inline void WarnV(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::warn, fmt, arg1, args...);}
+inline void Warnv(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::warn, fmt, arg1, args...);}
 template<typename T>
-inline void WarnV(const T& msg){vio_logger->log(spdlog::level::warn, msg);}
+inline void Warnv(const T& msg){vio_logger->log(spdlog::level::warn, msg);}
 template <typename Arg1, typename... Args>
-inline void CriticalV(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::critical, fmt, arg1, args...);}
+inline void Errorv(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::err, fmt, arg1, args...);}
 template<typename T>
-inline void CriticalV(const T& msg){vio_logger->log(spdlog::level::critical, msg);}
+inline void Errorv(const T& msg){vio_logger->log(spdlog::level::err, msg);}
+template <typename Arg1, typename... Args>
+inline void Criticalv(const char* fmt, const Arg1 &arg1, const Args&... args){vio_logger->log(spdlog::level::critical, fmt, arg1, args...);}
+template<typename T>
+inline void Criticalv(const T& msg){vio_logger->log(spdlog::level::critical, msg);}
 
 template <typename Arg1, typename... Args>
-inline void DebugS(const char* fmt, const Arg1 &arg1, const Args&... args){ sg_logger->log(spdlog::level::debug, fmt, arg1, args...);}
+inline void Debugs(const char* fmt, const Arg1 &arg1, const Args&... args){ sg_logger->log(spdlog::level::debug, fmt, arg1, args...);}
 template<typename T>
-inline void DebugS(const T& msg){sg_logger->log(spdlog::level::debug, msg); }
+inline void Debugs(const T& msg){sg_logger->log(spdlog::level::debug, msg); }
 template <typename Arg1, typename... Args>
-inline void InfoS(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::info, fmt, arg1, args...);}
+inline void Infos(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::info, fmt, arg1, args...);}
 template<typename T>
-inline void InfoS(const T& msg){sg_logger->log(spdlog::level::info, msg);}
+inline void Infos(const T& msg){sg_logger->log(spdlog::level::info, msg);}
 template <typename Arg1, typename... Args>
-inline void WarnS(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::warn, fmt, arg1, args...);}
+inline void Warns(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::warn, fmt, arg1, args...);}
 template<typename T>
-inline void WarnS(const T& msg){sg_logger->log(spdlog::level::warn, msg);}
+inline void Warns(const T& msg){sg_logger->log(spdlog::level::warn, msg);}
 template <typename Arg1, typename... Args>
-inline void CriticalS(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::critical, fmt, arg1, args...);}
+inline void Criticals(const char* fmt, const Arg1 &arg1, const Args&... args){sg_logger->log(spdlog::level::critical, fmt, arg1, args...);}
 template<typename T>
-inline void CriticalS(const T& msg){sg_logger->log(spdlog::level::critical, msg);}
+inline void Criticals(const T& msg){sg_logger->log(spdlog::level::critical, msg);}
 
 template <typename Arg1, typename... Args>
-inline void DebugT(const char* fmt, const Arg1 &arg1, const Args&... args){ tk_logger->log(spdlog::level::debug, fmt, arg1, args...);}
+inline void Debugt(const char* fmt, const Arg1 &arg1, const Args&... args){ tk_logger->log(spdlog::level::debug, fmt, arg1, args...);}
 template<typename T>
-inline void DebugT(const T& msg){tk_logger->log(spdlog::level::debug, msg); }
+inline void Debugt(const T& msg){tk_logger->log(spdlog::level::debug, msg); }
 template <typename Arg1, typename... Args>
-inline void InfoT(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::info, fmt, arg1, args...);}
+inline void Infot(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::info, fmt, arg1, args...);}
 template<typename T>
-inline void InfoT(const T& msg){tk_logger->log(spdlog::level::info, msg);}
+inline void Infot(const T& msg){tk_logger->log(spdlog::level::info, msg);}
 template <typename Arg1, typename... Args>
-inline void WarnT(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::warn, fmt, arg1, args...);}
+inline void Warnt(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::warn, fmt, arg1, args...);}
 template<typename T>
-inline void WarnT(const T& msg){tk_logger->log(spdlog::level::warn, msg);}
+inline void Warnt(const T& msg){tk_logger->log(spdlog::level::warn, msg);}
 template <typename Arg1, typename... Args>
-inline void CriticalT(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::critical, fmt, arg1, args...);}
+inline void Criticalt(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::critical, fmt, arg1, args...);}
 template<typename T>
-inline void CriticalT(const T& msg){tk_logger->log(spdlog::level::critical, msg);}
+inline void Criticalt(const T& msg){tk_logger->log(spdlog::level::critical, msg);}
 
 
 }

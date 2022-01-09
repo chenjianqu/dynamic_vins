@@ -43,14 +43,14 @@ InstanceSegmentor::InstanceSegmentor()
 {
     if(Config::is_input_seg || Config::slam == SlamType::kRaw){
         auto msg="set input seg, the segmentor does not initial";
-        WarnV(msg);
+        Warnv(msg);
         cerr<<msg<<endl;
         return;
     }
 
     ///注册预定义的和自定义的插件
     initLibNvInferPlugins(&sample::gLogger.getTRTLogger(),"");
-    InfoV("读取模型文件");
+    Infov("读取模型文件");
     std::string model_str;
     if(std::ifstream ifs(Config::kDetectorSerializePath);ifs.is_open()){
         while(ifs.peek() != EOF){
@@ -66,19 +66,19 @@ InstanceSegmentor::InstanceSegmentor()
         throw std::runtime_error(msg);
     }
 
-    InfoV("createInferRuntime");
+    Infov("createInferRuntime");
 
     ///创建runtime
     runtime_=std::unique_ptr<nvinfer1::IRuntime,InferDeleter>(
             nvinfer1::createInferRuntime(sample::gLogger.getTRTLogger()));
 
-    InfoV("deserializeCudaEngine");
+    Infov("deserializeCudaEngine");
 
     ///反序列化模型
     engine_=std::shared_ptr<nvinfer1::ICudaEngine>(
             runtime_->deserializeCudaEngine(model_str.data(), model_str.size()) , InferDeleter());
 
-    InfoV("createExecutionContext");
+    Infov("createExecutionContext");
 
     ///创建执行上下文
     context_=std::unique_ptr<nvinfer1::IExecutionContext,InferDeleter>(
@@ -110,7 +110,7 @@ InstanceSegmentor::InstanceSegmentor()
 
     cv::resize(warn_up_input,warn_up_input,cv::Size(Config::kCol, Config::kRow));
 
-    WarnV("warn up model");
+    Warnv("warn up model");
 
     //[[maybe_unused]] auto result = forward(warn_up_input);
 
@@ -122,7 +122,7 @@ InstanceSegmentor::InstanceSegmentor()
         throw std::runtime_error("model not init");
     }
 
-    InfoV("infer init finished");
+    Infov("infer init finished");
 }
 
 
@@ -142,14 +142,14 @@ InstanceSegmentor::Forward(cv::Mat &img)
     pipeline_->SetBufferWithNorm(input, buffer->cpu_buffer[0]);
     buffer->cpyInputToGPU();
 
-    tt.toc_print_tic("prepare:");
+    tt.TocPrintTic("prepare:");
 
     ///推断
     context_->enqueue(kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
 
     buffer->cpyOutputToCPU();
 
-    tt.toc_print_tic("enqueue:");
+    tt.TocPrintTic("enqueue:");
 
 
     /*std::vector<torch::Tensor> outputs;
@@ -178,13 +178,11 @@ InstanceSegmentor::Forward(cv::Mat &img)
             std::terminate();
         }
     }
-    tt.toc_print_tic("push_back");
+    tt.TocPrintTic("push_back");
     cout<<endl;
 
 
-
-
-    tt.toc_print_tic("push_back");
+    tt.TocPrintTic("push_back");
 
     //cv::Mat mask_img=solo_->GetSingleSeg(outputs,torch::kCUDA,insts);
     //auto [masks,insts] = solo_->GetSingleSeg(outputs,pipeline_->image_info);
@@ -200,9 +198,9 @@ InstanceSegmentor::Forward(cv::Mat &img)
         mask_v.push_back(mask);
     }
 
-    tt.toc_print_tic("GetSingleSeg:");
+    tt.TocPrintTic("GetSingleSeg:");
 
-    infer_time_ = ticToc.toc();
+    infer_time_ = ticToc.Toc();
     //ticToc.toc_print_tic("kitti time:");
     //VisualizeResult(img,mask_img,insts);
 
@@ -280,12 +278,12 @@ void InstanceSegmentor::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask
     pipeline_->SetBufferWithNorm(input, buffer->cpu_buffer[0]);
     buffer->cpyInputToGPU();
 
-    InfoS("ForwardTensor prepare:{} ms", tt.toc_then_tic());
+    Infos("ForwardTensor prepare:{} ms", tt.TocThenTic());
 
     ///推断
     context_->enqueue(kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
 
-    InfoS("ForwardTensor enqueue:{} ms", tt.toc_then_tic());
+    Infos("ForwardTensor enqueue:{} ms", tt.TocThenTic());
 
     std::vector<torch::Tensor> outputs(kTensorQueueShapes.size());
 
@@ -319,13 +317,13 @@ void InstanceSegmentor::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask
         //cout<<index<<" ("<<buffer->dims[i].d[1]<<buffer->dims[i].d[2]<<buffer->dims[i].d[3]<<")"<<endl;
     }
 
-    InfoS("ForwardTensor push_back:{} ms", tt.toc_then_tic());
+    Infos("ForwardTensor push_back:{} ms", tt.TocThenTic());
 
     solo_->GetSegTensor(outputs, pipeline_->image_info, mask_tensor, insts);
 
-    InfoS("ForwardTensor GetSegTensor:{} ms", tt.toc_then_tic());
+    Infos("ForwardTensor GetSegTensor:{} ms", tt.TocThenTic());
 
-    infer_time_ = tic_toc.toc();
+    infer_time_ = tic_toc.Toc();
 
 }
 

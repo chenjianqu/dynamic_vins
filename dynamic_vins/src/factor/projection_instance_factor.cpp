@@ -190,7 +190,7 @@ bool ProjectionInstanceFactor::Evaluate(double const *const *parameters, double 
 
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 
@@ -356,7 +356,7 @@ bool ProjInst12Factor::Evaluate(double const *const *parameters, double *residua
             jacobian_feature = - reduce * R_cb2 * R_bc1 * pts_j  / (inv_dep_j * inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -393,7 +393,7 @@ bool ProjInst12FactorSimple::Evaluate(double const *const *parameters, double *r
             jacobian_feature = - reduce * R_cb1 * R_bc1 * pts_j  / (inv_dep_j * inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -541,7 +541,7 @@ bool ProjInst21Factor::Evaluate(double const *const *parameters, double *residua
             jacobian_feature = reduce * R_cb * R_biw * R_woi * R_ojw * R_wbj * R_bc * pts_j_td / (inv_dep_j*inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -626,7 +626,7 @@ bool ProjInst21SimpleFactor::Evaluate(double const *const *parameters, double *r
             jacobian_feature = reduce * R_cb * R_biw * R_woi * R_ojw * R_wbj * R_bc * pts_j_td / (inv_dep_j*inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -774,7 +774,7 @@ bool ProjInst22Factor::Evaluate(double const *const *parameters, double *residua
             jacobian_feature = reduce * R_cb2 * R_biw * R_woi * R_ojw * R_wbj * R_bc1 * pts_j_td / (inv_dep_j*inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -859,7 +859,7 @@ bool ProjInst22SimpleFactor::Evaluate(double const *const *parameters, double *r
             jacobian_feature = reduce * R_cb2 * R_biw * R_woi * R_ojw * R_wbj * R_bc1 * pts_j_td / (inv_dep_j*inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }

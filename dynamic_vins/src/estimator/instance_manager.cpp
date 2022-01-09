@@ -26,7 +26,7 @@ void InstanceManager::Triangulate(int frame_cnt)
 {
     if(tracking_number_ < 1)
         return;
-    InfoV("triangulate 三角化:");
+    Infov("triangulate 三角化:");
 
     auto getCamPose=[this](int index,int cam_id){
         assert(cam_id == 0 || cam_id == 1);
@@ -164,13 +164,13 @@ void InstanceManager::Triangulate(int frame_cnt)
         for(auto &ld : inst.landmarks){
             if(ld.depth > 0)num_depth++;
         }
-        DebugV("inst:{} landmarks.size{} depth.size:{} avg_depth:{} new_add:{} \n{}",
+        Debugv("inst:{} landmarks.size{} depth.size:{} avg_depth:{} new_add:{} \n{}",
                inst.id, inst.landmarks.size(), num_depth, avg_depth, inst_add_num, lm_msg);
         num_triangle += inst_add_num;
     }
 
     if(num_triangle>0 || num_delete_landmark>0)
-        DebugV("增加:{}=(M:{},S:{}) 失败:{} 删除:{}", num_triangle, num_mono, num_triangle - num_mono,
+        Debugv("增加:{}=(M:{},S:{}) 失败:{} 删除:{}", num_triangle, num_mono, num_triangle - num_mono,
                num_failed, num_delete_landmark);
 }
 
@@ -187,7 +187,7 @@ void InstanceManager::PredictCurrentPose()
 
     SetVelMap();
 
-    InfoV("predictCurrentPose 位姿递推");
+    Infov("predictCurrentPose 位姿递推");
 
     int i=e_->frame_count;
     int j= e_->frame_count - 1;
@@ -205,7 +205,7 @@ void InstanceManager::PredictCurrentPose()
         inst.state[i].R=Roioj * inst.state[j].R;
         inst.state[i].P=Roioj* inst.state[j].P + Poioj;
 
-        DebugV("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
+        Debugv("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
         /*      State new_pose;
                 new_pose.time=e->Headers[1];
                 double time_ij=new_pose.time - inst.state[0].time;
@@ -242,12 +242,12 @@ void InstanceManager::SlideWindow()
 
     if(e_->frame_count != kWindowSize)
         return;
-    InfoV("动态特征边缘化:");
+    Infov("动态特征边缘化:");
     //printf("动态特征边缘化:");
     if(e_->margin_flag == MarginFlag::kMarginOld)
-        InfoV("最老帧 | ");
+        Infov("最老帧 | ");
     else
-        InfoV("次新帧 | ");
+        Infov("次新帧 | ");
 
 
     for(auto &[key,inst] : instances){
@@ -289,7 +289,7 @@ void InstanceManager::SlideWindow()
         }
 
         if(debug_num>0){
-            DebugV("<Inst:{},del:{}> ", inst.id, debug_num);
+            Debugv("<Inst:{},del:{}> ", inst.id, debug_num);
         }
     }
 }
@@ -307,7 +307,7 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
 {
     if(e_->solver_flag == SolverFlag::kInitial)
         return;
-    DebugV("push_back current insts size:{}", instances.size());
+    Debugv("push_back current insts size:{}", instances.size());
 
 
     for(auto &[instance_id , inst_feat] : input_insts)
@@ -325,7 +325,7 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
                 instances[instance_id].landmarks.push_back(landmarkPoint);
                 instances[instance_id].landmarks.back().feats.emplace_back(featPoint);//添加第一个观测
             }
-            DebugV("push_back create new inst:{}", instance_id);
+            Debugv("push_back create new inst:{}", instance_id);
         }
         //将特征添加到实例中
         else
@@ -354,14 +354,14 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
     }
 
 
-    DebugV("push_back all insts:");
+    Debugv("push_back all insts:");
     for(const auto& [key,inst] : instances){
         if(inst.is_tracking)
-            DebugV("inst:{} landmarks.size:{} ", key, inst.landmarks.size());
+            Debugv("inst:{} landmarks.size:{} ", key, inst.landmarks.size());
     }
 
     if(!input_insts.empty()){
-        InfoV("push_back 观测增加:{},{}",
+        Infov("push_back 观测增加:{},{}",
               input_insts.size(),
               std::accumulate(input_insts.begin(), input_insts.end(), 0,
                               [](int sum, auto &p) { return sum + p.second.size(); }));
@@ -374,12 +374,12 @@ void InstanceManager::GetOptimizationParameters()
 {
     if(tracking_number_ < 1)
         return;
-    DebugV("InstanceManager 优化前后的位姿对比:");
+    Debugv("InstanceManager 优化前后的位姿对比:");
     for(auto &[key,inst] : instances){
         if(!inst.is_initial || !inst.is_tracking)
             continue;
 
-        DebugV("Inst {}", inst.id);
+        Debugv("Inst {}", inst.id);
 
         string lm_msg="优化前 Depth: ";
         int lm_cnt=0;
@@ -389,7 +389,7 @@ void InstanceManager::GetOptimizationParameters()
             if(lm_cnt%5==0) lm_msg += "\n";
             lm_msg += fmt::format("<lid:{},n:{},d:{:.2f}> ",lm.id,lm.feats.size(),lm.depth);
         }
-        DebugV(lm_msg);
+        Debugv(lm_msg);
 
         string pose_msg;
         pose_msg += fmt::format("优化前 Speed: v:({}) a:({})\n", VecToStr(inst.vel.v), VecToStr(inst.vel.a));
@@ -408,7 +408,7 @@ void InstanceManager::GetOptimizationParameters()
             if(i==4)pose_msg+="\n";
         }
         pose_msg +=fmt::format("\n优化后 Speed v:({}) a:({})", VecToStr(inst.vel.v), VecToStr(inst.vel.a));
-        DebugV(pose_msg);
+        Debugv(pose_msg);
 
         lm_msg="优化后 Depth: ";
         lm_cnt=0;
@@ -418,7 +418,7 @@ void InstanceManager::GetOptimizationParameters()
             if(lm_cnt%5==0) lm_msg += "\n";
             lm_msg += fmt::format("<lid:{},n:{},d:{:.2f}>",lm.id,lm.feats.size(),lm.depth);
         }
-        DebugV(lm_msg);
+        Debugv(lm_msg);
     }
 }
 
@@ -450,7 +450,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
 {
     if(tracking_number_ < 1)
         return;
-    InfoV("添加Instance残差:");
+    Infov("添加Instance残差:");
     int res21=0,res22=0,res12=0;
 
     for(auto &[key,inst] : instances){
@@ -669,11 +669,11 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                 inst.para_speed[0]);*/
 
 
-        DebugV("inst:{} landmarks.size:{} isOptimizeVel:{} track_3:{} \n {}", inst.id, inst.landmarks.size(),
+        Debugv("inst:{} landmarks.size:{} isOptimizeVel:{} track_3:{} \n {}", inst.id, inst.landmarks.size(),
                inst.opt_vel, track_3, debug_msg);
 
     }
-    DebugV("残差项数量: res21:{},res22:{},res12:{}", res21, res22, res12);
+    Debugv("残差项数量: res21:{},res22:{},res12:{}", res21, res22, res12);
 }
 
 

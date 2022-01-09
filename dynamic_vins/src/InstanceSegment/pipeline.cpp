@@ -84,13 +84,13 @@ cv::Mat Pipeline::ProcessPad(cv::Mat &img)
     cv::resize(img, re, re.size(), 0, 0, cv::INTER_LINEAR);
     //resizeByNN(img.data, re.data, img.rows, img.cols, img.channels(), re.rows, re.cols);
 
-    tt.toc_print_tic("resize");
+    tt.TocPrintTic("resize");
 
     //将图片复制到out中
     cv::Mat out(Config::kInputHeight, Config::kInputWidth, CV_8UC3, cv::Scalar(128, 128, 128));
     re.copyTo(out(cv::Rect(image_info.rect_x, image_info.rect_y, re.cols, re.rows)));
 
-    tt.toc_print_tic("copyTo out");
+    tt.TocPrintTic("copyTo out");
 
     return out;
 }
@@ -161,7 +161,7 @@ void* Pipeline::SetInputTensor(cv::Mat &img)
     cv::Mat out;
     cv::resize(img,out,cv::Size(image_info.rect_w, image_info.rect_h));
 
-    DebugS("SetInputTensor resize:{} ms", tt.toc_then_tic());
+    Debugs("SetInputTensor resize:{} ms", tt.TocThenTic());
 
     ///拼接图像边缘
     static cv::Scalar mag_color(kSoloImgMean[2], kSoloImgMean[1], kSoloImgMean[0]);
@@ -179,30 +179,30 @@ void* Pipeline::SetInputTensor(cv::Mat &img)
         cv::hconcat(out,cat_img,out);
     }
 
-    DebugS("SetInputTensor concat:{} ms", tt.toc_then_tic());
+    Debugs("SetInputTensor concat:{} ms", tt.TocThenTic());
 
     cv::cvtColor(out,out,CV_BGR2RGB);
 
-    DebugS("SetInputTensor cvtColor:{} ms", tt.toc_then_tic());
+    Debugs("SetInputTensor cvtColor:{} ms", tt.TocThenTic());
 
 
     cv::Mat img_float;
     out.convertTo(img_float,CV_32FC3);
 
-    DebugS("SetInputTensor convertTo:{} ms", tt.toc_then_tic());
+    Debugs("SetInputTensor convertTo:{} ms", tt.TocThenTic());
 
 
     torch::Tensor input_tensor_cpu = torch::from_blob(img_float.data, { img_float.rows,img_float.cols ,3 }, torch::kFloat32);
     input_tensor = input_tensor_cpu.to(torch::kCUDA).permute({2,0,1});
 
-    DebugS("SetInputTensor from_blob:{} ms", tt.toc_then_tic());
+    Debugs("SetInputTensor from_blob:{} ms", tt.TocThenTic());
 
     static torch::Tensor mean_t=torch::from_blob(kSoloImgMean, {3, 1, 1}, torch::kFloat).to(torch::kCUDA).expand({3, img_float.rows, img_float.cols});
     static torch::Tensor std_t=torch::from_blob(kSoloImgStd, {3, 1, 1}, torch::kFloat).to(torch::kCUDA).expand({3, img_float.rows, img_float.cols});
 
     input_tensor = ((input_tensor-mean_t)/std_t).contiguous();
 
-    DebugS("SetInputTensor norm:{} ms", tt.toc_then_tic());
+    Debugs("SetInputTensor norm:{} ms", tt.TocThenTic());
 
     return input_tensor.data_ptr();
 }

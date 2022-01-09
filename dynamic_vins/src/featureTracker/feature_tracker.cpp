@@ -88,7 +88,7 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
     }
     for (auto &n : track_cnt) n++;
 
-    InfoT("TrackImage | flowTrack:{}", tt.toc_then_tic());
+    Infot("TrackImage | flowTrack:{}", tt.TocThenTic());
 
     //RejectWithF();
     TicToc t_m;
@@ -110,12 +110,12 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
         track_cnt.push_back(1);
     }
 
-    InfoT("TrackImage | goodFeaturesToTrack:{}", tt.toc_then_tic());
+    Infot("TrackImage | goodFeaturesToTrack:{}", tt.TocThenTic());
 
     cur_un_pts = undistortedPts(cur_pts, m_camera[0]);
     pts_velocity = ptsVelocity(ids, cur_un_pts, cur_un_pts_map, prev_un_pts_map);
 
-    InfoT("TrackImage | un&&vel:{}", tt.toc_then_tic());
+    Infot("TrackImage | un&&vel:{}", tt.TocThenTic());
 
     if(!cur_img.gray1.empty() && stereo_cam)
     {
@@ -144,13 +144,13 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
         }
         prev_un_right_pts_map = cur_un_right_pts_map;
 
-        InfoT("TrackImage | flowTrack right:{}", tt.toc_then_tic());
+        Infot("TrackImage | flowTrack right:{}", tt.TocThenTic());
     }
 
     if(cfg::kShowTrack)
         drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
 
-    InfoT("TrackImage | drawTrack right:{}", tt.toc_then_tic());
+    Infot("TrackImage | drawTrack right:{}", tt.TocThenTic());
 
     prev_img = cur_img;
     prev_pts = cur_pts;
@@ -162,11 +162,11 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
     for(size_t i = 0; i < cur_pts.size(); i++)
         prevLeftPtsMap[ids[i]] = cur_pts[i];
 
-    return setOutputFeats();
+    return SetOutputFeats();
 }
 
 
-FeatureMap FeatureTracker::setOutputFeats()
+FeatureMap FeatureTracker::SetOutputFeats()
 {
     std::map<int, vector<pair<int, Vec7d>>> featureFrame;
     for (size_t i = 0; i < ids.size(); i++){
@@ -235,7 +235,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
 
     if (!prev_pts.empty())
     {
-        DebugT("trackImageNaive | prev_pts.size:{}", prev_pts.size());
+        Debugt("trackImageNaive | prev_pts.size:{}", prev_pts.size());
         //vector<uchar> status = flowTrack(prev_img.gray0,cur_img.gray0,prev_pts, cur_pts);
         vector<uchar> status= FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, prev_img.gray0_gpu,
                                                   cur_img.gray0_gpu,
@@ -253,10 +253,10 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         ReduceVector(cur_pts, status);
         ReduceVector(ids, status);
         ReduceVector(track_cnt, status);
-        DebugT("trackImageNaive | cur_pts.size:{}", cur_pts.size());
+        Debugt("trackImageNaive | cur_pts.size:{}", cur_pts.size());
     }
 
-    InfoT("trackImageNaive | flowTrack left:{}", tt.toc_then_tic());
+    Infot("trackImageNaive | flowTrack left:{}", tt.TocThenTic());
 
 
     for (auto &n : track_cnt) n++;
@@ -290,7 +290,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         /*cv::imshow("mask",mask);
         cv::waitKey(1);*/
 
-        WarnT("trackImageNaive | n_max_cnt:{}", n_max_cnt);
+        Warnt("trackImageNaive | n_max_cnt:{}", n_max_cnt);
 
         n_pts = DetectShiTomasiCornersGpu(n_max_cnt, cur_img.gray0_gpu, mask_gpu);
         //n_pts = detectNewFeaturesGPU(n_max_cnt,cur_img.gray0_gpu,mask);
@@ -302,17 +302,17 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
             ids.push_back(n_id++);
             track_cnt.push_back(1);
         }
-        DebugT("trackImageNaive | cur_pts.size:{}", cur_pts.size());
+        Debugt("trackImageNaive | cur_pts.size:{}", cur_pts.size());
     }
     else
         n_pts.clear();
 
-    InfoT("trackImageNaive | detect feature:{}", tt.toc_then_tic());
+    Infot("trackImageNaive | detect feature:{}", tt.TocThenTic());
 
     cur_un_pts = undistortedPts(cur_pts, m_camera[0]);
     pts_velocity = ptsVelocity(ids, cur_un_pts, cur_un_pts_map, prev_un_pts_map);
 
-    InfoT("trackImageNaive | vel&&un:{}", tt.toc_then_tic());
+    Infot("trackImageNaive | vel&&un:{}", tt.TocThenTic());
 
     if((!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty() && stereo_cam)
     {
@@ -321,13 +321,13 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         cur_un_right_pts.clear();
         right_pts_velocity.clear();
         cur_un_right_pts_map.clear();
-        DebugT("trackImageNaive | flowTrack right start");
+        Debugt("trackImageNaive | flowTrack right start");
 
         //std::vector<uchar> status= flowTrack(cur_img.gray0,cur_img.gray1,cur_pts, cur_right_pts);
         vector<uchar> status= FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, cur_img.gray0_gpu,
                                                   cur_img.gray1_gpu,
                                                   cur_pts, cur_right_pts);
-        DebugT("trackImageNaive | flowTrack right finish");
+        Debugt("trackImageNaive | flowTrack right finish");
         if(cfg::dataset == DatasetType::kViode){
             for(int i=0;i<(int)status.size();++i){
                 if(status[i] && VIODE::IsDynamic(cur_right_pts[i], cur_img.seg1))
@@ -356,8 +356,8 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         right_pts_velocity = ptsVelocity(ids_right, cur_un_right_pts, cur_un_right_pts_map, prev_un_right_pts_map);
         prev_un_right_pts_map = cur_un_right_pts_map;
 
-        DebugT("trackImageNaive | cur_right_pts.size:{}", cur_right_pts.size());
-        InfoT("trackImageNaive | flow_track right:{}", tt.toc_then_tic());
+        Debugt("trackImageNaive | cur_right_pts.size:{}", cur_right_pts.size());
+        Infot("trackImageNaive | flow_track right:{}", tt.TocThenTic());
     }
 
 
@@ -374,7 +374,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     for(size_t i = 0; i < cur_pts.size(); i++)
         prevLeftPtsMap[ids[i]] = cur_pts[i];
 
-    return setOutputFeats();
+    return SetOutputFeats();
 }
 
 
@@ -409,7 +409,7 @@ void FeatureTracker::rejectWithF()
         ReduceVector(ids, status);
         ReduceVector(track_cnt, status);
         ROS_DEBUG("FM ransac: %d -> %lu: %f", size_a, cur_pts.size(), 1.0 * cur_pts.size() / size_a);
-        ROS_DEBUG("FM ransac costs: %fms", t_f.toc());
+        ROS_DEBUG("FM ransac costs: %fms", t_f.Toc());
     }
 }
 
@@ -627,7 +627,7 @@ void FeatureTracker::removeOutliers(std::set<int> &removePtsIds)
 
 FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 {
-    WarnT("----------Time : {} ----------", img.time0);
+    Warnt("----------Time : {} ----------", img.time0);
 
     TicToc t_r,tt;
     cur_time = img.time0;
@@ -655,8 +655,8 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     ///开启另一个线程检测动态特征点
     TicToc t_i;
-    //std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
-    std::thread t_inst_track(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
+    std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
+    //std::thread t_inst_track(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
 
     if(is_exist_inst){
         Erode10Gpu(cur_img.inv_merge_mask_gpu,cur_img.inv_merge_mask_gpu);///形态学运算
@@ -665,7 +665,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     if (!prev_pts.empty())
     {
-        DebugT("trackImageNaive | prev_pts.size:{}", prev_pts.size());
+        Debugt("trackImageNaive | prev_pts.size:{}", prev_pts.size());
         vector<uchar> status = FeatureTrackByLK(prev_img.gray0, cur_img.gray0, prev_pts, cur_pts);
         //vector<uchar> status=flowTrackGpu(lk_optical_flow,lk_optical_flow_back,prev_img.gray0_gpu,cur_img.gray0_gpu,prev_pts,cur_pts);
         if(!cur_img.inv_merge_mask.empty()){
@@ -681,9 +681,9 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         ReduceVector(cur_pts, status);
         ReduceVector(ids, status);
         ReduceVector(track_cnt, status);
-        DebugT("trackImageNaive | cur_pts.size:{}", cur_pts.size());
+        Debugt("trackImageNaive | cur_pts.size:{}", cur_pts.size());
     }
-    InfoT("trackImageNaive | flowTrack left:{}", tt.toc_then_tic());
+    Infot("trackImageNaive | flowTrack left:{}", tt.TocThenTic());
 
     for (auto &n : track_cnt) n++;
 
@@ -702,13 +702,13 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     if (int n_max_cnt = cfg::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10)
     {
-        WarnT("trackImageNaive | n_max_cnt:{}", n_max_cnt);
+        Warnt("trackImageNaive | n_max_cnt:{}", n_max_cnt);
         //if(cur_img.gray0.empty()) cur_img.gray0_gpu.download(cur_img.gray0);
-        DebugT("trackImageNaive | semantic_mask size:{}x{} type:{} ", semantic_mask.rows, semantic_mask.cols,
+        Debugt("trackImageNaive | semantic_mask size:{}x{} type:{} ", semantic_mask.rows, semantic_mask.cols,
                semantic_mask.type());
-        DebugT("trackImageNaive | mask size:{}x{} type:{} ", mask.rows, mask.cols, mask.type());
-        DebugT("trackImageNaive | mask_gpu size:{}x{} type:{} ", mask_gpu.rows, mask_gpu.cols, mask_gpu.type());
-        DebugT("trackImageNaive | img.gray0_gpu size:{}x{} type:{} ", cur_img.gray0_gpu.rows, cur_img.gray0_gpu.cols,
+        Debugt("trackImageNaive | mask size:{}x{} type:{} ", mask.rows, mask.cols, mask.type());
+        Debugt("trackImageNaive | mask_gpu size:{}x{} type:{} ", mask_gpu.rows, mask_gpu.cols, mask_gpu.type());
+        Debugt("trackImageNaive | img.gray0_gpu size:{}x{} type:{} ", cur_img.gray0_gpu.rows, cur_img.gray0_gpu.cols,
                cur_img.gray0_gpu.type());
         //n_pts = detectNewFeaturesGPU(n_max_cnt,cur_img.gray0_gpu,mask_gpu);
         n_pts = DetectShiTomasiCorners(n_max_cnt, cur_img.gray0, mask);
@@ -721,17 +721,17 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
             ids.push_back(n_id++);
             track_cnt.push_back(1);
         }
-        DebugT("trackImageNaive | cur_pts.size:{}", cur_pts.size());
+        Debugt("trackImageNaive | cur_pts.size:{}", cur_pts.size());
     }
     else
         n_pts.clear();
 
-    InfoT("trackImageNaive | detect feature:{}", tt.toc_then_tic());
+    Infot("trackImageNaive | detect feature:{}", tt.TocThenTic());
 
     cur_un_pts = undistortedPts(cur_pts, m_camera[0]);
     pts_velocity = ptsVelocity(ids, cur_un_pts, cur_un_pts_map, prev_un_pts_map);
 
-    InfoT("trackImageNaive | vel&&un:{}", tt.toc_then_tic());
+    Infot("trackImageNaive | vel&&un:{}", tt.TocThenTic());
 
     if((!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty() && stereo_cam)
     {
@@ -740,11 +740,11 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         cur_un_right_pts.clear();
         right_pts_velocity.clear();
         cur_un_right_pts_map.clear();
-        DebugT("trackImageNaive | flowTrack right start");
+        Debugt("trackImageNaive | flowTrack right start");
 
         std::vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, cur_pts, cur_right_pts);
         //vector<uchar> status=flowTrackGpu(lk_optical_flow,lk_optical_flow_back,cur_img.gray0_gpu,cur_img.gray1_gpu,cur_pts,cur_right_pts);
-        DebugT("trackImageNaive | flowTrack right finish");
+        Debugt("trackImageNaive | flowTrack right finish");
         if(cfg::dataset == DatasetType::kViode){
             for(int i=0;i<(int)status.size();++i)
                 if(status[i] && VIODE::IsDynamic(cur_right_pts[i], cur_img.seg1))
@@ -770,8 +770,8 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         cur_un_right_pts = undistortedPts(cur_right_pts, m_camera[1]);
         right_pts_velocity = ptsVelocity(ids_right, cur_un_right_pts, cur_un_right_pts_map, prev_un_right_pts_map);
         prev_un_right_pts_map = cur_un_right_pts_map;
-        DebugT("trackImageNaive | cur_right_pts.size:{}", cur_right_pts.size());
-        InfoT("trackImageNaive | flow_track right:{}", tt.toc_then_tic());
+        Debugt("trackImageNaive | cur_right_pts.size:{}", cur_right_pts.size());
+        Infot("trackImageNaive | flow_track right:{}", tt.TocThenTic());
     }
     if(cfg::kShowTrack)
         drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
@@ -812,9 +812,9 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     }*/
 
-    InfoT("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.toc_then_tic());
+    Infot("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.TocThenTic());
     if(cfg::kShowTrack)insts_tracker->DrawInsts(img_track_);
-    InfoT("TrackSemanticImage drawInsts:{} ms", t_i.toc_then_tic());
+    Infot("TrackSemanticImage drawInsts:{} ms", t_i.TocThenTic());
 
     prev_img = cur_img;
     prev_pts = cur_pts;
@@ -829,7 +829,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     //cv::imshow("img_track",img_track);
     //cv::waitKey(1);
 
-    return setOutputFeats();
+    return SetOutputFeats();
 
     /*
     TicToc t_r,t_all;

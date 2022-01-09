@@ -17,6 +17,7 @@
 
 
 #include "feature_manager.h"
+#include "dynamic.h"
 
 
 namespace dynamic_vins{\
@@ -63,10 +64,10 @@ int FeatureManager::getFeatureCount()
 }
 
 
-bool FeatureManager::addFeatureCheckParallax(int frame_count, const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td)
+bool FeatureManager::addFeatureCheckParallax(int frame_count, const FeatureMap &image, double td)
 {
-    vio_logger->debug("addFeatureCheckParallax input feature: {}", (int)image.size());
-    vio_logger->debug("addFeatureCheckParallax factor of feature: {}", getFeatureCount());
+    Debugv("addFeatureCheckParallax input feature: {}", (int) image.size());
+    Debugv("addFeatureCheckParallax factor of feature: {}", getFeatureCount());
     double parallax_sum = 0;
     int parallax_num = 0;
     last_track_num = 0;
@@ -113,8 +114,8 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const std::map<int
         return true;
     }
     else{
-        vio_logger->debug("addFeatureCheckParallax parallax_sum: {}, parallax_num: {}", parallax_sum, parallax_num);
-        vio_logger->debug("addFeatureCheckParallax current parallax: {}", parallax_sum / parallax_num * kFocalLength);
+        Debugv("addFeatureCheckParallax parallax_sum: {}, parallax_num: {}", parallax_sum, parallax_num);
+        Debugv("addFeatureCheckParallax current parallax: {}", parallax_sum / parallax_num * kFocalLength);
         last_average_parallax = parallax_sum / parallax_num * kFocalLength;
         return parallax_sum / parallax_num >= Config::kMinParallax;
     }
@@ -226,7 +227,7 @@ bool FeatureManager::solvePoseByPnP(Mat3d &R, Vec3d &P,
     if (int(pts2D.size()) < 4)
     {
         printf("feature tracking not enough, please slowly move you device! \n");
-        vio_logger->error("solvePoseByPnP feature tracking not enough, please slowly move you device! ");
+        Errorv("solvePoseByPnP feature tracking not enough, please slowly move you device! ");
         return false;
     }
     cv::Mat r, rvec, t, D, tmp_r;
@@ -240,7 +241,7 @@ bool FeatureManager::solvePoseByPnP(Mat3d &R, Vec3d &P,
 
     if(!pnp_succ)
     {
-        vio_logger->error("solvePoseByPnP pnp failed ! ");
+        Errorv("solvePoseByPnP pnp failed ! ");
         return false;
     }
     cv::Rodrigues(rvec, r);
@@ -278,7 +279,7 @@ void FeatureManager::initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
             }
         }
 
-        vio_logger->debug("initFramePoseByPnP pts2D.size:{}", pts2D.size());
+        Debugv("initFramePoseByPnP pts2D.size:{}", pts2D.size());
 
         Mat3d RCam;
         Vec3d PCam;

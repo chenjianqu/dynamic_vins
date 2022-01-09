@@ -114,7 +114,7 @@ public:
     void StartFlowEstimating(torch::Tensor &img){
         while(flow_estimator_->is_running()){
             std::this_thread::sleep_for(5ms);
-            DebugS("flow_estimator is_running");
+            Debugs("flow_estimator is_running");
         }
         flow_estimator_->StartForward(img);
     }
@@ -131,10 +131,8 @@ private:
     void ManageInstances();
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
 
-    static void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr_un_pts, std::map<unsigned int, cv::Point2f> &prev_id_pts,
-                            std::map<unsigned int, cv::Point2f> &output_cur_id_pts, vector<cv::Point2f> &output_velocity);
-    static float GetMaskIoU(const torch::Tensor &mask1, const InstInfo &instInfo1, const float mask1_area,
-                            const torch::Tensor &mask2, const InstInfo &instInfo2, const float mask2_area);
+
+
     std::tuple<int,float,float> GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor);
 
     std::unordered_map<unsigned int,InstFeat> instances_;

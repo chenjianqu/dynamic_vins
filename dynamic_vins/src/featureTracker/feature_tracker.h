@@ -66,7 +66,7 @@ public:
                    std::map<int, cv::Point2f> &prevLeftPts);
     void setPrediction(std::map<int, Eigen::Vector3d> &predictPts);
     void removeOutliers(std::set<int> &removePtsIds);
-    std::map<int, vector<pair<int, Vec7d>>> setOutputFeats();
+    std::map<int, vector<pair<int, Vec7d>>> SetOutputFeats();
 
     cv::Mat img_track(){return img_track_;}
 

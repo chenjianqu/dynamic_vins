@@ -196,7 +196,7 @@ void Estimator::optimization()
     if(cfg::slam == SlamType::kDynamic)
         insts_manager.AddResidualBlock(problem, loss_function);
 
-    DebugV("optimization 开始优化 visual measurement count: {}", f_m_cnt);
+    Debugv("optimization 开始优化 visual measurement count: {}", f_m_cnt);
 
     ceres::Solver::Options options;
 
@@ -215,8 +215,8 @@ void Estimator::optimization()
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    DebugV("Iterations: {}", summary.iterations.size());
-    InfoV("优化完成");
+    Debugv("Iterations: {}", summary.iterations.size());
+    Infov("优化完成");
 
     if(cfg::slam == SlamType::kDynamic)
         insts_manager.GetOptimizationParameters();
@@ -229,7 +229,7 @@ void Estimator::optimization()
 
     msg+="相机位姿 优化后：\n";
     msg += logCurrentPose();
-    DebugV(msg);
+    Debugv(msg);
 
     if(frame_count < kWindowSize)
         return;
@@ -326,11 +326,11 @@ void Estimator::optimization()
 
         TicToc t_pre_margin;
         marginalization_info->preMarginalize();
-        DebugV("pre marginalization {} ms", t_pre_margin.toc());
+        Debugv("pre marginalization {} ms", t_pre_margin.Toc());
 
         TicToc t_margin;
         marginalization_info->marginalize();
-        DebugV("marginalization {} ms", t_margin.toc());
+        Debugv("marginalization {} ms", t_margin.Toc());
 
         std::unordered_map<long, double *> addr_shift;
         for (int i = 1; i <= kWindowSize; i++)
@@ -378,14 +378,14 @@ void Estimator::optimization()
             }
 
             TicToc t_pre_margin;
-            InfoV("begin marginalization");
+            Infov("begin marginalization");
             marginalization_info->preMarginalize();
-            InfoV("end pre marginalization, {} ms", t_pre_margin.toc());
+            Infov("end pre marginalization, {} ms", t_pre_margin.Toc());
 
             TicToc t_margin;
-            InfoV("begin marginalization");
+            Infov("begin marginalization");
             marginalization_info->marginalize();
-            InfoV("end marginalization, {} ms", t_margin.toc());
+            Infov("end marginalization, {} ms", t_margin.Toc());
 
             std::unordered_map<long, double *> addr_shift;
             for (int i = 0; i <= kWindowSize; i++)
@@ -501,7 +501,7 @@ void Estimator::SetParameter()
         ric[i] = cfg::RIC[i];
         std::stringstream ss;
         ss << "setParameter extrinsic cam " << i << endl  << ric[i] << endl << tic[i].transpose() << endl;
-        InfoV(ss.str());
+        Infov(ss.str());
     }
     f_manager.setRic(ric);
     ProjectionTwoFrameOneCamFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
@@ -522,7 +522,7 @@ void Estimator::SetParameter()
     g = cfg::G;
     std::stringstream ss;
     ss << "setParameter set g " << g.transpose() << endl;
-    InfoV(ss.str());
+    Infov(ss.str());
 
     mProcess.unlock();
 }
@@ -1416,16 +1416,16 @@ void Estimator::updateLatestStates(){
     mPropagate.unlock();
 }
 
-void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const double header){
-    InfoV("processImage Adding feature points:{}", image.size());
+void Estimator::processImage(const FeatureMap &image, const double header){
+    Infov("processImage Adding feature points:{}", image.size());
     if (f_manager.addFeatureCheckParallax(frame_count, image, td))
         margin_flag = MarginFlag::kMarginOld;
     else
         margin_flag = MarginFlag::kMarginSecondNew;
 
-    DebugV("processImage margin_flag:{}", margin_flag == MarginFlag::kMarginSecondNew ? "Non-keyframe" : "Keyframe");
-    DebugV("processImage frame_count {}", frame_count);
-    DebugV("processImage all feature size: {}", f_manager.getFeatureCount());
+    Debugv("processImage margin_flag:{}", margin_flag == MarginFlag::kMarginSecondNew ? "Non-keyframe" : "Keyframe");
+    Debugv("processImage frame_count {}", frame_count);
+    Debugv("processImage all feature size: {}", f_manager.getFeatureCount());
 
     headers[frame_count] = header;
 
@@ -1435,12 +1435,12 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame_count], Bgs[frame_count]};
 
     if(cfg::ESTIMATE_EXTRINSIC == 2){
-        InfoV("calibrating extrinsic param, rotation movement is needed");
+        Infov("calibrating extrinsic param, rotation movement is needed");
         if (frame_count != 0){
             auto cor = f_manager.getCorresponding(frame_count - 1, frame_count);
             if (Matrix3d calib_ric;initial_ex_rotation.CalibrationExRotation(cor, pre_integrations[frame_count]->delta_q, calib_ric)){
-                DebugV("initial extrinsic rotation calib success");
-                DebugV("initial extrinsic rotation:\n{}", EigenToStr(calib_ric));
+                Debugv("initial extrinsic rotation calib success");
+                Debugv("initial extrinsic rotation:\n{}", EigenToStr(calib_ric));
                 ric[0] = calib_ric;
                 cfg::RIC[0] = calib_ric;
                 cfg::ESTIMATE_EXTRINSIC = 1;
@@ -1473,7 +1473,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                     updateLatestStates();
                     solver_flag = SolverFlag::kNonLinear;
                     slideWindow();
-                    InfoV("Initialization finish!");
+                    Infov("Initialization finish!");
                 }
                 else{
                     slideWindow();
@@ -1500,7 +1500,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 updateLatestStates();
                 solver_flag = SolverFlag::kNonLinear;
                 slideWindow();
-                InfoV("Initialization finish!");
+                Infov("Initialization finish!");
             }
         }
 
@@ -1515,7 +1515,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
                 updateLatestStates();
                 solver_flag = SolverFlag::kNonLinear;
                 slideWindow();
-                InfoV("Initialization finish!");
+                Infov("Initialization finish!");
             }
         }
 
@@ -1545,15 +1545,15 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
         outliersRejection(removeIndex);
         f_manager.removeOutlier(removeIndex);
 
-        DebugV("solver costs:{} ms", t_solve.toc());
+        Debugv("solver costs:{} ms", t_solve.Toc());
 
         if (failureDetection())
         {
-            WarnV("failure detection!");
+            Warnv("failure detection!");
             failure_occur = true;
             ClearState();
             SetParameter();
-            WarnV("system reboot!");
+            Warnv("system reboot!");
             return;
         }
 
@@ -1612,10 +1612,10 @@ void Estimator::ProcessMeasurements(){
             if(cfg::slam == SlamType::kDynamic)
                 curr_insts=instancesBuf.front();
 
-            WarnV("----------Time : {} ----------", feature_frame.time);
+            Warnv("----------Time : {} ----------", feature_frame.time);
 
             static TicToc tt;
-            tt.tic();
+            tt.Tic();
 
             mBuf.lock();
             if(cfg::is_use_imu)
@@ -1645,8 +1645,8 @@ void Estimator::ProcessMeasurements(){
             }
             mProcess.lock();
 
-            InfoV("get input time: {} ms", tt.toc_then_tic());
-            DebugV("solver_flag:{}", solver_flag == SolverFlag::kInitial ? "INITIAL" : "NO-LINEAR");
+            Infov("get input time: {} ms", tt.TocThenTic());
+            Debugv("solver_flag:{}", solver_flag == SolverFlag::kInitial ? "INITIAL" : "NO-LINEAR");
 
             if(cfg::slam == SlamType::kDynamic)
                 insts_manager.PushBack(frame_count, curr_insts);
@@ -1677,14 +1677,15 @@ void Estimator::ProcessMeasurements(){
 
             static unsigned int estimator_cnt=0;
             estimator_cnt++;
-            auto output_msg=fmt::format("cnt:{} ___________process time: {} ms_____________\n",estimator_cnt,tt.toc_then_tic());
-            InfoV(output_msg);
+            auto output_msg=fmt::format("cnt:{} ___________process time: {} ms_____________\n",estimator_cnt,
+                                        tt.TocThenTic());
+            Infov(output_msg);
             cerr<<output_msg<<endl;
         }
         std::this_thread::sleep_for(2ms);
     }
 
-    WarnV("ProcessMeasurements 线程退出");
+    Warnv("ProcessMeasurements 线程退出");
 
 }
 

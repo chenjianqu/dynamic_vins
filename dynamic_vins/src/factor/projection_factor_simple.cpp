@@ -108,7 +108,7 @@ bool ProjectionTwoFrameOneCamFactorSimple::Evaluate(double const *const *paramet
         }
 
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -224,7 +224,7 @@ bool ProjectionTwoFrameTwoCamFactorSimple::Evaluate(double const *const *paramet
         }
 
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -310,7 +310,7 @@ bool ProjectionOneFrameTwoCamFactorSimple::Evaluate(double const *const *paramet
         }
 
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }
@@ -420,7 +420,7 @@ bool ProjectionBoxFactorSimple::Evaluate(double const *const *parameters, double
         }
     }
 
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 

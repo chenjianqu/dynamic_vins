@@ -147,7 +147,7 @@ bool ProjectionInstanceSpeedFactor::Evaluate(const double *const *parameters, do
             jacobian_feature =  Roioj * R_ojw * R_wbj * R_bc * pts_j / (inv_dep_j*inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 
@@ -250,7 +250,7 @@ bool ProjectionSpeedFactor::Evaluate(double const *const *parameters, double *re
             jacobian_feature = - reduce * R_cb2 * R_biw * R_oioj * R_wbj * R_bc1 * pts_j_td / (inv_dep_j*inv_dep_j);
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }

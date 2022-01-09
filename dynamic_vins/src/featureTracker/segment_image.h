@@ -51,7 +51,7 @@ struct SegImage{
     cv::Mat merge_mask,inv_merge_mask;
     cv::cuda::GpuMat merge_mask_gpu,inv_merge_mask_gpu;
 
-    torch::Tensor flow;
+    cv::Mat flow;//光流估计结果
 
     void SetMask();
     void SetMaskGpu();

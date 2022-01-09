@@ -101,7 +101,7 @@ void SetViodeMask(SegImage &img)
                     if(blockInsts->count(key)==0){
                         MiniInstance inst(row_start,row_end,col_start,col_end);
                         blockInsts->insert({key,inst});
-                        DebugS("create inst:{} row_start:{} row_end:{} col_start:{} col_end:{} ",
+                        Debugs("create inst:{} row_start:{} row_end:{} col_start:{} col_end:{} ",
                                key, inst.row_start, inst.row_end, inst.col_start, inst.col_end);
                     }
                     //设置实例的mask
@@ -113,6 +113,7 @@ void SetViodeMask(SegImage &img)
         }
     };
 
+    tt.Tic();
 
     auto *insts1=new std::unordered_map<unsigned int,MiniInstance>;
     auto *insts2=new std::unordered_map<unsigned int,MiniInstance>;
@@ -122,22 +123,16 @@ void SetViodeMask(SegImage &img)
     ///4线程并行
     auto half_row=img_row/2, half_col=img_col/2;
     std::thread block_thread1(calBlock, 0,          half_row,      0,          half_col,insts1);
-    DebugS("setViodeMask join1");
-    block_thread1.join();
-
     std::thread block_thread2(calBlock, half_row,   img_row,       0,          half_col,insts2);
-    DebugS("setViodeMask join2");
-    block_thread2.join();
-
     std::thread block_thread3(calBlock, 0,          half_row,      half_col,   img_col, insts3);
-    DebugS("setViodeMask join3");
-    block_thread3.join();
-
-
     calBlock(                           half_row,   img_row,       half_col,   img_col, insts4);
 
-    DebugS("setViodeMask join");
-    DebugS("setViodeMask calBlock :{} ms", tt.toc_then_tic());
+    block_thread1.join();
+    block_thread2.join();
+    block_thread3.join();
+
+    Debugs("setViodeMask join");
+    Debugs("setViodeMask calBlock :{} ms", tt.TocThenTic());
 
     ///线程结果合并
     std::unordered_multimap<unsigned int,MiniInstance> insts_all;
@@ -156,12 +151,10 @@ void SetViodeMask(SegImage &img)
         m_inst.mask.copyTo(block);
     }
 
-    DebugS("setViodeMask merge :{} ms", tt.toc_then_tic());
+    Debugs("setViodeMask merge :{} ms", tt.TocThenTic());
 
     static auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
     static auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
-
-    static TicToc ticToc;
 
     ///构建InstanceInfo
     for(auto &[key,inst] : insts){
@@ -169,8 +162,8 @@ void SetViodeMask(SegImage &img)
         info.id = key;
         info.track_id=key;
 
-        DebugS("id:{}", key);
-        DebugS("mask:{} {} {}", inst.mask.empty(),inst.mask.rows,inst.mask.cols);
+        Debugs("id:{}", key);
+        Debugs("mask:{} {} {}", inst.mask.empty(), inst.mask.rows, inst.mask.cols);
 
         //info.mask_cv = inst.mask;
         info.mask_gpu.upload(inst.mask);
@@ -180,13 +173,13 @@ void SetViodeMask(SegImage &img)
         img.insts_info.emplace_back(info);
     }
 
-    DebugS("erode_filter:{}", ticToc.toc_then_tic());
+    Debugs("erode_filter:{}", tt.TocThenTic());
     img.merge_mask = merge_mask;
     img.merge_mask_gpu.upload(merge_mask);
     cv::cuda::bitwise_not(img.merge_mask_gpu,img.inv_merge_mask_gpu);
     img.inv_merge_mask_gpu.download(img.inv_merge_mask);
 
-    DebugS("setViodeMask set gpu :{} ms", tt.toc_then_tic());
+    Debugs("setViodeMask set gpu :{} ms", tt.TocThenTic());
 }
 
 

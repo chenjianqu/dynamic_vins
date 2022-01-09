@@ -114,7 +114,7 @@ void printStatistics(const Estimator &estimator, double t)
         for (int i = 0; i < cfg::kCamNum; i++)
         {
             //ROS_DEBUG("calibration result for camera %d", i);
-            ROS_DEBUG_STREAM("extirnsic tic: " << estimator.tic[i].transpose());
+            ROS_DEBUG_STREAM("extirnsic Tic: " << estimator.tic[i].transpose());
             ROS_DEBUG_STREAM("extrinsic ric: " << Utility::R2ypr(estimator.ric[i]).transpose());
 
             Eigen::Matrix4d eigen_T = Eigen::Matrix4d::Identity();

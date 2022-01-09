@@ -1,0 +1,2048 @@
+[2022-01-09 22:12:14.223] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.223] [tracker_log] [info] trackImageNaive | flowTrack left:0.768783
+[2022-01-09 22:12:14.224] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:14.224] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:14.224] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:14.224] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:14.224] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:14.225] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.225] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.225] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.026981 ms
+[2022-01-09 22:12:14.238] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:14.238] [tracker_log] [info] trackImageNaive | detect feature:14.9569
+[2022-01-09 22:12:14.238] [tracker_log] [info] trackImageNaive | vel&&un:0.019038
+[2022-01-09 22:12:14.238] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.241] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.241] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:14.241] [tracker_log] [info] trackImageNaive | flow_track right:2.43902
+[2022-01-09 22:12:14.243] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:19.9657 ms
+[2022-01-09 22:12:14.243] [tracker_log] [info] TrackSemanticImage drawInsts:0.010932 ms
+[2022-01-09 22:12:14.244] [tracker_log] [info] **************feature_track:21.7942 ms****************
+
+[2022-01-09 22:12:14.244] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.245] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:14.246] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:14.246] [tracker_log] [info] trackImageNaive | flowTrack left:1.62938
+[2022-01-09 22:12:14.246] [tracker_log] [info] trackImageNaive | detect feature:0.166591
+[2022-01-09 22:12:14.246] [tracker_log] [info] trackImageNaive | vel&&un:0.042101
+[2022-01-09 22:12:14.246] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.247] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.248] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:14.248] [tracker_log] [info] trackImageNaive | flow_track right:1.33677
+[2022-01-09 22:12:14.249] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.249] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.249] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.021176 ms
+[2022-01-09 22:12:14.249] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.76201 ms
+[2022-01-09 22:12:14.249] [tracker_log] [info] TrackSemanticImage drawInsts:0.009203 ms
+[2022-01-09 22:12:14.250] [tracker_log] [info] **************feature_track:5.86065 ms****************
+
+[2022-01-09 22:12:14.261] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.262] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:14.263] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:14.263] [tracker_log] [info] trackImageNaive | flowTrack left:2.08808
+[2022-01-09 22:12:14.264] [tracker_log] [info] trackImageNaive | detect feature:0.215914
+[2022-01-09 22:12:14.264] [tracker_log] [info] trackImageNaive | vel&&un:0.046855
+[2022-01-09 22:12:14.264] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.265] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.265] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:14.265] [tracker_log] [info] trackImageNaive | flow_track right:1.36047
+[2022-01-09 22:12:14.266] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.266] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.266] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.019804 ms
+[2022-01-09 22:12:14.267] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.39875 ms
+[2022-01-09 22:12:14.267] [tracker_log] [info] TrackSemanticImage drawInsts:0.010312 ms
+[2022-01-09 22:12:14.269] [tracker_log] [info] **************feature_track:7.29296 ms****************
+
+[2022-01-09 22:12:14.279] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.281] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:14.283] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:14.283] [tracker_log] [info] trackImageNaive | flowTrack left:3.67019
+[2022-01-09 22:12:14.283] [tracker_log] [info] trackImageNaive | detect feature:0.272786
+[2022-01-09 22:12:14.283] [tracker_log] [info] trackImageNaive | vel&&un:0.091202
+[2022-01-09 22:12:14.283] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.285] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.285] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:158
+[2022-01-09 22:12:14.285] [tracker_log] [info] trackImageNaive | flow_track right:2.00095
+[2022-01-09 22:12:14.286] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.288] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.288] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:1.19605 ms
+[2022-01-09 22:12:14.288] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:7.06309 ms
+[2022-01-09 22:12:14.288] [tracker_log] [info] TrackSemanticImage drawInsts:0.011786 ms
+[2022-01-09 22:12:14.288] [tracker_log] [info] **************feature_track:8.71666 ms****************
+
+[2022-01-09 22:12:14.300] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.301] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:14.302] [tracker_log] [debug] trackImageNaive | cur_pts.size:159
+[2022-01-09 22:12:14.302] [tracker_log] [info] trackImageNaive | flowTrack left:2.12432
+[2022-01-09 22:12:14.302] [tracker_log] [info] trackImageNaive | detect feature:0.246547
+[2022-01-09 22:12:14.302] [tracker_log] [info] trackImageNaive | vel&&un:0.065371
+[2022-01-09 22:12:14.302] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.304] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.304] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:158
+[2022-01-09 22:12:14.304] [tracker_log] [info] trackImageNaive | flow_track right:1.6629
+[2022-01-09 22:12:14.305] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.305] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.305] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.015022 ms
+[2022-01-09 22:12:14.306] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.1919 ms
+[2022-01-09 22:12:14.306] [tracker_log] [info] TrackSemanticImage drawInsts:0.008289 ms
+[2022-01-09 22:12:14.307] [tracker_log] [info] **************feature_track:6.97016 ms****************
+
+[2022-01-09 22:12:14.317] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.317] [tracker_log] [debug] trackImageNaive | prev_pts.size:159
+[2022-01-09 22:12:14.317] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.317] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.317] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013496 ms
+[2022-01-09 22:12:14.319] [tracker_log] [debug] trackImageNaive | cur_pts.size:159
+[2022-01-09 22:12:14.319] [tracker_log] [info] trackImageNaive | flowTrack left:1.47041
+[2022-01-09 22:12:14.319] [tracker_log] [info] trackImageNaive | detect feature:0.148073
+[2022-01-09 22:12:14.319] [tracker_log] [info] trackImageNaive | vel&&un:0.049392
+[2022-01-09 22:12:14.319] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.320] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.320] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:14.320] [tracker_log] [info] trackImageNaive | flow_track right:1.20848
+[2022-01-09 22:12:14.322] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.59964 ms
+[2022-01-09 22:12:14.322] [tracker_log] [info] TrackSemanticImage drawInsts:0.009788 ms
+[2022-01-09 22:12:14.322] [tracker_log] [info] **************feature_track:5.4276 ms****************
+
+[2022-01-09 22:12:14.350] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.350] [tracker_log] [debug] trackImageNaive | prev_pts.size:159
+[2022-01-09 22:12:14.350] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.350] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.350] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.015476 ms
+[2022-01-09 22:12:14.351] [tracker_log] [debug] trackImageNaive | cur_pts.size:159
+[2022-01-09 22:12:14.351] [tracker_log] [info] trackImageNaive | flowTrack left:1.43974
+[2022-01-09 22:12:14.351] [tracker_log] [info] trackImageNaive | detect feature:0.141894
+[2022-01-09 22:12:14.351] [tracker_log] [info] trackImageNaive | vel&&un:0.044129
+[2022-01-09 22:12:14.351] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.352] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.353] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:158
+[2022-01-09 22:12:14.353] [tracker_log] [info] trackImageNaive | flow_track right:1.03718
+[2022-01-09 22:12:14.354] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.16681 ms
+[2022-01-09 22:12:14.354] [tracker_log] [info] TrackSemanticImage drawInsts:0.009455 ms
+[2022-01-09 22:12:14.355] [tracker_log] [info] **************feature_track:5.01007 ms****************
+
+[2022-01-09 22:12:14.402] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.402] [tracker_log] [debug] trackImageNaive | prev_pts.size:159
+[2022-01-09 22:12:14.402] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.402] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.402] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.015474 ms
+[2022-01-09 22:12:14.404] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.404] [tracker_log] [info] trackImageNaive | flowTrack left:1.66022
+[2022-01-09 22:12:14.404] [tracker_log] [info] trackImageNaive | detect feature:0.158552
+[2022-01-09 22:12:14.404] [tracker_log] [info] trackImageNaive | vel&&un:0.046923
+[2022-01-09 22:12:14.404] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.405] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.405] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.405] [tracker_log] [info] trackImageNaive | flow_track right:1.21093
+[2022-01-09 22:12:14.407] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.82128 ms
+[2022-01-09 22:12:14.407] [tracker_log] [info] TrackSemanticImage drawInsts:0.010782 ms
+[2022-01-09 22:12:14.408] [tracker_log] [info] **************feature_track:5.65333 ms****************
+
+[2022-01-09 22:12:14.483] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.484] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.486] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.486] [tracker_log] [info] trackImageNaive | flowTrack left:3.22457
+[2022-01-09 22:12:14.487] [tracker_log] [info] trackImageNaive | detect feature:1.01757
+[2022-01-09 22:12:14.487] [tracker_log] [info] trackImageNaive | vel&&un:0.068465
+[2022-01-09 22:12:14.487] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.488] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.488] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.488] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.027679 ms
+[2022-01-09 22:12:14.489] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.489] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:14.489] [tracker_log] [info] trackImageNaive | flow_track right:2.15642
+[2022-01-09 22:12:14.492] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.96046 ms
+[2022-01-09 22:12:14.492] [tracker_log] [info] TrackSemanticImage drawInsts:0.030703 ms
+[2022-01-09 22:12:14.493] [tracker_log] [info] **************feature_track:10.7817 ms****************
+
+[2022-01-09 22:12:14.506] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.506] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.506] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.506] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.506] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.012981 ms
+[2022-01-09 22:12:14.509] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.509] [tracker_log] [info] trackImageNaive | flowTrack left:3.51281
+[2022-01-09 22:12:14.510] [tracker_log] [info] trackImageNaive | detect feature:0.155059
+[2022-01-09 22:12:14.510] [tracker_log] [info] trackImageNaive | vel&&un:0.046491
+[2022-01-09 22:12:14.510] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.512] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.512] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:14.512] [tracker_log] [info] trackImageNaive | flow_track right:2.44416
+[2022-01-09 22:12:14.514] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:7.48019 ms
+[2022-01-09 22:12:14.514] [tracker_log] [info] TrackSemanticImage drawInsts:0.011398 ms
+[2022-01-09 22:12:14.515] [tracker_log] [info] **************feature_track:8.63125 ms****************
+
+[2022-01-09 22:12:14.552] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.552] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.552] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.552] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.552] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.032277 ms
+[2022-01-09 22:12:14.554] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.554] [tracker_log] [info] trackImageNaive | flowTrack left:2.79971
+[2022-01-09 22:12:14.554] [tracker_log] [info] trackImageNaive | detect feature:0.157359
+[2022-01-09 22:12:14.555] [tracker_log] [info] trackImageNaive | vel&&un:0.047295
+[2022-01-09 22:12:14.555] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.556] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.556] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:14.556] [tracker_log] [info] trackImageNaive | flow_track right:1.18357
+[2022-01-09 22:12:14.558] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.14147 ms
+[2022-01-09 22:12:14.558] [tracker_log] [info] TrackSemanticImage drawInsts:0.009542 ms
+[2022-01-09 22:12:14.558] [tracker_log] [info] **************feature_track:6.56498 ms****************
+
+[2022-01-09 22:12:14.599] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.599] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.599] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.599] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.599] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.021907 ms
+[2022-01-09 22:12:14.600] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.600] [tracker_log] [info] trackImageNaive | flowTrack left:1.50778
+[2022-01-09 22:12:14.600] [tracker_log] [info] trackImageNaive | detect feature:0.143488
+[2022-01-09 22:12:14.600] [tracker_log] [info] trackImageNaive | vel&&un:0.042504
+[2022-01-09 22:12:14.600] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.602] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.602] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.602] [tracker_log] [info] trackImageNaive | flow_track right:2.11571
+[2022-01-09 22:12:14.604] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.24409 ms
+[2022-01-09 22:12:14.604] [tracker_log] [info] TrackSemanticImage drawInsts:0.009914 ms
+[2022-01-09 22:12:14.605] [tracker_log] [info] **************feature_track:6.18135 ms****************
+
+[2022-01-09 22:12:14.649] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.649] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.649] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.649] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.649] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013493 ms
+[2022-01-09 22:12:14.652] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.652] [tracker_log] [info] trackImageNaive | flowTrack left:2.74294
+[2022-01-09 22:12:14.652] [tracker_log] [info] trackImageNaive | detect feature:0.191153
+[2022-01-09 22:12:14.652] [tracker_log] [info] trackImageNaive | vel&&un:0.048349
+[2022-01-09 22:12:14.652] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.653] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.653] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.653] [tracker_log] [info] trackImageNaive | flow_track right:1.16262
+[2022-01-09 22:12:14.656] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:6.31848 ms
+[2022-01-09 22:12:14.656] [tracker_log] [info] TrackSemanticImage drawInsts:0.021425 ms
+[2022-01-09 22:12:14.657] [tracker_log] [info] **************feature_track:7.65483 ms****************
+
+[2022-01-09 22:12:14.696] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.697] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.697] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.697] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.697] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013766 ms
+[2022-01-09 22:12:14.698] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.698] [tracker_log] [info] trackImageNaive | flowTrack left:1.53649
+[2022-01-09 22:12:14.698] [tracker_log] [info] trackImageNaive | detect feature:0.145888
+[2022-01-09 22:12:14.698] [tracker_log] [info] trackImageNaive | vel&&un:0.043371
+[2022-01-09 22:12:14.698] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.699] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.699] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.699] [tracker_log] [info] trackImageNaive | flow_track right:1.15821
+[2022-01-09 22:12:14.701] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.30727 ms
+[2022-01-09 22:12:14.701] [tracker_log] [info] TrackSemanticImage drawInsts:0.009685 ms
+[2022-01-09 22:12:14.702] [tracker_log] [info] **************feature_track:5.19651 ms****************
+
+[2022-01-09 22:12:14.750] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.750] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.750] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.750] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.750] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013764 ms
+[2022-01-09 22:12:14.751] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.751] [tracker_log] [info] trackImageNaive | flowTrack left:1.57122
+[2022-01-09 22:12:14.751] [tracker_log] [info] trackImageNaive | detect feature:0.15495
+[2022-01-09 22:12:14.751] [tracker_log] [info] trackImageNaive | vel&&un:0.052013
+[2022-01-09 22:12:14.751] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.752] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.753] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.753] [tracker_log] [info] trackImageNaive | flow_track right:1.16004
+[2022-01-09 22:12:14.755] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.52109 ms
+[2022-01-09 22:12:14.755] [tracker_log] [info] TrackSemanticImage drawInsts:0.016341 ms
+[2022-01-09 22:12:14.756] [tracker_log] [info] **************feature_track:6.82002 ms****************
+
+[2022-01-09 22:12:14.797] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.797] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.797] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.797] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.797] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013764 ms
+[2022-01-09 22:12:14.799] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.799] [tracker_log] [info] trackImageNaive | flowTrack left:1.60842
+[2022-01-09 22:12:14.799] [tracker_log] [info] trackImageNaive | detect feature:0.158137
+[2022-01-09 22:12:14.799] [tracker_log] [info] trackImageNaive | vel&&un:0.05172
+[2022-01-09 22:12:14.799] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.800] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.800] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.800] [tracker_log] [info] trackImageNaive | flow_track right:1.22291
+[2022-01-09 22:12:14.802] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.70501 ms
+[2022-01-09 22:12:14.802] [tracker_log] [info] TrackSemanticImage drawInsts:0.012449 ms
+[2022-01-09 22:12:14.803] [tracker_log] [info] **************feature_track:5.65094 ms****************
+
+[2022-01-09 22:12:14.847] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.847] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.847] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.847] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.847] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013527 ms
+[2022-01-09 22:12:14.848] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.848] [tracker_log] [info] trackImageNaive | flowTrack left:1.46789
+[2022-01-09 22:12:14.848] [tracker_log] [info] trackImageNaive | detect feature:0.145204
+[2022-01-09 22:12:14.849] [tracker_log] [info] trackImageNaive | vel&&un:0.042802
+[2022-01-09 22:12:14.849] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.850] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.850] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.850] [tracker_log] [info] trackImageNaive | flow_track right:1.12989
+[2022-01-09 22:12:14.851] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.2206 ms
+[2022-01-09 22:12:14.851] [tracker_log] [info] TrackSemanticImage drawInsts:0.009231 ms
+[2022-01-09 22:12:14.852] [tracker_log] [info] **************feature_track:5.05181 ms****************
+
+[2022-01-09 22:12:14.909] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.910] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.910] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.910] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.910] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.021868 ms
+[2022-01-09 22:12:14.911] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.911] [tracker_log] [info] trackImageNaive | flowTrack left:1.76211
+[2022-01-09 22:12:14.911] [tracker_log] [info] trackImageNaive | detect feature:0.20246
+[2022-01-09 22:12:14.912] [tracker_log] [info] trackImageNaive | vel&&un:0.063156
+[2022-01-09 22:12:14.912] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.913] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.913] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.913] [tracker_log] [info] trackImageNaive | flow_track right:1.46117
+[2022-01-09 22:12:14.915] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.34444 ms
+[2022-01-09 22:12:14.915] [tracker_log] [info] TrackSemanticImage drawInsts:0.012456 ms
+[2022-01-09 22:12:14.916] [tracker_log] [info] **************feature_track:6.2908 ms****************
+
+[2022-01-09 22:12:14.949] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.950] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.950] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.950] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.950] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.019313 ms
+[2022-01-09 22:12:14.951] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.951] [tracker_log] [info] trackImageNaive | flowTrack left:1.69478
+[2022-01-09 22:12:14.951] [tracker_log] [info] trackImageNaive | detect feature:0.149747
+[2022-01-09 22:12:14.951] [tracker_log] [info] trackImageNaive | vel&&un:0.046194
+[2022-01-09 22:12:14.951] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:14.952] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:14.952] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:14.952] [tracker_log] [info] trackImageNaive | flow_track right:1.06462
+[2022-01-09 22:12:14.955] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.08164 ms
+[2022-01-09 22:12:14.955] [tracker_log] [info] TrackSemanticImage drawInsts:0.010528 ms
+[2022-01-09 22:12:14.955] [tracker_log] [info] **************feature_track:5.94512 ms****************
+
+[2022-01-09 22:12:14.997] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:14.997] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:14.997] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:14.997] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:14.997] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013815 ms
+[2022-01-09 22:12:14.998] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:14.998] [tracker_log] [info] trackImageNaive | flowTrack left:1.50691
+[2022-01-09 22:12:14.998] [tracker_log] [info] trackImageNaive | detect feature:0.150481
+[2022-01-09 22:12:14.998] [tracker_log] [info] trackImageNaive | vel&&un:0.043975
+[2022-01-09 22:12:14.998] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.000] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.000] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:15.000] [tracker_log] [info] trackImageNaive | flow_track right:1.14552
+[2022-01-09 22:12:15.002] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.45724 ms
+[2022-01-09 22:12:15.002] [tracker_log] [info] TrackSemanticImage drawInsts:0.009277 ms
+[2022-01-09 22:12:15.002] [tracker_log] [info] **************feature_track:5.26566 ms****************
+
+[2022-01-09 22:12:15.050] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.050] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:15.050] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.050] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.050] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013555 ms
+[2022-01-09 22:12:15.051] [tracker_log] [debug] trackImageNaive | cur_pts.size:155
+[2022-01-09 22:12:15.051] [tracker_log] [info] trackImageNaive | flowTrack left:1.66879
+[2022-01-09 22:12:15.052] [tracker_log] [info] trackImageNaive | detect feature:0.151075
+[2022-01-09 22:12:15.052] [tracker_log] [info] trackImageNaive | vel&&un:0.043846
+[2022-01-09 22:12:15.052] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.053] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.053] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:153
+[2022-01-09 22:12:15.053] [tracker_log] [info] trackImageNaive | flow_track right:1.11729
+[2022-01-09 22:12:15.055] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.99592 ms
+[2022-01-09 22:12:15.055] [tracker_log] [info] TrackSemanticImage drawInsts:0.014406 ms
+[2022-01-09 22:12:15.056] [tracker_log] [info] **************feature_track:6.3186 ms****************
+
+[2022-01-09 22:12:15.099] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.099] [tracker_log] [debug] trackImageNaive | prev_pts.size:155
+[2022-01-09 22:12:15.099] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.099] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.099] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013973 ms
+[2022-01-09 22:12:15.101] [tracker_log] [debug] trackImageNaive | cur_pts.size:148
+[2022-01-09 22:12:15.101] [tracker_log] [info] trackImageNaive | flowTrack left:1.69025
+[2022-01-09 22:12:15.101] [tracker_log] [warning] trackImageNaive | n_max_cnt:12
+[2022-01-09 22:12:15.101] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.101] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.101] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.101] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.106] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.106] [tracker_log] [info] trackImageNaive | detect feature:4.92827
+[2022-01-09 22:12:15.106] [tracker_log] [info] trackImageNaive | vel&&un:0.036735
+[2022-01-09 22:12:15.106] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.107] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.107] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:15.107] [tracker_log] [info] trackImageNaive | flow_track right:1.14834
+[2022-01-09 22:12:15.109] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.32727 ms
+[2022-01-09 22:12:15.109] [tracker_log] [info] TrackSemanticImage drawInsts:0.009987 ms
+[2022-01-09 22:12:15.109] [tracker_log] [info] **************feature_track:10.1674 ms****************
+
+[2022-01-09 22:12:15.145] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.145] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.145] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.145] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.145] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.020421 ms
+[2022-01-09 22:12:15.147] [tracker_log] [debug] trackImageNaive | cur_pts.size:143
+[2022-01-09 22:12:15.147] [tracker_log] [info] trackImageNaive | flowTrack left:1.81883
+[2022-01-09 22:12:15.147] [tracker_log] [warning] trackImageNaive | n_max_cnt:17
+[2022-01-09 22:12:15.147] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.147] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.147] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.147] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.151] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.151] [tracker_log] [info] trackImageNaive | detect feature:4.51331
+[2022-01-09 22:12:15.151] [tracker_log] [info] trackImageNaive | vel&&un:0.030538
+[2022-01-09 22:12:15.151] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.152] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.152] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:15.152] [tracker_log] [info] trackImageNaive | flow_track right:1.18798
+[2022-01-09 22:12:15.154] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.36079 ms
+[2022-01-09 22:12:15.154] [tracker_log] [info] TrackSemanticImage drawInsts:0.013542 ms
+[2022-01-09 22:12:15.155] [tracker_log] [info] **************feature_track:10.3006 ms****************
+
+[2022-01-09 22:12:15.198] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.198] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.198] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.198] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.198] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.012979 ms
+[2022-01-09 22:12:15.199] [tracker_log] [debug] trackImageNaive | cur_pts.size:144
+[2022-01-09 22:12:15.199] [tracker_log] [info] trackImageNaive | flowTrack left:1.62806
+[2022-01-09 22:12:15.199] [tracker_log] [warning] trackImageNaive | n_max_cnt:16
+[2022-01-09 22:12:15.199] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.199] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.199] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.199] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.203] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.203] [tracker_log] [info] trackImageNaive | detect feature:4.03278
+[2022-01-09 22:12:15.203] [tracker_log] [info] trackImageNaive | vel&&un:0.032364
+[2022-01-09 22:12:15.203] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.204] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.204] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:15.204] [tracker_log] [info] trackImageNaive | flow_track right:1.11537
+[2022-01-09 22:12:15.206] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.1836 ms
+[2022-01-09 22:12:15.206] [tracker_log] [info] TrackSemanticImage drawInsts:0.01087 ms
+[2022-01-09 22:12:15.207] [tracker_log] [info] **************feature_track:9.16005 ms****************
+
+[2022-01-09 22:12:15.255] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.256] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.256] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.256] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.256] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.01293 ms
+[2022-01-09 22:12:15.257] [tracker_log] [debug] trackImageNaive | cur_pts.size:137
+[2022-01-09 22:12:15.257] [tracker_log] [info] trackImageNaive | flowTrack left:1.94272
+[2022-01-09 22:12:15.257] [tracker_log] [warning] trackImageNaive | n_max_cnt:23
+[2022-01-09 22:12:15.257] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.257] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.257] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.257] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.262] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.262] [tracker_log] [info] trackImageNaive | detect feature:5.15885
+[2022-01-09 22:12:15.262] [tracker_log] [info] trackImageNaive | vel&&un:0.031185
+[2022-01-09 22:12:15.262] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.263] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.263] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:15.263] [tracker_log] [info] trackImageNaive | flow_track right:1.21487
+[2022-01-09 22:12:15.265] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.74269 ms
+[2022-01-09 22:12:15.265] [tracker_log] [info] TrackSemanticImage drawInsts:0.010094 ms
+[2022-01-09 22:12:15.266] [tracker_log] [info] **************feature_track:10.6246 ms****************
+
+[2022-01-09 22:12:15.294] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.294] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.294] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.294] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.294] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013336 ms
+[2022-01-09 22:12:15.295] [tracker_log] [debug] trackImageNaive | cur_pts.size:146
+[2022-01-09 22:12:15.295] [tracker_log] [info] trackImageNaive | flowTrack left:1.61005
+[2022-01-09 22:12:15.295] [tracker_log] [warning] trackImageNaive | n_max_cnt:14
+[2022-01-09 22:12:15.295] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.295] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.295] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.296] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.300] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.300] [tracker_log] [info] trackImageNaive | detect feature:4.62936
+[2022-01-09 22:12:15.300] [tracker_log] [info] trackImageNaive | vel&&un:0.031598
+[2022-01-09 22:12:15.300] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.301] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.301] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:15.301] [tracker_log] [info] trackImageNaive | flow_track right:1.04766
+[2022-01-09 22:12:15.303] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.64399 ms
+[2022-01-09 22:12:15.303] [tracker_log] [info] TrackSemanticImage drawInsts:0.009805 ms
+[2022-01-09 22:12:15.303] [tracker_log] [info] **************feature_track:9.51753 ms****************
+
+[2022-01-09 22:12:15.352] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.352] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.352] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.352] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.352] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013408 ms
+[2022-01-09 22:12:15.354] [tracker_log] [debug] trackImageNaive | cur_pts.size:144
+[2022-01-09 22:12:15.354] [tracker_log] [info] trackImageNaive | flowTrack left:1.85781
+[2022-01-09 22:12:15.354] [tracker_log] [warning] trackImageNaive | n_max_cnt:16
+[2022-01-09 22:12:15.354] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.354] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.354] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.354] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.358] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.358] [tracker_log] [info] trackImageNaive | detect feature:4.90013
+[2022-01-09 22:12:15.358] [tracker_log] [info] trackImageNaive | vel&&un:0.036634
+[2022-01-09 22:12:15.358] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.360] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.360] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:15.360] [tracker_log] [info] trackImageNaive | flow_track right:1.35287
+[2022-01-09 22:12:15.362] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.69155 ms
+[2022-01-09 22:12:15.362] [tracker_log] [info] TrackSemanticImage drawInsts:0.0126 ms
+[2022-01-09 22:12:15.362] [tracker_log] [info] **************feature_track:10.8339 ms****************
+
+[2022-01-09 22:12:15.397] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.397] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.397] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.397] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.397] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013605 ms
+[2022-01-09 22:12:15.398] [tracker_log] [debug] trackImageNaive | cur_pts.size:148
+[2022-01-09 22:12:15.398] [tracker_log] [info] trackImageNaive | flowTrack left:1.70719
+[2022-01-09 22:12:15.399] [tracker_log] [warning] trackImageNaive | n_max_cnt:12
+[2022-01-09 22:12:15.399] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.399] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.399] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.399] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.404] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.404] [tracker_log] [info] trackImageNaive | detect feature:5.27856
+[2022-01-09 22:12:15.404] [tracker_log] [info] trackImageNaive | vel&&un:0.040391
+[2022-01-09 22:12:15.404] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.405] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.405] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:15.405] [tracker_log] [info] trackImageNaive | flow_track right:1.19751
+[2022-01-09 22:12:15.407] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.63261 ms
+[2022-01-09 22:12:15.407] [tracker_log] [info] TrackSemanticImage drawInsts:0.011507 ms
+[2022-01-09 22:12:15.407] [tracker_log] [info] **************feature_track:10.6387 ms****************
+
+[2022-01-09 22:12:15.449] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.449] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.449] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.449] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.449] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.015098 ms
+[2022-01-09 22:12:15.454] [tracker_log] [debug] trackImageNaive | cur_pts.size:151
+[2022-01-09 22:12:15.454] [tracker_log] [info] trackImageNaive | flowTrack left:5.72602
+[2022-01-09 22:12:15.455] [tracker_log] [info] trackImageNaive | detect feature:0.113484
+[2022-01-09 22:12:15.455] [tracker_log] [info] trackImageNaive | vel&&un:0.042897
+[2022-01-09 22:12:15.455] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.456] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.456] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:151
+[2022-01-09 22:12:15.456] [tracker_log] [info] trackImageNaive | flow_track right:1.02641
+[2022-01-09 22:12:15.457] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.06051 ms
+[2022-01-09 22:12:15.457] [tracker_log] [info] TrackSemanticImage drawInsts:0.009626 ms
+[2022-01-09 22:12:15.458] [tracker_log] [info] **************feature_track:8.9658 ms****************
+
+[2022-01-09 22:12:15.495] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.496] [tracker_log] [debug] trackImageNaive | prev_pts.size:151
+[2022-01-09 22:12:15.496] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.496] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.496] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013924 ms
+[2022-01-09 22:12:15.497] [tracker_log] [debug] trackImageNaive | cur_pts.size:144
+[2022-01-09 22:12:15.497] [tracker_log] [info] trackImageNaive | flowTrack left:1.58478
+[2022-01-09 22:12:15.497] [tracker_log] [warning] trackImageNaive | n_max_cnt:16
+[2022-01-09 22:12:15.497] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.497] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.497] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.497] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.501] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.501] [tracker_log] [info] trackImageNaive | detect feature:4.44232
+[2022-01-09 22:12:15.501] [tracker_log] [info] trackImageNaive | vel&&un:0.031172
+[2022-01-09 22:12:15.501] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.502] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.502] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:15.502] [tracker_log] [info] trackImageNaive | flow_track right:1.13315
+[2022-01-09 22:12:15.504] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.45185 ms
+[2022-01-09 22:12:15.504] [tracker_log] [info] TrackSemanticImage drawInsts:0.009792 ms
+[2022-01-09 22:12:15.505] [tracker_log] [info] **************feature_track:9.3427 ms****************
+
+[2022-01-09 22:12:15.547] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.547] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.547] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.547] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.547] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013055 ms
+[2022-01-09 22:12:15.549] [tracker_log] [debug] trackImageNaive | cur_pts.size:156
+[2022-01-09 22:12:15.549] [tracker_log] [info] trackImageNaive | flowTrack left:1.61705
+[2022-01-09 22:12:15.549] [tracker_log] [info] trackImageNaive | detect feature:0.177071
+[2022-01-09 22:12:15.549] [tracker_log] [info] trackImageNaive | vel&&un:0.047186
+[2022-01-09 22:12:15.549] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.550] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.550] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:151
+[2022-01-09 22:12:15.550] [tracker_log] [info] trackImageNaive | flow_track right:1.13677
+[2022-01-09 22:12:15.552] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.199 ms
+[2022-01-09 22:12:15.552] [tracker_log] [info] TrackSemanticImage drawInsts:0.008619 ms
+[2022-01-09 22:12:15.552] [tracker_log] [info] **************feature_track:5.07275 ms****************
+
+[2022-01-09 22:12:15.595] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.595] [tracker_log] [debug] trackImageNaive | prev_pts.size:156
+[2022-01-09 22:12:15.595] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.595] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.595] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013315 ms
+[2022-01-09 22:12:15.596] [tracker_log] [debug] trackImageNaive | cur_pts.size:152
+[2022-01-09 22:12:15.596] [tracker_log] [info] trackImageNaive | flowTrack left:1.61367
+[2022-01-09 22:12:15.596] [tracker_log] [info] trackImageNaive | detect feature:0.146443
+[2022-01-09 22:12:15.596] [tracker_log] [info] trackImageNaive | vel&&un:0.045847
+[2022-01-09 22:12:15.596] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.597] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.598] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:152
+[2022-01-09 22:12:15.598] [tracker_log] [info] trackImageNaive | flow_track right:1.13201
+[2022-01-09 22:12:15.599] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.17545 ms
+[2022-01-09 22:12:15.599] [tracker_log] [info] TrackSemanticImage drawInsts:0.010029 ms
+[2022-01-09 22:12:15.600] [tracker_log] [info] **************feature_track:5.0579 ms****************
+
+[2022-01-09 22:12:15.649] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.650] [tracker_log] [debug] trackImageNaive | prev_pts.size:152
+[2022-01-09 22:12:15.650] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.650] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.650] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.015804 ms
+[2022-01-09 22:12:15.651] [tracker_log] [debug] trackImageNaive | cur_pts.size:149
+[2022-01-09 22:12:15.652] [tracker_log] [info] trackImageNaive | flowTrack left:2.22538
+[2022-01-09 22:12:15.652] [tracker_log] [warning] trackImageNaive | n_max_cnt:11
+[2022-01-09 22:12:15.652] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.652] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.652] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.652] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.659] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.659] [tracker_log] [info] trackImageNaive | detect feature:7.42555
+[2022-01-09 22:12:15.659] [tracker_log] [info] trackImageNaive | vel&&un:0.032822
+[2022-01-09 22:12:15.659] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.660] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.660] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:15.660] [tracker_log] [info] trackImageNaive | flow_track right:1.15806
+[2022-01-09 22:12:15.662] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:11.9235 ms
+[2022-01-09 22:12:15.662] [tracker_log] [info] TrackSemanticImage drawInsts:0.009324 ms
+[2022-01-09 22:12:15.662] [tracker_log] [info] **************feature_track:12.9794 ms****************
+
+[2022-01-09 22:12:15.693] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.694] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.694] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.694] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.694] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013823 ms
+[2022-01-09 22:12:15.695] [tracker_log] [debug] trackImageNaive | cur_pts.size:147
+[2022-01-09 22:12:15.695] [tracker_log] [info] trackImageNaive | flowTrack left:1.79326
+[2022-01-09 22:12:15.696] [tracker_log] [warning] trackImageNaive | n_max_cnt:13
+[2022-01-09 22:12:15.696] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.696] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.696] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.696] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.700] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.700] [tracker_log] [info] trackImageNaive | detect feature:5.12768
+[2022-01-09 22:12:15.700] [tracker_log] [info] trackImageNaive | vel&&un:0.032859
+[2022-01-09 22:12:15.700] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.701] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.702] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:15.702] [tracker_log] [info] trackImageNaive | flow_track right:1.07536
+[2022-01-09 22:12:15.703] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.25656 ms
+[2022-01-09 22:12:15.703] [tracker_log] [info] TrackSemanticImage drawInsts:0.009958 ms
+[2022-01-09 22:12:15.704] [tracker_log] [info] **************feature_track:10.4448 ms****************
+
+[2022-01-09 22:12:15.746] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.746] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.746] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.746] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.746] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.012998 ms
+[2022-01-09 22:12:15.748] [tracker_log] [debug] trackImageNaive | cur_pts.size:156
+[2022-01-09 22:12:15.748] [tracker_log] [info] trackImageNaive | flowTrack left:1.86073
+[2022-01-09 22:12:15.748] [tracker_log] [info] trackImageNaive | detect feature:0.148283
+[2022-01-09 22:12:15.748] [tracker_log] [info] trackImageNaive | vel&&un:0.044999
+[2022-01-09 22:12:15.748] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.749] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.749] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:155
+[2022-01-09 22:12:15.749] [tracker_log] [info] trackImageNaive | flow_track right:1.04196
+[2022-01-09 22:12:15.751] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.30044 ms
+[2022-01-09 22:12:15.751] [tracker_log] [info] TrackSemanticImage drawInsts:0.009318 ms
+[2022-01-09 22:12:15.751] [tracker_log] [info] **************feature_track:5.1946 ms****************
+
+[2022-01-09 22:12:15.799] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.799] [tracker_log] [debug] trackImageNaive | prev_pts.size:156
+[2022-01-09 22:12:15.800] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.800] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.800] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.024099 ms
+[2022-01-09 22:12:15.801] [tracker_log] [debug] trackImageNaive | cur_pts.size:153
+[2022-01-09 22:12:15.801] [tracker_log] [info] trackImageNaive | flowTrack left:1.58667
+[2022-01-09 22:12:15.801] [tracker_log] [info] trackImageNaive | detect feature:0.148598
+[2022-01-09 22:12:15.801] [tracker_log] [info] trackImageNaive | vel&&un:0.045259
+[2022-01-09 22:12:15.801] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.802] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.802] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:152
+[2022-01-09 22:12:15.802] [tracker_log] [info] trackImageNaive | flow_track right:1.10932
+[2022-01-09 22:12:15.804] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.82168 ms
+[2022-01-09 22:12:15.804] [tracker_log] [info] TrackSemanticImage drawInsts:0.016573 ms
+[2022-01-09 22:12:15.805] [tracker_log] [info] **************feature_track:5.76776 ms****************
+
+[2022-01-09 22:12:15.855] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.855] [tracker_log] [debug] trackImageNaive | prev_pts.size:153
+[2022-01-09 22:12:15.855] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.855] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.855] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.015627 ms
+[2022-01-09 22:12:15.857] [tracker_log] [debug] trackImageNaive | cur_pts.size:153
+[2022-01-09 22:12:15.857] [tracker_log] [info] trackImageNaive | flowTrack left:2.40647
+[2022-01-09 22:12:15.857] [tracker_log] [info] trackImageNaive | detect feature:0.150071
+[2022-01-09 22:12:15.857] [tracker_log] [info] trackImageNaive | vel&&un:0.045671
+[2022-01-09 22:12:15.857] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.858] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.858] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:151
+[2022-01-09 22:12:15.858] [tracker_log] [info] trackImageNaive | flow_track right:1.14425
+[2022-01-09 22:12:15.860] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.01138 ms
+[2022-01-09 22:12:15.860] [tracker_log] [info] TrackSemanticImage drawInsts:0.008678 ms
+[2022-01-09 22:12:15.861] [tracker_log] [info] **************feature_track:5.96735 ms****************
+
+[2022-01-09 22:12:15.895] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.895] [tracker_log] [debug] trackImageNaive | prev_pts.size:153
+[2022-01-09 22:12:15.895] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.895] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.895] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.020265 ms
+[2022-01-09 22:12:15.897] [tracker_log] [debug] trackImageNaive | cur_pts.size:150
+[2022-01-09 22:12:15.897] [tracker_log] [info] trackImageNaive | flowTrack left:1.90636
+[2022-01-09 22:12:15.897] [tracker_log] [info] trackImageNaive | detect feature:0.15121
+[2022-01-09 22:12:15.897] [tracker_log] [info] trackImageNaive | vel&&un:0.049107
+[2022-01-09 22:12:15.897] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.898] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.898] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:149
+[2022-01-09 22:12:15.898] [tracker_log] [info] trackImageNaive | flow_track right:1.16548
+[2022-01-09 22:12:15.900] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.79038 ms
+[2022-01-09 22:12:15.900] [tracker_log] [info] TrackSemanticImage drawInsts:0.011033 ms
+[2022-01-09 22:12:15.901] [tracker_log] [info] **************feature_track:5.74076 ms****************
+
+[2022-01-09 22:12:15.944] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.945] [tracker_log] [debug] trackImageNaive | prev_pts.size:150
+[2022-01-09 22:12:15.945] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.945] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.945] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013538 ms
+[2022-01-09 22:12:15.946] [tracker_log] [debug] trackImageNaive | cur_pts.size:148
+[2022-01-09 22:12:15.946] [tracker_log] [info] trackImageNaive | flowTrack left:1.56723
+[2022-01-09 22:12:15.946] [tracker_log] [warning] trackImageNaive | n_max_cnt:12
+[2022-01-09 22:12:15.946] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:15.946] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:15.946] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.946] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:15.951] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:15.951] [tracker_log] [info] trackImageNaive | detect feature:5.45662
+[2022-01-09 22:12:15.951] [tracker_log] [info] trackImageNaive | vel&&un:0.043872
+[2022-01-09 22:12:15.951] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:15.953] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:15.953] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:158
+[2022-01-09 22:12:15.953] [tracker_log] [info] trackImageNaive | flow_track right:1.18579
+[2022-01-09 22:12:15.955] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:10.0141 ms
+[2022-01-09 22:12:15.955] [tracker_log] [info] TrackSemanticImage drawInsts:0.010486 ms
+[2022-01-09 22:12:15.955] [tracker_log] [info] **************feature_track:10.8918 ms****************
+
+[2022-01-09 22:12:15.998] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:15.998] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:15.998] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:15.999] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:15.999] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.014086 ms
+[2022-01-09 22:12:16.000] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:16.000] [tracker_log] [info] trackImageNaive | flowTrack left:1.50326
+[2022-01-09 22:12:16.000] [tracker_log] [info] trackImageNaive | detect feature:0.146538
+[2022-01-09 22:12:16.000] [tracker_log] [info] trackImageNaive | vel&&un:0.046433
+[2022-01-09 22:12:16.000] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.001] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.001] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.001] [tracker_log] [info] trackImageNaive | flow_track right:1.00031
+[2022-01-09 22:12:16.002] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:3.91566 ms
+[2022-01-09 22:12:16.002] [tracker_log] [info] TrackSemanticImage drawInsts:0.009496 ms
+[2022-01-09 22:12:16.003] [tracker_log] [info] **************feature_track:4.84283 ms****************
+
+[2022-01-09 22:12:16.047] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.047] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:16.047] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.047] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.047] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013212 ms
+[2022-01-09 22:12:16.048] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:16.048] [tracker_log] [info] trackImageNaive | flowTrack left:1.66494
+[2022-01-09 22:12:16.049] [tracker_log] [info] trackImageNaive | detect feature:0.171996
+[2022-01-09 22:12:16.049] [tracker_log] [info] trackImageNaive | vel&&un:0.067768
+[2022-01-09 22:12:16.049] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.050] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.050] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.050] [tracker_log] [info] trackImageNaive | flow_track right:1.21092
+[2022-01-09 22:12:16.052] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.49981 ms
+[2022-01-09 22:12:16.052] [tracker_log] [info] TrackSemanticImage drawInsts:0.011211 ms
+[2022-01-09 22:12:16.052] [tracker_log] [info] **************feature_track:5.44674 ms****************
+
+[2022-01-09 22:12:16.095] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.095] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:16.095] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.095] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.095] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.022052 ms
+[2022-01-09 22:12:16.096] [tracker_log] [debug] trackImageNaive | cur_pts.size:158
+[2022-01-09 22:12:16.096] [tracker_log] [info] trackImageNaive | flowTrack left:1.4618
+[2022-01-09 22:12:16.097] [tracker_log] [info] trackImageNaive | detect feature:0.144568
+[2022-01-09 22:12:16.097] [tracker_log] [info] trackImageNaive | vel&&un:0.048092
+[2022-01-09 22:12:16.097] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.098] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.098] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.098] [tracker_log] [info] trackImageNaive | flow_track right:0.99161
+[2022-01-09 22:12:16.099] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:3.89735 ms
+[2022-01-09 22:12:16.099] [tracker_log] [info] TrackSemanticImage drawInsts:0.00939 ms
+[2022-01-09 22:12:16.100] [tracker_log] [info] **************feature_track:4.74068 ms****************
+
+[2022-01-09 22:12:16.147] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.148] [tracker_log] [debug] trackImageNaive | prev_pts.size:158
+[2022-01-09 22:12:16.148] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.148] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.148] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.014201 ms
+[2022-01-09 22:12:16.151] [tracker_log] [debug] trackImageNaive | cur_pts.size:157
+[2022-01-09 22:12:16.151] [tracker_log] [info] trackImageNaive | flowTrack left:3.87663
+[2022-01-09 22:12:16.151] [tracker_log] [info] trackImageNaive | detect feature:0.156281
+[2022-01-09 22:12:16.152] [tracker_log] [info] trackImageNaive | vel&&un:0.047971
+[2022-01-09 22:12:16.152] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.153] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.153] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.153] [tracker_log] [info] trackImageNaive | flow_track right:1.2572
+[2022-01-09 22:12:16.155] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:7.19529 ms
+[2022-01-09 22:12:16.155] [tracker_log] [info] TrackSemanticImage drawInsts:0.014063 ms
+[2022-01-09 22:12:16.156] [tracker_log] [info] **************feature_track:8.07149 ms****************
+
+[2022-01-09 22:12:16.222] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.223] [tracker_log] [debug] trackImageNaive | prev_pts.size:157
+[2022-01-09 22:12:16.223] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.223] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.223] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.019966 ms
+[2022-01-09 22:12:16.224] [tracker_log] [debug] trackImageNaive | cur_pts.size:157
+[2022-01-09 22:12:16.224] [tracker_log] [info] trackImageNaive | flowTrack left:2.09345
+[2022-01-09 22:12:16.225] [tracker_log] [info] trackImageNaive | detect feature:0.221492
+[2022-01-09 22:12:16.225] [tracker_log] [info] trackImageNaive | vel&&un:0.067956
+[2022-01-09 22:12:16.225] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.227] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.227] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.227] [tracker_log] [info] trackImageNaive | flow_track right:2.13649
+[2022-01-09 22:12:16.229] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:6.44975 ms
+[2022-01-09 22:12:16.229] [tracker_log] [info] TrackSemanticImage drawInsts:0.023826 ms
+[2022-01-09 22:12:16.230] [tracker_log] [info] **************feature_track:7.67261 ms****************
+
+[2022-01-09 22:12:16.247] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.247] [tracker_log] [debug] trackImageNaive | prev_pts.size:157
+[2022-01-09 22:12:16.247] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.247] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.247] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013598 ms
+[2022-01-09 22:12:16.248] [tracker_log] [debug] trackImageNaive | cur_pts.size:157
+[2022-01-09 22:12:16.248] [tracker_log] [info] trackImageNaive | flowTrack left:1.57066
+[2022-01-09 22:12:16.248] [tracker_log] [info] trackImageNaive | detect feature:0.14588
+[2022-01-09 22:12:16.248] [tracker_log] [info] trackImageNaive | vel&&un:0.046034
+[2022-01-09 22:12:16.248] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.249] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.250] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.250] [tracker_log] [info] trackImageNaive | flow_track right:1.11644
+[2022-01-09 22:12:16.251] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.09673 ms
+[2022-01-09 22:12:16.251] [tracker_log] [info] TrackSemanticImage drawInsts:0.009928 ms
+[2022-01-09 22:12:16.252] [tracker_log] [info] **************feature_track:4.96334 ms****************
+
+[2022-01-09 22:12:16.295] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.295] [tracker_log] [debug] trackImageNaive | prev_pts.size:157
+[2022-01-09 22:12:16.295] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.295] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.295] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013596 ms
+[2022-01-09 22:12:16.297] [tracker_log] [debug] trackImageNaive | cur_pts.size:157
+[2022-01-09 22:12:16.297] [tracker_log] [info] trackImageNaive | flowTrack left:1.71974
+[2022-01-09 22:12:16.297] [tracker_log] [info] trackImageNaive | detect feature:0.183346
+[2022-01-09 22:12:16.297] [tracker_log] [info] trackImageNaive | vel&&un:0.064166
+[2022-01-09 22:12:16.297] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.300] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.300] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.300] [tracker_log] [info] trackImageNaive | flow_track right:3.10563
+[2022-01-09 22:12:16.302] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:6.90196 ms
+[2022-01-09 22:12:16.302] [tracker_log] [info] TrackSemanticImage drawInsts:0.025297 ms
+[2022-01-09 22:12:16.303] [tracker_log] [info] **************feature_track:8.38632 ms****************
+
+[2022-01-09 22:12:16.348] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.349] [tracker_log] [debug] trackImageNaive | prev_pts.size:157
+[2022-01-09 22:12:16.349] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.349] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.349] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.01447 ms
+[2022-01-09 22:12:16.350] [tracker_log] [debug] trackImageNaive | cur_pts.size:157
+[2022-01-09 22:12:16.350] [tracker_log] [info] trackImageNaive | flowTrack left:2.31339
+[2022-01-09 22:12:16.350] [tracker_log] [info] trackImageNaive | detect feature:0.155976
+[2022-01-09 22:12:16.350] [tracker_log] [info] trackImageNaive | vel&&un:0.052725
+[2022-01-09 22:12:16.350] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.352] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.352] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.352] [tracker_log] [info] trackImageNaive | flow_track right:1.21828
+[2022-01-09 22:12:16.354] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.913 ms
+[2022-01-09 22:12:16.354] [tracker_log] [info] TrackSemanticImage drawInsts:0.018308 ms
+[2022-01-09 22:12:16.355] [tracker_log] [info] **************feature_track:6.73167 ms****************
+
+[2022-01-09 22:12:16.400] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.401] [tracker_log] [debug] trackImageNaive | prev_pts.size:157
+[2022-01-09 22:12:16.401] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.401] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.401] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.014742 ms
+[2022-01-09 22:12:16.402] [tracker_log] [debug] trackImageNaive | cur_pts.size:157
+[2022-01-09 22:12:16.402] [tracker_log] [info] trackImageNaive | flowTrack left:1.62173
+[2022-01-09 22:12:16.402] [tracker_log] [info] trackImageNaive | detect feature:0.159875
+[2022-01-09 22:12:16.402] [tracker_log] [info] trackImageNaive | vel&&un:0.050789
+[2022-01-09 22:12:16.402] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.403] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.404] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.404] [tracker_log] [info] trackImageNaive | flow_track right:1.28135
+[2022-01-09 22:12:16.405] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.40352 ms
+[2022-01-09 22:12:16.405] [tracker_log] [info] TrackSemanticImage drawInsts:0.011711 ms
+[2022-01-09 22:12:16.406] [tracker_log] [info] **************feature_track:5.61884 ms****************
+
+[2022-01-09 22:12:16.447] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.447] [tracker_log] [debug] trackImageNaive | prev_pts.size:157
+[2022-01-09 22:12:16.447] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.447] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.447] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.015312 ms
+[2022-01-09 22:12:16.449] [tracker_log] [debug] trackImageNaive | cur_pts.size:157
+[2022-01-09 22:12:16.449] [tracker_log] [info] trackImageNaive | flowTrack left:2.58743
+[2022-01-09 22:12:16.449] [tracker_log] [info] trackImageNaive | detect feature:0.156364
+[2022-01-09 22:12:16.449] [tracker_log] [info] trackImageNaive | vel&&un:0.049034
+[2022-01-09 22:12:16.449] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.450] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.451] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.451] [tracker_log] [info] trackImageNaive | flow_track right:1.21299
+[2022-01-09 22:12:16.452] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.31632 ms
+[2022-01-09 22:12:16.452] [tracker_log] [info] TrackSemanticImage drawInsts:0.01009 ms
+[2022-01-09 22:12:16.453] [tracker_log] [info] **************feature_track:6.35407 ms****************
+
+[2022-01-09 22:12:16.493] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.494] [tracker_log] [debug] trackImageNaive | prev_pts.size:157
+[2022-01-09 22:12:16.494] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.494] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.494] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.014862 ms
+[2022-01-09 22:12:16.496] [tracker_log] [debug] trackImageNaive | cur_pts.size:156
+[2022-01-09 22:12:16.496] [tracker_log] [info] trackImageNaive | flowTrack left:2.36902
+[2022-01-09 22:12:16.496] [tracker_log] [info] trackImageNaive | detect feature:0.157646
+[2022-01-09 22:12:16.496] [tracker_log] [info] trackImageNaive | vel&&un:0.046872
+[2022-01-09 22:12:16.496] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.497] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.497] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:16.497] [tracker_log] [info] trackImageNaive | flow_track right:1.17299
+[2022-01-09 22:12:16.499] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.07453 ms
+[2022-01-09 22:12:16.499] [tracker_log] [info] TrackSemanticImage drawInsts:0.01737 ms
+[2022-01-09 22:12:16.499] [tracker_log] [info] **************feature_track:5.97884 ms****************
+
+[2022-01-09 22:12:16.547] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.547] [tracker_log] [debug] trackImageNaive | prev_pts.size:156
+[2022-01-09 22:12:16.547] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.547] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.547] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013444 ms
+[2022-01-09 22:12:16.551] [tracker_log] [debug] trackImageNaive | cur_pts.size:154
+[2022-01-09 22:12:16.551] [tracker_log] [info] trackImageNaive | flowTrack left:3.63569
+[2022-01-09 22:12:16.551] [tracker_log] [info] trackImageNaive | detect feature:0.186777
+[2022-01-09 22:12:16.551] [tracker_log] [info] trackImageNaive | vel&&un:0.050449
+[2022-01-09 22:12:16.551] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.552] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.552] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:154
+[2022-01-09 22:12:16.552] [tracker_log] [info] trackImageNaive | flow_track right:1.26362
+[2022-01-09 22:12:16.554] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:6.81685 ms
+[2022-01-09 22:12:16.554] [tracker_log] [info] TrackSemanticImage drawInsts:0.014886 ms
+[2022-01-09 22:12:16.555] [tracker_log] [info] **************feature_track:8.14299 ms****************
+
+[2022-01-09 22:12:16.593] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.594] [tracker_log] [debug] trackImageNaive | prev_pts.size:154
+[2022-01-09 22:12:16.594] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.594] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.594] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.014069 ms
+[2022-01-09 22:12:16.595] [tracker_log] [debug] trackImageNaive | cur_pts.size:148
+[2022-01-09 22:12:16.595] [tracker_log] [info] trackImageNaive | flowTrack left:1.61673
+[2022-01-09 22:12:16.595] [tracker_log] [warning] trackImageNaive | n_max_cnt:12
+[2022-01-09 22:12:16.595] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.595] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.595] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.595] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.599] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.599] [tracker_log] [info] trackImageNaive | detect feature:4.17447
+[2022-01-09 22:12:16.599] [tracker_log] [info] trackImageNaive | vel&&un:0.033781
+[2022-01-09 22:12:16.599] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.600] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.600] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:16.600] [tracker_log] [info] trackImageNaive | flow_track right:1.02192
+[2022-01-09 22:12:16.602] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.12613 ms
+[2022-01-09 22:12:16.602] [tracker_log] [info] TrackSemanticImage drawInsts:0.010043 ms
+[2022-01-09 22:12:16.602] [tracker_log] [info] **************feature_track:8.93096 ms****************
+
+[2022-01-09 22:12:16.645] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.645] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.646] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.646] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.646] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013282 ms
+[2022-01-09 22:12:16.648] [tracker_log] [debug] trackImageNaive | cur_pts.size:143
+[2022-01-09 22:12:16.648] [tracker_log] [info] trackImageNaive | flowTrack left:2.92897
+[2022-01-09 22:12:16.648] [tracker_log] [warning] trackImageNaive | n_max_cnt:17
+[2022-01-09 22:12:16.648] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.648] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.648] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.648] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.652] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.652] [tracker_log] [info] trackImageNaive | detect feature:4.41567
+[2022-01-09 22:12:16.653] [tracker_log] [info] trackImageNaive | vel&&un:0.034464
+[2022-01-09 22:12:16.653] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.654] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.654] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:16.654] [tracker_log] [info] trackImageNaive | flow_track right:1.62965
+[2022-01-09 22:12:16.656] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:10.4761 ms
+[2022-01-09 22:12:16.656] [tracker_log] [info] TrackSemanticImage drawInsts:0.010675 ms
+[2022-01-09 22:12:16.656] [tracker_log] [info] **************feature_track:11.3704 ms****************
+
+[2022-01-09 22:12:16.696] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.697] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.697] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.697] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.697] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.01411 ms
+[2022-01-09 22:12:16.698] [tracker_log] [debug] trackImageNaive | cur_pts.size:120
+[2022-01-09 22:12:16.698] [tracker_log] [info] trackImageNaive | flowTrack left:1.92697
+[2022-01-09 22:12:16.698] [tracker_log] [warning] trackImageNaive | n_max_cnt:40
+[2022-01-09 22:12:16.698] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.698] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.698] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.698] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.703] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.703] [tracker_log] [info] trackImageNaive | detect feature:4.44642
+[2022-01-09 22:12:16.703] [tracker_log] [info] trackImageNaive | vel&&un:0.03308
+[2022-01-09 22:12:16.703] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.704] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.704] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:16.704] [tracker_log] [info] trackImageNaive | flow_track right:1.0943
+[2022-01-09 22:12:16.705] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.92771 ms
+[2022-01-09 22:12:16.705] [tracker_log] [info] TrackSemanticImage drawInsts:0.009452 ms
+[2022-01-09 22:12:16.706] [tracker_log] [info] **************feature_track:9.82423 ms****************
+
+[2022-01-09 22:12:16.747] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.748] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.748] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.748] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.748] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013481 ms
+[2022-01-09 22:12:16.750] [tracker_log] [debug] trackImageNaive | cur_pts.size:120
+[2022-01-09 22:12:16.750] [tracker_log] [info] trackImageNaive | flowTrack left:2.36901
+[2022-01-09 22:12:16.750] [tracker_log] [warning] trackImageNaive | n_max_cnt:40
+[2022-01-09 22:12:16.750] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.750] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.750] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.750] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.755] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.755] [tracker_log] [info] trackImageNaive | detect feature:5.17681
+[2022-01-09 22:12:16.755] [tracker_log] [info] trackImageNaive | vel&&un:0.033192
+[2022-01-09 22:12:16.755] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.756] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.756] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:16.756] [tracker_log] [info] trackImageNaive | flow_track right:1.24593
+[2022-01-09 22:12:16.758] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.93063 ms
+[2022-01-09 22:12:16.758] [tracker_log] [info] TrackSemanticImage drawInsts:0.010161 ms
+[2022-01-09 22:12:16.758] [tracker_log] [info] **************feature_track:11.0402 ms****************
+
+[2022-01-09 22:12:16.794] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.794] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.794] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.794] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.794] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.014405 ms
+[2022-01-09 22:12:16.797] [tracker_log] [debug] trackImageNaive | cur_pts.size:131
+[2022-01-09 22:12:16.797] [tracker_log] [info] trackImageNaive | flowTrack left:2.98654
+[2022-01-09 22:12:16.797] [tracker_log] [warning] trackImageNaive | n_max_cnt:29
+[2022-01-09 22:12:16.797] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.797] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.797] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.797] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.802] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.802] [tracker_log] [info] trackImageNaive | detect feature:4.99525
+[2022-01-09 22:12:16.802] [tracker_log] [info] trackImageNaive | vel&&un:0.047388
+[2022-01-09 22:12:16.802] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.805] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.805] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:158
+[2022-01-09 22:12:16.805] [tracker_log] [info] trackImageNaive | flow_track right:3.70336
+[2022-01-09 22:12:16.808] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:13.8707 ms
+[2022-01-09 22:12:16.808] [tracker_log] [info] TrackSemanticImage drawInsts:0.022725 ms
+[2022-01-09 22:12:16.809] [tracker_log] [info] **************feature_track:14.9726 ms****************
+
+[2022-01-09 22:12:16.844] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.844] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.844] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.844] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.844] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013393 ms
+[2022-01-09 22:12:16.846] [tracker_log] [debug] trackImageNaive | cur_pts.size:125
+[2022-01-09 22:12:16.846] [tracker_log] [info] trackImageNaive | flowTrack left:2.02296
+[2022-01-09 22:12:16.846] [tracker_log] [warning] trackImageNaive | n_max_cnt:35
+[2022-01-09 22:12:16.846] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.846] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.846] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.846] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.851] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.851] [tracker_log] [info] trackImageNaive | detect feature:5.03194
+[2022-01-09 22:12:16.851] [tracker_log] [info] trackImageNaive | vel&&un:0.032264
+[2022-01-09 22:12:16.851] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.852] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.852] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:157
+[2022-01-09 22:12:16.852] [tracker_log] [info] trackImageNaive | flow_track right:1.11572
+[2022-01-09 22:12:16.854] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.73525 ms
+[2022-01-09 22:12:16.854] [tracker_log] [info] TrackSemanticImage drawInsts:0.0101 ms
+[2022-01-09 22:12:16.855] [tracker_log] [info] **************feature_track:10.5984 ms****************
+
+[2022-01-09 22:12:16.896] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.896] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.896] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.896] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.896] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.014443 ms
+[2022-01-09 22:12:16.897] [tracker_log] [debug] trackImageNaive | cur_pts.size:138
+[2022-01-09 22:12:16.897] [tracker_log] [info] trackImageNaive | flowTrack left:1.7747
+[2022-01-09 22:12:16.898] [tracker_log] [warning] trackImageNaive | n_max_cnt:22
+[2022-01-09 22:12:16.898] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.898] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.898] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.898] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.902] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.902] [tracker_log] [info] trackImageNaive | detect feature:4.21189
+[2022-01-09 22:12:16.902] [tracker_log] [info] trackImageNaive | vel&&un:0.032121
+[2022-01-09 22:12:16.902] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.903] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.903] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:16.903] [tracker_log] [info] trackImageNaive | flow_track right:1.66968
+[2022-01-09 22:12:16.906] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:9.63233 ms
+[2022-01-09 22:12:16.906] [tracker_log] [info] TrackSemanticImage drawInsts:0.011629 ms
+[2022-01-09 22:12:16.906] [tracker_log] [info] **************feature_track:10.5081 ms****************
+
+[2022-01-09 22:12:16.952] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.953] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.953] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.953] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.953] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013961 ms
+[2022-01-09 22:12:16.958] [tracker_log] [debug] trackImageNaive | cur_pts.size:133
+[2022-01-09 22:12:16.958] [tracker_log] [info] trackImageNaive | flowTrack left:5.87132
+[2022-01-09 22:12:16.958] [tracker_log] [warning] trackImageNaive | n_max_cnt:27
+[2022-01-09 22:12:16.958] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:16.958] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:16.958] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.958] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:16.963] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:16.963] [tracker_log] [info] trackImageNaive | detect feature:4.865
+[2022-01-09 22:12:16.963] [tracker_log] [info] trackImageNaive | vel&&un:0.03318
+[2022-01-09 22:12:16.963] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.964] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.964] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:159
+[2022-01-09 22:12:16.964] [tracker_log] [info] trackImageNaive | flow_track right:1.22371
+[2022-01-09 22:12:16.966] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:13.1879 ms
+[2022-01-09 22:12:16.966] [tracker_log] [info] TrackSemanticImage drawInsts:0.010981 ms
+[2022-01-09 22:12:16.967] [tracker_log] [info] **************feature_track:14.3995 ms****************
+
+[2022-01-09 22:12:16.995] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:16.996] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:16.996] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:16.996] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:16.996] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.013568 ms
+[2022-01-09 22:12:16.997] [tracker_log] [debug] trackImageNaive | cur_pts.size:153
+[2022-01-09 22:12:16.997] [tracker_log] [info] trackImageNaive | flowTrack left:1.70685
+[2022-01-09 22:12:16.997] [tracker_log] [info] trackImageNaive | detect feature:0.142724
+[2022-01-09 22:12:16.997] [tracker_log] [info] trackImageNaive | vel&&un:0.045209
+[2022-01-09 22:12:16.997] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:16.998] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:16.998] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:153
+[2022-01-09 22:12:16.998] [tracker_log] [info] trackImageNaive | flow_track right:1.08857
+[2022-01-09 22:12:17.000] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.39985 ms
+[2022-01-09 22:12:17.000] [tracker_log] [info] TrackSemanticImage drawInsts:0.012646 ms
+[2022-01-09 22:12:17.001] [tracker_log] [info] **************feature_track:5.33407 ms****************
+
+[2022-01-09 22:12:17.054] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.054] [tracker_log] [debug] trackImageNaive | prev_pts.size:153
+[2022-01-09 22:12:17.054] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.054] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.054] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.01475 ms
+[2022-01-09 22:12:17.057] [tracker_log] [debug] trackImageNaive | cur_pts.size:150
+[2022-01-09 22:12:17.057] [tracker_log] [info] trackImageNaive | flowTrack left:2.81335
+[2022-01-09 22:12:17.057] [tracker_log] [info] trackImageNaive | detect feature:0.184981
+[2022-01-09 22:12:17.057] [tracker_log] [info] trackImageNaive | vel&&un:0.049519
+[2022-01-09 22:12:17.057] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.058] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.058] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:150
+[2022-01-09 22:12:17.058] [tracker_log] [info] trackImageNaive | flow_track right:1.2549
+[2022-01-09 22:12:17.060] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.5452 ms
+[2022-01-09 22:12:17.060] [tracker_log] [info] TrackSemanticImage drawInsts:0.009008 ms
+[2022-01-09 22:12:17.060] [tracker_log] [info] **************feature_track:6.47663 ms****************
+
+[2022-01-09 22:12:17.305] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.309] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.309] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.309] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.309] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.363364 ms
+[2022-01-09 22:12:17.310] [tracker_log] [info] instsTrack set mask_img:0.88858 ms
+[2022-01-09 22:12:17.310] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.310] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.310] [tracker_log] [info] instsTrack flowTrack:0.016133 ms
+[2022-01-09 22:12:17.310] [tracker_log] [info] instsTrack prepare detect:0.003508 ms
+[2022-01-09 22:12:17.310] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.310] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.310] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.310] [tracker_log] [debug] trackImageNaive | prev_pts.size:150
+[2022-01-09 22:12:17.313] [tracker_log] [debug] trackImageNaive | cur_pts.size:148
+[2022-01-09 22:12:17.313] [tracker_log] [info] trackImageNaive | flowTrack left:7.38068
+[2022-01-09 22:12:17.313] [tracker_log] [warning] trackImageNaive | n_max_cnt:12
+[2022-01-09 22:12:17.313] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.313] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.313] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.313] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.316] [tracker_log] [debug] instsTrack actually detect num:50
+[2022-01-09 22:12:17.316] [tracker_log] [info] instsTrack detectNewFeaturesGPU:6.01241 ms
+[2022-01-09 22:12:17.316] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.006632 ms
+[2022-01-09 22:12:17.316] [tracker_log] [info] instsTrack flowTrack right:0.004575 ms
+[2022-01-09 22:12:17.316] [tracker_log] [info] instsTrack manageInstances:0.003763 ms
+[2022-01-09 22:12:17.316] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.316] [tracker_log] [debug] Inst:141608000 size:0
+[2022-01-09 22:12:17.318] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:17.318] [tracker_log] [info] trackImageNaive | detect feature:5.12643
+[2022-01-09 22:12:17.318] [tracker_log] [info] trackImageNaive | vel&&un:0.03193
+[2022-01-09 22:12:17.318] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.319] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.319] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:17.319] [tracker_log] [info] trackImageNaive | flow_track right:1.21719
+[2022-01-09 22:12:17.320] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:11.7915 ms
+[2022-01-09 22:12:17.320] [tracker_log] [info] TrackSemanticImage drawInsts:0.009572 ms
+[2022-01-09 22:12:17.321] [tracker_log] [info] **************feature_track:16.09 ms****************
+
+[2022-01-09 22:12:17.328] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.330] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:17.332] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:17.332] [tracker_log] [info] trackImageNaive | flowTrack left:4.05083
+[2022-01-09 22:12:17.332] [tracker_log] [info] trackImageNaive | detect feature:0.137839
+[2022-01-09 22:12:17.332] [tracker_log] [info] trackImageNaive | vel&&un:0.06146
+[2022-01-09 22:12:17.332] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.334] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.334] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:17.334] [tracker_log] [info] trackImageNaive | flow_track right:1.34588
+[2022-01-09 22:12:17.334] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.334] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.334] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.334] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.120681 ms
+[2022-01-09 22:12:17.335] [tracker_log] [info] instsTrack set mask_img:0.906591 ms
+[2022-01-09 22:12:17.335] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.335] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.335] [tracker_log] [info] instsTrack flowTrack:0.026618 ms
+[2022-01-09 22:12:17.335] [tracker_log] [info] instsTrack prepare detect:0.007183 ms
+[2022-01-09 22:12:17.335] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.335] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.335] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.337] [tracker_log] [debug] instsTrack actually detect num:3
+[2022-01-09 22:12:17.337] [tracker_log] [info] instsTrack detectNewFeaturesGPU:2.22692 ms
+[2022-01-09 22:12:17.337] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.006757 ms
+[2022-01-09 22:12:17.374] [tracker_log] [debug] flowTrackGpu forward success:3
+[2022-01-09 22:12:17.374] [tracker_log] [debug] flowTrackGpu backward success:3
+[2022-01-09 22:12:17.374] [tracker_log] [debug] flowTrackGpu input:3 final_success:3
+[2022-01-09 22:12:17.374] [tracker_log] [info] instsTrack flowTrack right:36.4739 ms
+[2022-01-09 22:12:17.374] [tracker_log] [info] instsTrack manageInstances:0.005833 ms
+[2022-01-09 22:12:17.374] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.374] [tracker_log] [debug] Inst:141608000 size:3
+[2022-01-09 22:12:17.374] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:44.7308 ms
+[2022-01-09 22:12:17.374] [tracker_log] [info] TrackSemanticImage drawInsts:0.117858 ms
+[2022-01-09 22:12:17.374] [tracker_log] [debug] inst_id:141608000 l_track:3 r_track:3
+[2022-01-09 22:12:17.375] [tracker_log] [info] **************feature_track:46.5083 ms****************
+
+[2022-01-09 22:12:17.375] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.375] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.375] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.375] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.375] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.137734 ms
+[2022-01-09 22:12:17.376] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:17.376] [tracker_log] [info] instsTrack set mask_img:0.732756 ms
+[2022-01-09 22:12:17.376] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.376] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.376] [tracker_log] [debug] inst:141608000 last_points:3 mask(480x752,type:0)
+[2022-01-09 22:12:17.376] [tracker_log] [debug] flowTrackGpu forward success:3
+[2022-01-09 22:12:17.376] [tracker_log] [debug] flowTrackGpu backward success:3
+[2022-01-09 22:12:17.377] [tracker_log] [debug] flowTrackGpu input:3 final_success:3
+[2022-01-09 22:12:17.377] [tracker_log] [info] instsTrack flowTrack:0.55733 ms
+[2022-01-09 22:12:17.377] [tracker_log] [info] instsTrack prepare detect:0.010891 ms
+[2022-01-09 22:12:17.377] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.377] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.377] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.377] [tracker_log] [debug] trackImageNaive | cur_pts.size:156
+[2022-01-09 22:12:17.377] [tracker_log] [info] trackImageNaive | flowTrack left:2.57555
+[2022-01-09 22:12:17.377] [tracker_log] [info] trackImageNaive | detect feature:0.219873
+[2022-01-09 22:12:17.377] [tracker_log] [info] trackImageNaive | vel&&un:0.05764
+[2022-01-09 22:12:17.377] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.380] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.380] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:156
+[2022-01-09 22:12:17.380] [tracker_log] [info] trackImageNaive | flow_track right:2.33967
+[2022-01-09 22:12:17.380] [tracker_log] [debug] instsTrack actually detect num:3
+[2022-01-09 22:12:17.380] [tracker_log] [info] instsTrack detectNewFeaturesGPU:3.53548 ms
+[2022-01-09 22:12:17.380] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.009251 ms
+[2022-01-09 22:12:17.381] [tracker_log] [debug] flowTrackGpu forward success:6
+[2022-01-09 22:12:17.381] [tracker_log] [debug] flowTrackGpu backward success:6
+[2022-01-09 22:12:17.381] [tracker_log] [debug] flowTrackGpu input:6 final_success:6
+[2022-01-09 22:12:17.381] [tracker_log] [info] instsTrack flowTrack right:0.842799 ms
+[2022-01-09 22:12:17.381] [tracker_log] [info] instsTrack manageInstances:0.006561 ms
+[2022-01-09 22:12:17.381] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.381] [tracker_log] [debug] Inst:141608000 size:6
+[2022-01-09 22:12:17.381] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:6.37067 ms
+[2022-01-09 22:12:17.382] [tracker_log] [info] TrackSemanticImage drawInsts:0.107529 ms
+[2022-01-09 22:12:17.382] [tracker_log] [debug] inst_id:141608000 l_track:6 r_track:6
+[2022-01-09 22:12:17.382] [tracker_log] [info] **************feature_track:7.71623 ms****************
+
+[2022-01-09 22:12:17.387] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.389] [tracker_log] [debug] trackImageNaive | prev_pts.size:156
+[2022-01-09 22:12:17.390] [tracker_log] [debug] trackImageNaive | cur_pts.size:154
+[2022-01-09 22:12:17.390] [tracker_log] [info] trackImageNaive | flowTrack left:3.46652
+[2022-01-09 22:12:17.391] [tracker_log] [info] trackImageNaive | detect feature:0.365376
+[2022-01-09 22:12:17.391] [tracker_log] [info] trackImageNaive | vel&&un:0.125826
+[2022-01-09 22:12:17.391] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.392] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.393] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:154
+[2022-01-09 22:12:17.393] [tracker_log] [info] trackImageNaive | flow_track right:1.64621
+[2022-01-09 22:12:17.393] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.393] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.393] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.393] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.106357 ms
+[2022-01-09 22:12:17.394] [tracker_log] [info] instsTrack set mask_img:1.67423 ms
+[2022-01-09 22:12:17.394] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.394] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.394] [tracker_log] [debug] inst:141608000 last_points:6 mask(480x752,type:0)
+[2022-01-09 22:12:17.396] [tracker_log] [debug] flowTrackGpu forward success:6
+[2022-01-09 22:12:17.396] [tracker_log] [debug] flowTrackGpu backward success:6
+[2022-01-09 22:12:17.396] [tracker_log] [debug] flowTrackGpu input:6 final_success:6
+[2022-01-09 22:12:17.396] [tracker_log] [info] instsTrack flowTrack:1.24175 ms
+[2022-01-09 22:12:17.396] [tracker_log] [info] instsTrack prepare detect:0.007383 ms
+[2022-01-09 22:12:17.396] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.396] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.396] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.397] [tracker_log] [debug] instsTrack actually detect num:3
+[2022-01-09 22:12:17.397] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.77459 ms
+[2022-01-09 22:12:17.397] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.006832 ms
+[2022-01-09 22:12:17.398] [tracker_log] [debug] flowTrackGpu forward success:9
+[2022-01-09 22:12:17.398] [tracker_log] [debug] flowTrackGpu backward success:9
+[2022-01-09 22:12:17.398] [tracker_log] [debug] flowTrackGpu input:9 final_success:9
+[2022-01-09 22:12:17.398] [tracker_log] [info] instsTrack flowTrack right:0.384501 ms
+[2022-01-09 22:12:17.398] [tracker_log] [info] instsTrack manageInstances:0.004911 ms
+[2022-01-09 22:12:17.398] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.398] [tracker_log] [debug] Inst:141608000 size:9
+[2022-01-09 22:12:17.398] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:10.0668 ms
+[2022-01-09 22:12:17.398] [tracker_log] [info] TrackSemanticImage drawInsts:0.120041 ms
+[2022-01-09 22:12:17.398] [tracker_log] [debug] inst_id:141608000 l_track:9 r_track:9
+[2022-01-09 22:12:17.399] [tracker_log] [info] **************feature_track:11.5872 ms****************
+
+[2022-01-09 22:12:17.407] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.408] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.408] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.408] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.408] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.137515 ms
+[2022-01-09 22:12:17.409] [tracker_log] [debug] trackImageNaive | prev_pts.size:154
+[2022-01-09 22:12:17.409] [tracker_log] [info] instsTrack set mask_img:0.549097 ms
+[2022-01-09 22:12:17.409] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.409] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.409] [tracker_log] [debug] inst:141608000 last_points:9 mask(480x752,type:0)
+[2022-01-09 22:12:17.409] [tracker_log] [debug] flowTrackGpu forward success:9
+[2022-01-09 22:12:17.409] [tracker_log] [debug] flowTrackGpu backward success:9
+[2022-01-09 22:12:17.409] [tracker_log] [debug] flowTrackGpu input:9 final_success:9
+[2022-01-09 22:12:17.409] [tracker_log] [info] instsTrack flowTrack:0.569199 ms
+[2022-01-09 22:12:17.409] [tracker_log] [info] instsTrack prepare detect:0.013365 ms
+[2022-01-09 22:12:17.410] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.410] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.410] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.410] [tracker_log] [debug] trackImageNaive | cur_pts.size:152
+[2022-01-09 22:12:17.410] [tracker_log] [info] trackImageNaive | flowTrack left:2.81258
+[2022-01-09 22:12:17.410] [tracker_log] [info] trackImageNaive | detect feature:0.239249
+[2022-01-09 22:12:17.410] [tracker_log] [info] trackImageNaive | vel&&un:0.050282
+[2022-01-09 22:12:17.410] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.411] [tracker_log] [debug] instsTrack actually detect num:3
+[2022-01-09 22:12:17.411] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.2332 ms
+[2022-01-09 22:12:17.411] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.00909 ms
+[2022-01-09 22:12:17.411] [tracker_log] [debug] flowTrackGpu forward success:12
+[2022-01-09 22:12:17.411] [tracker_log] [debug] flowTrackGpu backward success:12
+[2022-01-09 22:12:17.411] [tracker_log] [debug] flowTrackGpu input:12 final_success:12
+[2022-01-09 22:12:17.411] [tracker_log] [info] instsTrack flowTrack right:0.451437 ms
+[2022-01-09 22:12:17.411] [tracker_log] [info] instsTrack manageInstances:0.006509 ms
+[2022-01-09 22:12:17.411] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.411] [tracker_log] [debug] Inst:141608000 size:12
+[2022-01-09 22:12:17.411] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.411] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:152
+[2022-01-09 22:12:17.411] [tracker_log] [info] trackImageNaive | flow_track right:1.24252
+[2022-01-09 22:12:17.413] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.6608 ms
+[2022-01-09 22:12:17.414] [tracker_log] [info] TrackSemanticImage drawInsts:0.13191 ms
+[2022-01-09 22:12:17.414] [tracker_log] [debug] inst_id:141608000 l_track:12 r_track:12
+[2022-01-09 22:12:17.414] [tracker_log] [info] **************feature_track:7.20176 ms****************
+
+[2022-01-09 22:12:17.427] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.431] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.431] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.431] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.431] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.203512 ms
+[2022-01-09 22:12:17.432] [tracker_log] [debug] trackImageNaive | prev_pts.size:152
+[2022-01-09 22:12:17.433] [tracker_log] [info] instsTrack set mask_img:2.25167 ms
+[2022-01-09 22:12:17.433] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.433] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.433] [tracker_log] [debug] inst:141608000 last_points:12 mask(480x752,type:0)
+[2022-01-09 22:12:17.434] [tracker_log] [debug] flowTrackGpu forward success:12
+[2022-01-09 22:12:17.434] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:17.434] [tracker_log] [debug] flowTrackGpu backward success:12
+[2022-01-09 22:12:17.434] [tracker_log] [info] trackImageNaive | flowTrack left:6.59821
+[2022-01-09 22:12:17.434] [tracker_log] [debug] flowTrackGpu input:12 final_success:12
+[2022-01-09 22:12:17.434] [tracker_log] [info] instsTrack flowTrack:0.662022 ms
+[2022-01-09 22:12:17.434] [tracker_log] [info] instsTrack prepare detect:0.027435 ms
+[2022-01-09 22:12:17.434] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:17.434] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.434] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.434] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.434] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.434] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.434] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.434] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.436] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.436] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.6774 ms
+[2022-01-09 22:12:17.436] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.01339 ms
+[2022-01-09 22:12:17.436] [tracker_log] [debug] flowTrackGpu forward success:12
+[2022-01-09 22:12:17.437] [tracker_log] [debug] flowTrackGpu backward success:12
+[2022-01-09 22:12:17.437] [tracker_log] [debug] flowTrackGpu input:12 final_success:12
+[2022-01-09 22:12:17.437] [tracker_log] [info] instsTrack flowTrack right:1.12646 ms
+[2022-01-09 22:12:17.437] [tracker_log] [info] instsTrack manageInstances:0.005241 ms
+[2022-01-09 22:12:17.437] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.437] [tracker_log] [debug] Inst:141608000 size:12
+[2022-01-09 22:12:17.440] [tracker_log] [debug] trackImageNaive | cur_pts.size:5
+[2022-01-09 22:12:17.440] [tracker_log] [info] trackImageNaive | detect feature:5.51886
+[2022-01-09 22:12:17.440] [tracker_log] [info] trackImageNaive | vel&&un:0.019511
+[2022-01-09 22:12:17.440] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.441] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.441] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:0
+[2022-01-09 22:12:17.441] [tracker_log] [info] trackImageNaive | flow_track right:1.37142
+[2022-01-09 22:12:17.442] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:11.049 ms
+[2022-01-09 22:12:17.466] [tracker_log] [info] TrackSemanticImage drawInsts:24.1755 ms
+[2022-01-09 22:12:17.466] [tracker_log] [debug] inst_id:141608000 l_track:12 r_track:12
+[2022-01-09 22:12:17.467] [tracker_log] [info] **************feature_track:39.1798 ms****************
+
+[2022-01-09 22:12:17.477] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.478] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.478] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.478] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.479] [tracker_log] [debug] trackImageNaive | prev_pts.size:5
+[2022-01-09 22:12:17.481] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:2.60574 ms
+[2022-01-09 22:12:17.483] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:17.483] [tracker_log] [info] trackImageNaive | flowTrack left:6.09505
+[2022-01-09 22:12:17.483] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:17.483] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.483] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.483] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.483] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.485] [tracker_log] [info] instsTrack set mask_img:3.89422 ms
+[2022-01-09 22:12:17.485] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.485] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.485] [tracker_log] [debug] inst:141608000 last_points:12 mask(480x752,type:0)
+[2022-01-09 22:12:17.485] [tracker_log] [debug] flowTrackGpu forward success:12
+[2022-01-09 22:12:17.485] [tracker_log] [debug] flowTrackGpu backward success:12
+[2022-01-09 22:12:17.485] [tracker_log] [debug] flowTrackGpu input:12 final_success:12
+[2022-01-09 22:12:17.486] [tracker_log] [info] instsTrack flowTrack:0.574473 ms
+[2022-01-09 22:12:17.486] [tracker_log] [info] instsTrack prepare detect:0.010101 ms
+[2022-01-09 22:12:17.486] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.486] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.486] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.488] [tracker_log] [debug] instsTrack actually detect num:1
+[2022-01-09 22:12:17.488] [tracker_log] [info] instsTrack detectNewFeaturesGPU:2.19995 ms
+[2022-01-09 22:12:17.488] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.010442 ms
+[2022-01-09 22:12:17.488] [tracker_log] [debug] flowTrackGpu forward success:13
+[2022-01-09 22:12:17.488] [tracker_log] [debug] flowTrackGpu backward success:13
+[2022-01-09 22:12:17.488] [tracker_log] [debug] flowTrackGpu input:13 final_success:13
+[2022-01-09 22:12:17.488] [tracker_log] [info] instsTrack flowTrack right:0.477696 ms
+[2022-01-09 22:12:17.488] [tracker_log] [info] instsTrack manageInstances:0.006884 ms
+[2022-01-09 22:12:17.488] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.488] [tracker_log] [debug] Inst:141608000 size:13
+[2022-01-09 22:12:17.490] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:17.490] [tracker_log] [info] trackImageNaive | detect feature:6.76454
+[2022-01-09 22:12:17.490] [tracker_log] [info] trackImageNaive | vel&&un:0.028918
+[2022-01-09 22:12:17.490] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.491] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.491] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:158
+[2022-01-09 22:12:17.491] [tracker_log] [info] trackImageNaive | flow_track right:1.26039
+[2022-01-09 22:12:17.493] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:15.046 ms
+[2022-01-09 22:12:17.493] [tracker_log] [info] TrackSemanticImage drawInsts:0.125431 ms
+[2022-01-09 22:12:17.493] [tracker_log] [debug] inst_id:141608000 l_track:13 r_track:13
+[2022-01-09 22:12:17.494] [tracker_log] [info] **************feature_track:16.9205 ms****************
+
+[2022-01-09 22:12:17.500] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.501] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:17.504] [tracker_log] [debug] trackImageNaive | cur_pts.size:151
+[2022-01-09 22:12:17.504] [tracker_log] [info] trackImageNaive | flowTrack left:4.7525
+[2022-01-09 22:12:17.505] [tracker_log] [info] trackImageNaive | detect feature:0.309308
+[2022-01-09 22:12:17.505] [tracker_log] [info] trackImageNaive | vel&&un:0.089691
+[2022-01-09 22:12:17.505] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.507] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.507] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:151
+[2022-01-09 22:12:17.507] [tracker_log] [info] trackImageNaive | flow_track right:2.02451
+[2022-01-09 22:12:17.508] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.508] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.508] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.508] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.168087 ms
+[2022-01-09 22:12:17.509] [tracker_log] [info] instsTrack set mask_img:0.631046 ms
+[2022-01-09 22:12:17.509] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.509] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.509] [tracker_log] [debug] inst:141608000 last_points:13 mask(480x752,type:0)
+[2022-01-09 22:12:17.509] [tracker_log] [debug] flowTrackGpu forward success:13
+[2022-01-09 22:12:17.510] [tracker_log] [debug] flowTrackGpu backward success:13
+[2022-01-09 22:12:17.510] [tracker_log] [debug] flowTrackGpu input:13 final_success:13
+[2022-01-09 22:12:17.510] [tracker_log] [info] instsTrack flowTrack:1.07116 ms
+[2022-01-09 22:12:17.510] [tracker_log] [info] instsTrack prepare detect:0.009598 ms
+[2022-01-09 22:12:17.510] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.510] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.510] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.512] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.512] [tracker_log] [info] instsTrack detectNewFeaturesGPU:2.07942 ms
+[2022-01-09 22:12:17.512] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.011678 ms
+[2022-01-09 22:12:17.512] [tracker_log] [debug] flowTrackGpu forward success:13
+[2022-01-09 22:12:17.512] [tracker_log] [debug] flowTrackGpu backward success:13
+[2022-01-09 22:12:17.512] [tracker_log] [debug] flowTrackGpu input:13 final_success:13
+[2022-01-09 22:12:17.512] [tracker_log] [info] instsTrack flowTrack right:0.578031 ms
+[2022-01-09 22:12:17.512] [tracker_log] [info] instsTrack manageInstances:0.004984 ms
+[2022-01-09 22:12:17.512] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.512] [tracker_log] [debug] Inst:141608000 size:13
+[2022-01-09 22:12:17.512] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:11.9338 ms
+[2022-01-09 22:12:17.513] [tracker_log] [info] TrackSemanticImage drawInsts:0.147318 ms
+[2022-01-09 22:12:17.513] [tracker_log] [debug] inst_id:141608000 l_track:13 r_track:13
+[2022-01-09 22:12:17.513] [tracker_log] [info] **************feature_track:13.9106 ms****************
+
+[2022-01-09 22:12:17.522] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.522] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.522] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.522] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.523] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.0914 ms
+[2022-01-09 22:12:17.523] [tracker_log] [debug] trackImageNaive | prev_pts.size:151
+[2022-01-09 22:12:17.523] [tracker_log] [info] instsTrack set mask_img:0.78921 ms
+[2022-01-09 22:12:17.523] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.523] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.523] [tracker_log] [debug] inst:141608000 last_points:13 mask(480x752,type:0)
+[2022-01-09 22:12:17.524] [tracker_log] [debug] flowTrackGpu forward success:13
+[2022-01-09 22:12:17.525] [tracker_log] [debug] flowTrackGpu backward success:13
+[2022-01-09 22:12:17.525] [tracker_log] [debug] flowTrackGpu input:13 final_success:13
+[2022-01-09 22:12:17.525] [tracker_log] [info] instsTrack flowTrack:1.28654 ms
+[2022-01-09 22:12:17.525] [tracker_log] [info] instsTrack prepare detect:0.015659 ms
+[2022-01-09 22:12:17.525] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.525] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.525] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.525] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.525] [tracker_log] [info] instsTrack detectNewFeaturesGPU:0.642248 ms
+[2022-01-09 22:12:17.525] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.018084 ms
+[2022-01-09 22:12:17.525] [tracker_log] [debug] trackImageNaive | cur_pts.size:145
+[2022-01-09 22:12:17.525] [tracker_log] [info] trackImageNaive | flowTrack left:3.40478
+[2022-01-09 22:12:17.526] [tracker_log] [debug] flowTrackGpu forward success:13
+[2022-01-09 22:12:17.526] [tracker_log] [warning] trackImageNaive | n_max_cnt:15
+[2022-01-09 22:12:17.526] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.526] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.526] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.526] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.526] [tracker_log] [debug] flowTrackGpu backward success:13
+[2022-01-09 22:12:17.526] [tracker_log] [debug] flowTrackGpu input:13 final_success:13
+[2022-01-09 22:12:17.526] [tracker_log] [info] instsTrack flowTrack right:0.555254 ms
+[2022-01-09 22:12:17.526] [tracker_log] [info] instsTrack manageInstances:0.017219 ms
+[2022-01-09 22:12:17.526] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.526] [tracker_log] [debug] Inst:141608000 size:13
+[2022-01-09 22:12:17.531] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:17.531] [tracker_log] [info] trackImageNaive | detect feature:5.41165
+[2022-01-09 22:12:17.531] [tracker_log] [info] trackImageNaive | vel&&un:0.082356
+[2022-01-09 22:12:17.531] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.535] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.535] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:158
+[2022-01-09 22:12:17.535] [tracker_log] [info] trackImageNaive | flow_track right:3.8193
+[2022-01-09 22:12:17.537] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:14.9863 ms
+[2022-01-09 22:12:17.537] [tracker_log] [info] TrackSemanticImage drawInsts:0.122495 ms
+[2022-01-09 22:12:17.538] [tracker_log] [debug] inst_id:141608000 l_track:13 r_track:13
+[2022-01-09 22:12:17.538] [tracker_log] [info] **************feature_track:16.1987 ms****************
+
+[2022-01-09 22:12:17.548] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.549] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.549] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.549] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.549] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.087194 ms
+[2022-01-09 22:12:17.549] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:17.550] [tracker_log] [info] instsTrack set mask_img:0.766335 ms
+[2022-01-09 22:12:17.550] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.550] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.550] [tracker_log] [debug] inst:141608000 last_points:13 mask(480x752,type:0)
+[2022-01-09 22:12:17.550] [tracker_log] [debug] flowTrackGpu forward success:13
+[2022-01-09 22:12:17.551] [tracker_log] [debug] flowTrackGpu backward success:11
+[2022-01-09 22:12:17.551] [tracker_log] [debug] flowTrackGpu input:13 final_success:11
+[2022-01-09 22:12:17.551] [tracker_log] [info] instsTrack flowTrack:1.00873 ms
+[2022-01-09 22:12:17.551] [tracker_log] [info] instsTrack prepare detect:0.017227 ms
+[2022-01-09 22:12:17.551] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.551] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.551] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.551] [tracker_log] [debug] trackImageNaive | cur_pts.size:153
+[2022-01-09 22:12:17.551] [tracker_log] [info] trackImageNaive | flowTrack left:2.577
+[2022-01-09 22:12:17.552] [tracker_log] [info] trackImageNaive | detect feature:1.019
+[2022-01-09 22:12:17.552] [tracker_log] [info] trackImageNaive | vel&&un:0.057285
+[2022-01-09 22:12:17.552] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.553] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.553] [tracker_log] [info] instsTrack detectNewFeaturesGPU:2.42948 ms
+[2022-01-09 22:12:17.553] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.011094 ms
+[2022-01-09 22:12:17.554] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.554] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:153
+[2022-01-09 22:12:17.554] [tracker_log] [info] trackImageNaive | flow_track right:1.88318
+[2022-01-09 22:12:17.555] [tracker_log] [debug] flowTrackGpu forward success:11
+[2022-01-09 22:12:17.555] [tracker_log] [debug] flowTrackGpu backward success:11
+[2022-01-09 22:12:17.555] [tracker_log] [debug] flowTrackGpu input:11 final_success:11
+[2022-01-09 22:12:17.555] [tracker_log] [info] instsTrack flowTrack right:1.91964 ms
+[2022-01-09 22:12:17.555] [tracker_log] [info] instsTrack manageInstances:0.004732 ms
+[2022-01-09 22:12:17.555] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.555] [tracker_log] [debug] Inst:141608000 size:11
+[2022-01-09 22:12:17.556] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:7.43503 ms
+[2022-01-09 22:12:17.556] [tracker_log] [info] TrackSemanticImage drawInsts:0.182639 ms
+[2022-01-09 22:12:17.557] [tracker_log] [debug] inst_id:141608000 l_track:11 r_track:11
+[2022-01-09 22:12:17.557] [tracker_log] [info] **************feature_track:8.76505 ms****************
+
+[2022-01-09 22:12:17.597] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.597] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.597] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.597] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.598] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.083247 ms
+[2022-01-09 22:12:17.598] [tracker_log] [debug] trackImageNaive | prev_pts.size:153
+[2022-01-09 22:12:17.598] [tracker_log] [info] instsTrack set mask_img:0.705802 ms
+[2022-01-09 22:12:17.598] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.598] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.598] [tracker_log] [debug] inst:141608000 last_points:11 mask(480x752,type:0)
+[2022-01-09 22:12:17.599] [tracker_log] [debug] flowTrackGpu forward success:11
+[2022-01-09 22:12:17.599] [tracker_log] [debug] flowTrackGpu backward success:7
+[2022-01-09 22:12:17.599] [tracker_log] [debug] flowTrackGpu input:11 final_success:7
+[2022-01-09 22:12:17.599] [tracker_log] [info] instsTrack flowTrack:0.704072 ms
+[2022-01-09 22:12:17.599] [tracker_log] [info] instsTrack prepare detect:0.011287 ms
+[2022-01-09 22:12:17.599] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.599] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.599] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.600] [tracker_log] [debug] trackImageNaive | cur_pts.size:150
+[2022-01-09 22:12:17.600] [tracker_log] [info] trackImageNaive | flowTrack left:3.27911
+[2022-01-09 22:12:17.601] [tracker_log] [info] trackImageNaive | detect feature:0.228091
+[2022-01-09 22:12:17.601] [tracker_log] [info] trackImageNaive | vel&&un:0.049206
+[2022-01-09 22:12:17.601] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.601] [tracker_log] [debug] instsTrack actually detect num:2
+[2022-01-09 22:12:17.601] [tracker_log] [info] instsTrack detectNewFeaturesGPU:2.16634 ms
+[2022-01-09 22:12:17.601] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.009719 ms
+[2022-01-09 22:12:17.601] [tracker_log] [debug] flowTrackGpu forward success:9
+[2022-01-09 22:12:17.602] [tracker_log] [debug] flowTrackGpu backward success:9
+[2022-01-09 22:12:17.602] [tracker_log] [debug] flowTrackGpu input:9 final_success:9
+[2022-01-09 22:12:17.602] [tracker_log] [info] instsTrack flowTrack right:0.478149 ms
+[2022-01-09 22:12:17.602] [tracker_log] [info] instsTrack manageInstances:0.00688 ms
+[2022-01-09 22:12:17.602] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.602] [tracker_log] [debug] Inst:141608000 size:9
+[2022-01-09 22:12:17.602] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.602] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:150
+[2022-01-09 22:12:17.602] [tracker_log] [info] trackImageNaive | flow_track right:1.23525
+[2022-01-09 22:12:17.603] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.86497 ms
+[2022-01-09 22:12:17.603] [tracker_log] [info] TrackSemanticImage drawInsts:0.111575 ms
+[2022-01-09 22:12:17.604] [tracker_log] [debug] inst_id:141608000 l_track:9 r_track:9
+[2022-01-09 22:12:17.604] [tracker_log] [info] **************feature_track:6.81481 ms****************
+
+[2022-01-09 22:12:17.646] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.647] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.647] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.647] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.647] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.105654 ms
+[2022-01-09 22:12:17.647] [tracker_log] [debug] trackImageNaive | prev_pts.size:150
+[2022-01-09 22:12:17.648] [tracker_log] [info] instsTrack set mask_img:1.4678 ms
+[2022-01-09 22:12:17.648] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.648] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.648] [tracker_log] [debug] inst:141608000 last_points:9 mask(480x752,type:0)
+[2022-01-09 22:12:17.649] [tracker_log] [debug] trackImageNaive | cur_pts.size:148
+[2022-01-09 22:12:17.649] [tracker_log] [info] trackImageNaive | flowTrack left:3.13581
+[2022-01-09 22:12:17.649] [tracker_log] [debug] flowTrackGpu forward success:8
+[2022-01-09 22:12:17.649] [tracker_log] [warning] trackImageNaive | n_max_cnt:12
+[2022-01-09 22:12:17.649] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.649] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.649] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.649] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.649] [tracker_log] [debug] flowTrackGpu backward success:5
+[2022-01-09 22:12:17.649] [tracker_log] [debug] flowTrackGpu input:9 final_success:5
+[2022-01-09 22:12:17.649] [tracker_log] [info] instsTrack flowTrack:0.844834 ms
+[2022-01-09 22:12:17.649] [tracker_log] [info] instsTrack prepare detect:0.012133 ms
+[2022-01-09 22:12:17.649] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.649] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.649] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.651] [tracker_log] [debug] instsTrack actually detect num:1
+[2022-01-09 22:12:17.651] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.67511 ms
+[2022-01-09 22:12:17.651] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.010309 ms
+[2022-01-09 22:12:17.651] [tracker_log] [debug] flowTrackGpu forward success:6
+[2022-01-09 22:12:17.651] [tracker_log] [debug] flowTrackGpu backward success:6
+[2022-01-09 22:12:17.651] [tracker_log] [debug] flowTrackGpu input:6 final_success:6
+[2022-01-09 22:12:17.651] [tracker_log] [info] instsTrack flowTrack right:0.432874 ms
+[2022-01-09 22:12:17.651] [tracker_log] [info] instsTrack manageInstances:0.004756 ms
+[2022-01-09 22:12:17.651] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.651] [tracker_log] [debug] Inst:141608000 size:6
+[2022-01-09 22:12:17.655] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:17.655] [tracker_log] [info] trackImageNaive | detect feature:6.36323
+[2022-01-09 22:12:17.655] [tracker_log] [info] trackImageNaive | vel&&un:0.052862
+[2022-01-09 22:12:17.655] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.658] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.659] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:17.659] [tracker_log] [info] trackImageNaive | flow_track right:3.14629
+[2022-01-09 22:12:17.660] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:13.4688 ms
+[2022-01-09 22:12:17.660] [tracker_log] [info] TrackSemanticImage drawInsts:0.156341 ms
+[2022-01-09 22:12:17.661] [tracker_log] [debug] inst_id:141608000 l_track:6 r_track:6
+[2022-01-09 22:12:17.661] [tracker_log] [info] **************feature_track:15.2508 ms****************
+
+[2022-01-09 22:12:17.694] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.695] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.695] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.695] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.695] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.080632 ms
+[2022-01-09 22:12:17.695] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:17.696] [tracker_log] [info] instsTrack set mask_img:0.647937 ms
+[2022-01-09 22:12:17.696] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.696] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.696] [tracker_log] [debug] inst:141608000 last_points:6 mask(480x752,type:0)
+[2022-01-09 22:12:17.696] [tracker_log] [debug] flowTrackGpu forward success:6
+[2022-01-09 22:12:17.696] [tracker_log] [debug] flowTrackGpu backward success:5
+[2022-01-09 22:12:17.696] [tracker_log] [debug] flowTrackGpu input:6 final_success:5
+[2022-01-09 22:12:17.696] [tracker_log] [info] instsTrack flowTrack:0.594613 ms
+[2022-01-09 22:12:17.696] [tracker_log] [info] instsTrack prepare detect:0.010297 ms
+[2022-01-09 22:12:17.696] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.696] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.696] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.697] [tracker_log] [debug] trackImageNaive | cur_pts.size:155
+[2022-01-09 22:12:17.697] [tracker_log] [info] trackImageNaive | flowTrack left:2.14223
+[2022-01-09 22:12:17.697] [tracker_log] [info] trackImageNaive | detect feature:0.275185
+[2022-01-09 22:12:17.697] [tracker_log] [info] trackImageNaive | vel&&un:0.050934
+[2022-01-09 22:12:17.697] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.698] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.698] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.3879 ms
+[2022-01-09 22:12:17.698] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.007925 ms
+[2022-01-09 22:12:17.698] [tracker_log] [debug] flowTrackGpu forward success:5
+[2022-01-09 22:12:17.698] [tracker_log] [debug] flowTrackGpu backward success:5
+[2022-01-09 22:12:17.698] [tracker_log] [debug] flowTrackGpu input:5 final_success:5
+[2022-01-09 22:12:17.698] [tracker_log] [info] instsTrack flowTrack right:0.465029 ms
+[2022-01-09 22:12:17.698] [tracker_log] [info] instsTrack manageInstances:0.006551 ms
+[2022-01-09 22:12:17.698] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.698] [tracker_log] [debug] Inst:141608000 size:5
+[2022-01-09 22:12:17.698] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.698] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:155
+[2022-01-09 22:12:17.698] [tracker_log] [info] trackImageNaive | flow_track right:1.261
+[2022-01-09 22:12:17.700] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.13687 ms
+[2022-01-09 22:12:17.700] [tracker_log] [info] TrackSemanticImage drawInsts:0.154664 ms
+[2022-01-09 22:12:17.700] [tracker_log] [debug] inst_id:141608000 l_track:5 r_track:5
+[2022-01-09 22:12:17.701] [tracker_log] [info] **************feature_track:6.19257 ms****************
+
+[2022-01-09 22:12:17.745] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.745] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.745] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.745] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.745] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.083056 ms
+[2022-01-09 22:12:17.746] [tracker_log] [debug] trackImageNaive | prev_pts.size:155
+[2022-01-09 22:12:17.746] [tracker_log] [info] instsTrack set mask_img:0.721762 ms
+[2022-01-09 22:12:17.746] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.746] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.746] [tracker_log] [debug] inst:141608000 last_points:5 mask(480x752,type:0)
+[2022-01-09 22:12:17.746] [tracker_log] [debug] flowTrackGpu forward success:4
+[2022-01-09 22:12:17.746] [tracker_log] [debug] flowTrackGpu backward success:4
+[2022-01-09 22:12:17.747] [tracker_log] [debug] flowTrackGpu input:5 final_success:4
+[2022-01-09 22:12:17.747] [tracker_log] [info] instsTrack flowTrack:0.610394 ms
+[2022-01-09 22:12:17.747] [tracker_log] [info] instsTrack prepare detect:0.012096 ms
+[2022-01-09 22:12:17.747] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.747] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.747] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.747] [tracker_log] [debug] trackImageNaive | cur_pts.size:155
+[2022-01-09 22:12:17.747] [tracker_log] [info] trackImageNaive | flowTrack left:2.15929
+[2022-01-09 22:12:17.747] [tracker_log] [info] trackImageNaive | detect feature:0.21345
+[2022-01-09 22:12:17.747] [tracker_log] [info] trackImageNaive | vel&&un:0.051582
+[2022-01-09 22:12:17.747] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.748] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.748] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.40133 ms
+[2022-01-09 22:12:17.748] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.008537 ms
+[2022-01-09 22:12:17.748] [tracker_log] [debug] flowTrackGpu forward success:4
+[2022-01-09 22:12:17.748] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.748] [tracker_log] [debug] flowTrackGpu backward success:4
+[2022-01-09 22:12:17.748] [tracker_log] [debug] flowTrackGpu input:4 final_success:4
+[2022-01-09 22:12:17.748] [tracker_log] [info] instsTrack flowTrack right:0.45072 ms
+[2022-01-09 22:12:17.748] [tracker_log] [info] instsTrack manageInstances:0.006256 ms
+[2022-01-09 22:12:17.748] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.748] [tracker_log] [debug] Inst:141608000 size:4
+[2022-01-09 22:12:17.748] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:155
+[2022-01-09 22:12:17.748] [tracker_log] [info] trackImageNaive | flow_track right:1.27515
+[2022-01-09 22:12:17.750] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:4.75184 ms
+[2022-01-09 22:12:17.750] [tracker_log] [info] TrackSemanticImage drawInsts:0.095019 ms
+[2022-01-09 22:12:17.750] [tracker_log] [debug] inst_id:141608000 l_track:4 r_track:4
+[2022-01-09 22:12:17.750] [tracker_log] [info] **************feature_track:5.61036 ms****************
+
+[2022-01-09 22:12:17.794] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.794] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.794] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.794] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.794] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.080882 ms
+[2022-01-09 22:12:17.795] [tracker_log] [debug] trackImageNaive | prev_pts.size:155
+[2022-01-09 22:12:17.795] [tracker_log] [info] instsTrack set mask_img:0.675557 ms
+[2022-01-09 22:12:17.795] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.795] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.795] [tracker_log] [debug] inst:141608000 last_points:4 mask(480x752,type:0)
+[2022-01-09 22:12:17.795] [tracker_log] [debug] flowTrackGpu forward success:4
+[2022-01-09 22:12:17.796] [tracker_log] [debug] flowTrackGpu backward success:4
+[2022-01-09 22:12:17.796] [tracker_log] [debug] flowTrackGpu input:4 final_success:4
+[2022-01-09 22:12:17.796] [tracker_log] [info] instsTrack flowTrack:0.57608 ms
+[2022-01-09 22:12:17.796] [tracker_log] [info] instsTrack prepare detect:0.012275 ms
+[2022-01-09 22:12:17.796] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.796] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.796] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.796] [tracker_log] [debug] trackImageNaive | cur_pts.size:155
+[2022-01-09 22:12:17.796] [tracker_log] [info] trackImageNaive | flowTrack left:2.08486
+[2022-01-09 22:12:17.796] [tracker_log] [info] trackImageNaive | detect feature:0.192677
+[2022-01-09 22:12:17.796] [tracker_log] [info] trackImageNaive | vel&&un:0.048857
+[2022-01-09 22:12:17.796] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.797] [tracker_log] [debug] instsTrack actually detect num:1
+[2022-01-09 22:12:17.797] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.51657 ms
+[2022-01-09 22:12:17.797] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.014564 ms
+[2022-01-09 22:12:17.797] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.797] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:155
+[2022-01-09 22:12:17.797] [tracker_log] [info] trackImageNaive | flow_track right:1.22566
+[2022-01-09 22:12:17.797] [tracker_log] [debug] flowTrackGpu forward success:5
+[2022-01-09 22:12:17.799] [tracker_log] [debug] flowTrackGpu backward success:3
+[2022-01-09 22:12:17.799] [tracker_log] [debug] flowTrackGpu input:5 final_success:3
+[2022-01-09 22:12:17.799] [tracker_log] [info] instsTrack flowTrack right:2.05216 ms
+[2022-01-09 22:12:17.799] [tracker_log] [info] instsTrack manageInstances:0.010517 ms
+[2022-01-09 22:12:17.799] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.799] [tracker_log] [debug] Inst:141608000 size:5
+[2022-01-09 22:12:17.799] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:5.15047 ms
+[2022-01-09 22:12:17.799] [tracker_log] [info] TrackSemanticImage drawInsts:0.098734 ms
+[2022-01-09 22:12:17.800] [tracker_log] [debug] inst_id:141608000 l_track:5 r_track:3
+[2022-01-09 22:12:17.800] [tracker_log] [info] **************feature_track:6.12101 ms****************
+
+[2022-01-09 22:12:17.845] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.846] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.846] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.846] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.846] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.075642 ms
+[2022-01-09 22:12:17.846] [tracker_log] [debug] trackImageNaive | prev_pts.size:155
+[2022-01-09 22:12:17.848] [tracker_log] [debug] trackImageNaive | cur_pts.size:154
+[2022-01-09 22:12:17.848] [tracker_log] [info] trackImageNaive | flowTrack left:3.19524
+[2022-01-09 22:12:17.849] [tracker_log] [info] trackImageNaive | detect feature:0.152139
+[2022-01-09 22:12:17.849] [tracker_log] [info] trackImageNaive | vel&&un:0.047616
+[2022-01-09 22:12:17.849] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.850] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.850] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:154
+[2022-01-09 22:12:17.850] [tracker_log] [info] trackImageNaive | flow_track right:1.18041
+[2022-01-09 22:12:17.851] [tracker_log] [info] instsTrack set mask_img:5.3492 ms
+[2022-01-09 22:12:17.851] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.851] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.851] [tracker_log] [debug] inst:141608000 last_points:5 mask(480x752,type:0)
+[2022-01-09 22:12:17.852] [tracker_log] [debug] flowTrackGpu forward success:5
+[2022-01-09 22:12:17.852] [tracker_log] [debug] flowTrackGpu backward success:3
+[2022-01-09 22:12:17.852] [tracker_log] [debug] flowTrackGpu input:5 final_success:3
+[2022-01-09 22:12:17.853] [tracker_log] [info] instsTrack flowTrack:1.42566 ms
+[2022-01-09 22:12:17.853] [tracker_log] [info] instsTrack prepare detect:0.013083 ms
+[2022-01-09 22:12:17.853] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.853] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.853] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.858] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.858] [tracker_log] [info] instsTrack detectNewFeaturesGPU:5.42979 ms
+[2022-01-09 22:12:17.858] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.007776 ms
+[2022-01-09 22:12:17.858] [tracker_log] [debug] flowTrackGpu forward success:3
+[2022-01-09 22:12:17.858] [tracker_log] [debug] flowTrackGpu backward success:3
+[2022-01-09 22:12:17.858] [tracker_log] [debug] flowTrackGpu input:3 final_success:3
+[2022-01-09 22:12:17.858] [tracker_log] [info] instsTrack flowTrack right:0.39486 ms
+[2022-01-09 22:12:17.858] [tracker_log] [info] instsTrack manageInstances:0.004818 ms
+[2022-01-09 22:12:17.858] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.858] [tracker_log] [debug] Inst:141608000 size:3
+[2022-01-09 22:12:17.858] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:12.8103 ms
+[2022-01-09 22:12:17.859] [tracker_log] [info] TrackSemanticImage drawInsts:0.096723 ms
+[2022-01-09 22:12:17.859] [tracker_log] [debug] inst_id:141608000 l_track:3 r_track:3
+[2022-01-09 22:12:17.859] [tracker_log] [info] **************feature_track:13.7797 ms****************
+
+[2022-01-09 22:12:17.894] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.895] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.895] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.895] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.895] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.088947 ms
+[2022-01-09 22:12:17.896] [tracker_log] [debug] trackImageNaive | prev_pts.size:154
+[2022-01-09 22:12:17.896] [tracker_log] [info] instsTrack set mask_img:1.14217 ms
+[2022-01-09 22:12:17.896] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.896] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.896] [tracker_log] [debug] inst:141608000 last_points:3 mask(480x752,type:0)
+[2022-01-09 22:12:17.897] [tracker_log] [debug] flowTrackGpu forward success:3
+[2022-01-09 22:12:17.897] [tracker_log] [debug] flowTrackGpu backward success:3
+[2022-01-09 22:12:17.897] [tracker_log] [debug] flowTrackGpu input:3 final_success:3
+[2022-01-09 22:12:17.897] [tracker_log] [info] instsTrack flowTrack:0.657695 ms
+[2022-01-09 22:12:17.897] [tracker_log] [info] instsTrack prepare detect:0.048219 ms
+[2022-01-09 22:12:17.897] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.897] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.897] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.897] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:17.897] [tracker_log] [info] trackImageNaive | flowTrack left:3.13605
+[2022-01-09 22:12:17.898] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:17.898] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.898] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.898] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.898] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.898] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:17.898] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.43528 ms
+[2022-01-09 22:12:17.898] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.008982 ms
+[2022-01-09 22:12:17.899] [tracker_log] [debug] flowTrackGpu forward success:3
+[2022-01-09 22:12:17.899] [tracker_log] [debug] flowTrackGpu backward success:2
+[2022-01-09 22:12:17.899] [tracker_log] [debug] flowTrackGpu input:3 final_success:2
+[2022-01-09 22:12:17.899] [tracker_log] [info] instsTrack flowTrack right:0.652315 ms
+[2022-01-09 22:12:17.899] [tracker_log] [info] instsTrack manageInstances:0.006965 ms
+[2022-01-09 22:12:17.899] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.899] [tracker_log] [debug] Inst:141608000 size:3
+[2022-01-09 22:12:17.902] [tracker_log] [debug] trackImageNaive | cur_pts.size:2
+[2022-01-09 22:12:17.902] [tracker_log] [info] trackImageNaive | detect feature:4.27469
+[2022-01-09 22:12:17.902] [tracker_log] [info] trackImageNaive | vel&&un:0.019298
+[2022-01-09 22:12:17.902] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.902] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.902] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:0
+[2022-01-09 22:12:17.902] [tracker_log] [info] trackImageNaive | flow_track right:0.721579
+[2022-01-09 22:12:17.903] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.53216 ms
+[2022-01-09 22:12:17.904] [tracker_log] [info] TrackSemanticImage drawInsts:0.135858 ms
+[2022-01-09 22:12:17.904] [tracker_log] [debug] inst_id:141608000 l_track:3 r_track:2
+[2022-01-09 22:12:17.904] [tracker_log] [info] **************feature_track:9.71628 ms****************
+
+[2022-01-09 22:12:17.948] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.948] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.948] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.948] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.948] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.083459 ms
+[2022-01-09 22:12:17.948] [tracker_log] [debug] trackImageNaive | prev_pts.size:2
+[2022-01-09 22:12:17.949] [tracker_log] [info] instsTrack set mask_img:0.769704 ms
+[2022-01-09 22:12:17.949] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.949] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.949] [tracker_log] [debug] inst:141608000 last_points:3 mask(480x752,type:0)
+[2022-01-09 22:12:17.949] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:17.949] [tracker_log] [info] trackImageNaive | flowTrack left:1.51643
+[2022-01-09 22:12:17.949] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:17.949] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.949] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.949] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.949] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.950] [tracker_log] [debug] flowTrackGpu forward success:3
+[2022-01-09 22:12:17.950] [tracker_log] [debug] flowTrackGpu backward success:2
+[2022-01-09 22:12:17.950] [tracker_log] [debug] flowTrackGpu input:3 final_success:1
+[2022-01-09 22:12:17.950] [tracker_log] [info] instsTrack flowTrack:0.774041 ms
+[2022-01-09 22:12:17.950] [tracker_log] [info] instsTrack prepare detect:0.010912 ms
+[2022-01-09 22:12:17.950] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.950] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.950] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.951] [tracker_log] [debug] instsTrack actually detect num:1
+[2022-01-09 22:12:17.951] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.35717 ms
+[2022-01-09 22:12:17.951] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.005978 ms
+[2022-01-09 22:12:17.951] [tracker_log] [debug] flowTrackGpu forward success:2
+[2022-01-09 22:12:17.952] [tracker_log] [debug] flowTrackGpu backward success:1
+[2022-01-09 22:12:17.952] [tracker_log] [debug] flowTrackGpu input:2 final_success:1
+[2022-01-09 22:12:17.952] [tracker_log] [info] instsTrack flowTrack right:0.460731 ms
+[2022-01-09 22:12:17.952] [tracker_log] [info] instsTrack manageInstances:0.004734 ms
+[2022-01-09 22:12:17.952] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.952] [tracker_log] [debug] Inst:141608000 size:2
+[2022-01-09 22:12:17.954] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:17.954] [tracker_log] [info] trackImageNaive | detect feature:4.46868
+[2022-01-09 22:12:17.954] [tracker_log] [info] trackImageNaive | vel&&un:0.018697
+[2022-01-09 22:12:17.954] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.955] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.955] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:17.955] [tracker_log] [info] trackImageNaive | flow_track right:1.09391
+[2022-01-09 22:12:17.957] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.45907 ms
+[2022-01-09 22:12:17.957] [tracker_log] [info] TrackSemanticImage drawInsts:0.088723 ms
+[2022-01-09 22:12:17.957] [tracker_log] [debug] inst_id:141608000 l_track:2 r_track:1
+[2022-01-09 22:12:17.957] [tracker_log] [info] **************feature_track:9.27794 ms****************
+
+[2022-01-09 22:12:17.992] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:17.992] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:17.992] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:17.992] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:17.992] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.082484 ms
+[2022-01-09 22:12:17.993] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:17.993] [tracker_log] [info] instsTrack set mask_img:1.04247 ms
+[2022-01-09 22:12:17.993] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.993] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:17.993] [tracker_log] [debug] inst:141608000 last_points:2 mask(480x752,type:0)
+[2022-01-09 22:12:17.994] [tracker_log] [debug] flowTrackGpu forward success:2
+[2022-01-09 22:12:17.994] [tracker_log] [debug] flowTrackGpu backward success:1
+[2022-01-09 22:12:17.994] [tracker_log] [debug] flowTrackGpu input:2 final_success:0
+[2022-01-09 22:12:17.994] [tracker_log] [info] instsTrack flowTrack:0.72704 ms
+[2022-01-09 22:12:17.994] [tracker_log] [info] instsTrack prepare detect:0.00764 ms
+[2022-01-09 22:12:17.994] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:17.994] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.994] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.994] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:17.994] [tracker_log] [info] trackImageNaive | flowTrack left:2.68558
+[2022-01-09 22:12:17.995] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:17.995] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:17.995] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:17.995] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.995] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:17.995] [tracker_log] [debug] instsTrack actually detect num:1
+[2022-01-09 22:12:17.995] [tracker_log] [info] instsTrack detectNewFeaturesGPU:1.48917 ms
+[2022-01-09 22:12:17.995] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.008476 ms
+[2022-01-09 22:12:17.996] [tracker_log] [debug] flowTrackGpu forward success:1
+[2022-01-09 22:12:17.996] [tracker_log] [debug] flowTrackGpu backward success:0
+[2022-01-09 22:12:17.996] [tracker_log] [debug] flowTrackGpu input:1 final_success:0
+[2022-01-09 22:12:17.996] [tracker_log] [info] instsTrack flowTrack right:0.608515 ms
+[2022-01-09 22:12:17.996] [tracker_log] [info] instsTrack manageInstances:0.006465 ms
+[2022-01-09 22:12:17.996] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:17.996] [tracker_log] [debug] Inst:141608000 size:1
+[2022-01-09 22:12:17.998] [tracker_log] [debug] trackImageNaive | cur_pts.size:1
+[2022-01-09 22:12:17.998] [tracker_log] [info] trackImageNaive | detect feature:4.0389
+[2022-01-09 22:12:17.998] [tracker_log] [info] trackImageNaive | vel&&un:0.012764
+[2022-01-09 22:12:17.998] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:17.999] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:17.999] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:0
+[2022-01-09 22:12:17.999] [tracker_log] [info] trackImageNaive | flow_track right:0.527711
+[2022-01-09 22:12:18.000] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:7.69944 ms
+[2022-01-09 22:12:18.000] [tracker_log] [info] TrackSemanticImage drawInsts:0.129676 ms
+[2022-01-09 22:12:18.000] [tracker_log] [debug] inst_id:141608000 l_track:1 r_track:0
+[2022-01-09 22:12:18.000] [tracker_log] [info] **************feature_track:8.56414 ms****************
+
+[2022-01-09 22:12:18.050] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:18.051] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:18.051] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:18.051] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:18.051] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.079636 ms
+[2022-01-09 22:12:18.051] [tracker_log] [debug] trackImageNaive | prev_pts.size:1
+[2022-01-09 22:12:18.051] [tracker_log] [info] instsTrack set mask_img:0.77769 ms
+[2022-01-09 22:12:18.051] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:18.052] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:18.052] [tracker_log] [debug] inst:141608000 last_points:1 mask(480x752,type:0)
+[2022-01-09 22:12:18.052] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:18.052] [tracker_log] [info] trackImageNaive | flowTrack left:1.56821
+[2022-01-09 22:12:18.052] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:18.052] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:18.052] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:18.052] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.052] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.052] [tracker_log] [debug] flowTrackGpu forward success:1
+[2022-01-09 22:12:18.052] [tracker_log] [debug] flowTrackGpu backward success:0
+[2022-01-09 22:12:18.052] [tracker_log] [debug] flowTrackGpu input:1 final_success:0
+[2022-01-09 22:12:18.052] [tracker_log] [info] instsTrack flowTrack:0.748764 ms
+[2022-01-09 22:12:18.052] [tracker_log] [info] instsTrack prepare detect:0.007424 ms
+[2022-01-09 22:12:18.052] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:18.052] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.052] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.055] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:18.055] [tracker_log] [info] instsTrack detectNewFeaturesGPU:2.4519 ms
+[2022-01-09 22:12:18.055] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.011335 ms
+[2022-01-09 22:12:18.055] [tracker_log] [info] instsTrack flowTrack right:0.005325 ms
+[2022-01-09 22:12:18.055] [tracker_log] [info] instsTrack manageInstances:0.004388 ms
+[2022-01-09 22:12:18.055] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:18.055] [tracker_log] [debug] Inst:141608000 size:0
+[2022-01-09 22:12:18.057] [tracker_log] [debug] trackImageNaive | cur_pts.size:160
+[2022-01-09 22:12:18.057] [tracker_log] [info] trackImageNaive | detect feature:5.64754
+[2022-01-09 22:12:18.057] [tracker_log] [info] trackImageNaive | vel&&un:0.020219
+[2022-01-09 22:12:18.057] [tracker_log] [debug] trackImageNaive | flowTrack right start
+[2022-01-09 22:12:18.060] [tracker_log] [debug] trackImageNaive | flowTrack right finish
+[2022-01-09 22:12:18.060] [tracker_log] [debug] trackImageNaive | cur_right_pts.size:160
+[2022-01-09 22:12:18.060] [tracker_log] [info] trackImageNaive | flow_track right:2.58664
+[2022-01-09 22:12:18.062] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:11.0161 ms
+[2022-01-09 22:12:18.062] [tracker_log] [info] TrackSemanticImage drawInsts:0.011591 ms
+[2022-01-09 22:12:18.062] [tracker_log] [info] **************feature_track:11.8505 ms****************
+
+[2022-01-09 22:12:18.095] [tracker_log] [warning] ----------Time : 1.5972e+09 ----------
+[2022-01-09 22:12:18.095] [tracker_log] [debug] start to addViodeInstancesBySegImg()
+[2022-01-09 22:12:18.095] [tracker_log] [debug] addViodeInstancesBySegImg merge insts
+[2022-01-09 22:12:18.095] [tracker_log] [debug] inst:141608000 mask_img:(480x752) local_mask:(480x752)
+[2022-01-09 22:12:18.095] [tracker_log] [info] instsTrack addViodeInstancesBySegImg:0.06938 ms
+[2022-01-09 22:12:18.096] [tracker_log] [debug] trackImageNaive | prev_pts.size:160
+[2022-01-09 22:12:18.097] [tracker_log] [info] instsTrack set mask_img:1.13121 ms
+[2022-01-09 22:12:18.097] [tracker_log] [debug] instsTrack prev_img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:18.097] [tracker_log] [debug] instsTrack img.gray0_gpu:(480x752,type:0)
+[2022-01-09 22:12:18.097] [tracker_log] [info] instsTrack flowTrack:0.018712 ms
+[2022-01-09 22:12:18.097] [tracker_log] [info] instsTrack prepare detect:0.004787 ms
+[2022-01-09 22:12:18.097] [tracker_log] [debug] instsTrack | mask_background size:480x752 type:0 
+[2022-01-09 22:12:18.097] [tracker_log] [debug] instsTrack | mask_background_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.097] [tracker_log] [debug] instsTrack | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.098] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:18.098] [tracker_log] [info] trackImageNaive | flowTrack left:3.0415
+[2022-01-09 22:12:18.098] [tracker_log] [warning] trackImageNaive | n_max_cnt:160
+[2022-01-09 22:12:18.098] [tracker_log] [debug] trackImageNaive | semantic_mask size:0x0 type:0 
+[2022-01-09 22:12:18.098] [tracker_log] [debug] trackImageNaive | mask size:480x752 type:0 
+[2022-01-09 22:12:18.098] [tracker_log] [debug] trackImageNaive | mask_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.098] [tracker_log] [debug] trackImageNaive | img.gray0_gpu size:480x752 type:0 
+[2022-01-09 22:12:18.099] [tracker_log] [debug] instsTrack actually detect num:0
+[2022-01-09 22:12:18.099] [tracker_log] [info] instsTrack detectNewFeaturesGPU:2.51654 ms
+[2022-01-09 22:12:18.099] [tracker_log] [info] instsTrack undistortedPts & ptsVelocity:0.009338 ms
+[2022-01-09 22:12:18.099] [tracker_log] [info] instsTrack flowTrack right:0.005183 ms
+[2022-01-09 22:12:18.099] [tracker_log] [info] instsTrack manageInstances:0.00363 ms
+[2022-01-09 22:12:18.099] [tracker_log] [debug] InstanceTracker:实例数量:1
+[2022-01-09 22:12:18.099] [tracker_log] [debug] Inst:141608000 size:0
+[2022-01-09 22:12:18.103] [tracker_log] [debug] trackImageNaive | cur_pts.size:0
+[2022-01-09 22:12:18.103] [tracker_log] [info] trackImageNaive | detect feature:5.02551
+[2022-01-09 22:12:18.103] [tracker_log] [info] trackImageNaive | vel&&un:0.018466
+[2022-01-09 22:12:18.104] [tracker_log] [info] TrackSemanticImage 动态检测线程总时间:8.67309 ms
+[2022-01-09 22:12:18.104] [tracker_log] [info] TrackSemanticImage drawInsts:0.010156 ms
+[2022-01-09 22:12:18.104] [tracker_log] [info] **************feature_track:9.56568 ms****************
+

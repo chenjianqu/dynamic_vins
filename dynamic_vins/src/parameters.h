@@ -76,6 +76,8 @@ constexpr int kInstFeatSize=500;
 constexpr int kSpeedSize=6;
 constexpr int kBoxSize=3;
 
+constexpr int kQueueSize=200;
+constexpr double kDelay=0.005;
 
 //图像归一化参数，注意是以RGB的顺序排序
 inline float kSoloImgMean[3]={123.675, 116.28, 103.53};

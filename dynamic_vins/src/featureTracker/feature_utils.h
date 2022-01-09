@@ -22,6 +22,7 @@
 
 #include "parameters.h"
 #include "utils.h"
+#include "segment_image.h"
 
 namespace dynamic_vins{\
 
@@ -154,6 +155,44 @@ inline std::vector<cv::Point2f> DetectShiTomasiCorners(int detect_num, const cv:
  */
 std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask,
                                               std::vector<cv::Point2f> &curr_pts, cv::Rect rect=cv::Rect());
+
+
+/**
+ * 计算两个物体Mask的IoU
+ * @param mask1 二元Mask1
+ * @param instInfo1  物体信息1
+ * @param mask1_area Mask1的大小
+ * @param mask2 二元Mask2
+ * @param instInfo2  物体信息2
+ * @param mask2_area Mask2的大小
+ * @return IoU
+ */
+inline float GetMaskIoU(const torch::Tensor &mask1, const InstInfo &instInfo1, const float mask1_area,
+                 const torch::Tensor &mask2, const InstInfo &instInfo2, const float mask2_area){
+    auto intersection_mask=(mask1 * mask2);
+    float intersection_area = intersection_mask.sum(torch::IntArrayRef({0,1})).item().toFloat();
+    return intersection_area/(mask1_area + mask2_area - intersection_area);
+}
+
+/**
+ * 将id和特征组合在一起
+ * @param ids
+ * @param curr_un_pts
+ * @param out_pairs
+ */
+inline void SetIdPointPair(vector<unsigned int> &ids,
+                           vector<cv::Point2f> &curr_un_pts,
+                           std::map<unsigned int, cv::Point2f> &out_pairs){
+    out_pairs.clear();
+    for (unsigned int i = 0; i < ids.size(); i++)
+        out_pairs.insert({ids[i], curr_un_pts[i]});
+}
+
+
+
+void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr_un_pts,
+                        std::map<unsigned int, cv::Point2f> &prev_id_pts,vector<cv::Point2f> &output_velocity);
+
 
 
 }

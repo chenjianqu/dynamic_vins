@@ -35,7 +35,7 @@ int main(int argc, char **argv)
         dv::Config cfg(config_file);
     }
     catch(std::runtime_error &e){
-        dv::CriticalS(e.what());
+        dv::Criticals(e.what());
         cerr<<e.what()<<endl;
         return -1;
     }

@@ -23,11 +23,12 @@
 #include <mutex>
 #include <chrono>
 #include <future>
+#include <filesystem>
 
-#include <ros/ros.h>
-#include <cv_bridge/cv_bridge.h>
-#include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
+#include <ros/ros.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/optflow.hpp>
 
 #include "parameters.h"
 #include "estimator/estimator.h"
@@ -38,133 +39,61 @@
 #include "featureTracker/feature_tracker.h"
 #include "FlowEstimating/flow_estimator.h"
 #include "FlowEstimating/flow_visual.h"
+#include "utility/call_back.h"
 
 namespace dynamic_vins{\
 
-constexpr int kQueueSize=200;
-constexpr double kDelay=0.005;
+namespace fs=std::filesystem;
+
 
 Estimator::Ptr estimator;
 InstanceSegmentor::Ptr inst_segmentor;
 FeatureTracker::Ptr feature_tracker;
-
-queue<sensor_msgs::ImuConstPtr> imu_buf;
-queue<sensor_msgs::PointCloudConstPtr> feature_buf;
-queue<sensor_msgs::ImageConstPtr> img0_buf;
-queue<sensor_msgs::ImageConstPtr> seg0_buf;
-queue<sensor_msgs::ImageConstPtr> img1_buf;
-queue<sensor_msgs::ImageConstPtr> seg1_buf;
-
-std::mutex m_buf;
-std::mutex img0_mutex,img1_mutex,seg0_mutex,seg1_mutex;
-
-void Img0Callback(const sensor_msgs::ImageConstPtr &img_msg){
-    img0_mutex.lock();
-    if(img0_buf.size() < kQueueSize)
-        img0_buf.push(img_msg);
-    img0_mutex.unlock();
-}
-
-void Seg0Callback(const sensor_msgs::ImageConstPtr &img_msg){
-    seg0_mutex.lock();
-    if(seg0_buf.size() < kQueueSize)
-        seg0_buf.push(img_msg);
-    seg0_mutex.unlock();
-}
-
-void Img1Callback(const sensor_msgs::ImageConstPtr &img_msg){
-    img1_mutex.lock();
-    if(img1_buf.size() < kQueueSize)
-        img1_buf.push(img_msg);
-    img1_mutex.unlock();
-}
-
-void Seg1Callback(const sensor_msgs::ImageConstPtr &img_msg){
-    seg1_mutex.lock();
-    if(seg1_buf.size() < kQueueSize)
-        seg1_buf.push(img_msg);
-    seg1_mutex.unlock();
-}
-
-inline cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg){
-    cv_bridge::CvImageConstPtr ptr= cv_bridge::toCvShare(img_msg, sensor_msgs::image_encodings::BGR8);
-    return ptr->image.clone();
-}
+CallBack* callback;
 
 
-SegImage SyncProcess()
-{
-    SegImage img;
-    while(cfg::ok.load(std::memory_order_seq_cst))
-    {
-        if((cfg::is_input_seg && (img0_buf.empty() || img1_buf.empty() || seg0_buf.empty() || seg1_buf.empty())) || //等待图片
-        (!cfg::is_input_seg && (img0_buf.empty() || img1_buf.empty()))) {
-            std::this_thread::sleep_for(2ms);
-            continue;
-        }
-        ///下面以img0的时间戳为基准，找到与img0相近的图片
-        img0_mutex.lock();
-        img.color0= GetImageFromMsg(img0_buf.front());
-        img.time0=img0_buf.front()->header.stamp.toSec();
-        img0_buf.pop();
-        img0_mutex.unlock();
-
-        img1_mutex.lock();
-        img.time1=img1_buf.front()->header.stamp.toSec();
-        if(img.time0 + kDelay < img.time1){ //img0太早了
-            img1_mutex.unlock();
-            std::this_thread::sleep_for(2ms);
-            continue;
-        }
-        else if(img.time1 + kDelay < img.time0){ //img1太早了
-            while(img.time0 - img.time1 > kDelay){
-                img1_buf.pop();
-                img.time1=img1_buf.front()->header.stamp.toSec();
-            }
-        }
-        img.color1= GetImageFromMsg(img1_buf.front());
-        img1_buf.pop();
-        img1_mutex.unlock();
-
-        if(cfg::is_input_seg){
-            seg0_mutex.lock();
-            img.seg0_time=seg0_buf.front()->header.stamp.toSec();
-            if(img.time0 + kDelay < img.seg0_time){ //img0太早了
-                seg0_mutex.unlock();
-                std::this_thread::sleep_for(2ms);
-                continue;
-            }
-            else if(img.seg0_time + kDelay < img.time0){ //seg0太早了
-                while(img.time0 - img.seg0_time > kDelay){
-                    seg0_buf.pop();
-                    img.seg0_time=seg0_buf.front()->header.stamp.toSec();
-                }
-            }
-            img.seg0= GetImageFromMsg(seg0_buf.front());
-            seg0_buf.pop();
-            seg0_mutex.unlock();
-
-            seg1_mutex.lock();
-            img.seg1_time=seg1_buf.front()->header.stamp.toSec();
-            if(img.time0 + kDelay < img.seg1_time){ //img0太早了
-                seg1_mutex.unlock();
-                std::this_thread::sleep_for(2ms);
-                continue;
-            }
-            else if(img.seg1_time + kDelay < img.time0){ //seg1太早了
-                while(img.time0 - img.seg1_time > kDelay){
-                    seg1_buf.pop();
-                    img.seg1_time=seg1_buf.front()->header.stamp.toSec();
-                }
-            }
-            img.seg1= GetImageFromMsg(seg1_buf.front());
-            seg1_buf.pop();
-            seg1_mutex.unlock();
-        }
-        break;
+//摆烂了，直接读取离线估计的光流
+cv::Mat ReadFlowTensor(double time){
+    static vector<fs::path> names;
+    constexpr char* dataset_path = "/home/chen/temp/flow0/";
+    if(names.empty()){
+        fs::path dir_path(dataset_path);
+        if(!fs::exists(dir_path))
+            return {};
+        fs::directory_iterator dir_iter(dir_path);
+        for(auto &it : dir_iter)
+            names.emplace_back(it.path().filename());
+        std::sort(names.begin(),names.end());
     }
-    return img;
+    cv::Mat read_flow;
+    string input_time = std::to_string(time);
+    //二分查找
+    int low=0,high=names.size()-1;
+    while(low<=high){
+        int mid=(low+high)/2;
+        string name=names[mid];
+        string name_time = name.substr(0,name.find_last_of('_'));
+        double n_time=std::atof(name_time.c_str());
+        if(input_time==name_time){
+            string n_path = (dataset_path/names[mid]).string();
+            read_flow = cv::optflow::readOpticalFlow(n_path);
+            break;
+        }
+        else if(n_time>time){
+            high = mid-1;
+        }
+        else{
+            low = mid+1;
+        }
+    }
+    return read_flow;
+    /*if(read_flow.empty())
+        return {};
+    torch::Tensor tensor = torch::from_blob(read_flow.data, {read_flow.rows,read_flow.cols ,2}, torch::kFloat32).to(torch::kCUDA);
+    tensor = tensor.permute({2,0,1});
+    return tensor;*/
 }
+
 
 
 
@@ -177,9 +106,9 @@ void ImageProcess()
             std::this_thread::sleep_for(50ms);
             continue;
         }
-        DebugS("Start sync");
-        SegImage img = SyncProcess();
-        WarnS("----------Time : {} ----------", img.time0);
+        Debugs("Start sync");
+        SegImage img = callback->SyncProcess();
+        Warns("----------Time : {} ----------", img.time0);
 
         ///rgb to gray
         if(img.gray0.empty()){
@@ -201,47 +130,60 @@ void ImageProcess()
         //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
         ///启动光流估计线程
         if(cfg::slam == SlamType::kDynamic){
-            feature_tracker->insts_tracker->StartFlowEstimating(img_tensor);
+            //feature_tracker->insts_tracker->StartFlowEstimating(img_tensor);
         }
 
         ///实例分割
         if(!cfg::is_input_seg){
             if(cfg::slam != SlamType::kRaw){
-                tt.tic();
+                tt.Tic();
                 inst_segmentor->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
-                InfoS("sync_process forward: {}", tt.toc_then_tic());
+                Infos("sync_process forward: {}", tt.TocThenTic());
                 if(cfg::slam == SlamType::kNaive)
                     img.SetMaskGpuSimple();
                 else if(cfg::slam == SlamType::kDynamic)
                     img.SetMaskGpu();
-                InfoS("sync_process SetMask: {}", tt.toc_then_tic());
+                Infos("sync_process SetMask: {}", tt.TocThenTic());
             }
         }
         else{
+            tt.Tic();
             if(cfg::dataset == DatasetType::kViode){
                 if(cfg::slam == SlamType::kNaive)
                     VIODE::SetViodeMaskSimple(img);
                 else if(cfg::slam == SlamType::kDynamic)
                     VIODE::SetViodeMask(img);
             }
-            InfoS("sync_process SetMask: {}", tt.toc_then_tic());
+            Infos("sync_process SetMask: {}", tt.TocThenTic());
         }
 
+        tt.Tic();
+
         ///等待光流估计结果
-        auto flow_tensor = feature_tracker->insts_tracker->WaitingFlowEstimating();
-        img.flow = flow_tensor;
+        //auto flow_tensor = feature_tracker->insts_tracker->WaitingFlowEstimating();
+        auto flow_cv = ReadFlowTensor(img.time0);
+        if(!flow_cv.empty()){
+            img.flow = flow_cv;
+        }
+        else{
+            Warns("Can not find :{}", std::to_string(img.time0));
+            img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
+        }
 
-        //inst_segmentor->PushBack(img);
+        Debugs("ReadFlowTensor:{}", tt.TocThenTic());
 
-        //cv::Mat show;
-        //cv::cvtColor(img.merge_mask,show,CV_GRAY2BGR);
-        //cv::scaleAdd(img.color0,0.5,show,show);
-        cv::Mat show = VisualFlow(flow_tensor);
-        cv::imshow("show",show);
-        cv::waitKey(1);
+        inst_segmentor->PushBack(img);
+        /*cv::Mat show;
+        cv::cvtColor(img.merge_mask,show,CV_GRAY2BGR);
+        cv::scaleAdd(img.color0,0.5,show,show);*/
+        /*if(flow_tensor.defined()){
+            cv::Mat show = VisualFlow(flow_tensor);
+            cv::imshow("show",show);
+            cv::waitKey(1);
+        }*/
     }
 
-    WarnS("ImageProcess 线程退出");
+    Warns("ImageProcess 线程退出");
 }
 
 
@@ -252,12 +194,12 @@ void FeatureTrack()
     int cnt;
     while(cfg::ok.load(std::memory_order_seq_cst)){
         if(auto img = inst_segmentor->WaitForResult();img){
-            tt.tic();
+            tt.Tic();
             if(cfg::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
                 FeatureMap features = feature_tracker->TrackSemanticImage(*img);
                 auto instances= feature_tracker->insts_tracker->SetOutputFeature();
-                //estimator->PushBack(img->time0, features, instances);
+                estimator->PushBack(img->time0, features, instances);
             }
             else if(cfg::slam == SlamType::kNaive){
                 FeatureMap features = feature_tracker->TrackImageNaive(*img);
@@ -279,10 +221,10 @@ void FeatureTrack()
                 }*/
             }
 
-            InfoT("**************feature_track:{} ms****************\n", tt.toc());
+            Infot("**************feature_track:{} ms****************\n", tt.Toc());
         }
     }
-    WarnT("FeatureTrack 线程退出");
+    Warnt("FeatureTrack 线程退出");
 }
 
 
@@ -298,7 +240,7 @@ void ImuCallback(const sensor_msgs::ImuConstPtr &imu_msg)
 void RestartCallback(const std_msgs::BoolConstPtr &restart_msg)
 {
     if (restart_msg->data == true){
-        WarnV("restart the e!");
+        Warnv("restart the e!");
         estimator->ClearState();
         estimator->SetParameter();
     }
@@ -316,11 +258,11 @@ void TerminalCallback(const std_msgs::BoolConstPtr &terminal_msg)
 void ImuSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true){
-        WarnV("use IMU!");
+        Warnv("use IMU!");
         estimator->ChangeSensorType(1, cfg::is_stereo);
     }
     else{
-        WarnV("disable IMU!");
+        Warnv("disable IMU!");
         estimator->ChangeSensorType(0, cfg::is_stereo);
     }
 }
@@ -328,11 +270,11 @@ void ImuSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 void CamSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true){
-        WarnV("use stereo!");
+        Warnv("use stereo!");
         estimator->ChangeSensorType(cfg::is_use_imu, 1);
     }
     else{
-        WarnV("use mono camera (left)!");
+        Warnv("use mono camera (left)!");
         estimator->ChangeSensorType(cfg::is_use_imu, 0);
     }
 }
@@ -351,6 +293,7 @@ int Run(int argc, char **argv){
         estimator.reset(new Estimator());
         inst_segmentor.reset(new InstanceSegmentor);
         feature_tracker = std::make_unique<FeatureTracker>();
+        callback = new CallBack();
     }
     catch(std::runtime_error &e){
         vio_logger->critical(e.what());
@@ -365,13 +308,13 @@ int Run(int argc, char **argv){
     registerPub(n);
 
     ros::Subscriber sub_imu = n.subscribe(cfg::kImuTopic, 2000, ImuCallback, ros::TransportHints().tcpNoDelay());
-    ros::Subscriber sub_img0 = n.subscribe(cfg::kImage0Topic, 100, Img0Callback);
-    ros::Subscriber sub_img1 = n.subscribe(cfg::kImage1Topic, 100, Img1Callback);
+    ros::Subscriber sub_img0 = n.subscribe(cfg::kImage0Topic, 100, &CallBack::Img0Callback,callback);
+    ros::Subscriber sub_img1 = n.subscribe(cfg::kImage1Topic, 100, &CallBack::Img1Callback,callback);
 
     ros::Subscriber sub_seg0,sub_seg1;
     if(cfg::is_input_seg){
-        sub_seg0 = n.subscribe(cfg::kImage0SegTopic, 100, Seg0Callback);
-        sub_seg1 = n.subscribe(cfg::kImage1SegTopic, 100, Seg1Callback);
+        sub_seg0 = n.subscribe(cfg::kImage0SegTopic, 100, &CallBack::Seg0Callback,callback);
+        sub_seg1 = n.subscribe(cfg::kImage1SegTopic, 100, &CallBack::Seg1Callback,callback);
     }
 
     ros::Subscriber sub_restart = n.subscribe("/vins_restart", 100, RestartCallback);
@@ -382,15 +325,15 @@ int Run(int argc, char **argv){
     vio_logger->flush();
 
     std::thread sync_thread{ImageProcess};
-    //std::thread fk_thread{FeatureTrack};
-    //std::thread vio_thread{&Estimator::ProcessMeasurements, estimator};
+    std::thread fk_thread{FeatureTrack};
+    std::thread vio_thread{&Estimator::ProcessMeasurements, estimator};
 
 
     ros::spin();
 
     sync_thread.join();
-    //fk_thread.join();
-    //vio_thread.join();
+    fk_thread.join();
+    vio_thread.join();
     spdlog::drop_all();
 
     cerr<<"vins结束"<<endl;

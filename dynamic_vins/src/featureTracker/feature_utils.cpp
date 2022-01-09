@@ -83,7 +83,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
     GpuMat2Points(d_nextPts, pts_next);
 
     int forward_success=getValidStatusSize(status);
-    DebugT("flowTrackGpu forward success:{}", forward_success);
+    Debugt("flowTrackGpu forward success:{}", forward_success);
 
     //反向光流计算 判断之前光流跟踪的特征点的质量
     if(Config::kFlowBack){
@@ -106,7 +106,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
             else
                 status[i] = 0;
         }
-        DebugT("flowTrackGpu backward success:{}", getValidStatusSize(status));
+        Debugt("flowTrackGpu backward success:{}", getValidStatusSize(status));
         //}
         /*else{
             std::vector<std::tuple<int,float>> feats_dis(status.size());
@@ -138,7 +138,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
             status[i] = 0;
     }
 
-    DebugT("flowTrackGpu input:{} final_success:{}", status.size(), getValidStatusSize(status));
+    Debugt("flowTrackGpu input:{} final_success:{}", status.size(), getValidStatusSize(status));
 
     return status;
 }
@@ -199,6 +199,7 @@ vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
             status[i]=1;
         else
             status[i]=0;
+        Debugt("index:{},({},{}),({},{})", i, delta[0], delta[1], pts2[i].x, pts2[i].y);
     }
     return status;
 }
@@ -219,18 +220,54 @@ std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &ins
         row_end = rect.br().y;
         col_end = rect.br().x;
     }
-    vector<cv::Point2f> output;
-    constexpr int kMinDist=5;
-    for(int i=row_start;i<row_end && cnt<detect_num;i+=kMinDist){
-        for(int j=col_start;j<col_end && cnt<detect_num;j+=kMinDist){
+    vector<cv::Point2f> vec;
+    constexpr int kMinDist=3;
+    for(int i=row_start;i<row_end;i+=kMinDist){
+        for(int j=col_start;j<col_end;j+=kMinDist){
             if(mask.at<uchar>(i,j) > 0){
-                output.push_back(cv::Point2f(j,i));
+                vec.emplace_back(j,i);
                 cnt++;
             }
         }
     }
-    return output;
+
+    std::random_shuffle(vec.begin(),vec.end());
+    return vec;
 }
+
+/**
+ * 计算特征点的像素速度
+ * @param dt
+ * @param ids
+ * @param curr_un_pts
+ * @param prev_id_pts 上一帧中的 ID_特征点
+ * @param output_velocity
+ */
+void PtsVelocity(double dt,
+                 vector<unsigned int> &ids,
+                 vector<cv::Point2f> &curr_un_pts,
+                 std::map<unsigned int, cv::Point2f> &prev_id_pts,
+                 vector<cv::Point2f> &output_velocity){
+    output_velocity.clear();
+    if (!prev_id_pts.empty()){
+        for (unsigned int i = 0; i < curr_un_pts.size(); i++){
+            if (auto it = prev_id_pts.find(ids[i]);it != prev_id_pts.end()){
+                double v_x = (curr_un_pts[i].x - it->second.x) / dt;
+                double v_y = (curr_un_pts[i].y - it->second.y) / dt;
+                output_velocity.emplace_back(v_x, v_y);
+            }
+            else{
+                output_velocity.emplace_back(0, 0);
+            }
+        }
+    }
+    else{
+        for(unsigned int i = 0; i < curr_un_pts.size(); i++)
+            output_velocity.emplace_back(0, 0);
+    }
+}
+
+
 
 
 

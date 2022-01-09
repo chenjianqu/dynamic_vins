@@ -89,12 +89,12 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     const int feat_w=feat_tensor.sizes()[2];
     const int pred_num=cate_tensor.sizes()[0];//所有的实例数量(3872)
 
-    ticToc.toc_print_tic("input reshape:");
+    ticToc.TocPrintTic("input reshape:");
     ///过滤掉低于0.1置信度的实例
     auto inds= cate_tensor > Config::kSoloScoreThr;
     torch::IntArrayRef dims={0,1};
     if(inds.sum(dims).item().toInt() == 0){
-        WarnS("inds.sum(dims) == 0");
+        Warns("inds.sum(dims) == 0");
         return {};
     }
     cate_tensor=cate_tensor.masked_select(inds);
@@ -109,7 +109,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     auto pred_index=inds.index({"...",0});
     auto kernel_preds=kernel_tensor.index({pred_index});
 
-    ticToc.toc_print_tic("过滤掉低于0.1置信度的实例:");
+    ticToc.TocPrintTic("过滤掉低于0.1置信度的实例:");
 
 
     ///计算每个实例的stride
@@ -134,7 +134,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     strides=strides.index({pred_index});
     //cout<<"strides.sizes"<<strides.sizes()<<endl;
 
-    ticToc.toc_print_tic("计算每个实例的stride:");
+    ticToc.TocPrintTic("计算每个实例的stride:");
 
 
     //cout<<"将mask_feat和kernel进行卷积"<<endl;
@@ -150,7 +150,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     seg_preds=torch::squeeze(seg_preds,0).sigmoid();
     //cout<<"seg_preds.sizes"<<seg_preds.sizes()<<endl;
 
-    ticToc.toc_print_tic("将mask_feat和kernel进行卷积:");
+    ticToc.TocPrintTic("将mask_feat和kernel进行卷积:");
 
 
     ///计算mask
@@ -160,7 +160,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     //cout<<"sum_masks.sizes"<<sum_masks.sizes()<<endl;
     //cout<<sum_masks<<endl;
 
-    ticToc.toc_print_tic("计算mask:");
+    ticToc.TocPrintTic("计算mask:");
 
     //cout<<"根据strides过滤掉像素点太少的实例"<<endl;
 
@@ -176,7 +176,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     cate_tensor=cate_tensor.index({keep});
     cate_labels=cate_labels.index({keep});
 
-    ticToc.toc_print_tic("根据strides过滤掉像素点太少的实例:");
+    ticToc.TocPrintTic("根据strides过滤掉像素点太少的实例:");
 
 
     ///根据mask预测设置实例的置信度
@@ -208,13 +208,13 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     cate_labels=cate_labels.index({sort_inds});
     //cout<<"cate_labels.sizes"<<cate_labels.sizes()<<endl;
 
-    ticToc.toc_print_tic("NMS准备:");
+    ticToc.TocPrintTic("NMS准备:");
 
 
     ///执行Matrix NMS
     auto cate_scores = MatrixNMS(seg_masks,cate_labels,cate_tensor,sum_masks);
     //cout<<"cate_scores.sizes"<<cate_scores.sizes()<<endl;
-    ticToc.toc_print_tic("NMS执行:");
+    ticToc.TocPrintTic("NMS执行:");
 
     ///根据新的置信度过滤结果
     //cout<<"根据新的置信度过滤结果"<<endl;
@@ -244,7 +244,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     cate_labels=cate_labels.index({sort_inds});
     //cout<<"cate_labels.sizes"<<cate_labels.sizes()<<endl;
 
-    ticToc.toc_print_tic("NMS执行:");
+    ticToc.TocPrintTic("NMS执行:");
 
 
     //cout<<"对mask进行双线性上采样"<<endl;
@@ -268,7 +268,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     seg_masks = (seg_preds > Config::kSoloMaskThr).to(torch::kFloat );
     //cout<<"seg_masks.sizes"<<seg_masks.sizes()<<endl;
 
-    ticToc.toc_print_tic("上采样和阈值化:");
+    ticToc.TocPrintTic("上采样和阈值化:");
 
     ///根据mask计算包围框
 
@@ -292,22 +292,22 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
     seg_masks = seg_masks.unsqueeze(3).expand({seg_masks.sizes()[0],seg_masks.sizes()[1],seg_masks.sizes()[2],3});
     //seg_masks=seg_masks.permute({2,3,1,0});
     //cout<<"seg_masks.sizes"<<seg_masks.sizes()<<endl;
-    ticToc.toc_print_tic("seg_masks.expand");
+    ticToc.TocPrintTic("seg_masks.expand");
 
     auto rand_color = torch::randint(0, 255, { seg_masks.sizes()[0], 3},kernel_tensor.device());
-    ticToc.toc_print_tic("torch::randint");
+    ticToc.TocPrintTic("torch::randint");
 
     rand_color = rand_color.unsqueeze(1).unsqueeze(2).expand({seg_masks.sizes()[0],seg_masks.sizes()[1],seg_masks.sizes()[2],3});
-    ticToc.toc_print_tic("rand_color.expand");
+    ticToc.TocPrintTic("rand_color.expand");
 
     auto show_tensor = seg_masks * rand_color;    //非常耗时18ms
-    ticToc.toc_print_tic("seg_masks * rand_color");
+    ticToc.TocPrintTic("seg_masks * rand_color");
 
     auto show_img = show_tensor.sum(0).clip(0,255).squeeze(0) * 0.6f; //非常耗时7ms
-    ticToc.toc_print_tic("show_tensor.sum");
+    ticToc.TocPrintTic("show_tensor.sum");
 
     show_img=show_img.to(torch::kInt8).detach();
-    ticToc.toc_print_tic("to(torch::kInt8).detach");
+    ticToc.TocPrintTic("to(torch::kInt8).detach");
 
     //cout<<"show_img.sizes"<<show_img.sizes()<<endl;
 
@@ -315,7 +315,7 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
 
 
     cv::Mat timg=cv::Mat(cv::Size(show_img.sizes()[1], show_img.sizes()[0]), CV_8UC3, show_img.data_ptr()).clone();
-    ticToc.toc_print_tic("cv::Mat");
+    ticToc.TocPrintTic("cv::Mat");
 
     //ticToc.toc_print_tic("计算可视化:");
 
@@ -353,7 +353,7 @@ std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> Solov2::GetSingleSeg(std:
     cout<<"cate_tensor.sizes"<<cate_tensor.sizes()<<endl;
     auto inds= cate_tensor > Config::kSoloScoreThr;
     if(inds.sum(torch::IntArrayRef({0,1})).item().toInt() == 0){
-        WarnS("inds.sum(dims) == 0");
+        Warns("inds.sum(dims) == 0");
         return {std::vector<cv::Mat>(),std::vector<InstInfo>()};
     }
     cout<<inds.sizes()<<endl;
@@ -537,7 +537,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     ///过滤掉低于0.1置信度的实例
     auto inds= cate_tensor > Config::kSoloScoreThr;
     if(inds.sum(torch::IntArrayRef({0,1})).item().toInt() == 0){
-        WarnS("inds.sum(dims) == 0");
+        Warns("inds.sum(dims) == 0");
         return;
     }
     cate_tensor=cate_tensor.masked_select(inds);
@@ -604,8 +604,8 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     cate_tensor=cate_tensor.index({sort_inds});
     cate_labels=cate_labels.index({sort_inds});
 
-    DebugS("seg_masks.dims:{}", DimsToStr(seg_masks.sizes()));
-    DebugS("cate_labels.dims:{}", DimsToStr(cate_labels.sizes()));
+    Debugs("seg_masks.dims:{}", DimsToStr(seg_masks.sizes()));
+    Debugs("cate_labels.dims:{}", DimsToStr(cate_labels.sizes()));
 
     ///执行Matrix NMS
     auto cate_scores = MatrixNMS(seg_masks,cate_labels,cate_tensor,sum_masks);
@@ -622,7 +622,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     sum_masks = sum_masks.index({keep});
 
     for(int i=0;i<cate_scores.sizes()[0];++i){
-        DebugS("id:{},cls:{},prob:{}", i, Config::CocoLabelVector[cate_labels[i].item().toInt()],
+        Debugs("id:{},cls:{},prob:{}", i, Config::CocoLabelVector[cate_labels[i].item().toInt()],
                cate_scores[i].item().toFloat());
     }
 
@@ -636,7 +636,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     cate_labels=cate_labels.index({sort_inds});
     sum_masks = sum_masks.index({sort_inds});
 
-    DebugS("seg_preds.dims:{}", DimsToStr(seg_preds.sizes()));
+    Debugs("seg_preds.dims:{}", DimsToStr(seg_preds.sizes()));
 
     ///对mask进行双线性上采样,
     static auto options=InterpolateFuncOptions().mode(torch::kBilinear).align_corners(true);

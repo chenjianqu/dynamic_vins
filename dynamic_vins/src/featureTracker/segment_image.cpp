@@ -37,7 +37,7 @@ void SegImage::SetMask(){
 
 void SegImage::SetMaskGpu(){
     if(insts_info.empty()){
-        WarnS("Can not detect any object in picture");
+        Warns("Can not detect any object in picture");
         return;
     }
     cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);
@@ -55,9 +55,10 @@ void SegImage::SetMaskGpu(){
 
     std::stringstream ss;
     ss<<merge_tensor.scalar_type();
-    DebugS("SetMaskGpu merge_tensor:type:{}",ss.str());
-    DebugS("SetMaskGpu merge_mask_gpu:({},{}) type:{}",merge_mask_gpu.rows,merge_mask_gpu.cols,merge_mask_gpu.type());
-    DebugS("SetMaskGpu inv_merge_mask_gpu:({},{}) type:{}",inv_merge_mask_gpu.rows,inv_merge_mask_gpu.cols,inv_merge_mask_gpu.type());
+    Debugs("SetMaskGpu merge_tensor:type:{}", ss.str());
+    Debugs("SetMaskGpu merge_mask_gpu:({},{}) type:{}", merge_mask_gpu.rows, merge_mask_gpu.cols, merge_mask_gpu.type());
+    Debugs("SetMaskGpu inv_merge_mask_gpu:({},{}) type:{}", inv_merge_mask_gpu.rows, inv_merge_mask_gpu.cols,
+           inv_merge_mask_gpu.type());
 
     for(int i=0; i < (int)insts_info.size(); ++i){
         auto inst_mask_tensor = mask_tensor[i];
@@ -75,7 +76,7 @@ void SegImage::SetMaskGpu(){
 
 void SegImage::SetMaskGpuSimple(){
     if(insts_info.empty()){
-        WarnS("Can not detect any object in picture");
+        Warns("Can not detect any object in picture");
         return;
     }
     cv::Size mask_size((int)mask_tensor.sizes()[2],(int)mask_tensor.sizes()[1]);

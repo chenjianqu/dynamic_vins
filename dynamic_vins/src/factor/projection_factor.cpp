@@ -127,7 +127,7 @@ bool ProjectionFactor::Evaluate(double const *const *parameters, double *residua
 #endif
         }
     }
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 }

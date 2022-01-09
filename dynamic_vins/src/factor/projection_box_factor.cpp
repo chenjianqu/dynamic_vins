@@ -137,7 +137,7 @@ bool ProjBoxFactor::Evaluate(double const *const *parameters, double *residuals,
         }
     }
 
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 
@@ -254,7 +254,7 @@ bool ProjBoxSimpleFactor::Evaluate(double const *const *parameters, double *resi
     }
 
 
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 
@@ -305,7 +305,7 @@ bool BoxPowFactor::Evaluate(double const *const *parameters, double *residuals, 
         }
     }
 
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 
@@ -410,7 +410,7 @@ bool BoxSqrtFactor::Evaluate(double const *const *parameters, double *residuals,
         }
     }
 
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 
@@ -512,7 +512,7 @@ bool BoxAbsFactor::Evaluate(double const *const *parameters, double *residuals, 
         }
     }
 
-    sum_t += tic_toc.toc();
+    sum_t += tic_toc.Toc();
 
     return true;
 

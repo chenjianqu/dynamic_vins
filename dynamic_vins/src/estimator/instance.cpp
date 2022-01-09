@@ -122,7 +122,7 @@ void Instance::InitialPose()
         box = Vec3d::Ones();
         is_initial=true;
 
-        DebugV("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
+        Debugv("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
                id, cnt_max, frame_cnt, VecToStr(center), VecToStr(box));
 
         ///删去初始化之前的观测
@@ -394,7 +394,7 @@ void Instance::OutlierRejection()
     if(!is_initial || !is_tracking)
         return;
     int num_delete=0,index=0;
-    DebugV("Inst:{} landmark_num:{} box:<{}>", id, landmarks.size(), VecToStr(box));
+    Debugv("Inst:{} landmark_num:{} box:<{}>", id, landmarks.size(), VecToStr(box));
 
     std::string debug_msg;
     string lm_msg;
@@ -468,15 +468,15 @@ void Instance::OutlierRejection()
         double ave_err = err / err_cnt * kFocalLength;
         index++;
         if(ave_err > 10){
-            DebugV("del lid:{} ,avg:{:.2f},d:{:.2f}> ", lm.id, ave_err, lm.depth);
+            Debugv("del lid:{} ,avg:{:.2f},d:{:.2f}> ", lm.id, ave_err, lm.depth);
             landmarks.erase(it);
             num_delete++;
         }
     }
 
-    DebugV(lm_msg);
-    DebugV("outbox:{}", debug_msg);
-    DebugV("Inst:{} delete num:{}", id, num_delete);
+    Debugv(lm_msg);
+    Debugv("outbox:{}", debug_msg);
+    Debugv("Inst:{} delete num:{}", id, num_delete);
 }
 
 
