@@ -173,8 +173,8 @@ Config::Config(const std::string &file_name)
     kMinDist = fs["min_dist"];
     kMinDynamicDist = fs["min_dynamic_dist"];
     kFThreshold = fs["F_threshold"];
-    kShowTrack = fs["show_track"];
-    kFlowBack = fs["flow_back"];
+    is_show_track = fs["show_track"];
+    is_flow_back = fs["flow_back"];
 
     kMaxSolverTime = fs["max_solver_time"];
     KNumIter = fs["max_num_iterations"];
@@ -201,19 +201,19 @@ Config::Config(const std::string &file_name)
     fout.close();
 
     /// 设置 相机到IMU的外参矩阵
-    ESTIMATE_EXTRINSIC = fs["estimate_extrinsic"];
-    if (ESTIMATE_EXTRINSIC == 2){
+    is_estimate_ex = fs["estimate_extrinsic"];
+    if (is_estimate_ex == 2){
         cout<<"have no prior about extrinsic param, calibrate extrinsic param"<<endl;
         RIC.emplace_back(Eigen::Matrix3d::Identity());
         TIC.emplace_back(Eigen::Vector3d::Zero());
         kExCalibResultPath = kOutputFolder + "/extrinsic_parameter.csv";
     }
     else{
-        if ( ESTIMATE_EXTRINSIC == 1){
+        if (is_estimate_ex == 1){
             cout<<"Optimize extrinsic param around initial guess!"<<endl;
             kExCalibResultPath = kOutputFolder + "/extrinsic_parameter.csv";
         }
-        else if (ESTIMATE_EXTRINSIC == 0){
+        else if (is_estimate_ex == 0){
             cout<<"fix extrinsic param"<<endl;
         }
         cv::Mat cv_T;
@@ -231,18 +231,18 @@ Config::Config(const std::string &file_name)
 
     ///读取各个相机配置文件
     auto pn = file_name.find_last_of('/');
-    std::string configPath = file_name.substr(0, pn);
+    std::string config_path = file_name.substr(0, pn);
 
-    std::string cam0Calib;
-    fs["cam0_calib"] >> cam0Calib;
-    std::string cam0Path = configPath + "/" + cam0Calib;
+    std::string cam0_calib;
+    fs["cam0_calib"] >> cam0_calib;
+    std::string cam0Path = config_path + "/" + cam0_calib;
     kCamPath.push_back(cam0Path);
 
     if(kCamNum == 2){
-        is_stereo = 1;
+        is_stereo = true;
         std::string cam1Calib;
         fs["cam1_calib"] >> cam1Calib;
-        std::string cam1Path = configPath + "/" + cam1Calib;
+        std::string cam1Path = config_path + "/" + cam1Calib;
         kCamPath.push_back(cam1Path);
 
         cv::Mat cv_T;
@@ -251,6 +251,9 @@ Config::Config(const std::string &file_name)
         cv::cv2eigen(cv_T, T);
         RIC.emplace_back(T.block<3, 3>(0, 0));
         TIC.emplace_back(T.block<3, 1>(0, 3));
+    }
+    else{
+        is_stereo = false;
     }
 
     fs["INIT_DEPTH"] >> kInitDepth;
@@ -267,7 +270,7 @@ Config::Config(const std::string &file_name)
     }
 
     if(!is_use_imu){
-        ESTIMATE_EXTRINSIC = 0;
+        is_estimate_ex = 0;
         is_estimate_td = 0;
         cout<<"no imu, fix extrinsic param; no time offset calibration"<<endl;
     }

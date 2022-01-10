@@ -48,9 +48,7 @@
 #include "utils.h"
 #include "landmark.h"
 
-
 namespace dynamic_vins{\
-
 
 
 class Estimator
@@ -63,22 +61,18 @@ class Estimator
     void SetParameter();
 
     // interface
-    void initFirstPose(Vec3d p, Eigen::Matrix3d r);
-    void InputIMU(double t, const Vector3d &linearAcceleration, const Vector3d &angularVelocity);
-    void processIMU(double t, double dt, const Vector3d &linear_acceleration, const Vector3d &angular_velocity);
+    void InputIMU(double t, const Vec3d &linearAcceleration, const Vec3d &angularVelocity);
+    void ProcessIMU(double t, double dt, const Vec3d &linear_acceleration, const Vec3d &angular_velocity);
     void processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const double header);
-
-    void PushBack(double time, FeatureMap &feats);
-    void PushBack(double time, FeatureMap &feats, InstancesFeatureMap &insts);
 
     void ProcessMeasurements();
     void ChangeSensorType(int use_imu, int use_stereo);
 
     // internal
     void ClearState();
-    bool initialStructure();
+    bool InitialStructure();
     bool visualInitialAlign();
-    bool relativePose(Matrix3d &relative_R, Vector3d &relative_T, int &l);
+    bool relativePose(Mat3d &relative_R, Vec3d &relative_T, int &l);
     void slideWindow();
     void slideWindowNew();
     void slideWindowOld();
@@ -86,79 +80,118 @@ class Estimator
     void vector2double();
     void double2vector();
     bool failureDetection();
-    bool getIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &accVector,
-                                              vector<pair<double, Vec3d>> &gyrVector);
+    bool GetIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &acc_vec,
+                        vector<pair<double, Vec3d>> &gyr_vec);
     void getPoseInWorldFrame(Eigen::Matrix4d &T);
     void getPoseInWorldFrame(int index, Eigen::Matrix4d &T);
     void predictPtsInNextFrame();
     void outliersRejection(set<int> &removeIndex);
-    double reprojectionError(Matrix3d &Ri, Vector3d &Pi, Matrix3d &rici, Vector3d &tici,
-                                     Matrix3d &Rj, Vector3d &Pj, Matrix3d &ricj, Vector3d &ticj, 
-                                     double depth, Vector3d &uvi, Vector3d &uvj);
+    double reprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
+                                     Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj, 
+                                     double depth, Vec3d &uvi, Vec3d &uvj);
     void updateLatestStates();
-    void fastPredictIMU(double t, Vec3d linear_acceleration, Vec3d angular_velocity);
-    bool IMUAvailable(double t);
-    void initFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
+    void FastPredictIMU(double t, Vec3d linear_acceleration, Vec3d angular_velocity);
 
-    std::mutex mProcess;
-    std::mutex mBuf;
-    std::mutex mPropagate;
-    queue<pair<double, Vec3d>> accBuf;
-    queue<pair<double, Vec3d>> gyrBuf;
-    queue<FeatureFrame> featureBuf;
-    queue<InstancesFeatureMap> instancesBuf;
-    double prevTime{}, curTime{};
-    bool openExEstimation{};
+    void InitFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
 
-    std::thread trackThread;
-    std::thread processThread;
+    bool IMUAvailable(double t){
+        if(!acc_buf.empty() && t <= acc_buf.back().first)
+            return true;
+        else
+            return false;
+    }
 
-    SolverFlag solver_flag;
-    MarginFlag   margin_flag;
-    Vector3d g;
+    void PushBack(double time, FeatureMap &feats, InstancesFeatureMap &insts){
+        input_image_cnt++;
+        if(input_image_cnt % 2 == 0){
+            buf_mutex.lock();
+            feature_buf.emplace(std::move(feats), time);//放入特征队列中
+            instances_buf.push(std::move(insts));
+            buf_mutex.unlock();
+        }
+    }
 
-    Matrix3d ric[2];
-    Vector3d tic[2];
+    void PushBack(double time, FeatureMap &feats){
+        input_image_cnt++;
+        if(input_image_cnt % 2 == 0){
+            buf_mutex.lock();
+            feature_buf.emplace(std::move(feats), time);//放入特征队列中
+            buf_mutex.unlock();
+        }
+    }
 
-    Vector3d        Ps[(kWindowSize + 1)];
-    Vector3d        Vs[(kWindowSize + 1)];
-    Matrix3d        Rs[(kWindowSize + 1)];
-    Vector3d        Bas[(kWindowSize + 1)];
-    Vector3d        Bgs[(kWindowSize + 1)];
+    Mat3d ric[2];
+    Vec3d tic[2];
+    Vec3d        Ps[(kWindowSize + 1)];
+    Vec3d        Vs[(kWindowSize + 1)];
+    Mat3d        Rs[(kWindowSize + 1)];
+    Vec3d        Bas[(kWindowSize + 1)];
+    Vec3d        Bgs[(kWindowSize + 1)];
     double td{};
-
-    Matrix3d back_R0, last_R, last_R0;
-    Vector3d back_P0, last_P, last_P0;
     double headers[(kWindowSize + 1)]{};
-
-    IntegrationBase *pre_integrations[(kWindowSize + 1)] {nullptr};
-    Vector3d acc_0, gyr_0;
-
-    vector<double> dt_buf[(kWindowSize + 1)];
-    vector<Vector3d> linear_acceleration_buf[(kWindowSize + 1)];
-    vector<Vector3d> angular_velocity_buf[(kWindowSize + 1)];
-
     int frame_count{};
-    int sum_of_outlier{}, sum_of_back{}, sum_of_front{}, sum_of_invalid{};
-    int inputImageCnt{};
 
+    vector<Vec3d> key_poses;
+    SolverFlag solver_flag;
+    MarginFlag margin_flag;
+    double para_ex_pose[2][kSizePose]{};
+
+    InstanceManager insts_manager;
     FeatureManager f_manager;
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;
+private:
+    string logCurrentPose(){
+        string result;
+        for(int i=0; i <= kWindowSize; ++i)
+            result+= fmt::format("{} t:({}) q:({})\n", i, VecToStr(Ps[i]),
+                                 QuaternionToStr(Eigen::Quaterniond(Rs[i])));
+        return result;
+    }
+
+    void initFirstPose(Vec3d p, Mat3d r){
+        Ps[0] = p;
+        Rs[0] = r;
+        initP = p;
+        initR = r;
+    }
+
+    std::mutex process_mutex;
+    std::mutex buf_mutex;
+    std::mutex propogate_mutex;
+    queue<pair<double, Vec3d>> acc_buf;
+    queue<pair<double, Vec3d>> gyr_buf;
+    queue<FeatureFrame> feature_buf;
+    queue<InstancesFeatureMap> instances_buf;
+    double prevTime{}, cur_time{};
+    bool openExEstimation{};
+
+    Vec3d g;
+
+    Mat3d back_R0, last_R, last_R0;
+    Vec3d back_P0, last_P, last_P0;
+
+    IntegrationBase *pre_integrations[(kWindowSize + 1)] {nullptr};
+    Vec3d acc_0, gyr_0;
+
+    vector<double> dt_buf[(kWindowSize + 1)];
+    vector<Vec3d> linear_acceleration_buf[(kWindowSize + 1)];
+    vector<Vec3d> angular_velocity_buf[(kWindowSize + 1)];
+
+    int sum_of_outlier{}, sum_of_back{}, sum_of_front{}, sum_of_invalid{};
+    int input_image_cnt{};
 
     bool first_imu{};
     bool is_valid{}, is_key{};
     bool failure_occur{};
 
-    vector<Vector3d> point_cloud;
-    vector<Vector3d> margin_cloud;
-    vector<Vector3d> key_poses;
+    vector<Vec3d> point_cloud;
+    vector<Vec3d> margin_cloud;
     double initial_timestamp{};
 
     double para_Pose[kWindowSize + 1][kSizePose]{};
     double para_SpeedBias[kWindowSize + 1][kSizeSpeedBias]{};
     double para_Feature[kNumFeat][kSizeFeature]{};
-    double para_ex_pose[2][kSizePose]{};
     double para_Retrive_Pose[kSizePose]{};
     double para_Td[1][1]{};
     double para_Tr[1][1]{};
@@ -172,21 +205,14 @@ class Estimator
     IntegrationBase *tmp_pre_integration{};
 
     Vec3d initP;
-    Eigen::Matrix3d initR;
+    Mat3d initR;
 
     double latest_time{};
     Vec3d latest_P, latest_V, latest_Ba, latest_Bg, latest_acc_0, latest_gyr_0;
     Eigen::Quaterniond latest_Q;
 
-    bool initFirstPoseFlag{};
+    bool is_init_first_pose{};
     bool initThreadFlag;
-
-    InstanceManager insts_manager;
-
-private:
-    string logCurrentPose();
-
-
 };
 
 

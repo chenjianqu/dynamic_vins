@@ -90,11 +90,10 @@ private:
     vector<int> track_cnt;
     std::map<int, cv::Point2f> cur_un_pts_map, prev_un_pts_map;
     std::map<int, cv::Point2f> cur_un_right_pts_map, prev_un_right_pts_map;
-    std::map<int, cv::Point2f> prevLeftPtsMap;
+    std::map<int, cv::Point2f> prev_left_map;
     vector<camodocal::CameraPtr> m_camera;
     double cur_time{};
     double prev_time{};
-    bool stereo_cam;
     int n_id;
 
     std::vector<cv::Point2f> visual_new_pts;

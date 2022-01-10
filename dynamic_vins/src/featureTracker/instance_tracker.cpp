@@ -336,6 +336,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
 }
 
 
+/*
 
 void InstsFeatManager::InstsFlowTrack(SegImage img)
 {
@@ -455,7 +456,8 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
         Infot("instsTrack undistortedPts & ptsVelocity:{} ms", tic_toc.TocThenTic());
 
         /// 右边相机图像的跟踪
-        /*if((!img.gray1.empty() || !img.gray1_gpu.empty()) && is_stereo_){
+        */
+/*if((!img.gray1.empty() || !img.gray1_gpu.empty()) && is_stereo_){
             for(auto& [key,inst] : instances_){
                 inst.right_points.clear();
                 if(!inst.curr_points.empty() && inst.lost_num==0){
@@ -476,7 +478,8 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
                                 inst.right_prev_id_pts, inst.right_curr_id_pts, inst.right_pts_velocity);
                 }
             }
-        }*/
+        }*//*
+
 
         ManageInstances();
         ///输出实例数据
@@ -517,6 +520,7 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
     prev_img = img;
 }
 
+*/
 
 
 /**
@@ -945,7 +949,6 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         for(const auto &[id,inst]: instances_){
             if(inst.lost_num>0 || inst.curr_points.empty())
                 continue;
-
             for(const auto &[pt1,pt2] : inst.visual_points_pair){
                 //cv::circle(img, pt1, 2, cv::Scalar(255, 255, 255), 2);//上一帧的点
                 cv::circle(img, pt2, 2, inst.color, 2);//当前帧的点
@@ -979,9 +982,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
                     cv::circle(img, pt, 2, inst.color, 2);
                 }
             }
-
         }
-
 
         /*for(const auto& pt : visual_new_points){
             cv::circle(img, pt, 3, cv::Scalar(0,0,255), 3);

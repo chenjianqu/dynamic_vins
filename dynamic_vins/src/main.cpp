@@ -211,7 +211,7 @@ void FeatureTrack()
             }
 
             ///发布跟踪可视化图像
-            if (cfg::kShowTrack){
+            if (cfg::is_show_track){
                 PubTrackImage(feature_tracker->img_track(), img->time0);
                 /*cv::imshow("img",feature_tracker->img_track);
                 cv::waitKey(1);*/

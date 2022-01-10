@@ -108,7 +108,7 @@ void printStatistics(const Estimator &estimator, double t)
     //printf("position: %f, %f, %f\r", e.Ps[kWindowSize].x(), e.Ps[kWindowSize].y(), e.Ps[kWindowSize].z());
     ROS_DEBUG_STREAM("position: " << estimator.Ps[kWindowSize].transpose());
     ROS_DEBUG_STREAM("orientation: " << estimator.Vs[kWindowSize].transpose());
-    if (cfg::ESTIMATE_EXTRINSIC)
+    if (cfg::is_estimate_ex)
     {
         cv::FileStorage fs(cfg::kExCalibResultPath, cv::FileStorage::WRITE);
         for (int i = 0; i < cfg::kCamNum; i++)

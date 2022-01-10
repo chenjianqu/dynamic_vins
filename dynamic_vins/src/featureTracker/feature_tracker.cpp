@@ -26,11 +26,9 @@ namespace dynamic_vins{\
 
 FeatureTracker::FeatureTracker()
 {
-    stereo_cam = false;
     n_id = 0;
-    vio_logger->info("init FeatureTracker");
+    Debugt("init FeatureTracker");
     insts_tracker.reset(new InstsFeatManager);
-
     lk_optical_flow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30);
     lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30, true);
 }
@@ -100,7 +98,8 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
     TicToc t_t;
     int n_max_cnt = cfg::kMaxCnt - static_cast<int>(cur_pts.size());
     if (n_max_cnt > 0)
-        cv::goodFeaturesToTrack(cur_img.gray0, n_pts, cfg::kMaxCnt - cur_pts.size(), 0.01, cfg::kMinDist, mask);
+        cv::goodFeaturesToTrack(cur_img.gray0, n_pts, cfg::kMaxCnt - cur_pts.size(),
+                                0.01, cfg::kMinDist, mask);
     else
         n_pts.clear();
 
@@ -117,7 +116,7 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
 
     Infot("TrackImage | un&&vel:{}", tt.TocThenTic());
 
-    if(!cur_img.gray1.empty() && stereo_cam)
+    if(cfg::is_stereo && !cur_img.gray1.empty())
     {
         ids_right.clear();
         cur_right_pts.clear();
@@ -147,8 +146,8 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
         Infot("TrackImage | flowTrack right:{}", tt.TocThenTic());
     }
 
-    if(cfg::kShowTrack)
-        drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
+    if(cfg::is_show_track)
+        drawTrack(cur_img, ids, cur_pts, cur_right_pts, prev_left_map);
 
     Infot("TrackImage | drawTrack right:{}", tt.TocThenTic());
 
@@ -158,9 +157,9 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
     prev_un_pts_map = cur_un_pts_map;
     prev_time = cur_time;
 
-    prevLeftPtsMap.clear();
+    prev_left_map.clear();
     for(size_t i = 0; i < cur_pts.size(); i++)
-        prevLeftPtsMap[ids[i]] = cur_pts[i];
+        prev_left_map[ids[i]] = cur_pts[i];
 
     return SetOutputFeats();
 }
@@ -168,9 +167,8 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
 
 FeatureMap FeatureTracker::SetOutputFeats()
 {
-    std::map<int, vector<pair<int, Vec7d>>> featureFrame;
+    FeatureMap fm;
     for (size_t i = 0; i < ids.size(); i++){
-        int feature_id = ids[i];
         double x = cur_un_pts[i].x;
         double y = cur_un_pts[i].y;
         constexpr double z = 1;
@@ -181,14 +179,10 @@ FeatureMap FeatureTracker::SetOutputFeats()
         double velocity_y = pts_velocity[i].y;
         Vec7d xyz_uv_velocity;
         xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
-        featureFrame[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
+        fm[ids[i]].emplace_back(camera_id,  xyz_uv_velocity);
     }
-
-    if (!cur_img.gray1.empty() && stereo_cam)
-    {
-        for (size_t i = 0; i < ids_right.size(); i++)
-        {
-            int feature_id = ids_right[i];
+    if (cfg::is_stereo && !cur_img.gray1.empty()){
+        for (size_t i = 0; i < ids_right.size(); i++){
             double x = cur_un_right_pts[i].x;
             double y = cur_un_right_pts[i].y;
             constexpr double z = 1;
@@ -199,11 +193,10 @@ FeatureMap FeatureTracker::SetOutputFeats()
             double velocity_y = right_pts_velocity[i].y;
             Vec7d xyz_uv_velocity;
             xyz_uv_velocity << x, y, z, p_u, p_v, velocity_x, velocity_y;
-            featureFrame[feature_id].emplace_back(camera_id,  xyz_uv_velocity);
+            fm[ids_right[i]].emplace_back(camera_id,  xyz_uv_velocity);
         }
     }
-    //printf("feature track whole time %f\n", t_r.toc());
-    return featureFrame;
+    return fm;
 }
 
 
@@ -314,7 +307,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
 
     Infot("trackImageNaive | vel&&un:{}", tt.TocThenTic());
 
-    if((!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty() && stereo_cam)
+    if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty())
     {
         ids_right.clear();
         cur_right_pts.clear();
@@ -361,8 +354,8 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     }
 
 
-    if(cfg::kShowTrack)
-        drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
+    if(cfg::is_show_track)
+        drawTrack(cur_img, ids, cur_pts, cur_right_pts, prev_left_map);
 
     prev_img = cur_img;
     prev_pts = cur_pts;
@@ -370,9 +363,9 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     prev_un_pts_map = cur_un_pts_map;
     prev_time = cur_time;
 
-    prevLeftPtsMap.clear();
+    prev_left_map.clear();
     for(size_t i = 0; i < cur_pts.size(); i++)
-        prevLeftPtsMap[ids[i]] = cur_pts[i];
+        prev_left_map[ids[i]] = cur_pts[i];
 
     return SetOutputFeats();
 }
@@ -414,7 +407,6 @@ void FeatureTracker::rejectWithF()
 }
 
 
-
 void FeatureTracker::ReadIntrinsicParameter(const vector<string> &calib_file)
 {
     for (const auto & i : calib_file){
@@ -426,7 +418,6 @@ void FeatureTracker::ReadIntrinsicParameter(const vector<string> &calib_file)
 
     insts_tracker->set_camera(m_camera[0]);
     if (calib_file.size() == 2){
-        stereo_cam = true;
         insts_tracker->set_is_stereo(true);
         insts_tracker->set_right_camera(m_camera[1]);
     }
@@ -459,12 +450,11 @@ void FeatureTracker::showUndistortion(const string &name)
         //cout << trackerData[0].K << endl;
         //printf("%lf %lf\n", p.at<float>(1, 0), p.at<float>(0, 0));
         //printf("%lf %lf\n", pp.at<float>(1, 0), pp.at<float>(0, 0));
-        if (pp.at<float>(1, 0) + 300 >= 0 && pp.at<float>(1, 0) + 300 < row + 600 && pp.at<float>(0, 0) + 300 >= 0 && pp.at<float>(0, 0) + 300 < col + 600)
-        {
+        if (pp.at<float>(1, 0) + 300 >= 0 && pp.at<float>(1, 0) + 300 < row + 600 &&
+        pp.at<float>(0, 0) + 300 >= 0 && pp.at<float>(0, 0) + 300 < col + 600){
             undistortedImg.at<uchar>(pp.at<float>(1, 0) + 300, pp.at<float>(0, 0) + 300) = cur_img.gray0.at<uchar>(distortedp[i].y(), distortedp[i].x());
         }
-        else
-        {
+        else{
             //ROS_ERROR("(%f %f) -> (%f %f)", distortedp[i].y, distortedp[i].x, pp.at<float>(1, 0), pp.at<float>(0, 0));
         }
     }
@@ -477,10 +467,9 @@ void FeatureTracker::showUndistortion(const string &name)
 vector<cv::Point2f> FeatureTracker::undistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam)
 {
     vector<cv::Point2f> un_pts;
-    for (auto & pt : pts)
-    {
-        Eigen::Vector2d a(pt.x, pt.y);
-        Eigen::Vector3d b;
+    for (auto & pt : pts){
+        Vec2d a(pt.x, pt.y);
+        Vec3d b;
         cam->liftProjective(a, b);
         un_pts.emplace_back(b.x() / b.z(), b.y() / b.z());
     }
@@ -497,11 +486,9 @@ vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &id_vec,
         cur_id_pts.insert({id_vec[i], pts[i]});
     }
     // caculate points velocity
-    if (!prev_id_pts.empty())
-    {
+    if (!prev_id_pts.empty()){
         double dt = cur_time - prev_time;
-        for (unsigned int i = 0; i < pts.size(); i++)
-        {
+        for (unsigned int i = 0; i < pts.size(); i++){
             std::map<int, cv::Point2f>::iterator it;
             it = prev_id_pts.find(id_vec[i]);
             if (it != prev_id_pts.end()){
@@ -509,28 +496,26 @@ vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &id_vec,
                 double v_y = (pts[i].y - it->second.y) / dt;
                 pts_vel.emplace_back(v_x, v_y);
             }
-            else
+            else{
                 pts_vel.emplace_back(0, 0);
+            }
         }
     }
-    else
-    {
+    else{
         for (unsigned int i = 0; i < cur_pts.size(); i++){
             pts_vel.emplace_back(0, 0);
         }
     }
     return pts_vel;
-                                                }
+}
 
 
 
-
-                                                void FeatureTracker::drawTrack(const SegImage &img,
-                                                                               vector<int> &curLeftIds,
-                                                                               vector<cv::Point2f> &curLeftPts,
-                                                                               vector<cv::Point2f> &curRightPts,
-                                                                               std::map<int, cv::Point2f> &prevLeftPts){
-
+void FeatureTracker::drawTrack(const SegImage &img,
+                               vector<int> &curLeftIds,
+                               vector<cv::Point2f> &curLeftPts,
+                               vector<cv::Point2f> &curRightPts,
+                               std::map<int, cv::Point2f> &prevLeftPts){
     if(!img.inv_merge_mask_gpu.empty()){
         cv::cuda::GpuMat img_show_gpu;
         cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
@@ -542,7 +527,7 @@ vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &id_vec,
         img_track_ = img.color0;
     }
 
-    if (!img.color1.empty() && stereo_cam){
+    if (cfg::is_stereo && !img.color1.empty()){
         if(cfg::dataset == DatasetType::kKitti){
             cv::vconcat(img_track_, img.color1, img_track_);
         }else{
@@ -560,7 +545,7 @@ vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &id_vec,
         cv::circle(img_track_, visual_new_pts[j], 2, cv::Scalar(255, 255, 255), 2);
     }
 
-    if (!img.color1.empty() && stereo_cam){
+    if (cfg::is_stereo && !img.color1.empty() ){
         if(cfg::dataset == DatasetType::kKitti){
             for (auto &rightPt : curRightPts){
                 rightPt.y += (float)img.color0.rows;
@@ -634,14 +619,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     cur_img = img;
     row = img.color0.rows;
     col = img.color0.cols;
-    /*
-    {
-        cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
-        clahe->apply(cur_img, cur_img);
-        if(!rightImg.empty())
-            clahe->apply(rightImg, rightImg);
-    }
-    */
+
     cur_pts.clear();
 
     //为了防止两个线程同时访问图片内存，这里进行复制
@@ -655,7 +633,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     ///开启另一个线程检测动态特征点
     TicToc t_i;
-    std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
+    //std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
     //std::thread t_inst_track(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
 
     if(is_exist_inst){
@@ -733,7 +711,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     Infot("trackImageNaive | vel&&un:{}", tt.TocThenTic());
 
-    if((!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty() && stereo_cam)
+    if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty())
     {
         ids_right.clear();
         cur_right_pts.clear();
@@ -773,10 +751,10 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         Debugt("trackImageNaive | cur_right_pts.size:{}", cur_right_pts.size());
         Infot("trackImageNaive | flow_track right:{}", tt.TocThenTic());
     }
-    if(cfg::kShowTrack)
-        drawTrack(cur_img, ids, cur_pts, cur_right_pts, prevLeftPtsMap);
+    if(cfg::is_show_track)
+        drawTrack(cur_img, ids, cur_pts, cur_right_pts, prev_left_map);
 
-    t_inst_track.join();
+    //t_inst_track.join();
 
     /*static int cnt=0;
     cnt++;
@@ -813,7 +791,8 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     }*/
 
     Infot("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.TocThenTic());
-    if(cfg::kShowTrack)insts_tracker->DrawInsts(img_track_);
+    if(cfg::is_show_track)
+        insts_tracker->DrawInsts(img_track_);
     Infot("TrackSemanticImage drawInsts:{} ms", t_i.TocThenTic());
 
     prev_img = cur_img;
@@ -822,9 +801,9 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     prev_un_pts_map = cur_un_pts_map;
     prev_time = cur_time;
 
-    prevLeftPtsMap.clear();
+    prev_left_map.clear();
     for(size_t i = 0; i < cur_pts.size(); i++)
-        prevLeftPtsMap[ids[i]] = cur_pts[i];
+        prev_left_map[ids[i]] = cur_pts[i];
 
     //cv::imshow("img_track",img_track);
     //cv::waitKey(1);

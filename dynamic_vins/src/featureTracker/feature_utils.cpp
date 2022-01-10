@@ -27,7 +27,7 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
     cv::calcOpticalFlowPyrLK(img1, img2, pts1, pts2,status, err, cv::Size(21, 21), 3);
 
     //反向光流计算 判断之前光流跟踪的特征点的质量
-    if(Config::kFlowBack){
+    if(Config::is_flow_back){
         vector<uchar> reverse_status;
         std::vector<cv::Point2f> reverse_pts = pts1;
         cv::calcOpticalFlowPyrLK(img2, img1, pts2, reverse_pts,
@@ -86,7 +86,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
     Debugt("flowTrackGpu forward success:{}", forward_success);
 
     //反向光流计算 判断之前光流跟踪的特征点的质量
-    if(Config::kFlowBack){
+    if(Config::is_flow_back){
         cv::cuda::GpuMat d_reverse_status;
         cv::cuda::GpuMat d_reverse_pts = d_prevPts;
 
