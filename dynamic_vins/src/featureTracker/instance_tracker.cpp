@@ -39,7 +39,7 @@ InstsFeatManager::InstsFeatManager()
             cv::Size(21, 21),1,30,true);
     std::array<int64_t, 2> orig_dim{int64_t(cfg::kRow), int64_t(cfg::kCol)};
     mot_tracker = std::make_unique<DeepSORT>(orig_dim);
-    flow_estimator_ = std::make_unique<FlowEstimator>();
+    //flow_estimator_ = std::make_unique<FlowEstimator>();
 }
 
 
@@ -66,7 +66,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
 
     if(exist_inst_){
         ///形态学运算
-        Erode10Gpu(img.merge_mask_gpu,img.merge_mask_gpu);
+        ErodeMaskGpu(img.merge_mask_gpu, img.merge_mask_gpu);
         img.merge_mask_gpu.download(img.merge_mask);
 
         //img.gray0_gpu.download(img.gray0);
@@ -263,10 +263,10 @@ void InstsFeatManager::InstsTrack(SegImage img)
             PtsVelocity(curr_time - last_time, inst.ids, inst.curr_un_points,
                         inst.prev_id_pts, inst.pts_velocity);
         }
-        Infot("instsTrack undistortedPts & ptsVelocity:{} ms", tic_toc.TocThenTic());
+        Infot("instsTrack UndistortedPts & PtsVelocity:{} ms", tic_toc.TocThenTic());
 
         /// 右边相机图像的跟踪
-        if((!img.gray1.empty() || !img.gray1_gpu.empty()) && is_stereo_){
+        if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
             for(auto& [key,inst] : instances_){
                 inst.right_points.clear();
                 if(!inst.curr_points.empty() && inst.lost_num==0){
@@ -478,7 +478,8 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
                                 inst.right_prev_id_pts, inst.right_curr_id_pts, inst.right_pts_velocity);
                 }
             }
-        }*//*
+        }*/
+/*
 
 
         ManageInstances();
@@ -532,11 +533,9 @@ void InstsFeatManager::ManageInstances()
     {
         it_next++;
         auto &inst=it->second;
-
         if(inst.lost_num ==0 && inst.curr_points.empty()){
             inst.lost_num++;
         }
-
         if(inst.lost_num > 0){
             inst.lost_num++;
             if(inst.lost_num > 3){ //删除该实例
@@ -551,38 +550,34 @@ void InstsFeatManager::ManageInstances()
  ** 用于将特征点传到VIO模块
  * @param result
  */
-InstancesFeatureMap InstsFeatManager::SetOutputFeature()
+InstancesFeatureMap InstsFeatManager::GetOutputFeature()
 {
     InstancesFeatureMap result;
     for(auto& [key,inst]: instances_)
     {
         if(inst.lost_num>0)continue;
-        InstanceFeatureSimple  featuresMap;
-        featuresMap.color = inst.color;
-
+        InstanceFeatureSimple  features_map;
+        features_map.color = inst.color;
         for(int i=0;i<(int)inst.curr_un_points.size();++i){
             Eigen::Matrix<double,5,1> feat;
             feat<<inst.curr_un_points[i].x,inst.curr_un_points[i].y, 1 ,inst.pts_velocity[i].x,inst.pts_velocity[i].y;
             vector<Eigen::Matrix<double,5,1>> vp={feat};
-            featuresMap.insert({inst.ids[i],vp});
+            features_map.insert({inst.ids[i],vp});
         }
-
         int right_cnt=0;
-        if(is_stereo_){
+        if(cfg::is_stereo){
             for(int i=0; i<(int)inst.right_un_points.size(); i++){
                 auto r_id = inst.right_ids[i];
-                if(featuresMap.count(r_id) ==0)
+                if(features_map.count(r_id) ==0)
                     continue;
                 Eigen::Matrix<double,5,1> feat;
                 feat<<inst.right_un_points[i].x,inst.right_un_points[i].y, 1 ,inst.right_pts_velocity[i].x,inst.right_pts_velocity[i].y;
-                featuresMap[r_id].push_back(feat);
+                features_map[r_id].push_back(feat);
                 right_cnt++;
             }
         }
-
-        result.insert({key,featuresMap});
-
-        Debugt("inst_id:{} l_track:{} r_track:{}", key, featuresMap.size(), right_cnt);
+        result.insert({key,features_map});
+        Debugt("inst_id:{} l_track:{} r_track:{}", key, features_map.size(), right_cnt);
     }
     return result;
 }
@@ -597,20 +592,16 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
 {
     cv::Mat seg = img.seg0;
     Debugt("start to addViodeInstancesBySegImg()");
-
     for(auto &[key,inst] : instances_){
         inst.mask_area=0;
     }
-
     Debugt("addViodeInstancesBySegImg merge insts");
-
     for(auto &inst_info : img.insts_info){
         auto key = inst_info.track_id;
         if(instances_.count(key) == 0){
             InstFeat instanceFeature(key, 0);
             instances_.insert({key, instanceFeature});
         }
-
         auto &inst = instances_[key];
         inst.mask_img = inst_info.mask_cv;
         inst.box_vel = cv::Point2f(0,0);
@@ -620,8 +611,6 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
                instances_[key].mask_img.cols,
                inst.mask_img.rows, inst.mask_img.cols);
     }
-
-
     for(auto &[key,inst]: instances_){
         if(inst.last_frame_cnt == global_frame_id){
             auto rect = cv::boundingRect(inst.mask_img);
@@ -631,7 +620,6 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
             inst.color = img.seg0.at<cv::Vec3b>(inst.box_center_pt);
         }
     }
-
     exist_inst_ = !img.insts_info.empty();
 }
 

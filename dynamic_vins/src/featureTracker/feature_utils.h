@@ -83,9 +83,9 @@ void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2);
  * @param in
  * @param out
  */
-inline void Erode10Gpu(cv::cuda::GpuMat &in,cv::cuda::GpuMat &out){
-    static auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
-    static auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
+inline void ErodeMaskGpu(cv::cuda::GpuMat &in, cv::cuda::GpuMat &out,int kernel_size=10){
+    auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(kernel_size,kernel_size),cv::Point(-1,-1));
+    auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
     erode_filter->apply(in,out);
 }
 
@@ -188,11 +188,12 @@ inline void SetIdPointPair(vector<unsigned int> &ids,
         out_pairs.insert({ids[i], curr_un_pts[i]});
 }
 
-
-
 void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr_un_pts,
                         std::map<unsigned int, cv::Point2f> &prev_id_pts,vector<cv::Point2f> &output_velocity);
 
+vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam);
+
+void SortPoints(vector<cv::Point2f> &cur_pts, vector<int> &track_cnt, vector<int> &ids);
 
 
 }

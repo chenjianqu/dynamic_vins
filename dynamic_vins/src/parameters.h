@@ -69,7 +69,7 @@ using VecMatrix3d = EigenContainer<Eigen::Matrix3d>;
 constexpr int kInferImageListSize=30;
 
 constexpr double kFocalLength = 460.0;
-constexpr int kWindowSize = 10;
+constexpr int kWinSize = 10;
 constexpr int kNumFeat = 1000;
 
 constexpr int kInstFeatSize=500;

@@ -33,7 +33,7 @@ void Instance::GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
     vertex[7].x()=minPt.x();vertex[7].y()=maxPt.y();vertex[7].z()=minPt.z();
 
     for(int i=0;i<8;++i){
-        vertex[i] = state[kWindowSize].R * vertex[i] + state[kWindowSize].P;
+        vertex[i] = state[kWinSize].R * vertex[i] + state[kWinSize].P;
     }
 }
 
@@ -45,7 +45,7 @@ void Instance::GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
 void Instance::SetWindowPose()
 {
     //DebugV("SetWindowPose Inst:{} 起始位姿:<{}> 速度:v<{}> a{}>",id,vec2str(state[0].P),vec2str(vel.v),VecToStr(vel.a) );
-    for(int i=1; i <= kWindowSize; i++){
+    for(int i=1; i <= kWinSize; i++){
         state[i].time=e->headers[i];
         double time_ij=state[i].time - state[0].time;
         Eigen::Matrix3d Roioj=Sophus::SO3d::exp(vel.a*time_ij).matrix();
@@ -66,7 +66,7 @@ void Instance::InitialPose()
     if(is_initial) return;
 
     ///初始化的思路是找到某一帧，该帧拥有已经三角化的特征点的开始帧数量最多。
-    int cnt[kWindowSize + 1]={0};
+    int cnt[kWinSize + 1]={0};
     for(auto &lm : landmarks){
         if(lm.depth > 0){
             cnt[lm.feats[0].frame]++;
@@ -75,7 +75,7 @@ void Instance::InitialPose()
     int frame_cnt=-1;//将作为初始化位姿的帧号
     int cnt_max=0;
     int cnt_sum=0;
-    for(int i=0; i <= kWindowSize; ++i){
+    for(int i=0; i <= kWinSize; ++i){
         if(cnt[i]>cnt_max){
             cnt_max=cnt[i];
             frame_cnt=i;
@@ -246,10 +246,10 @@ int Instance::SlideWindowOld()
     }
 
     ///将最老帧的相关变量去掉
-    for (int i = 0; i < kWindowSize; i++){
+    for (int i = 0; i < kWinSize; i++){
         state[i].swap(state[i+1]);
     }
-    state[kWindowSize]=state[kWindowSize - 1];
+    state[kWinSize]=state[kWinSize - 1];
 
     //state[0]=state[1];
     //SetWindowPose(e);
@@ -284,11 +284,11 @@ int Instance::SlideWindowNew()
         int index=-1;
         for(auto& feat:it->feats){
             index++;
-            if(feat.frame == e->frame_count-1)
+            if(feat.frame == e->frame - 1)
                 it->feats.erase(it->feats.begin() + index);
         }
         for(auto& feat:it->feats){
-            if(feat.frame == e->frame_count)
+            if(feat.frame == e->frame)
                 feat.frame--;
         }
 
@@ -299,7 +299,7 @@ int Instance::SlideWindowNew()
     }
 
 
-    state[kWindowSize - 1] = state[kWindowSize];
+    state[kWinSize - 1] = state[kWinSize];
 
     return debug_num;
 }
@@ -314,7 +314,7 @@ void Instance::SetCurrentPoint3d()
         if(landmark.depth > 0){
             bool isPresent=false;
             for(auto &feat : landmark.feats){
-                if(feat.frame == e->frame_count-1){//因为实在slidewindows函数后面，所以需要-1
+                if(feat.frame == e->frame - 1){//因为实在slidewindows函数后面，所以需要-1
                     isPresent=true;
                     break;
                 }
@@ -323,7 +323,7 @@ void Instance::SetCurrentPoint3d()
                 continue;
 
             int frame_j=landmark.feats[0].frame;
-            int frame_i=e->frame_count;
+            int frame_i=e->frame;
             Eigen::Vector3d pts_cam_j = landmark.feats[0].point * landmark.depth;//k点在j时刻的相机坐标
             Eigen::Vector3d pts_imu_j = e->ric[0] * pts_cam_j + e->tic[0];//k点在j时刻的IMU坐标
             Eigen::Vector3d pts_w_j=e->Rs[frame_j] * pts_imu_j + e->Ps[frame_j];//k点在j时刻的世界坐标
@@ -494,7 +494,7 @@ void Instance::SetOptimizeParameters()
     para_box[0][1]=box.y();
     para_box[0][2]=box.z();
 
-    for(int i=0; i <= kWindowSize; ++i){
+    for(int i=0; i <= kWinSize; ++i){
         para_state[i][0]=state[i].P.x();
         para_state[i][1]=state[i].P.y();
         para_state[i][2]=state[i].P.z();

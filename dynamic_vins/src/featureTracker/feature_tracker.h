@@ -48,31 +48,29 @@ class FeatureTracker
 public:
     using Ptr=std::unique_ptr<FeatureTracker>;
     FeatureTracker();
-    std::map<int, vector<pair<int, Vec7d>>> TrackImage(SegImage &img);
-    std::map<int, vector<pair<int, Vec7d>>> TrackImageNaive(SegImage &img);
+    FeatureMap TrackImage(SegImage &img);
+    FeatureMap TrackImageNaive(SegImage &img);
     FeatureMap TrackSemanticImage(SegImage &img);
 
     void ReadIntrinsicParameter(const vector<string> &calib_file);
-    void showUndistortion(const string &name);
-    void rejectWithF();
-    static vector<cv::Point2f> undistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam);
-    vector<cv::Point2f> ptsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
+    void ShowUndistortion(const string &name);
+    void RejectWithF();
+    vector<cv::Point2f> PtsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
                                     std::map<int, cv::Point2f> &cur_id_pts,
                                     std::map<int, cv::Point2f> &prev_id_pts) const;
-    void drawTrack(const SegImage &img,
+    void DrawTrack(const SegImage &img,
                    vector<int> &curLeftIds,
                    vector<cv::Point2f> &curLeftPts,
                    vector<cv::Point2f> &curRightPts,
                    std::map<int, cv::Point2f> &prevLeftPts);
-    void setPrediction(std::map<int, Eigen::Vector3d> &predictPts);
-    void removeOutliers(std::set<int> &removePtsIds);
-    std::map<int, vector<pair<int, Vec7d>>> SetOutputFeats();
+    void SetPrediction(std::map<int, Eigen::Vector3d> &predictPts);
+    void RemoveOutliers(std::set<int> &removePtsIds);
 
     cv::Mat img_track(){return img_track_;}
 
     InstsFeatManager::Ptr insts_tracker;
 private:
-    void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, std::vector<int> &ids);
+    FeatureMap SetOutputFeats();
 
     int row{}, col{};
     cv::Mat img_track_;

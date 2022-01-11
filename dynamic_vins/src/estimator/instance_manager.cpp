@@ -189,8 +189,8 @@ void InstanceManager::PredictCurrentPose()
 
     Infov("predictCurrentPose 位姿递推");
 
-    int i=e_->frame_count;
-    int j= e_->frame_count - 1;
+    int i=e_->frame;
+    int j= e_->frame - 1;
 
     double time_ij= e_->headers[i] - e_->headers[j];
 
@@ -240,7 +240,7 @@ void InstanceManager::SlideWindow()
     if(tracking_number_ < 1)
         return;
 
-    if(e_->frame_count != kWindowSize)
+    if(e_->frame != kWinSize)
         return;
     Infov("动态特征边缘化:");
     //printf("动态特征边缘化:");
@@ -320,7 +320,7 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
             tracking_number_++;
 
             for(auto &[feat_id,feat_vector] : inst_feat){
-                FeaturePoint featPoint(feat_vector, e_->frame_count, e_->td);
+                FeaturePoint featPoint(feat_vector, e_->frame, e_->td);
                 LandmarkPoint landmarkPoint(feat_id);//创建Landmark
                 instances[instance_id].landmarks.push_back(landmarkPoint);
                 instances[instance_id].landmarks.back().feats.emplace_back(featPoint);//添加第一个观测
@@ -332,7 +332,7 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
         {
             for(auto &[feat_id,feat_vector] : inst_feat)
             {
-                FeaturePoint feat_point(feat_vector, e_->frame_count, e_->td);
+                FeaturePoint feat_point(feat_vector, e_->frame, e_->td);
                 //若不存在，则创建路标
                 if (auto it = std::find_if(instances[instance_id].landmarks.begin(),
                                            instances[instance_id].landmarks.end(),
@@ -394,7 +394,7 @@ void InstanceManager::GetOptimizationParameters()
         string pose_msg;
         pose_msg += fmt::format("优化前 Speed: v:({}) a:({})\n", VecToStr(inst.vel.v), VecToStr(inst.vel.a));
         pose_msg +="优化前 Pose:";
-        for(int i=0; i <= kWindowSize; ++i){
+        for(int i=0; i <= kWinSize; ++i){
             pose_msg+=fmt::format("{}:({}) ", i, VecToStr(inst.state[i].P));
             if(i==4)pose_msg+="\n";
         }
@@ -403,7 +403,7 @@ void InstanceManager::GetOptimizationParameters()
         inst.GetOptimizationParameters();
 
         pose_msg +="优化后 Pose:";
-        for(int i=0; i <= kWindowSize; ++i){
+        for(int i=0; i <= kWinSize; ++i){
             pose_msg+=fmt::format("{}:({}) ", i, VecToStr(inst.state[i].P));
             if(i==4)pose_msg+="\n";
         }
@@ -434,7 +434,7 @@ void InstanceManager::AddInstanceParameterBlock(ceres::Problem &problem)
     if(tracking_number_ < 1) return;
     for(auto &[key,inst] : instances){
         if(!inst.is_initial || !inst.is_tracking)continue;
-        for(int i=0;i<=(int)e_->frame_count; i++){
+        for(int i=0;i<=(int)e_->frame; i++){
             problem.AddParameterBlock(inst.para_state[i], kSizePose, new PoseLocalParameterization());
         }
     }

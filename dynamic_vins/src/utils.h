@@ -176,6 +176,10 @@ inline void Warnt(const char* fmt, const Arg1 &arg1, const Args&... args){tk_log
 template<typename T>
 inline void Warnt(const T& msg){tk_logger->log(spdlog::level::warn, msg);}
 template <typename Arg1, typename... Args>
+inline void Errort(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::err, fmt, arg1, args...);}
+template<typename T>
+inline void Errort(const T& msg){tk_logger->log(spdlog::level::err, msg);}
+template <typename Arg1, typename... Args>
 inline void Criticalt(const char* fmt, const Arg1 &arg1, const Args&... args){tk_logger->log(spdlog::level::critical, fmt, arg1, args...);}
 template<typename T>
 inline void Criticalt(const T& msg){tk_logger->log(spdlog::level::critical, msg);}

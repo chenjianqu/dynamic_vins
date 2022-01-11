@@ -92,36 +92,38 @@ class FeatureManager
   public:
     FeatureManager(Mat3d _Rs[]);
 
-    void setRic(Mat3d _ric[]);
-    void clearState();
-    int getFeatureCount();
-    bool addFeatureCheckParallax(int frame_count, const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td);
-    vector<pair<Vec3d, Vec3d>> getCorresponding(int frame_count_l, int frame_count_r);
+    void SetRic(Mat3d _ric[]);
+    void ClearState();
+    int GetFeatureCount();
+    bool AddFeatureCheckParallax(int frame_count, const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td);
+    vector<pair<Vec3d, Vec3d>> GetCorresponding(int frame_count_l, int frame_count_r);
     //void updateDepth(const VectorXd &x);
-    void setDepth(const Eigen::VectorXd &x);
-    void removeFailures();
-    void clearDepth();
-    Eigen::VectorXd getDepthVector();
+    void SetDepth(const Eigen::VectorXd &x);
+    void RemoveFailures();
+    void ClearDepth();
+    Eigen::VectorXd GetDepthVector();
     void triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
-    void triangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
-                            Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
+    void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
+                          Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
     void initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
-    bool solvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial, 
-                            vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
-    void removeBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_R, Vec3d new_P);
-    void removeBack();
-    void removeFront(int frame_count);
-    void removeOutlier(std::set<int> &outlierIndex);
+    bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
+                        vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
+    void RemoveBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_R, Vec3d new_P);
+    void RemoveBack();
+    void RemoveFront(int frame_count);
+    void RemoveOutlier(std::set<int> &outlierIndex);
+
     std::list<FeaturePerId> feature;
     int last_track_num;
+
+  private:
+    double CompensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
+    const Mat3d *Rs;
+    Mat3d ric[2];
+
     double last_average_parallax;
     int new_feature_num;
     int long_track_num;
-
-  private:
-    double compensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
-    const Mat3d *Rs;
-    Mat3d ric[2];
 };
 
 

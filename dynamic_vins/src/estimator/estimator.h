@@ -63,7 +63,7 @@ class Estimator
     // interface
     void InputIMU(double t, const Vec3d &linearAcceleration, const Vec3d &angularVelocity);
     void ProcessIMU(double t, double dt, const Vec3d &linear_acceleration, const Vec3d &angular_velocity);
-    void processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const double header);
+    void ProcessImage(const FeatureMap & image, const double header);
 
     void ProcessMeasurements();
     void ChangeSensorType(int use_imu, int use_stereo);
@@ -71,25 +71,25 @@ class Estimator
     // internal
     void ClearState();
     bool InitialStructure();
-    bool visualInitialAlign();
-    bool relativePose(Mat3d &relative_R, Vec3d &relative_T, int &l);
-    void slideWindow();
-    void slideWindowNew();
-    void slideWindowOld();
-    void optimization();
-    void vector2double();
-    void double2vector();
-    bool failureDetection();
+    bool VisualInitialAlign();
+    bool RelativePose(Mat3d &relative_R, Vec3d &relative_T, int &l);
+    void SlideWindow();
+    void SlideWindowNew();
+    void SlideWindowOld();
+    void Optimization();
+    void Vector2double();
+    void Double2vector();
+    bool FailureDetection();
     bool GetIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &acc_vec,
                         vector<pair<double, Vec3d>> &gyr_vec);
-    void getPoseInWorldFrame(Eigen::Matrix4d &T);
-    void getPoseInWorldFrame(int index, Eigen::Matrix4d &T);
-    void predictPtsInNextFrame();
-    void outliersRejection(set<int> &removeIndex);
-    double reprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
-                                     Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj, 
-                                     double depth, Vec3d &uvi, Vec3d &uvj);
-    void updateLatestStates();
+    void GetPoseInWorldFrame(Eigen::Matrix4d &T);
+    void GetPoseInWorldFrame(int index, Eigen::Matrix4d &T);
+    void PredictPtsInNextFrame();
+    void OutliersRejection(set<int> &removeIndex);
+    double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
+                             Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
+                             double depth, Vec3d &uvi, Vec3d &uvj);
+    void UpdateLatestStates();
     void FastPredictIMU(double t, Vec3d linear_acceleration, Vec3d angular_velocity);
 
     void InitFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
@@ -122,14 +122,14 @@ class Estimator
 
     Mat3d ric[2];
     Vec3d tic[2];
-    Vec3d        Ps[(kWindowSize + 1)];
-    Vec3d        Vs[(kWindowSize + 1)];
-    Mat3d        Rs[(kWindowSize + 1)];
-    Vec3d        Bas[(kWindowSize + 1)];
-    Vec3d        Bgs[(kWindowSize + 1)];
+    Vec3d Ps[(kWinSize + 1)];
+    Vec3d Vs[(kWinSize + 1)];
+    Mat3d Rs[(kWinSize + 1)];
+    Vec3d Bas[(kWinSize + 1)];
+    Vec3d Bgs[(kWinSize + 1)];
     double td{};
-    double headers[(kWindowSize + 1)]{};
-    int frame_count{};
+    double headers[(kWinSize + 1)]{};
+    int frame{};
 
     vector<Vec3d> key_poses;
     SolverFlag solver_flag;
@@ -141,9 +141,9 @@ class Estimator
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;
 private:
-    string logCurrentPose(){
+    string LogCurrentPose(){
         string result;
-        for(int i=0; i <= kWindowSize; ++i)
+        for(int i=0; i <= kWinSize; ++i)
             result+= fmt::format("{} t:({}) q:({})\n", i, VecToStr(Ps[i]),
                                  QuaternionToStr(Eigen::Quaterniond(Rs[i])));
         return result;
@@ -163,7 +163,7 @@ private:
     queue<pair<double, Vec3d>> gyr_buf;
     queue<FeatureFrame> feature_buf;
     queue<InstancesFeatureMap> instances_buf;
-    double prevTime{}, cur_time{};
+    double prev_time{}, cur_time{};
     bool openExEstimation{};
 
     Vec3d g;
@@ -171,12 +171,12 @@ private:
     Mat3d back_R0, last_R, last_R0;
     Vec3d back_P0, last_P, last_P0;
 
-    IntegrationBase *pre_integrations[(kWindowSize + 1)] {nullptr};
+    IntegrationBase *pre_integrations[(kWinSize + 1)] {nullptr};
     Vec3d acc_0, gyr_0;
 
-    vector<double> dt_buf[(kWindowSize + 1)];
-    vector<Vec3d> linear_acceleration_buf[(kWindowSize + 1)];
-    vector<Vec3d> angular_velocity_buf[(kWindowSize + 1)];
+    vector<double> dt_buf[(kWinSize + 1)];
+    vector<Vec3d> linear_acceleration_buf[(kWinSize + 1)];
+    vector<Vec3d> angular_velocity_buf[(kWinSize + 1)];
 
     int sum_of_outlier{}, sum_of_back{}, sum_of_front{}, sum_of_invalid{};
     int input_image_cnt{};
@@ -189,8 +189,8 @@ private:
     vector<Vec3d> margin_cloud;
     double initial_timestamp{};
 
-    double para_Pose[kWindowSize + 1][kSizePose]{};
-    double para_SpeedBias[kWindowSize + 1][kSizeSpeedBias]{};
+    double para_Pose[kWinSize + 1][kSizePose]{};
+    double para_SpeedBias[kWinSize + 1][kSizeSpeedBias]{};
     double para_Feature[kNumFeat][kSizeFeature]{};
     double para_Retrive_Pose[kSizePose]{};
     double para_Td[1][1]{};

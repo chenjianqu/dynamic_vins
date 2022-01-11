@@ -8,18 +8,20 @@
  *******************************************************/
 
 #include "viode_utils.h"
+#include "featureTracker/feature_utils.h"
 
 namespace dynamic_vins{\
 
 namespace VIODE{
 
-
+/**
+ * 根据VIODE的seg0设置背景掩码img.merge_mask、img.merge_mask_gpu 和 物体掩码img.inv_merge_mask_gpu、img.inv_merge_mask_gpu
+ * @param img
+ */
 void SetViodeMaskSimple(SegImage &img)
 {
     auto &semantic_img = img.seg0;
-
     cv::Mat merge_mask = cv::Mat(semantic_img.rows, semantic_img.cols, CV_8UC1, cv::Scalar(0));
-
     /*
      //低效的方法
      for (int i = 0; i < semantic_img.rows; i++) {
@@ -38,16 +40,14 @@ void SetViodeMaskSimple(SegImage &img)
             }
         }
      */
-
     //同时遍历单通道图像mask和BGR图像semantic_img
     auto calBlock=[&](size_t row_start,size_t row_end){
         for (size_t i = row_start; i < row_end; ++i) {
             uchar* seg_ptr = semantic_img.data + i * semantic_img.step;
             uchar* merge_ptr=merge_mask.data +i*merge_mask.step;
             for (int j = 0; j < semantic_img.cols; ++j) {
-                if(VIODE::IsDynamic(seg_ptr)){
+                if(VIODE::IsDynamic(seg_ptr))
                     merge_ptr[0]=255;
-                }
                 seg_ptr += 3;
                 merge_ptr+=1;
             }
@@ -61,18 +61,19 @@ void SetViodeMaskSimple(SegImage &img)
 
     img.merge_mask = merge_mask;
     img.merge_mask_gpu.upload(merge_mask);
-
     cv::cuda::bitwise_not(img.merge_mask_gpu,img.inv_merge_mask_gpu);
     img.inv_merge_mask_gpu.download(img.inv_merge_mask);
 }
 
 
 
-
+/**
+ * 根据VIODE数据集的seg图像，设置背景掩码img.merge_mask、img.merge_mask_gpu 和 物体掩码img.inv_merge_mask_gpu、img.inv_merge_mask_gpu
+ * 以及对每个物体，设置其背景mask，并进行形态学滤波
+ * @param img
+ */
 void SetViodeMask(SegImage &img)
 {
-    static TicToc tt;
-
     struct MiniInstance{
         MiniInstance()=default;
         MiniInstance(int row_start_,int row_end_,int col_start_,int col_end_):
@@ -84,25 +85,24 @@ void SetViodeMask(SegImage &img)
         int row_start{},row_end{},col_start{},col_end{};
     };
 
+    static TicToc tt;
+
     int img_row=img.seg0.rows;
     int img_col=img.seg0.cols;
 
-
     cv::Mat merge_mask = cv::Mat(img_row, img_col, CV_8UC1, cv::Scalar(0));
 
-    auto calBlock=[&](int row_start,int row_end,int col_start,int col_end,std::unordered_map<unsigned int,MiniInstance> *blockInsts){
+    auto calBlock=[&merge_mask,&img](int row_start,int row_end,int col_start,int col_end,
+            std::unordered_map<unsigned int,MiniInstance> *blockInsts){
         for (int i = row_start; i < row_end; ++i) {
             uchar* seg_ptr = img.seg0.data + i * img.seg0.step + col_start*3;
             uchar* merge_ptr=merge_mask.data + i * merge_mask.step + col_start*3;
             for (int j = col_start; j < col_end; ++j) {
                 if(auto key= PixelToKey(seg_ptr);VIODE::IsDynamic(key)){
                     merge_ptr[0]=255;
-                    //创建实例
-                    if(blockInsts->count(key)==0){
+                    if(blockInsts->count(key)==0){//创建实例
                         MiniInstance inst(row_start,row_end,col_start,col_end);
                         blockInsts->insert({key,inst});
-                        Debugs("create inst:{} row_start:{} row_end:{} col_start:{} col_end:{} ",
-                               key, inst.row_start, inst.row_end, inst.col_start, inst.col_end);
                     }
                     //设置实例的mask
                     (*blockInsts)[key].mask.at<uchar>(i-row_start,j-col_start)=255;
@@ -131,7 +131,6 @@ void SetViodeMask(SegImage &img)
     block_thread2.join();
     block_thread3.join();
 
-    Debugs("setViodeMask join");
     Debugs("setViodeMask calBlock :{} ms", tt.TocThenTic());
 
     ///线程结果合并
@@ -147,29 +146,23 @@ void SetViodeMask(SegImage &img)
             MiniInstance inst(0,img_row,0,img_col);
             insts.insert({key,inst});
         }
-        auto block=insts[key].mask(cv::Range(m_inst.row_start, m_inst.row_end), cv::Range(m_inst.col_start, m_inst.col_end));
+        auto block=insts[key].mask(cv::Range(m_inst.row_start, m_inst.row_end),
+                                   cv::Range(m_inst.col_start, m_inst.col_end));
         m_inst.mask.copyTo(block);
     }
 
     Debugs("setViodeMask merge :{} ms", tt.TocThenTic());
-
-    static auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
-    static auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
 
     ///构建InstanceInfo
     for(auto &[key,inst] : insts){
         InstInfo info;
         info.id = key;
         info.track_id=key;
-
         Debugs("id:{}", key);
         Debugs("mask:{} {} {}", inst.mask.empty(), inst.mask.rows, inst.mask.cols);
-
-        //info.mask_cv = inst.mask;
         info.mask_gpu.upload(inst.mask);
-        erode_filter->apply(info.mask_gpu,info.mask_gpu);
+        ErodeMaskGpu(info.mask_gpu, info.mask_gpu);
         info.mask_gpu.download(info.mask_cv);
-
         img.insts_info.emplace_back(info);
     }
 
@@ -180,6 +173,11 @@ void SetViodeMask(SegImage &img)
     img.inv_merge_mask_gpu.download(img.inv_merge_mask);
 
     Debugs("setViodeMask set gpu :{} ms", tt.TocThenTic());
+
+    delete insts1;
+    delete insts2;
+    delete insts3;
+    delete insts4;
 }
 
 

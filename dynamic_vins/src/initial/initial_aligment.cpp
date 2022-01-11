@@ -39,7 +39,7 @@ void solveGyroscopeBias(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bg
     delta_bg = A.ldlt().solve(b);
     ROS_WARN_STREAM("gyroscope bias initial calibration " << delta_bg.transpose());
 
-    for (int i = 0; i <= kWindowSize; i++)
+    for (int i = 0; i <= kWinSize; i++)
         Bgs[i] += delta_bg;
 
     for (frame_i = all_image_frame.begin(); next(frame_i) != all_image_frame.end( ); frame_i++)

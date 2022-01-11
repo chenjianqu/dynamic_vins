@@ -36,7 +36,7 @@ FeatureManager::FeatureManager(Mat3d _Rs[])
         ric[i].setIdentity();
 }
 
-void FeatureManager::setRic(Mat3d _ric[])
+void FeatureManager::SetRic(Mat3d _ric[])
 {
     for (int i = 0; i < Config::kCamNum; i++)
     {
@@ -44,12 +44,12 @@ void FeatureManager::setRic(Mat3d _ric[])
     }
 }
 
-void FeatureManager::clearState()
+void FeatureManager::ClearState()
 {
     feature.clear();
 }
 
-int FeatureManager::getFeatureCount()
+int FeatureManager::GetFeatureCount()
 {
     int cnt = 0;
     for (auto &it : feature)
@@ -64,10 +64,10 @@ int FeatureManager::getFeatureCount()
 }
 
 
-bool FeatureManager::addFeatureCheckParallax(int frame_count, const FeatureMap &image, double td)
+bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureMap &image, double td)
 {
     Debugv("addFeatureCheckParallax input feature: {}", (int) image.size());
-    Debugv("addFeatureCheckParallax factor of feature: {}", getFeatureCount());
+    Debugv("addFeatureCheckParallax factor of feature: {}", GetFeatureCount());
     double parallax_sum = 0;
     int parallax_num = 0;
     last_track_num = 0;
@@ -105,7 +105,7 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const FeatureMap &
     for (auto &it_per_id : feature){
         if (it_per_id.start_frame <= frame_count - 2 &&
         it_per_id.start_frame + int(it_per_id.feature_per_frame.size()) - 1 >= frame_count - 1){
-            parallax_sum += compensatedParallax2(it_per_id, frame_count);
+            parallax_sum += CompensatedParallax2(it_per_id, frame_count);
             parallax_num++;
         }
     }
@@ -121,7 +121,7 @@ bool FeatureManager::addFeatureCheckParallax(int frame_count, const FeatureMap &
     }
 }
 
-vector<pair<Vec3d, Vec3d>> FeatureManager::getCorresponding(int frame_count_l, int frame_count_r)
+vector<pair<Vec3d, Vec3d>> FeatureManager::GetCorresponding(int frame_count_l, int frame_count_r)
 {
     vector<pair<Vec3d, Vec3d>> corres;
     for (auto &it : feature)
@@ -142,7 +142,7 @@ vector<pair<Vec3d, Vec3d>> FeatureManager::getCorresponding(int frame_count_l, i
     return corres;
 }
 
-void FeatureManager::setDepth(const Eigen::VectorXd &x)
+void FeatureManager::SetDepth(const Eigen::VectorXd &x)
 {
     int feature_index = -1;
     for (auto &it_per_id : feature)
@@ -162,7 +162,7 @@ void FeatureManager::setDepth(const Eigen::VectorXd &x)
     }
 }
 
-void FeatureManager::removeFailures()
+void FeatureManager::RemoveFailures()
 {
     for (auto it = feature.begin(), it_next = feature.begin();
     it != feature.end(); it = it_next)
@@ -173,15 +173,15 @@ void FeatureManager::removeFailures()
     }
 }
 
-void FeatureManager::clearDepth()
+void FeatureManager::ClearDepth()
 {
     for (auto &it_per_id : feature)
         it_per_id.estimated_depth = -1;
 }
 
-Eigen::VectorXd FeatureManager::getDepthVector()
+Eigen::VectorXd FeatureManager::GetDepthVector()
 {
-    Eigen::VectorXd dep_vec(getFeatureCount());
+    Eigen::VectorXd dep_vec(GetFeatureCount());
     int feature_index = -1;
     for (auto &it_per_id : feature)
     {
@@ -198,7 +198,7 @@ Eigen::VectorXd FeatureManager::getDepthVector()
 }
 
 
-void FeatureManager::triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
+void FeatureManager::TriangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
                                       Eigen::Vector2d &point0, Eigen::Vector2d &point1, Vec3d &point_3d){
     Eigen::Matrix4d design_matrix = Eigen::Matrix4d::Zero();
     design_matrix.row(0) = point0[0] * Pose0.row(2) - Pose0.row(0);
@@ -214,20 +214,17 @@ void FeatureManager::triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen:
 }
 
 
-bool FeatureManager::solvePoseByPnP(Mat3d &R, Vec3d &P,
+bool FeatureManager::SolvePoseByPnP(Mat3d &R, Vec3d &P,
                                     vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D){
-    Mat3d R_initial;
-    Vec3d P_initial;
+    Eigen::Matrix3d R_initial;
+    Eigen::Vector3d P_initial;
 
     // w_T_cam ---> cam_T_w
     R_initial = R.inverse();
     P_initial = -(R_initial * P);
 
-    //printf("pnp size %d \n",(int)pts2D.size() );
-    if (int(pts2D.size()) < 4)
-    {
+    if (int(pts2D.size()) < 4){
         printf("feature tracking not enough, please slowly move you device! \n");
-        Errorv("solvePoseByPnP feature tracking not enough, please slowly move you device! ");
         return false;
     }
     cv::Mat r, rvec, t, D, tmp_r;
@@ -239,13 +236,11 @@ bool FeatureManager::solvePoseByPnP(Mat3d &R, Vec3d &P,
     pnp_succ = cv::solvePnP(pts3D, pts2D, K, D, rvec, t, 1);
     //pnp_succ = solvePnPRansac(pts3D, pts2D, K, D, rvec, t, true, 100, 8.0 / focalLength, 0.99, inliers);
 
-    if(!pnp_succ)
-    {
-        Errorv("solvePoseByPnP pnp failed ! ");
+    if(!pnp_succ){
+        printf("pnp failed ! \n");
         return false;
     }
     cv::Rodrigues(rvec, r);
-    //cout << "r " << endl << r << endl;
     Eigen::MatrixXd R_pnp;
     cv::cv2eigen(r, R_pnp);
     Eigen::MatrixXd T_pnp;
@@ -254,7 +249,6 @@ bool FeatureManager::solvePoseByPnP(Mat3d &R, Vec3d &P,
     // cam_T_w ---> w_T_cam
     R = R_pnp.transpose();
     P = R * (-T_pnp);
-
     return true;
 }
 
@@ -287,7 +281,7 @@ void FeatureManager::initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
         RCam = Rs[frameCnt - 1] * ric[0];
         PCam = Rs[frameCnt - 1] * tic[0] + Ps[frameCnt - 1];
 
-        if(solvePoseByPnP(RCam, PCam, pts2D, pts3D))
+        if(SolvePoseByPnP(RCam, PCam, pts2D, pts3D))
         {
             // trans to w_T_imu
             Rs[frameCnt] = RCam * ric[0].transpose();
@@ -331,7 +325,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
             //cout << "point0 " << point0.transpose() << endl;
             //cout << "point1 " << point1.transpose() << endl;
 
-            triangulatePoint(leftPose, rightPose, point0, point1, point3d);
+            TriangulatePoint(leftPose, rightPose, point0, point1, point3d);
             Vec3d localPoint;
             localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
             double depth = localPoint.z();
@@ -366,7 +360,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
             Vec3d point3d;
             point0 = it_per_id.feature_per_frame[0].point.head(2);
             point1 = it_per_id.feature_per_frame[1].point.head(2);
-            triangulatePoint(leftPose, rightPose, point0, point1, point3d);
+            TriangulatePoint(leftPose, rightPose, point0, point1, point3d);
             Vec3d localPoint;
             localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
             double depth = localPoint.z();
@@ -431,7 +425,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
     }
 }
 
-void FeatureManager::removeOutlier(std::set<int> &outlierIndex){
+void FeatureManager::RemoveOutlier(std::set<int> &outlierIndex){
     std::set<int>::iterator itSet;
     for (auto it = feature.begin(), it_next = feature.begin();
     it != feature.end(); it = it_next)
@@ -447,7 +441,7 @@ void FeatureManager::removeOutlier(std::set<int> &outlierIndex){
     }
 }
 
-void FeatureManager::removeBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_R, Vec3d new_P){
+void FeatureManager::RemoveBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_R, Vec3d new_P){
     for (auto it = feature.begin(), it_next = feature.begin();
     it != feature.end(); it = it_next)
     {
@@ -486,7 +480,7 @@ void FeatureManager::removeBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_
     }
 }
 
-void FeatureManager::removeBack()
+void FeatureManager::RemoveBack()
 {
     for (auto it = feature.begin(), it_next = feature.begin();
     it != feature.end(); it = it_next)
@@ -504,7 +498,7 @@ void FeatureManager::removeBack()
     }
 }
 
-void FeatureManager::removeFront(int frame_count)
+void FeatureManager::RemoveFront(int frame_count)
 {
     for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next)
     {
@@ -516,7 +510,7 @@ void FeatureManager::removeFront(int frame_count)
         }
         else
         {
-            int j = kWindowSize - 1 - it->start_frame;
+            int j = kWinSize - 1 - it->start_frame;
             if (it->endFrame() < frame_count - 1)
                 continue;
             it->feature_per_frame.erase(it->feature_per_frame.begin() + j);
@@ -526,7 +520,7 @@ void FeatureManager::removeFront(int frame_count)
     }
 }
 
-double FeatureManager::compensatedParallax2(const FeaturePerId &it_per_id, int frame_count)
+double FeatureManager::CompensatedParallax2(const FeaturePerId &it_per_id, int frame_count)
 {
     //check the second last frame is keyframe or not
     //parallax betwwen seconde last frame and third last frame

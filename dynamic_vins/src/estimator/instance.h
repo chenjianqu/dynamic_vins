@@ -59,7 +59,7 @@ public:
     bool opt_vel{false};
 
     //物体的位姿
-    State state[(kWindowSize + 1)]{};
+    State state[(kWinSize + 1)]{};
 
     //物体的速度
     Vel3d vel,last_vel;
@@ -68,7 +68,7 @@ public:
     cv::Scalar color;
 
     //优化过程中的变量
-    double para_state[kWindowSize + 1][kSizePose]{};
+    double para_state[kWinSize + 1][kSizePose]{};
     double para_speed[1][kSpeedSize]{};
     double para_box[1][kBoxSize]{};
     double para_inv_depth[kInstFeatSize][kSizeFeature]{};//逆深度参数数组

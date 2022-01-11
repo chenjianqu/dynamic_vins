@@ -36,7 +36,6 @@
 #include "estimator/landmark.h"
 #include "InstanceTracking/deep_sort.h"
 #include "feature_utils.h"
-#include "FlowEstimating/flow_estimator.h"
 
 namespace dynamic_vins{\
 
@@ -103,7 +102,7 @@ public:
 
     void InstsTrack(SegImage img);
     void InstsFlowTrack(SegImage img);
-    InstancesFeatureMap SetOutputFeature();
+    InstancesFeatureMap GetOutputFeature();
     void AddViodeInstances(SegImage &img);
     cv::Mat AddInstances(SegImage &img);
     void AddInstancesGPU(const SegImage &img);
@@ -112,27 +111,24 @@ public:
     void DrawInsts(cv::Mat& img);
 
     void StartFlowEstimating(torch::Tensor &img){
-        while(flow_estimator_->is_running()){
+/*        while(flow_estimator_->is_running()){
             std::this_thread::sleep_for(5ms);
             Debugs("flow_estimator is_running");
         }
-        flow_estimator_->StartForward(img);
+        flow_estimator_->StartForward(img);*/
     }
 
     torch::Tensor WaitingFlowEstimating(){
-        return flow_estimator_->WaitingResult();
+        //return flow_estimator_->WaitingResult();
+        return {};
     }
 
     void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
     void set_camera(camodocal::CameraPtr& camera){camera_ = camera;}
     void set_right_camera(camodocal::CameraPtr& right_camera){right_camera_ = right_camera;}
-    void set_is_stereo(bool is_stereo){is_stereo_=is_stereo;}
 private:
     void ManageInstances();
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
-
-
-
     std::tuple<int,float,float> GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor);
 
     std::unordered_map<unsigned int,InstFeat> instances_;
@@ -140,7 +136,6 @@ private:
 
     camodocal::CameraPtr camera_,right_camera_;
 
-    bool is_stereo_{false};
     unsigned int global_frame_id{0};
     cv::Mat mask_background;
     cv::cuda::GpuMat mask_background_gpu;
@@ -159,7 +154,7 @@ private:
     cv::Ptr<cv::cuda::CornersDetector> detector;
 
     DeepSORT::Ptr mot_tracker;
-    FlowEstimator::Ptr flow_estimator_;
+    //FlowEstimator::Ptr flow_estimator_;
 };
 
 }

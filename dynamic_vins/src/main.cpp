@@ -108,7 +108,7 @@ void ImageProcess()
         }
         Debugs("Start sync");
         SegImage img = callback->SyncProcess();
-        Warns("----------Time : {} ----------", img.time0);
+        Warns("----------Time : {} ----------", std::to_string(img.time0));
 
         ///rgb to gray
         if(img.gray0.empty()){
@@ -174,8 +174,10 @@ void ImageProcess()
 
         inst_segmentor->PushBack(img);
         /*cv::Mat show;
-        cv::cvtColor(img.merge_mask,show,CV_GRAY2BGR);
-        cv::scaleAdd(img.color0,0.5,show,show);*/
+        cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
+        cv::scaleAdd(img.color0,0.5,show,show);
+        cv::imshow("show",show);
+        cv::waitKey(1);*/
         /*if(flow_tensor.defined()){
             cv::Mat show = VisualFlow(flow_tensor);
             cv::imshow("show",show);
@@ -198,7 +200,7 @@ void FeatureTrack()
             if(cfg::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
                 FeatureMap features = feature_tracker->TrackSemanticImage(*img);
-                auto instances= feature_tracker->insts_tracker->SetOutputFeature();
+                auto instances= feature_tracker->insts_tracker->GetOutputFeature();
                 estimator->PushBack(img->time0, features, instances);
             }
             else if(cfg::slam == SlamType::kNaive){

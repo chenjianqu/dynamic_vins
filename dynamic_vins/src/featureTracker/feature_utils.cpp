@@ -13,18 +13,26 @@ namespace dynamic_vins{\
 
 using Tensor = torch::Tensor;
 
+/**
+ * LK光流估计
+ * @param img1
+ * @param img2
+ * @param pts1
+ * @param pts2
+ * @return
+ */
 std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2)
 {
     std::vector<uchar> status;
     std::vector<float> err;
-
     if(img1.empty() || img2.empty() || pts1.empty()){
         std::string msg="flowTrack() input wrong, received at least one of parameter are empty";
-        tk_logger->error(msg);
+        Errort(msg);
         throw std::runtime_error(msg);
     }
-
-    cv::calcOpticalFlowPyrLK(img1, img2, pts1, pts2,status, err, cv::Size(21, 21), 3);
+    //前向光流计算
+    cv::calcOpticalFlowPyrLK(img1, img2, pts1, pts2,status, err,
+                             cv::Size(21, 21), 3);
 
     //反向光流计算 判断之前光流跟踪的特征点的质量
     if(Config::is_flow_back){
@@ -32,7 +40,7 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
         std::vector<cv::Point2f> reverse_pts = pts1;
         cv::calcOpticalFlowPyrLK(img2, img1, pts2, reverse_pts,
                                  reverse_status, err, cv::Size(21, 21), 1,
-                                 cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 30, 0.01),
+                                 cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,30, 0.01),
                                  cv::OPTFLOW_USE_INITIAL_FLOW);
         //cv::calcOpticalFlowPyrLK(cur_img, prev_img, cur_pts, reverse_pts, reverse_status, err, cv::Size(21, 21), 3);
         for(size_t i = 0; i < status.size(); i++){
@@ -42,12 +50,12 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
                 status[i] = 0;
         }
     }
-
     ///将落在图像外面的特征点的状态删除
     for (size_t i = 0; i < pts2.size(); ++i){
         if (status[i] && !InBorder(pts2[i], img2.rows, img2.cols))
             status[i] = 0;
     }
+
     return status;
 }
 
@@ -59,11 +67,11 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
                                        std::vector<cv::Point2f> &pts_prev, std::vector<cv::Point2f> &pts_next){
     if(img_prev.empty() || img_next.empty() || pts_prev.empty()){
         std::string msg="flowTrack() input wrong, received at least one of parameter are empty";
-        tk_logger->error(msg);
+        Errort(msg);
         throw std::runtime_error(msg);
     }
 
-    static auto getValidStatusSize=[](const std::vector<uchar> &stu){
+    auto getValidStatusSize=[](const std::vector<uchar> &stu){
         int cnt=0;
         for(const auto s : stu) if(s)cnt++;
         return cnt;
@@ -127,7 +135,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
                     status[j]=0;
                 }
             }
-            tk_logger->warn("flowTrackGpu backward success:{},so save:{}",getValidStatusSize(reverse_status),getValidStatusSize(status));
+            Warnt("flowTrackGpu backward success:{},so save:{}",getValidStatusSize(reverse_status),getValidStatusSize(status));
         }*/
 
     }
@@ -268,8 +276,33 @@ void PtsVelocity(double dt,
 }
 
 
+/**
+ * 根据track_cnt对特征点、id进行重新排序
+ * @param cur_pts
+ * @param track_cnt
+ * @param ids
+ */
+void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, std::vector<int> &ids)
+{
+    vector<pair<int, pair<cv::Point2f, int>>> cnt_pts_id;
+    for (size_t i = 0; i < cur_pts.size(); i++)
+        cnt_pts_id.emplace_back(track_cnt[i], std::make_pair(cur_pts[i], ids[i]));
+    sort(cnt_pts_id.begin(), cnt_pts_id.end(),
+         [](const pair<int, pair<cv::Point2f, int>> &a, const pair<int, pair<cv::Point2f, int>> &b){
+        return a.first > b.first;
+    });
 
+    cur_pts.clear();
+    ids.clear();
+    track_cnt.clear();
 
+    for (auto &[t_cnt,pt_id] : cnt_pts_id){
+        auto &[pt,id]=pt_id;
+        cur_pts.push_back(pt);
+        ids.push_back(id);
+        track_cnt.push_back(t_cnt);
+    }
+}
 
 
 }
