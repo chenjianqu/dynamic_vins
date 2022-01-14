@@ -86,12 +86,9 @@ void SetViodeMask(SegImage &img)
     };
 
     static TicToc tt;
-
     int img_row=img.seg0.rows;
     int img_col=img.seg0.cols;
-
     cv::Mat merge_mask = cv::Mat(img_row, img_col, CV_8UC1, cv::Scalar(0));
-
     auto calBlock=[&merge_mask,&img](int row_start,int row_end,int col_start,int col_end,
             std::unordered_map<unsigned int,MiniInstance> *blockInsts){
         for (int i = row_start; i < row_end; ++i) {
@@ -131,7 +128,7 @@ void SetViodeMask(SegImage &img)
     block_thread2.join();
     block_thread3.join();
 
-    Debugs("setViodeMask calBlock :{} ms", tt.TocThenTic());
+    Debugs("SetViodeMask calBlock :{} ms", tt.TocThenTic());
 
     ///线程结果合并
     std::unordered_multimap<unsigned int,MiniInstance> insts_all;
@@ -151,28 +148,29 @@ void SetViodeMask(SegImage &img)
         m_inst.mask.copyTo(block);
     }
 
-    Debugs("setViodeMask merge :{} ms", tt.TocThenTic());
+    Debugs("SetViodeMask merge :{} ms", tt.TocThenTic());
+    Debugs("SetViodeMask detect num:{}",insts.size());
 
     ///构建InstanceInfo
     for(auto &[key,inst] : insts){
         InstInfo info;
         info.id = key;
         info.track_id=key;
-        Debugs("id:{}", key);
-        Debugs("mask:{} {} {}", inst.mask.empty(), inst.mask.rows, inst.mask.cols);
+        Debugs("SetViodeMask id:{}", key);
+        Debugs("SetViodeMask mask:{} {} {}", inst.mask.empty(), inst.mask.rows, inst.mask.cols);
         info.mask_gpu.upload(inst.mask);
         ErodeMaskGpu(info.mask_gpu, info.mask_gpu);
         info.mask_gpu.download(info.mask_cv);
-        img.insts_info.emplace_back(info);
+        img.insts_info.push_back(info);
     }
 
-    Debugs("erode_filter:{}", tt.TocThenTic());
+    Debugs("SetViodeMask erode time:{} ms", tt.TocThenTic());
     img.merge_mask = merge_mask;
     img.merge_mask_gpu.upload(merge_mask);
     cv::cuda::bitwise_not(img.merge_mask_gpu,img.inv_merge_mask_gpu);
     img.inv_merge_mask_gpu.download(img.inv_merge_mask);
 
-    Debugs("setViodeMask set gpu :{} ms", tt.TocThenTic());
+    Debugs("SetViodeMask set gpu :{} ms", tt.TocThenTic());
 
     delete insts1;
     delete insts2;

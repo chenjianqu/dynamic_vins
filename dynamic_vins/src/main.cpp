@@ -96,7 +96,9 @@ cv::Mat ReadFlowTensor(double time){
 
 
 
-
+/**
+ * 实例分割线程
+ */
 void ImageProcess()
 {
     int cnt = 0;
@@ -106,23 +108,24 @@ void ImageProcess()
             std::this_thread::sleep_for(50ms);
             continue;
         }
+        //同步获取图像
         Debugs("Start sync");
         SegImage img = callback->SyncProcess();
         Warns("----------Time : {} ----------", std::to_string(img.time0));
 
+
         ///rgb to gray
         if(img.gray0.empty()){
-            if(cfg::slam != SlamType::kRaw)
-                img.SetGrayImageGpu();
-            else
-                img.SetGrayImage();
+            img.SetGrayImageGpu();
         }
         else{
-            if(cfg::slam != SlamType::kRaw)
-                img.SetColorImageGpu();
-            else
-                img.SetColorImage();
+            img.SetColorImageGpu();
         }
+
+        static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+        clahe->apply(img.gray0, img.gray0);
+        if(!img.gray1.empty())
+            clahe->apply(img.gray1, img.gray1);
 
         static TicToc tt;
         torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
@@ -169,9 +172,7 @@ void ImageProcess()
             Warns("Can not find :{}", std::to_string(img.time0));
             img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
         }
-
         Debugs("ReadFlowTensor:{}", tt.TocThenTic());
-
         inst_segmentor->PushBack(img);
         /*cv::Mat show;
         cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
@@ -184,12 +185,13 @@ void ImageProcess()
             cv::waitKey(1);
         }*/
     }
-
     Warns("ImageProcess 线程退出");
 }
 
 
-
+/**
+ * 特征跟踪线程
+ */
 void FeatureTrack()
 {
     static TicToc tt;
@@ -201,7 +203,7 @@ void FeatureTrack()
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
                 FeatureMap features = feature_tracker->TrackSemanticImage(*img);
                 auto instances= feature_tracker->insts_tracker->GetOutputFeature();
-                estimator->PushBack(img->time0, features, instances);
+                //estimator->PushBack(img->time0, features, instances);
             }
             else if(cfg::slam == SlamType::kNaive){
                 FeatureMap features = feature_tracker->TrackImageNaive(*img);
@@ -222,13 +224,11 @@ void FeatureTrack()
                     cv::imwrite(label,imgTrack);
                 }*/
             }
-
             Infot("**************feature_track:{} ms****************\n", tt.Toc());
         }
     }
     Warnt("FeatureTrack 线程退出");
 }
-
 
 
 void ImuCallback(const sensor_msgs::ImuConstPtr &imu_msg)
@@ -337,9 +337,9 @@ int Run(int argc, char **argv){
     fk_thread.join();
     vio_thread.join();
     spdlog::drop_all();
+    delete callback;
 
-    cerr<<"vins结束"<<endl;
-
+    cout<<"vins结束"<<endl;
 }
 
 

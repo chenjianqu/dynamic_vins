@@ -112,6 +112,9 @@ void SegImage::SetGrayImageGpu(){
         }
         cv::cuda::cvtColor(color1_gpu,gray1_gpu,CV_BGR2GRAY);
     }
+    gray0_gpu.download(gray0);
+    gray1_gpu.download(gray1);
+
 }
 
 

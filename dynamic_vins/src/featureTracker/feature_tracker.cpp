@@ -43,14 +43,7 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
     cur_img = img;
     row = img.color0.rows;
     col = img.color0.cols;
-    /*
-    {
-        cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
-        clahe->apply(cur_img, cur_img);
-        if(!rightImg.empty())
-            clahe->apply(rightImg, rightImg);
-    }
-    */
+
     cur_pts.clear();
 
     if (!prev_pts.empty()){
@@ -331,7 +324,7 @@ void FeatureTracker::RejectWithF()
         }
         vector<uchar> status;
         cv::findFundamentalMat(un_cur_pts, un_prev_pts, cv::FM_RANSAC, cfg::kFThreshold, 0.99, status);
-        int size_a = cur_pts.size();
+        size_t size_a = cur_pts.size();
         ReduceVector(prev_pts, status);
         ReduceVector(cur_pts, status);
         ReduceVector(cur_un_pts, status);
@@ -361,7 +354,7 @@ void FeatureTracker::ReadIntrinsicParameter(const vector<string> &calib_file)
 
 void FeatureTracker::ShowUndistortion(const string &name)
 {
-    cv::Mat undistortedImg(row + 600, col + 600, CV_8UC1, cv::Scalar(0));
+/*    cv::Mat undistortedImg(row + 600, col + 600, CV_8UC1, cv::Scalar(0));
     vector<Eigen::Vector2d> distortedp, undistortedp;
     for (int i = 0; i < col; i++){
         for (int j = 0; j < row; j++){
@@ -387,7 +380,7 @@ void FeatureTracker::ShowUndistortion(const string &name)
     }
     // turn the following code on if you need
     // cv::imshow(name, undistortedImg);
-    // cv::waitKey(0);
+    // cv::waitKey(0);*/
 }
 
 
@@ -485,8 +478,6 @@ void FeatureTracker::DrawTrack(const SegImage &img,
 }
 
 
-
-
 void FeatureTracker::SetPrediction(std::map<int, Eigen::Vector3d> &predictPts)
 {
     predict_pts.clear();
@@ -548,8 +539,9 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 
     ///开启另一个线程检测动态特征点
     TicToc t_i;
-    std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
+    //std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
     //std::thread t_inst_track(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
+    std::thread t_inst_track(&InstsFeatManager::InstsTrackByMatching, insts_tracker.get(), img);
 
     if(is_exist_inst){
         ErodeMaskGpu(cur_img.inv_merge_mask_gpu, cur_img.inv_merge_mask_gpu);///形态学运算

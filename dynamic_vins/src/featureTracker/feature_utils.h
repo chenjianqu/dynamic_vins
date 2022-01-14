@@ -84,7 +84,8 @@ void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2);
  * @param out
  */
 inline void ErodeMaskGpu(cv::cuda::GpuMat &in, cv::cuda::GpuMat &out,int kernel_size=10){
-    auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(kernel_size,kernel_size),cv::Point(-1,-1));
+    auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,
+                                                  cv::Size(kernel_size,kernel_size),cv::Point(-1,-1));
     auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
     erode_filter->apply(in,out);
 }

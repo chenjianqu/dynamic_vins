@@ -26,9 +26,7 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
     std::vector<uchar> status;
     std::vector<float> err;
     if(img1.empty() || img2.empty() || pts1.empty()){
-        std::string msg="flowTrack() input wrong, received at least one of parameter are empty";
-        Errort(msg);
-        throw std::runtime_error(msg);
+        throw std::runtime_error("FeatureTrackByLK() input wrong, received at least one of parameter are empty");
     }
     //前向光流计算
     cv::calcOpticalFlowPyrLK(img1, img2, pts1, pts2,status, err,
@@ -70,7 +68,6 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
         Errort(msg);
         throw std::runtime_error(msg);
     }
-
     auto getValidStatusSize=[](const std::vector<uchar> &stu){
         int cnt=0;
         for(const auto s : stu) if(s)cnt++;
@@ -78,7 +75,6 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
     };
 
     std::vector<float> err;
-
     cv::cuda::GpuMat d_prevPts;
     Points2GpuMat(pts_prev, d_prevPts);
     cv::cuda::GpuMat d_nextPts;
@@ -89,7 +85,6 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
     std::vector<uchar> status;
     GpuMat2Status(d_status, status);
     GpuMat2Points(d_nextPts, pts_next);
-
     int forward_success=getValidStatusSize(status);
     Debugt("flowTrackGpu forward success:{}", forward_success);
 
@@ -97,15 +92,12 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
     if(Config::is_flow_back){
         cv::cuda::GpuMat d_reverse_status;
         cv::cuda::GpuMat d_reverse_pts = d_prevPts;
-
         lkOpticalFlowBack->calc(img_next,img_prev,d_nextPts,d_reverse_pts,d_reverse_status);
-
         std::vector<uchar> reverse_status;
         GpuMat2Status(d_reverse_status, reverse_status);
 
         std::vector<cv::Point2f> pts_prev_reverse;
         GpuMat2Points(d_reverse_pts, pts_prev_reverse);
-
         //constexpr float SAVE_RATIO=0.2f;
         //if(int inv_success = getValidStatusSize(reverse_status); inv_success*1.0 / forward_success > SAVE_RATIO){
         for(size_t i = 0; i < reverse_status.size(); i++){
@@ -137,7 +129,6 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
             }
             Warnt("flowTrackGpu backward success:{},so save:{}",getValidStatusSize(reverse_status),getValidStatusSize(status));
         }*/
-
     }
 
     ///将落在图像外面的特征点的状态删除
@@ -145,9 +136,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
         if (status[i] && !InBorder(pts_next[i], img_next.rows, img_next.cols))
             status[i] = 0;
     }
-
     Debugt("flowTrackGpu input:{} final_success:{}", status.size(), getValidStatusSize(status));
-
     return status;
 }
 

@@ -88,6 +88,9 @@ struct InstFeat{
     float mask_area{0.};//当前帧中属于该物体的像素数量
 
     unsigned int last_frame_cnt{0};
+
+    cv::Mat orb_descriptors,orb_last_descriptors;
+    std::vector<cv::KeyPoint> orb_keypoints,orb_last_keypoints;
 };
 
 
@@ -102,6 +105,8 @@ public:
 
     void InstsTrack(SegImage img);
     void InstsFlowTrack(SegImage img);
+    void InstsTrackByMatching(SegImage img);
+
     InstancesFeatureMap GetOutputFeature();
     void AddViodeInstances(SegImage &img);
     cv::Mat AddInstances(SegImage &img);
@@ -155,6 +160,10 @@ private:
 
     DeepSORT::Ptr mot_tracker;
     //FlowEstimator::Ptr flow_estimator_;
+
+    cv::Ptr<cv::FeatureDetector> orb_detector_;
+    cv::Ptr<cv::DescriptorExtractor> orb_descriptor_;
+    cv::Ptr<cv::DescriptorMatcher> orb_matcher_;
 };
 
 }

@@ -537,21 +537,21 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                             inst.para_inv_depth[depth_index]);*/
 
 
-            ///位姿和点云的约束
+            ///位姿、点云、速度的约束
             /*problem.AddResidualBlock(new InstanceInitPowFactor(
                             feat_j.point,feat_j.vel,e->Rs[fj],e->Ps[fj],
                             e->ric[0],e->tic[0],feat_j.td, e->td),
                             loss_function,
                             inst.para_state[fj],
                             inst.para_inv_depth[depth_index]);*/
-            problem.AddResidualBlock(new InstanceInitPowFactorSpeed(
+            /*problem.AddResidualBlock(new InstanceInitPowFactorSpeed(
                     feat_j.point, feat_j.vel, e_->Rs[fj], e_->Ps[fj],
                     e_->ric[0], e_->tic[0], feat_j.td, e_->td,
                     e_->headers[fj], e_->headers[0], 1.0),
                                      loss_function,
                                      inst.para_state[0],
                                      inst.para_speed[0],
-                                     inst.para_inv_depth[depth_index]);
+                                     inst.para_inv_depth[depth_index]);*/
             number_speed++;
 
             if(lm.feats.size() < 2)
@@ -610,9 +610,9 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                         );*/
                 ///优化物体的速度和位姿
                 /*problem.AddResidualBlock(new SpeedPoseSimpleFactor(
-                        feat_j.point, e->Headers[feat_j.frame], e->Headers[feat_i.frame],
-                        e->Rs[feat_j.frame], e->Ps[feat_j.frame], e->ric[0],
-                        e->tic[0],feat_j.vel, feat_j.td, e->td),
+                        feat_j.point, e_->headers[feat_j.frame], e_->headers[feat_i.frame],
+                        e_->Rs[feat_j.frame], e_->Ps[feat_j.frame], e_->ric[0],
+                        e_->tic[0],feat_j.vel, feat_j.td, e_->td),
                                          loss_function,
                                          inst.para_state[feat_j.frame],
                                          inst.para_state[feat_i.frame],
