@@ -25,74 +25,59 @@ std::tuple<float,float> Pipeline::GetXYWHS(int img_h,int img_w)
 {
     image_info.origin_h = img_h;
     image_info.origin_w = img_w;
-
     int w, h, x, y;
-    float r_w = Config::kInputWidth / (img_w * 1.0f);
-    float r_h = Config::kInputHeight / (img_h * 1.0f);
+    float r_w = static_cast<float>(Config::kInputWidth / (img_w * 1.0f));
+    float r_h = static_cast<float>(Config::kInputHeight / (img_h * 1.0f));
     if (r_h > r_w) {
         w = Config::kInputWidth;
-        h = r_w * img_h;
+        h = static_cast<int>(r_w * img_h);
         if(h%2==1)h++;//这里确保h为偶数，便于后面的使用
         x = 0;
         y = (Config::kInputHeight - h) / 2;
     } else {
-        w = r_h* img_w;
+        w = static_cast<int>(r_h* img_w);
         if(w%2==1)w++;
         h = Config::kInputHeight;
         x = (Config::kInputWidth - w) / 2;
         y = 0;
     }
-
     image_info.rect_x = x;
     image_info.rect_y = y;
     image_info.rect_w = w;
     image_info.rect_h = h;
-
     return {r_h,r_w};
 }
 
 
 cv::Mat Pipeline::ReadImage(const std::string& fileName)
 {
-    cv::Mat img = cv::imread(fileName, cv::IMREAD_COLOR);
+/*    cv::Mat img = cv::imread(fileName, cv::IMREAD_COLOR);
     if (img.empty())
         return cv::Mat();
-
     auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
-
     //将img resize为(INPUT_W,INPUT_H)
     cv::Mat re(image_info.rect_h, image_info.rect_w, CV_8UC3);
     cv::resize(img, re, re.size(), 0, 0, cv::INTER_LINEAR);
     //resizeByNN(img.data, re.data, img.rows, img.cols, img.channels(), re.rows, re.cols);
-
     //将图片复制到out中
     cv::Mat out(Config::kInputHeight, Config::kInputWidth, CV_8UC3, cv::Scalar(128, 128, 128));
     re.copyTo(out(cv::Rect(image_info.rect_x, image_info.rect_y, re.cols, re.rows)));
-
-    return out;
+    return out;*/
 }
 
 
 cv::Mat Pipeline::ProcessPad(cv::Mat &img)
 {
-    TicToc tt;
-
+/*    TicToc tt;
     auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
-
     //将img resize为(INPUT_W,INPUT_H)
     cv::Mat re(image_info.rect_h, image_info.rect_w, CV_8UC3);
     cv::resize(img, re, re.size(), 0, 0, cv::INTER_LINEAR);
     //resizeByNN(img.data, re.data, img.rows, img.cols, img.channels(), re.rows, re.cols);
-
-    tt.TocPrintTic("resize");
-
     //将图片复制到out中
     cv::Mat out(Config::kInputHeight, Config::kInputWidth, CV_8UC3, cv::Scalar(128, 128, 128));
     re.copyTo(out(cv::Rect(image_info.rect_x, image_info.rect_y, re.cols, re.rows)));
-
-    tt.TocPrintTic("copyTo out");
-
-    return out;
+    return out;*/
 }
 
 
@@ -154,7 +139,7 @@ cv::Mat Pipeline::ProcessPadCuda(cv::cuda::GpuMat &img)
 
 void* Pipeline::SetInputTensor(cv::Mat &img)
 {
-    TicToc tt;
+/*    TicToc tt;
 
     auto [r_h,r_w] = GetXYWHS(img.rows,img.cols);
 
@@ -204,7 +189,7 @@ void* Pipeline::SetInputTensor(cv::Mat &img)
 
     Debugs("SetInputTensor norm:{} ms", tt.TocThenTic());
 
-    return input_tensor.data_ptr();
+    return input_tensor.data_ptr();*/
 }
 
 /**
@@ -247,10 +232,9 @@ void* Pipeline::ProcessInput(torch::Tensor &img){
 
 cv::Mat Pipeline::ProcessMask(cv::Mat &mask, std::vector<InstInfo> &insts)
 {
-    cv::Mat rect_img = mask(cv::Rect(image_info.rect_x, image_info.rect_y, image_info.rect_w, image_info.rect_h));
+/*    cv::Mat rect_img = mask(cv::Rect(image_info.rect_x, image_info.rect_y, image_info.rect_w, image_info.rect_h));
     cv::Mat out;
     cv::resize(rect_img, out, cv::Size(image_info.origin_w, image_info.origin_h), 0, 0, cv::INTER_LINEAR);
-
     ///调整包围框
     float factor_x = out.cols *1.f / rect_img.cols;
     float factor_y = out.rows *1.f / rect_img.rows;
@@ -265,15 +249,13 @@ cv::Mat Pipeline::ProcessMask(cv::Mat &mask, std::vector<InstInfo> &insts)
         inst.max_pt.x *= factor_x;
         inst.max_pt.y *= factor_y;
     }
-
-
-    return out;
+    return out;*/
 }
 
 
 void Pipeline::ProcessKitti(cv::Mat &input, cv::Mat &output0, cv::Mat &output1)
 {
-    int input_h=448;
+/*    int input_h=448;
     int input_w=672;
 
     ///将输入图片划分为两个图片
@@ -329,13 +311,13 @@ void Pipeline::ProcessKitti(cv::Mat &input, cv::Mat &output0, cv::Mat &output1)
     re0.copyTo(output0(cv::Rect(x, y, re0.cols, re0.rows)));
 
     output1=cv::Mat(input_h, input_w, CV_8UC3, cv::Scalar(128, 128, 128));
-    re1.copyTo(output1(cv::Rect(x, y, re1.cols, re1.rows)));
+    re1.copyTo(output1(cv::Rect(x, y, re1.cols, re1.rows)));*/
 }
 
 
 cv::Mat Pipeline::ProcessCut(cv::Mat &img)
 {
-    int resize_h = Config::kInputHeight;
+/*    int resize_h = Config::kInputHeight;
     float h_factor = resize_h *1.f / img.rows;
     int resize_w = img.cols * h_factor;
 
@@ -353,12 +335,13 @@ cv::Mat Pipeline::ProcessCut(cv::Mat &img)
     image_info.origin_h = out.rows;
     image_info.origin_w = out.cols;
 
-    return out;
+    return out;*/
 }
 
 
 void Pipeline::SetBufferWithNorm(const cv::Mat &img, float *buffer)
 {
+    /*
     int i = 0,b_cnt=0;
     auto rows = std::min(img.rows,Config::kInputHeight);
     auto cols = std::min(img.cols,Config::kInputWidth);
@@ -371,14 +354,14 @@ void Pipeline::SetBufferWithNorm(const cv::Mat &img, float *buffer)
             uc_pixel += 3;
             ++i;
         }
-    }
+    }*/
 
 }
 
 
 torch::Tensor Pipeline::ImageToTensor(cv::Mat &img) {
     if(img.empty()){
-        return torch::Tensor();
+        return {};
     }
     cv::Mat img_float;
     img.convertTo(img_float,CV_32FC3);
@@ -397,7 +380,7 @@ torch::Tensor Pipeline::ImageToTensor(cv::Mat &img) {
 
 torch::Tensor Pipeline::ImageToTensor(cv::cuda::GpuMat &img){
     if(img.empty()){
-        return torch::Tensor();
+        return {};
     }
     cv::Mat img_float;
     img.convertTo(img_float,CV_32FC3);

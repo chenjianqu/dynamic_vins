@@ -48,7 +48,6 @@ public:
     double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo);
     void GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
 
-
     vector<Eigen::Vector3d> point3d_curr;
     std::list<LandmarkPoint> landmarks;
 
@@ -58,11 +57,8 @@ public:
     bool is_tracking{true};//是否在滑动窗口中
     bool opt_vel{false};
 
-    //物体的位姿
-    State state[(kWinSize + 1)]{};
-
-    //物体的速度
-    Vel3d vel,last_vel;
+    State state[(kWinSize + 1)]{}; //物体的位姿
+    Vel3d vel,last_vel;//物体的速度
 
     Eigen::Vector3d box;
     cv::Scalar color;
@@ -74,7 +70,6 @@ public:
     double para_inv_depth[kInstFeatSize][kSizeFeature]{};//逆深度参数数组
 
     Estimator* e{nullptr};
-
 };
 
 }

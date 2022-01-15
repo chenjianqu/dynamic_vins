@@ -312,6 +312,8 @@ Config::Config(const std::string &file_name)
 
     fs["visual_inst_duration"] >> kVisualInstDuration;
 
+    fs["only_frontend"]>>is_only_frontend;
+
     fs.release();
 
 

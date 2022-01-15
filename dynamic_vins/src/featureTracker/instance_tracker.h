@@ -135,6 +135,13 @@ private:
     void ManageInstances();
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
     std::tuple<int,float,float> GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor);
+    void ExecInst(std::function<void(unsigned int, InstFeat&)> func){
+        for(auto & [ key,inst] : instances_){
+            if(inst.lost_num>0)
+                continue;
+            func(key,inst);
+        }
+    }
 
     std::unordered_map<unsigned int,InstFeat> instances_;
     std::unordered_map<unsigned int,Vel3d> vel_map_;
@@ -147,7 +154,7 @@ private:
 
     std::vector<cv::Point2f> visual_new_points_;
     SegImage prev_img;
-    bool exist_inst_{false};
+    bool is_exist_inst_{false};
 
     unsigned long global_id_count{0};//全局特征序号，注意与静态物体上的特征id不共用
     unsigned int global_instance_id{0};

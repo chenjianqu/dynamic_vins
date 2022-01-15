@@ -72,10 +72,6 @@ constexpr double kFocalLength = 460.0;
 constexpr int kWinSize = 10;
 constexpr int kNumFeat = 1000;
 
-constexpr int kInstFeatSize=500;
-constexpr int kSpeedSize=6;
-constexpr int kBoxSize=3;
-
 constexpr int kQueueSize=200;
 constexpr double kDelay=0.005;
 
@@ -114,7 +110,10 @@ inline std::vector<std::vector<int>> kTensorQueueShapes{
 enum SizeParameterization{
     kSizePose = 7,
     kSizeSpeedBias = 9,
-    kSizeFeature = 1
+    kSizeFeature = 1,
+    kInstFeatSize=500,
+    kSpeedSize=6,
+    kBoxSize=3
 };
 
 
@@ -211,6 +210,7 @@ public:
     inline static SlamType slam;
     inline static DatasetType dataset;
     inline static bool is_input_seg;
+    inline static bool is_only_frontend;
 
     inline static std::vector<std::string> CocoLabelVector;
 

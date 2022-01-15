@@ -112,8 +112,6 @@ void ImageProcess()
         Debugs("Start sync");
         SegImage img = callback->SyncProcess();
         Warns("----------Time : {} ----------", std::to_string(img.time0));
-
-
         ///rgb to gray
         if(img.gray0.empty()){
             img.SetGrayImageGpu();
@@ -121,12 +119,10 @@ void ImageProcess()
         else{
             img.SetColorImageGpu();
         }
-
         static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
         clahe->apply(img.gray0, img.gray0);
         if(!img.gray1.empty())
             clahe->apply(img.gray1, img.gray1);
-
         static TicToc tt;
         torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
         //torch::Tensor img_clone = img_tensor.clone();
@@ -135,7 +131,6 @@ void ImageProcess()
         if(cfg::slam == SlamType::kDynamic){
             //feature_tracker->insts_tracker->StartFlowEstimating(img_tensor);
         }
-
         ///实例分割
         if(!cfg::is_input_seg){
             if(cfg::slam != SlamType::kRaw){
@@ -159,12 +154,11 @@ void ImageProcess()
             }
             Infos("sync_process SetMask: {}", tt.TocThenTic());
         }
-
         tt.Tic();
-
         ///等待光流估计结果
         //auto flow_tensor = feature_tracker->insts_tracker->WaitingFlowEstimating();
-        auto flow_cv = ReadFlowTensor(img.time0);
+        //auto flow_cv = ReadFlowTensor(img.time0);
+        cv::Mat flow_cv;
         if(!flow_cv.empty()){
             img.flow = flow_cv;
         }
@@ -203,15 +197,18 @@ void FeatureTrack()
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
                 FeatureMap features = feature_tracker->TrackSemanticImage(*img);
                 auto instances= feature_tracker->insts_tracker->GetOutputFeature();
-                //estimator->PushBack(img->time0, features, instances);
+                if(!cfg::is_only_frontend)
+                    estimator->PushBack(img->time0, features, instances);
             }
             else if(cfg::slam == SlamType::kNaive){
                 FeatureMap features = feature_tracker->TrackImageNaive(*img);
-                estimator->PushBack(img->time0, features);
+                if(!cfg::is_only_frontend)
+                    estimator->PushBack(img->time0, features);
             }
             else{
                 FeatureMap features = feature_tracker->TrackImage(*img);
-                estimator->PushBack(img->time0, features);
+                if(!cfg::is_only_frontend)
+                    estimator->PushBack(img->time0, features);
             }
 
             ///发布跟踪可视化图像
@@ -298,7 +295,7 @@ int Run(int argc, char **argv){
         callback = new CallBack();
     }
     catch(std::runtime_error &e){
-        vio_logger->critical(e.what());
+        Criticalv(e.what());
         cerr<<e.what()<<endl;
         return -1;
     }
@@ -328,8 +325,9 @@ int Run(int argc, char **argv){
 
     std::thread sync_thread{ImageProcess};
     std::thread fk_thread{FeatureTrack};
-    std::thread vio_thread{&Estimator::ProcessMeasurements, estimator};
-
+    std::thread vio_thread;
+    if(!cfg::is_only_frontend)
+        vio_thread = std::thread(&Estimator::ProcessMeasurements, estimator);
 
     ros::spin();
 

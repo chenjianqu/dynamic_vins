@@ -47,7 +47,6 @@ InstanceSegmentor::InstanceSegmentor()
         cerr<<msg<<endl;
         return;
     }
-
     ///注册预定义的和自定义的插件
     initLibNvInferPlugins(&sample::gLogger.getTRTLogger(),"");
     Infov("读取模型文件");
@@ -65,76 +64,50 @@ InstanceSegmentor::InstanceSegmentor()
         vio_logger->critical(msg);
         throw std::runtime_error(msg);
     }
-
     Infov("createInferRuntime");
-
     ///创建runtime
     runtime_=std::unique_ptr<nvinfer1::IRuntime,InferDeleter>(
             nvinfer1::createInferRuntime(sample::gLogger.getTRTLogger()));
-
     Infov("deserializeCudaEngine");
-
     ///反序列化模型
     engine_=std::shared_ptr<nvinfer1::ICudaEngine>(
             runtime_->deserializeCudaEngine(model_str.data(), model_str.size()) , InferDeleter());
-
     Infov("createExecutionContext");
-
     ///创建执行上下文
     context_=std::unique_ptr<nvinfer1::IExecutionContext,InferDeleter>(
             engine_->createExecutionContext());
-
     if(!context_){
         throw std::runtime_error("can not create context");
     }
-
     ///创建输入输出的内存
     buffer = std::make_shared<MyBuffer>(*engine_);
-
     Config::kInputHeight=buffer->dims[0].d[2];
     Config::kInputWidth=buffer->dims[0].d[3];
     Config::kInputChannel=3;
-
     pipeline_=std::make_shared<Pipeline>();
     solo_ = std::make_shared<Solov2>();
-
-
     //cv::Mat warn_up_input(cv::Size(1226,370),CV_8UC3,cv::Scalar(128));
     const std::string warn_up_path="/home/chen/ws/vio_ws/src/dynamic_vins/config/kitti.png";
     cv::Mat warn_up_input = cv::imread(warn_up_path);
-
     if(warn_up_input.empty()){
         vio_logger->error("Can not open warn up image:{}", warn_up_path);
         return;
     }
-
     cv::resize(warn_up_input,warn_up_input,cv::Size(Config::kCol, Config::kRow));
-
     Warnv("warn up model");
-
     //[[maybe_unused]] auto result = forward(warn_up_input);
-
     [[maybe_unused]] torch::Tensor mask_tensor;
     [[maybe_unused]] std::vector<InstInfo> insts_info;
     ForwardTensor(warn_up_input, mask_tensor, insts_info);
-
-    if(insts_info.empty()){
+    if(insts_info.empty())
         throw std::runtime_error("model not init");
-    }
-
     Infov("infer init finished");
 }
-
-
-
-
-
 
 std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>>
 InstanceSegmentor::Forward(cv::Mat &img)
 {
-    TicToc ticToc,tt;
-
+/*    TicToc ticToc,tt;
     //cv::Mat input=pipeline_->ProcessPad(img);
     cv::Mat input= pipeline_->ProcessPadCuda(img);
 
@@ -148,19 +121,7 @@ InstanceSegmentor::Forward(cv::Mat &img)
     context_->enqueue(kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
 
     buffer->cpyOutputToCPU();
-
     tt.TocPrintTic("enqueue:");
-
-
-    /*std::vector<torch::Tensor> outputs;
-    static auto opt=torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat);
-    for(int i=1;i<buffer->binding_num;++i){
-        torch::Tensor tensor=torch::from_blob(
-                buffer->gpu_buffer[i],
-                {buffer->dims[i].d[0],buffer->dims[i].d[1],buffer->dims[i].d[2],buffer->dims[i].d[3]},
-                opt);
-        outputs.push_back(tensor);
-    }*/
 
     std::vector<torch::Tensor> outputs(kTensorQueueShapes.size());
     auto opt=torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat);
@@ -179,9 +140,6 @@ InstanceSegmentor::Forward(cv::Mat &img)
         }
     }
     tt.TocPrintTic("push_back");
-    cout<<endl;
-
-
     tt.TocPrintTic("push_back");
 
     //cv::Mat mask_img=solo_->GetSingleSeg(outputs,torch::kCUDA,insts);
@@ -204,7 +162,7 @@ InstanceSegmentor::Forward(cv::Mat &img)
     //ticToc.toc_print_tic("kitti time:");
     //VisualizeResult(img,mask_img,insts);
 
-    return {mask_v,insts_info};
+    return {mask_v,insts_info};*/
 }
 
 void InstanceSegmentor::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts){
@@ -272,7 +230,7 @@ void InstanceSegmentor::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, 
 
 void InstanceSegmentor::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
 {
-    TicToc tic_toc,tt;
+/*    TicToc tic_toc,tt;
 
     cv::Mat input= pipeline_->ProcessPadCuda(img);
     pipeline_->SetBufferWithNorm(input, buffer->cpu_buffer[0]);
@@ -287,19 +245,6 @@ void InstanceSegmentor::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask
 
     std::vector<torch::Tensor> outputs(kTensorQueueShapes.size());
 
-
-    //方法1
-    /*buffer->cpyOutputToCPU();
-    for(int i=1;i<buffer->binding_num;++i){
-        torch::Tensor tensor=torch::from_blob(
-                buffer->cpu_buffer[i],
-                {buffer->dims[i].d[0],buffer->dims[i].d[1],buffer->dims[i].d[2],buffer->dims[i].d[3]},
-                torch::kFloat);
-        outputs.push_back(tensor.to(torch::kCUDA));
-        //cout<<tensor.sizes()<<endl;
-    }*/
-
-    //方法2
     auto opt=torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat);
     for(int i=1;i<buffer->binding_num;++i){
         torch::Tensor tensor=torch::from_blob(
@@ -320,10 +265,8 @@ void InstanceSegmentor::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask
     Infos("ForwardTensor push_back:{} ms", tt.TocThenTic());
 
     solo_->GetSegTensor(outputs, pipeline_->image_info, mask_tensor, insts);
-
     Infos("ForwardTensor GetSegTensor:{} ms", tt.TocThenTic());
-
-    infer_time_ = tic_toc.Toc();
+    infer_time_ = tic_toc.Toc();*/
 
 }
 
@@ -332,7 +275,7 @@ void InstanceSegmentor::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask
 
 void InstanceSegmentor::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts)
 {
-    if(mask.empty()){
+/*    if(mask.empty()){
         cv::imshow("test",input);
         cv::waitKey(1);
     }
@@ -357,7 +300,7 @@ void InstanceSegmentor::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vect
 
         cv::imshow("test",image_test);
         cv::waitKey(1);
-    }
+    }*/
 }
 
 }

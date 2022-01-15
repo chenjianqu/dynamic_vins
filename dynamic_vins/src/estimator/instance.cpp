@@ -13,25 +13,19 @@
 namespace dynamic_vins{\
 
 
-void Instance::GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
-    Eigen::Vector3d minPt,maxPt;
+void Instance::GetBoxVertex(EigenContainer<Vec3d> &vertex) {
+    Vec3d minPt,maxPt;
     minPt = - box;
     maxPt = box;
-
     vertex.resize(8);
-
     vertex[0]=minPt;
-
     vertex[1].x()=maxPt.x();vertex[1].y()=minPt.y();vertex[1].z()=minPt.z();
     vertex[2].x()=maxPt.x();vertex[2].y()=minPt.y();vertex[2].z()=maxPt.z();
     vertex[3].x()=minPt.x();vertex[3].y()=minPt.y();vertex[3].z()=maxPt.z();
     vertex[4].x()=minPt.x();vertex[4].y()=maxPt.y();vertex[4].z()=maxPt.z();
-
     vertex[5] = maxPt;
-
     vertex[6].x()=maxPt.x();vertex[6].y()=maxPt.y();vertex[6].z()=minPt.z();
     vertex[7].x()=minPt.x();vertex[7].y()=maxPt.y();vertex[7].z()=minPt.z();
-
     for(int i=0;i<8;++i){
         vertex[i] = state[kWinSize].R * vertex[i] + state[kWinSize].P;
     }
@@ -40,16 +34,14 @@ void Instance::GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex) {
 
 /**
  * 根据速度推导滑动窗口中各个物体的位姿
- * @param e
  */
 void Instance::SetWindowPose()
 {
-    //DebugV("SetWindowPose Inst:{} 起始位姿:<{}> 速度:v<{}> a{}>",id,vec2str(state[0].P),vec2str(vel.v),VecToStr(vel.a) );
     for(int i=1; i <= kWinSize; i++){
         state[i].time=e->headers[i];
         double time_ij=state[i].time - state[0].time;
-        Eigen::Matrix3d Roioj=Sophus::SO3d::exp(vel.a*time_ij).matrix();
-        Eigen::Vector3d Poioj=vel.v*time_ij;
+        Mat3d Roioj=Sophus::SO3d::exp(vel.a*time_ij).matrix();
+        Vec3d Poioj=vel.v*time_ij;
         state[i].R = Roioj * state[0].R;
         state[i].P = Roioj * state[0].P + Poioj;
     }
@@ -91,13 +83,13 @@ void Instance::InitialPose()
     if(frame_cnt >= 0)
     {
         ///计算初始位姿
-        Eigen::Vector3d center=Eigen::Vector3d::Zero(),minPt=center,maxPt=center;
+        Vec3d center=Vec3d::Zero(),minPt=center,maxPt=center;
         int index=0;
         for(auto &landmark : landmarks){
             if(landmark.depth > 0 && landmark.feats[0].frame == frame_cnt){
-                Eigen::Vector3d point_cam= landmark.feats[0].point * landmark.depth;//相机坐标
+                Vec3d point_cam= landmark.feats[0].point * landmark.depth;//相机坐标
                 auto point_imu=e->ric[0] * point_cam + e->tic[0];//IMU坐标
-                Eigen::Vector3d p=e->Rs[frame_cnt] * point_imu + e->Ps[frame_cnt];//世界坐标
+                Vec3d p=e->Rs[frame_cnt] * point_imu + e->Ps[frame_cnt];//世界坐标
                 center+=p;
                 index++;
                 if(p.x() < minPt.x()) minPt.x()=p.x();
@@ -111,7 +103,7 @@ void Instance::InitialPose()
         vel.SetZero();
 
         state[0].P=center/index;
-        state[0].R=Eigen::Matrix3d::Identity();
+        state[0].R=Mat3d::Identity();
         state[0].time=e->headers[0];
         SetWindowPose();
 
@@ -202,14 +194,14 @@ int Instance::SlideWindowOld()
         //将估计的逆深度值转移到新的开始帧
         else
         {
-            Eigen::Vector3d point_old=it->feats[0].point;
+            Vec3d point_old=it->feats[0].point;
             //首先删除该观测
             it->feats.erase(it->feats.begin());
 
             //计算新的深度
             if(it->depth > 0){
                 auto pts_cam_j= point_old * it->depth;
-                Eigen::Vector3d pts_cam_i;
+                Vec3d pts_cam_i;
                 if(it->feats[0].frame == 1){ //满足了使用预计算的矩阵的条件，可减少计算量
                     pts_cam_i = R_margin * pts_cam_j + t_margin;
                 }
@@ -304,48 +296,24 @@ int Instance::SlideWindowNew()
     return debug_num;
 }
 
-
+/**
+ * 将路标点转换为到世界坐标系
+ */
 void Instance::SetCurrentPoint3d()
 {
     point3d_curr.clear();
-
-
-    for(auto &landmark : landmarks){
-        if(landmark.depth > 0){
-            bool isPresent=false;
-            for(auto &feat : landmark.feats){
-                if(feat.frame == e->frame - 1){//因为实在slidewindows函数后面，所以需要-1
-                    isPresent=true;
-                    break;
-                }
-            }
-            if(!isPresent)
-                continue;
-
-            int frame_j=landmark.feats[0].frame;
-            int frame_i=e->frame;
-            Eigen::Vector3d pts_cam_j = landmark.feats[0].point * landmark.depth;//k点在j时刻的相机坐标
-            Eigen::Vector3d pts_imu_j = e->ric[0] * pts_cam_j + e->tic[0];//k点在j时刻的IMU坐标
-            Eigen::Vector3d pts_w_j=e->Rs[frame_j] * pts_imu_j + e->Ps[frame_j];//k点在j时刻的世界坐标
-
-            Eigen::Vector3d pts_obj_j=state[frame_j].R.transpose() * (pts_w_j - state[frame_j].P);//k点在j时刻的物体坐标
-            Eigen::Vector3d pts_w_i=state[frame_i].R * pts_obj_j + state[frame_i].P;//k点在i时刻的世界坐标
-            point3d_curr.push_back(pts_w_i);
-            //point3d_curr.push_back(pts_w_j);
-
-            ///测试
-            /*
-            if(id==114119232){
-                printf("%d:(%.2lf,%.2lf,d:%.2lf,%d) to (%.3lf,%.3lf,%.3lf)\n",landmark.id,landmark.feats[0].point.x(),
-                       landmark.feats[0].point.y(),landmark.depth,landmark.start_frame,
-                       pts_w_j.x(),pts_w_j.y(),pts_w_j.z());
-            }
-             */
-
-        }
+    for(auto &lm : landmarks){
+        if(lm.depth <= 0)
+            continue;
+        int frame_j=lm.feats[0].frame;
+        int frame_i=e->frame;
+        Vec3d pts_cam_j = lm.feats[0].point * lm.depth;//k点在j时刻的相机坐标
+        Vec3d pts_imu_j = e->ric[0] * pts_cam_j + e->tic[0];//k点在j时刻的IMU坐标
+        Vec3d pts_w_j=e->Rs[frame_j] * pts_imu_j + e->Ps[frame_j];//k点在j时刻的世界坐标
+        Vec3d pts_obj_j=state[frame_j].R.transpose() * (pts_w_j - state[frame_j].P);//k点在j时刻的物体坐标
+        Vec3d pts_w_i=state[frame_i].R * pts_obj_j + state[frame_i].P;//k点在i时刻的世界坐标
+        point3d_curr.push_back(pts_w_i);
     }
-
-
 }
 
 
@@ -360,35 +328,37 @@ void Instance::SetCurrentPoint3d()
  */
 double Instance::ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo)
 {
-    Eigen::Vector2d delta_j((e->td - feat_j.td) * feat_j.vel);
-    //Eigen::Vector3d pts_j_td = feat_j.point - Eigen::Vector3d(delta_j.x(),delta_j.y(),0);
-    Eigen::Vector3d pts_j_td = feat_j.point;
+    Vec2d delta_j((e->td - feat_j.td) * feat_j.vel);
+    //Vec3d pts_j_td = feat_j.point - Vec3d(delta_j.x(),delta_j.y(),0);
+    Vec3d pts_j_td = feat_j.point;
 
-    Eigen::Vector2d delta_i;
+    Vec2d delta_i;
     if(isStereo)
         delta_i= (e->td - feat_i.td) * feat_i.vel_right;
     else
         delta_i= (e->td - feat_i.td) * feat_i.vel;
-    //Eigen::Vector3d pts_i_td = feat_i.point - Eigen::Vector3d(delta_i.x(),delta_i.y(),0);
-    Eigen::Vector3d pts_i_td = feat_i.point;
+    //Vec3d pts_i_td = feat_i.point - Vec3d(delta_i.x(),delta_i.y(),0);
+    Vec3d pts_i_td = feat_i.point;
 
-    Eigen::Vector3d pts_imu_j=e->ric[0] * (pts_j_td / depth) + e->tic[0];//k点在j时刻的IMU坐标
-    Eigen::Vector3d pts_w_j=e->Rs[feat_j.frame]*pts_imu_j + e->Ps[feat_j.frame];//k点在j时刻的世界坐标
-    //Eigen::Vector3d pts_obj_j=Q_woj.inverse()*(pts_w_j-P_woj);//k点在j时刻的物体坐标
-    //Eigen::Vector3d pts_w_i=Q_woi*pts_obj_j+P_woi;//k点在i时刻的世界坐标
-    Eigen::Vector3d pts_imu_i=e->Rs[feat_i.frame].transpose()*(pts_w_j- e->Ps[feat_i.frame]);//k点在i时刻的IMU坐标
-    Eigen::Vector3d pts_cam_i;
+    Vec3d pts_imu_j=e->ric[0] * (pts_j_td / depth) + e->tic[0];//k点在j时刻的IMU坐标
+    Vec3d pts_w_j=e->Rs[feat_j.frame]*pts_imu_j + e->Ps[feat_j.frame];//k点在j时刻的世界坐标
+    //Vec3d pts_obj_j=Q_woj.inverse()*(pts_w_j-P_woj);//k点在j时刻的物体坐标
+    //Vec3d pts_w_i=Q_woi*pts_obj_j+P_woi;//k点在i时刻的世界坐标
+    Vec3d pts_imu_i=e->Rs[feat_i.frame].transpose()*(pts_w_j- e->Ps[feat_i.frame]);//k点在i时刻的IMU坐标
+    Vec3d pts_cam_i;
     if(isStereo)
         pts_cam_i=e->ric[1].transpose()*(pts_imu_i - e->tic[1]);
     else
         pts_cam_i=e->ric[0].transpose()*(pts_imu_i - e->tic[0]);
 
-    Eigen::Vector2d residual = (pts_cam_i / pts_cam_i.z()).head<2>() - pts_i_td.head<2>();
+    Vec2d residual = (pts_cam_i / pts_cam_i.z()).head<2>() - pts_i_td.head<2>();
 
     return std::sqrt(residual.x() * residual.x() + residual.y() * residual.y());
 }
 
-
+/**
+ * 外点剔除
+ */
 void Instance::OutlierRejection()
 {
     if(!is_initial || !is_tracking)
@@ -399,8 +369,7 @@ void Instance::OutlierRejection()
     std::string debug_msg;
     string lm_msg;
 
-    for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next)
-    {
+    for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
         it_next++;
         auto &lm=*it;
         if(lm.feats.empty() || lm.depth <= 0)
@@ -413,9 +382,7 @@ void Instance::OutlierRejection()
             num_delete++;
             continue;
         }
-
         lm_msg += fmt::format("\nlid:{} depth:{:.2f} ", lm.id,lm.depth);
-
         double err = 0;
         int err_cnt = 0;
         ///单目重投影误差
@@ -426,14 +393,12 @@ void Instance::OutlierRejection()
                                              lm.depth,lm.feats[0].point,lm.feats[i].point);*/
             int imu_i = lm.feats[0].frame;
             int imu_j = lm.feats[i].frame;
-
-            Eigen::Vector3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
-            Eigen::Vector3d pts_oi=state[imu_i].R.transpose() * ( pts_w-state[imu_i].P);
-            Eigen::Vector3d pts_wj=state[imu_j].R * pts_oi + state[imu_j].P;
-            Eigen::Vector3d pts_cj = e->ric[0].transpose() * (e->Rs[imu_j].transpose() * (pts_wj - e->Ps[imu_j]) - e->tic[0]);
-            Eigen::Vector2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
+            Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
+            Vec3d pts_oi=state[imu_i].R.transpose() * ( pts_w-state[imu_i].P);
+            Vec3d pts_wj=state[imu_j].R * pts_oi + state[imu_j].P;
+            Vec3d pts_cj = e->ric[0].transpose() * (e->Rs[imu_j].transpose() * (pts_wj - e->Ps[imu_j]) - e->tic[0]);
+            Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
             double re = residual.norm();
-
             err+=re;
             err_cnt++;
             lm_msg += fmt::format("M({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * kFocalLength);
@@ -453,13 +418,12 @@ void Instance::OutlierRejection()
                         state[lm.feats[i].frame].P, lm.depth, lm.feats[0].point, lm.feats[i].point_right);*/
                 int imu_i = lm.feats[0].frame;
                 int imu_j = lm.feats[i].frame;
-                Eigen::Vector3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
-                Eigen::Vector3d pts_oi=state[imu_i].R.transpose() * ( pts_w-state[imu_i].P);
-                Eigen::Vector3d pts_wj=state[imu_j].R * pts_oi + state[imu_j].P;
-                Eigen::Vector3d pts_cj = e->ric[1].transpose() * (e->Rs[imu_j].transpose() * (pts_wj - e->Ps[imu_j]) - e->tic[1]);
-                Eigen::Vector2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
+                Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
+                Vec3d pts_oi=state[imu_i].R.transpose() * ( pts_w-state[imu_i].P);
+                Vec3d pts_wj=state[imu_j].R * pts_oi + state[imu_j].P;
+                Vec3d pts_cj = e->ric[1].transpose() * (e->Rs[imu_j].transpose() * (pts_wj - e->Ps[imu_j]) - e->tic[1]);
+                Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
                 double re = residual.norm();
-
                 err+=re;
                 err_cnt++;
                 lm_msg += fmt::format("S({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * kFocalLength);
@@ -481,7 +445,9 @@ void Instance::OutlierRejection()
 
 
 
-
+/**
+ * 将需要优化的参数转换到double数组中，这是因为ceres库接受double数组作为优化变量的参数形式
+ */
 void Instance::SetOptimizeParameters()
 {
     para_speed[0][0] = vel.v.x();
@@ -514,9 +480,9 @@ void Instance::SetOptimizeParameters()
     }
 }
 
-
-
-
+/**
+ * 将优化完成的参数从double数组转移到各数据结构中
+ */
 void Instance::GetOptimizationParameters()
 {
     last_vel=vel;
@@ -532,7 +498,6 @@ void Instance::GetOptimizationParameters()
     box.x()=para_box[0][0];
     box.y()=para_box[0][1];
     box.z()=para_box[0][2];
-
 
     /*for(int i=0;i<=kWindowSize;++i){
         state[i].P.x()=para_state[i][0];

@@ -50,52 +50,42 @@ public:
     void AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
     /**
-* 获得优化完成的参数，并重新设置窗口内物体的位姿
-*/
+    * 获得优化完成的参数，并重新设置窗口内物体的位姿
+    */
     void SetOptimizationParameters(){
-        if(tracking_number_ < 1) return;
-        for(auto &[key,inst] : instances){
-            if(!inst.is_initial || !inst.is_tracking) continue;
+        InstExec([](int key,Instance& inst){
             inst.SetOptimizeParameters();
-        }
+        });
     }
 
     /**
  * 根据速度设置物体的位姿
  */
     void SetWindowPose(){
-        if(tracking_number_ < 1) return;
-        for(auto &[key,inst] : instances){
-            if(!inst.is_initial || !inst.is_tracking) continue;
+        InstExec([](int key,Instance& inst){
             inst.SetWindowPose();
-        }
+        });
     }
 
     /**
  * 进行物体的位姿初始化
  */
     void InitialInstance(){
-        if(tracking_number_ < 1) return;
-        for(auto &[key,inst] : instances){
-            if(!inst.is_tracking) continue;
+        InstExec([](int key,Instance& inst){
             inst.InitialPose();
-        }
+        });
     }
 
     void SetInstanceCurrentPoint3d(){
-        if(tracking_number_ < 1) return;
-        for(auto &[key,inst] : instances){
-            if(!inst.is_initial || !inst.is_tracking) continue;
+        InstExec([](int key,Instance& inst){
             inst.SetCurrentPoint3d();
-        }
+        });
     }
 
     void OutliersRejection(){
-        if(tracking_number_ < 1) return;
-        for(auto &[key,inst] : instances){
-            if(!inst.is_initial || !inst.is_tracking) continue;
+        InstExec([](int key,Instance& inst){
             inst.OutlierRejection();
-        }
+        });
     }
 
     std::unordered_map<unsigned int,Vel3d> vel_map(){
@@ -106,17 +96,23 @@ public:
     void set_estimator(Estimator* estimator);
     int tracking_number() const {return tracking_number_;}
 
-
     std::unordered_map<unsigned int,Instance> instances;
 private:
+    void InstExec(std::function<void(unsigned int,Instance&)> function){
+        if(tracking_number_ < 1)
+            return;
+        for(auto &[key,inst] : instances){
+            if(!inst.is_initial || !inst.is_tracking) continue;
+            function(key,inst);
+        }
+    }
+
     void SetVelMap(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
         vel_map_.clear();
-        for(auto &[key,inst] : instances){
-            if(inst.is_tracking && inst.is_initial && inst.vel.v.norm() > 0){
-                vel_map_.insert({inst.id, inst.vel});
-            }
-        }
+        InstExec([this](int key,Instance& inst){
+            if(inst.vel.v.norm() > 0)vel_map_.insert({inst.id, inst.vel});;
+        });
     }
 
     std::mutex vel_mutex_;

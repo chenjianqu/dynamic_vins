@@ -119,8 +119,8 @@ cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
 update_onnx_path: "weights/raft/kitti_update.onnx"
 update_tensorrt_path: "weights/raft/kitti_update.bin"
 
-solo_onnx_path: "weights/SOLOv2_light_R34_1152x384_cuda102.onnx"
-solo_serialize_path: "weights/tensorrt_model_1152x384.bin"
+solo_onnx_path: "weights/solo/SOLOv2_light_R34_1152x384_cuda102.onnx"
+solo_serialize_path: "weights/solo/tensorrt_model_1152x384.bin"
 
 #0表示raw,1表示naive,2表示dynamic
 slam_type: 2

@@ -21,7 +21,6 @@ void InstanceManager::set_estimator(Estimator* estimator){
     e_=estimator;
 }
 
-
 void InstanceManager::Triangulate(int frame_cnt)
 {
     if(tracking_number_ < 1)
@@ -173,8 +172,6 @@ void InstanceManager::Triangulate(int frame_cnt)
         Debugv("增加:{}=(M:{},S:{}) 失败:{} 删除:{}", num_triangle, num_mono, num_triangle - num_mono,
                num_failed, num_delete_landmark);
 }
-
-
 
 
 /**

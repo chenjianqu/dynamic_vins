@@ -116,6 +116,7 @@ update_tensorrt_path: "weights/raft/viode_update.bin"
 
 #物体可视化的持续时间
 visual_inst_duration: 120
-
+#是否仅仅启动前端
+only_frontend: 0
 #0表示raw,1表示naive,2表示dynamic
 slam_type: 2
