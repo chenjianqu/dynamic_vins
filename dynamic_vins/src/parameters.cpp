@@ -312,7 +312,12 @@ Config::Config(const std::string &file_name)
 
     fs["visual_inst_duration"] >> kVisualInstDuration;
 
+    fs["use_dense_flow"] >> use_dense_flow;
+    cout<<"use_dense_flow: "<<use_dense_flow<<endl;
+
     fs["only_frontend"]>>is_only_frontend;
+    cout<<"is_only_frontend: "<<is_only_frontend<<endl;
+
 
     fs.release();
 

@@ -28,7 +28,8 @@ class ImageFrame
 {
     public:
         ImageFrame(){};
-        ImageFrame(const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>& _points, double _t):t{_t},is_key_frame{false}
+        ImageFrame(const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>& _points, double _t)
+            :t{_t},is_key_frame{false}
         {
             points = _points;
         };

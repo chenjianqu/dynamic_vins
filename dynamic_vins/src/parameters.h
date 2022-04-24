@@ -209,7 +209,7 @@ public:
 
     inline static SlamType slam;
     inline static DatasetType dataset;
-    inline static bool is_input_seg;
+    inline static bool is_input_seg; //输入是否有语义分割结果
     inline static bool is_only_frontend;
 
     inline static std::vector<std::string> CocoLabelVector;
@@ -247,6 +247,8 @@ public:
     inline static int kTrackingNInit;
 
     inline static std::string kBasicDir;
+
+    inline static bool use_dense_flow;
 
     inline static std::atomic_bool ok{true};
 };

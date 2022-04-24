@@ -179,10 +179,10 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     ErodeMaskGpu(img.inv_merge_mask_gpu, img.inv_merge_mask_gpu);
     img.inv_merge_mask_gpu.download(img.inv_merge_mask);
 
+    ///特征点跟踪
     if (!prev_pts.empty())
     {
         Debugt("trackImageNaive | prev_pts.size:{}", prev_pts.size());
-        //vector<uchar> status = flowTrack(prev_img.gray0,cur_img.gray0,prev_pts, cur_pts);
         vector<uchar> status= FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, prev_img.gray0_gpu,
                                                   cur_img.gray0_gpu,
                                                   prev_pts, cur_pts);
@@ -193,7 +193,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
             }
         }
         else{
-            tk_logger->error("cur_img.inv_merge_mask is empty");
+            Errort("cur_img.inv_merge_mask is empty");
         }
         ReduceVector(prev_pts, status);
         ReduceVector(cur_pts, status);
@@ -208,6 +208,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
     TicToc t_m;
     TicToc t_t;
 
+    ///特征点检测
     SortPoints(cur_pts, track_cnt, ids);
     if(!cur_img.inv_merge_mask.empty())
         mask = cur_img.inv_merge_mask.clone();
@@ -216,7 +217,6 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
 
     for(const auto& pt : cur_pts)
         cv::circle(mask, pt, cfg::kMinDist, 0, -1);
-
     //cv::threshold(mask,mask,128,255,cv::THRESH_BINARY);
     mask_gpu.upload(mask);
 
@@ -224,7 +224,6 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         Warnt("trackImageNaive | n_max_cnt:{}", n_max_cnt);
         n_pts = DetectShiTomasiCornersGpu(n_max_cnt, cur_img.gray0_gpu, mask_gpu);
         //n_pts = detectNewFeaturesGPU(n_max_cnt,cur_img.gray0_gpu,mask);
-
         visual_new_pts = n_pts;
         for (auto &p : n_pts){
             cur_pts.push_back(p);
@@ -238,11 +237,13 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
 
     Infot("trackImageNaive | detect feature:{}", tt.TocThenTic());
 
+    ///特征点矫正和计算速度
     cur_un_pts = UndistortedPts(cur_pts, m_camera[0]);
     pts_velocity = PtsVelocity(ids, cur_un_pts, cur_un_pts_map, prev_un_pts_map);
 
     Infot("trackImageNaive | vel&&un:{}", tt.TocThenTic());
 
+    ///右图像跟踪
     if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty())
     {
         ids_right.clear();
@@ -286,6 +287,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         Debugt("trackImageNaive | cur_right_pts.size:{}", cur_right_pts.size());
         Infot("trackImageNaive | flow_track right:{}", tt.TocThenTic());
     }
+
     if(cfg::is_show_track)
         DrawTrack(cur_img, ids, cur_pts, cur_right_pts, prev_left_map);
     prev_img = cur_img;
@@ -511,7 +513,7 @@ void FeatureTracker::RemoveOutliers(std::set<int> &removePtsIds)
 
 FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 {
-    Warnt("----------Time : {} ----------", img.time0);
+    Warnt("----------Time : {} ----------", std::to_string(img.time0));
     TicToc t_r,tt;
     cur_time = img.time0;
     cur_img = img;
@@ -529,9 +531,14 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     bool is_exist_inst = !cur_img.insts_info.empty();
 
     ///开启另一个线程检测动态特征点
+    std::thread t_inst_track;
     TicToc t_i;
-    std::thread t_inst_track(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
-    //std::thread t_inst_track(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
+    if(cfg::use_dense_flow){
+        t_inst_track = std::thread(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
+    }
+    else{
+        t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
+    }
     //std::thread t_inst_track(&InstsFeatManager::InstsTrackByMatching, insts_tracker.get(), img);
 
     if(is_exist_inst){
@@ -539,18 +546,20 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         cur_img.inv_merge_mask_gpu.download(cur_img.inv_merge_mask);
     }
 
+    ///特征点跟踪
     if (!prev_pts.empty())
     {
         Debugt("TrackSemanticImage | prev_pts.size:{}", prev_pts.size());
         vector<uchar> status = FeatureTrackByLK(prev_img.gray0, cur_img.gray0, prev_pts, cur_pts);
         //vector<uchar> status=flowTrackGpu(lk_optical_flow,lk_optical_flow_back,prev_img.gray0_gpu,cur_img.gray0_gpu,prev_pts,cur_pts);
+        //剔除落在动态区域上的特征点
         if(!cur_img.inv_merge_mask.empty()){
             for(int i=0;i<(int)status.size();++i)
                 if(status[i] && cur_img.inv_merge_mask.at<uchar>(cur_pts[i]) < 123 )
                     status[i]=0;
         }
         else{
-            tk_logger->error("TrackSemanticImage cur_img.inv_merge_mask is empty");
+            Errort("TrackSemanticImage cur_img.inv_merge_mask is empty");
         }
         int cnt=0;
         for(auto e:status)if(e)cnt++;
@@ -568,18 +577,19 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     TicToc t_m;
     TicToc t_t;
 
+    ///检测新的特征点
     SortPoints(cur_pts, track_cnt, ids);
     if(!cur_img.inv_merge_mask.empty())
         mask = cur_img.inv_merge_mask.clone();
     else
         mask = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
-
-    for(const auto& pt : cur_pts) cv::circle(mask, pt, cfg::kMinDist, 0, -1);
-    mask_gpu.upload(mask);
+    for(const auto& pt : cur_pts)
+        cv::circle(mask, pt, cfg::kMinDist, 0, -1);
+    //mask_gpu.upload(mask);
 
     if (int n_max_cnt = cfg::kMaxCnt - (int)cur_pts.size(); n_max_cnt > 10){
         //n_pts = detectNewFeaturesGPU(n_max_cnt,cur_img.gray0_gpu,mask_gpu);
-        n_pts = DetectShiTomasiCorners(n_max_cnt, cur_img.gray0, mask);
+        cv::goodFeaturesToTrack(cur_img.gray0, n_pts, n_max_cnt, 0.01, cfg::kMinDist, mask);
         visual_new_pts = n_pts;
         for (auto &p : n_pts){
             cur_pts.push_back(p);
@@ -591,13 +601,12 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     else{
         n_pts.clear();
     }
-
     Infot("TrackSemanticImage | detect feature:{}", tt.TocThenTic());
 
+    ///矫正特征点,并计算特征点的速度
     cur_un_pts = UndistortedPts(cur_pts, m_camera[0]);
     pts_velocity = PtsVelocity(ids, cur_un_pts, cur_un_pts_map, prev_un_pts_map);
-
-    Infot("TrackSemanticImage | vel&&un:{}", tt.TocThenTic());
+    //Infot("TrackSemanticImage | vel&&un:{}", tt.TocThenTic());
 
     if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty())
     {
@@ -606,11 +615,11 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         cur_un_right_pts.clear();
         right_pts_velocity.clear();
         cur_un_right_pts_map.clear();
-        Debugt("TrackSemanticImage | flowTrack right start");
+        //Debugt("TrackSemanticImage | flowTrack right start");
 
         std::vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, cur_pts, cur_right_pts);
         //vector<uchar> status=flowTrackGpu(lk_optical_flow,lk_optical_flow_back,cur_img.gray0_gpu,cur_img.gray1_gpu,cur_pts,cur_right_pts);
-        Debugt("TrackSemanticImage | flowTrack right finish");
+        //Debugt("TrackSemanticImage | flowTrack right finish");
         if(cfg::dataset == DatasetType::kViode){
             for(int i=0;i<(int)status.size();++i)
                 if(status[i] && VIODE::IsDynamic(cur_right_pts[i], cur_img.seg1))

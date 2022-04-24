@@ -304,59 +304,60 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
 {
     if(e_->solver_flag == SolverFlag::kInitial)
         return;
-    Debugv("push_back current insts size:{}", instances.size());
+    Debugv("PushBack | push_back current insts size:{}", instances.size());
 
-
-    for(auto &[instance_id , inst_feat] : input_insts)
-    {
-        if(instances.count(instance_id) == 0){ //创建该实例
+    for(auto &[instance_id , inst_feat] : input_insts){
+        ///创建物体
+        auto inst_iter = instances.find(instance_id);
+        if(inst_iter == instances.end()){
             Instance new_inst(frame_id, instance_id, e_);
-            instances.insert({instance_id, new_inst});
-            instances[instance_id].is_initial=false;
-            instances[instance_id].color = inst_feat.color;
+            auto [it,is_insert] = instances.insert({instance_id, new_inst});
+            it->second.is_initial=false;
+            it->second.color = inst_feat.color;
             tracking_number_++;
 
             for(auto &[feat_id,feat_vector] : inst_feat){
                 FeaturePoint featPoint(feat_vector, e_->frame, e_->td);
                 LandmarkPoint landmarkPoint(feat_id);//创建Landmark
-                instances[instance_id].landmarks.push_back(landmarkPoint);
-                instances[instance_id].landmarks.back().feats.emplace_back(featPoint);//添加第一个观测
+                it->second.landmarks.push_back(landmarkPoint);
+                it->second.landmarks.back().feats.emplace_back(featPoint);//添加第一个观测
             }
-            Debugv("push_back create new inst:{}", instance_id);
+            Debugv("PushBack | create new inst:{}", instance_id);
         }
-        //将特征添加到实例中
+        ///将特征添加到物体中
         else
         {
+            auto &landmarks = inst_iter->second.landmarks;
             for(auto &[feat_id,feat_vector] : inst_feat)
             {
                 FeaturePoint feat_point(feat_vector, e_->frame, e_->td);
                 //若不存在，则创建路标
-                if (auto it = std::find_if(instances[instance_id].landmarks.begin(),
-                                           instances[instance_id].landmarks.end(),
+                if (auto it = std::find_if(landmarks.begin(),landmarks.end(),
                                            [id=feat_id](const LandmarkPoint &it){ return it.id == id;});
-                it == instances[instance_id].landmarks.end()){
-                    instances[instance_id].landmarks.emplace_back(feat_id);//创建Landmarrk
-                    instances[instance_id].landmarks.back().feats.emplace_back(feat_point);//添加第一个观测
-                    if(!instances[instance_id].is_tracking){
-                        instances[instance_id].is_tracking=true;
+                    it ==landmarks.end())
+                {
+                    landmarks.emplace_back(feat_id);//创建Landmarks
+                    landmarks.back().feats.emplace_back(feat_point);//添加第一个观测
+                    if(!inst_iter->second.is_tracking){
+                        inst_iter->second.is_tracking=true;
                         tracking_number_++;
                     }
                 }
-                //如果存在
+                //如果路标存在
                 else{
                     it->feats.emplace_back(feat_point);//添加一个观测
                 }
             }
+
         }
     }
 
-
+    ///输出的信息
     Debugv("push_back all insts:");
     for(const auto& [key,inst] : instances){
         if(inst.is_tracking)
             Debugv("inst:{} landmarks.size:{} ", key, inst.landmarks.size());
     }
-
     if(!input_insts.empty()){
         Infov("push_back 观测增加:{},{}",
               input_insts.size(),

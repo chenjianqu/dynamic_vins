@@ -106,9 +106,9 @@ class FeatureManager
     void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
                           Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
     void initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
-    bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
+    static bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
                         vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
-    void RemoveBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_R, Vec3d new_P);
+    void RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg_P, Mat3d new_R, Vec3d new_P);
     void RemoveBack();
     void RemoveFront(int frame_count);
     void RemoveOutlier(std::set<int> &outlierIndex);
@@ -117,7 +117,7 @@ class FeatureManager
     int last_track_num;
 
   private:
-    double CompensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
+    static double CompensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
     const Mat3d *Rs;
     Mat3d ric[2];
 

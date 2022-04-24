@@ -25,11 +25,15 @@ class IntegrationBase
     IntegrationBase() = delete;
     IntegrationBase(const Eigen::Vector3d &_acc_0, const Eigen::Vector3d &_gyr_0,
                     const Eigen::Vector3d &_linearized_ba, const Eigen::Vector3d &_linearized_bg)
-        : acc_0{_acc_0}, gyr_0{_gyr_0}, linearized_acc{_acc_0}, linearized_gyr{_gyr_0},
-          linearized_ba{_linearized_ba}, linearized_bg{_linearized_bg},
-            jacobian{Eigen::Matrix<double, 15, 15>::Identity()}, covariance{Eigen::Matrix<double, 15, 15>::Zero()},
-          sum_dt{0.0}, delta_p{Eigen::Vector3d::Zero()}, delta_q{Eigen::Quaterniond::Identity()}, delta_v{Eigen::Vector3d::Zero()}
-
+        : acc_0{_acc_0}, gyr_0{_gyr_0},
+        linearized_acc{_acc_0}, linearized_gyr{_gyr_0},
+        linearized_ba{_linearized_ba}, linearized_bg{_linearized_bg},
+        jacobian{Eigen::Matrix<double, 15, 15>::Identity()},
+        covariance{Eigen::Matrix<double, 15, 15>::Zero()},
+        sum_dt{0.0},
+        delta_p{Eigen::Vector3d::Zero()},
+        delta_q{Eigen::Quaterniond::Identity()},
+        delta_v{Eigen::Vector3d::Zero()}
     {
         noise = Eigen::Matrix<double, 18, 18>::Zero();
         noise.block<3, 3>(0, 0) =  (Config::ACC_N * Config::ACC_N) * Eigen::Matrix3d::Identity();
@@ -72,7 +76,6 @@ class IntegrationBase
                             Eigen::Vector3d &result_delta_p, Eigen::Quaterniond &result_delta_q, Eigen::Vector3d &result_delta_v,
                             Eigen::Vector3d &result_linearized_ba, Eigen::Vector3d &result_linearized_bg, bool update_jacobian)
     {
-        //ROS_INFO("midpoint integration");
         Vector3d un_acc_0 = delta_q * (_acc_0 - linearized_ba);
         Vector3d un_gyr = 0.5 * (_gyr_0 + _gyr_1) - linearized_bg;
         result_delta_q = delta_q * Quaterniond(1, un_gyr(0) * _dt / 2, un_gyr(1) * _dt / 2, un_gyr(2) * _dt / 2);

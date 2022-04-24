@@ -38,8 +38,7 @@ FeatureManager::FeatureManager(Mat3d _Rs[])
 
 void FeatureManager::SetRic(Mat3d _ric[])
 {
-    for (int i = 0; i < Config::kCamNum; i++)
-    {
+    for (int i = 0; i < Config::kCamNum; i++){
         ric[i] = _ric[i];
     }
 }
@@ -49,31 +48,41 @@ void FeatureManager::ClearState()
     feature.clear();
 }
 
+/**
+ * 统计当前地图中被观测4次以上的地点的数量
+ * @return
+ */
 int FeatureManager::GetFeatureCount()
 {
     int cnt = 0;
-    for (auto &it : feature)
-    {
+    for (auto &it : feature){
         it.used_num = it.feature_per_frame.size();
-        if (it.used_num >= 4)
-        {
+        if (it.used_num >= 4){
             cnt++;
         }
     }
     return cnt;
 }
 
-
+/**
+ *
+ * @param frame_count
+ * @param image
+ * @param td
+ * @return
+ */
 bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureMap &image, double td)
 {
-    Debugv("addFeatureCheckParallax input feature: {}", (int) image.size());
-    Debugv("addFeatureCheckParallax factor of feature: {}", GetFeatureCount());
+    Debugv("addFeatureCheckParallax | input feature num: {}", (int) image.size());
+    Debugv("addFeatureCheckParallax | factor of feature: {}", GetFeatureCount());
+
     double parallax_sum = 0;
     int parallax_num = 0;
     last_track_num = 0;
     last_average_parallax = 0;
     new_feature_num = 0;
     long_track_num = 0;
+
     for (auto &[feature_id,feat_vec] : image){
         FeaturePerFrame f_per_fra(feat_vec[0].second, td);
         assert(feat_vec[0].first == 0);
@@ -82,8 +91,10 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureMap &
             assert(feat_vec[1].first == 1);
         }
 
-        if (auto it = find_if(feature.begin(), feature.end(), [feature_id=feature_id](
-                const FeaturePerId &it){return it.feature_id == feature_id;});
+        if (auto it = find_if(feature.begin(), feature.end(),
+                              [feature_id=feature_id](const FeaturePerId &it){
+            return it.feature_id == feature_id;
+        });
         it == feature.end()){
             feature.emplace_back(feature_id, frame_count);
             feature.back().feature_per_frame.push_back(f_per_fra);
@@ -133,9 +144,7 @@ vector<pair<Vec3d, Vec3d>> FeatureManager::GetCorresponding(int frame_count_l, i
             int idx_r = frame_count_r - it.start_frame;
 
             a = it.feature_per_frame[idx_l].point;
-
             b = it.feature_per_frame[idx_r].point;
-
             corres.push_back(std::make_pair(a, b));
         }
     }
@@ -145,28 +154,23 @@ vector<pair<Vec3d, Vec3d>> FeatureManager::GetCorresponding(int frame_count_l, i
 void FeatureManager::SetDepth(const Eigen::VectorXd &x)
 {
     int feature_index = -1;
-    for (auto &it_per_id : feature)
-    {
+    for (auto &it_per_id : feature){
         it_per_id.used_num = it_per_id.feature_per_frame.size();
         if (it_per_id.used_num < 4)
             continue;
-
         it_per_id.estimated_depth = 1.0 / x(++feature_index);
-        //ROS_INFO("feature id %d , start_frame %d, depth %f ", it_per_id->feature_id, it_per_id-> start_frame, it_per_id->depth);
-        if (it_per_id.estimated_depth < 0)
-        {
+        if (it_per_id.estimated_depth < 0){
             it_per_id.solve_flag = 2;
         }
-        else
+        else{
             it_per_id.solve_flag = 1;
+        }
     }
 }
 
 void FeatureManager::RemoveFailures()
 {
-    for (auto it = feature.begin(), it_next = feature.begin();
-    it != feature.end(); it = it_next)
-    {
+    for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next){
         it_next++;
         if (it->solve_flag == 2)
             feature.erase(it);
@@ -213,7 +217,14 @@ void FeatureManager::TriangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen:
     point_3d(2) = triangulated_point(2) / triangulated_point(3);
 }
 
-
+/**
+ * PnP求解
+ * @param R
+ * @param P
+ * @param pts2D
+ * @param pts3D
+ * @return
+ */
 bool FeatureManager::SolvePoseByPnP(Mat3d &R, Vec3d &P,
                                     vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D){
     Eigen::Matrix3d R_initial;
@@ -227,19 +238,22 @@ bool FeatureManager::SolvePoseByPnP(Mat3d &R, Vec3d &P,
         printf("feature tracking not enough, please slowly move you device! \n");
         return false;
     }
+    //计算初值
     cv::Mat r, rvec, t, D, tmp_r;
     cv::eigen2cv(R_initial, tmp_r);
     cv::Rodrigues(tmp_r, rvec);
     cv::eigen2cv(P_initial, t);
     cv::Mat K = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+    //调用OpenCV函数求解
     bool pnp_succ;
-    pnp_succ = cv::solvePnP(pts3D, pts2D, K, D, rvec, t, 1);
+    pnp_succ = cv::solvePnP(pts3D, pts2D, K, D, rvec, t, true);
     //pnp_succ = solvePnPRansac(pts3D, pts2D, K, D, rvec, t, true, 100, 8.0 / focalLength, 0.99, inliers);
 
     if(!pnp_succ){
         printf("pnp failed ! \n");
         return false;
     }
+
     cv::Rodrigues(rvec, r);
     Eigen::MatrixXd R_pnp;
     cv::cv2eigen(r, R_pnp);
@@ -252,10 +266,18 @@ bool FeatureManager::SolvePoseByPnP(Mat3d &R, Vec3d &P,
     return true;
 }
 
+/**
+ * 使用PnP求解得到当前帧的位姿
+ * @param frameCnt
+ * @param Ps
+ * @param Rs
+ * @param tic
+ * @param ric
+ */
 void FeatureManager::initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[])
 {
-    if(frameCnt > 0)
-    {
+    if(frameCnt > 0){
+        ///构建3D-2D匹配对
         vector<cv::Point2f> pts2D;
         vector<cv::Point3f> pts3D;
         for (auto &it_per_id : feature){
@@ -272,58 +294,54 @@ void FeatureManager::initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
                 }
             }
         }
-
         Debugv("initFramePoseByPnP pts2D.size:{}", pts2D.size());
-
+        ///使用上一帧的位姿作为初值
         Mat3d RCam;
         Vec3d PCam;
         // trans to w_T_cam
         RCam = Rs[frameCnt - 1] * ric[0];
         PCam = Rs[frameCnt - 1] * tic[0] + Ps[frameCnt - 1];
-
-        if(SolvePoseByPnP(RCam, PCam, pts2D, pts3D))
-        {
+        ///求解
+        if(SolvePoseByPnP(RCam, PCam, pts2D, pts3D)){
             // trans to w_T_imu
             Rs[frameCnt] = RCam * ric[0].transpose();
             Ps[frameCnt] = -RCam * ric[0].transpose() * tic[0] + PCam;
-
-            Eigen::Quaterniond Q(Rs[frameCnt]);
-            //cout << "frameCnt: " << frameCnt <<  " pnp Q " << Q.w() << " " << Q.vec().transpose() << endl;
-            //cout << "frameCnt: " << frameCnt << " pnp P " << Ps[frameCnt].transpose() << endl;
         }
     }
 }
 
+/**
+ * 三角化背景特征点
+ * @param frameCnt
+ * @param Ps
+ * @param Rs
+ * @param tic
+ * @param ric
+ */
 void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[])
 {
-    for (auto &it_per_id : feature)
-    {
+    for (auto &it_per_id : feature){
         if (it_per_id.estimated_depth > 0)
             continue;
 
-        if(Config::is_stereo && it_per_id.feature_per_frame[0].is_stereo)
-        {
+        if(Config::is_stereo && it_per_id.feature_per_frame[0].is_stereo){
             int imu_i = it_per_id.start_frame;
             Eigen::Matrix<double, 3, 4> leftPose;
             Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
             Mat3d R0 = Rs[imu_i] * ric[0];
             leftPose.leftCols<3>() = R0.transpose();
             leftPose.rightCols<1>() = -R0.transpose() * t0;
-            //cout << "left pose " << leftPose << endl;
 
             Eigen::Matrix<double, 3, 4> rightPose;
             Vec3d t1 = Ps[imu_i] + Rs[imu_i] * tic[1];
             Mat3d R1 = Rs[imu_i] * ric[1];
             rightPose.leftCols<3>() = R1.transpose();
             rightPose.rightCols<1>() = -R1.transpose() * t1;
-            //cout << "right pose " << rightPose << endl;
 
             Eigen::Vector2d point0, point1;
             Vec3d point3d;
             point0 = it_per_id.feature_per_frame[0].point.head(2);
             point1 = it_per_id.feature_per_frame[0].pointRight.head(2);
-            //cout << "point0 " << point0.transpose() << endl;
-            //cout << "point1 " << point1.transpose() << endl;
 
             TriangulatePoint(leftPose, rightPose, point0, point1, point3d);
             Vec3d localPoint;
@@ -333,11 +351,6 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
                 it_per_id.estimated_depth = depth;
             else
                 it_per_id.estimated_depth = Config::kInitDepth;
-            /*
-            Vec3d ptsGt = pts_gt[it_per_id.feature_id];
-            printf("stereo %d pts: %f %f %f gt: %f %f %f \n",it_per_id.feature_id, point3d.x(), point3d.y(), point3d.z(),
-                                                            ptsGt.x(), ptsGt.y(), ptsGt.z());
-            */
             continue;
         }
         else if(it_per_id.feature_per_frame.size() > 1)
@@ -368,16 +381,14 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
                 it_per_id.estimated_depth = depth;
             else
                 it_per_id.estimated_depth = Config::kInitDepth;
-            /*
-            Vec3d ptsGt = pts_gt[it_per_id.feature_id];
-            printf("motion  %d pts: %f %f %f gt: %f %f %f \n",it_per_id.feature_id, point3d.x(), point3d.y(), point3d.z(),
-                                                            ptsGt.x(), ptsGt.y(), ptsGt.z());
-            */
             continue;
         }
+
         it_per_id.used_num = it_per_id.feature_per_frame.size();
         if (it_per_id.used_num < 4)
             continue;
+
+        //以下代码好像执行不到
 
         int imu_i = it_per_id.start_frame, imu_j = imu_i - 1;
 
@@ -425,41 +436,37 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
     }
 }
 
+/**
+ * 剔除特征点
+ * @param outlierIndex
+ */
 void FeatureManager::RemoveOutlier(std::set<int> &outlierIndex){
     std::set<int>::iterator itSet;
-    for (auto it = feature.begin(), it_next = feature.begin();
-    it != feature.end(); it = it_next)
-    {
+    for (auto it = feature.begin(), it_next = feature.begin();  it != feature.end(); it = it_next){
         it_next++;
         int index = it->feature_id;
         itSet = outlierIndex.find(index);
-        if(itSet != outlierIndex.end())
-        {
+        if(itSet != outlierIndex.end()){
             feature.erase(it);
-            //printf("remove outlier %d \n", index);
         }
     }
 }
 
-void FeatureManager::RemoveBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_R, Vec3d new_P){
-    for (auto it = feature.begin(), it_next = feature.begin();
-    it != feature.end(); it = it_next)
-    {
+void FeatureManager::RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg_P, Mat3d new_R, Vec3d new_P){
+    for (auto it = feature.begin(), it_next = feature.begin();it != feature.end(); it = it_next){
         it_next++;
 
-        if (it->start_frame != 0)
+        if (it->start_frame != 0){
             it->start_frame--;
-        else
-        {
+        }
+        else{
             Vec3d uv_i = it->feature_per_frame[0].point;
             it->feature_per_frame.erase(it->feature_per_frame.begin());
-            if (it->feature_per_frame.size() < 2)
-            {
+            if (it->feature_per_frame.size() < 2){
                 feature.erase(it);
                 continue;
             }
-            else
-            {
+            else{
                 Vec3d pts_i = uv_i * it->estimated_depth;
                 Vec3d w_pts_i = marg_R * pts_i + marg_P;
                 Vec3d pts_j = new_R.transpose() * (w_pts_i - new_P);
@@ -470,8 +477,8 @@ void FeatureManager::RemoveBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_
                     it->estimated_depth = Config::kInitDepth;
             }
         }
-        // remove tracking-lost feature after marginalize
         /*
+        // remove tracking-lost feature after marginalize
         if (it->endFrame() < kWindowSize - 1)
         {
             feature.erase(it);
@@ -482,15 +489,12 @@ void FeatureManager::RemoveBackShiftDepth(Mat3d marg_R, Vec3d marg_P, Mat3d new_
 
 void FeatureManager::RemoveBack()
 {
-    for (auto it = feature.begin(), it_next = feature.begin();
-    it != feature.end(); it = it_next)
-    {
+    for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next){
         it_next++;
-
-        if (it->start_frame != 0)
+        if (it->start_frame != 0){
             it->start_frame--;
-        else
-        {
+        }
+        else{
             it->feature_per_frame.erase(it->feature_per_frame.begin());
             if (it->feature_per_frame.empty())
                 feature.erase(it);
@@ -500,16 +504,12 @@ void FeatureManager::RemoveBack()
 
 void FeatureManager::RemoveFront(int frame_count)
 {
-    for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next)
-    {
+    for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next){
         it_next++;
-
-        if (it->start_frame == frame_count)
-        {
+        if (it->start_frame == frame_count){
             it->start_frame--;
         }
-        else
-        {
+        else{
             int j = kWinSize - 1 - it->start_frame;
             if (it->endFrame() < frame_count - 1)
                 continue;

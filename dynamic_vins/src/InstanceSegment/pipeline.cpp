@@ -358,7 +358,11 @@ void Pipeline::SetBufferWithNorm(const cv::Mat &img, float *buffer)
 
 }
 
-
+/**
+ * 将cv::Mat转换为torch::Tensor,同时执行bgr->rgb,hwc->chw
+ * @param img
+ * @return
+ */
 torch::Tensor Pipeline::ImageToTensor(cv::Mat &img) {
     if(img.empty()){
         return {};

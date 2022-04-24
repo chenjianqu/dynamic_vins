@@ -129,7 +129,7 @@ include_directories(src)
 set(Basic_Sources src/parameters.cpp src/utils.cpp src/utility/viode_utils.cpp)
 aux_source_directory(src/InstanceSegment InstanceSegmentation_SOURCES)
 aux_source_directory(src/InstanceTracking InstanceTracking_SOURCES)
-aux_source_directory(src/FlowEstimating OpticalFlowEstimating_SOURCES)
+#aux_source_directory(src/FlowEstimating OpticalFlowEstimating_SOURCES)
 aux_source_directory(src/TensorRT TensorRT_SOURCES)
 aux_source_directory(src/featureTracker featureTracker_SOURCES)
 aux_source_directory(src/initial initial_SOURCES)
@@ -141,7 +141,8 @@ message("estimator_SOURCES: ${estimator_SOURCES} ")
 
 add_executable(dynamic_vins src/main.cpp ${Basic_Sources} ${InstanceSegmentation_SOURCES} ${InstanceTracking_SOURCES}
         ${featureTracker_SOURCES} ${initial_SOURCES} ${utility_SOURCES} ${factor_SOURCES} ${estimator_SOURCES}
-        ${OpticalFlowEstimating_SOURCES} ${TensorRT_SOURCES})
+        # ${OpticalFlowEstimating_SOURCES}
+        ${TensorRT_SOURCES})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 

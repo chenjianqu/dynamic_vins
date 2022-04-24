@@ -86,11 +86,11 @@ class Estimator
     void GetPoseInWorldFrame(int index, Eigen::Matrix4d &T);
     void PredictPtsInNextFrame();
     void OutliersRejection(set<int> &removeIndex);
-    double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
+    static double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
                              Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
                              double depth, Vec3d &uvi, Vec3d &uvj);
     void UpdateLatestStates();
-    void FastPredictIMU(double t, Vec3d linear_acceleration, Vec3d angular_velocity);
+    void FastPredictIMU(double t, const Vec3d& linear_acceleration,const Vec3d& angular_velocity);
 
     void InitFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
 
@@ -156,6 +156,11 @@ private:
         initR = r;
     }
 
+
+    void SetMarginalizationInfo();
+
+
+
     std::mutex process_mutex;
     std::mutex buf_mutex;
     std::mutex propogate_mutex;
@@ -198,8 +203,8 @@ private:
 
     int loop_window_index{};
 
-    MarginalizationInfo *last_marginalization_info{};
-    vector<double *> last_marginalization_parameter_blocks;
+    MarginalizationInfo *last_marg_info{};
+    vector<double *> last_marg_para_blocks;
 
     map<double, ImageFrame> all_image_frame;
     IntegrationBase *tmp_pre_integration{};

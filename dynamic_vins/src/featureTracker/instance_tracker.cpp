@@ -46,12 +46,16 @@ InstsFeatManager::InstsFeatManager()
 }
 
 
-
+/**
+ * 跟踪动态物体
+ * @param img
+ */
 void InstsFeatManager::InstsTrack(SegImage img)
 {
     TicToc tic_toc;
     curr_time=img.time0;
 
+    ///MOT
     if(cfg::dataset == DatasetType::kKitti){
         AddInstancesByTracking(img);
     }
@@ -76,7 +80,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
         //ErodeMaskGpu(img.merge_mask_gpu, img.merge_mask_gpu);
         img.merge_mask_gpu.download(img.merge_mask);
 
-        //对每个目标进行光流跟踪
+        ///对每个目标进行光流跟踪
         /*for(auto & [ key,inst] : instances_){
             if(inst.last_points.empty() || inst.lost_num>0) continue;
             inst.curr_points.clear();
@@ -279,34 +283,34 @@ void InstsFeatManager::InstsTrack(SegImage img)
     prev_img = img;
 }
 
-/*
 
+
+/**
+ *
+ * @param img
+ */
 void InstsFeatManager::InstsFlowTrack(SegImage img)
 {
     TicToc tic_toc;
     curr_time=img.time0;
 
+    ///MOT
     if(cfg::dataset == DatasetType::kKitti){
-        //AddInstancesGPU(img);
         AddInstancesByTracking(img);
-        Infot("instsTrack AddInstances:{} ms", tic_toc.TocThenTic());
-        exist_inst_ = !img.insts_info.empty();
     }
     else if(cfg::dataset == DatasetType::kViode){
         AddViodeInstances(img);
-        Infot("instsTrack addViodeInstancesBySegImg:{} ms", tic_toc.TocThenTic());
     }
     else{
-        string msg="Have not this dataset Type";
-        Criticalt(msg);
-        throw std::runtime_error(msg);
+        throw std::runtime_error("have not this dataset type");
     }
+    Infot("instsTrack AddInstances:{} ms", tic_toc.TocThenTic());
 
     //cv::Mat flow_show = VisualFlow(flow_tensor);
     //cv::imshow("flow",flow_show);
     //cv::waitKey(1);
 
-    if(exist_inst_){
+    if(!img.insts_info.empty()){
         ///形态学运算
         //Erode10Gpu(img.merge_mask_gpu,img.merge_mask_gpu);
         img.merge_mask_gpu.download(img.merge_mask);
@@ -387,7 +391,6 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
             Infot("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.TocThenTic());
         }
 
-
         for(auto& [key,inst] : instances_){
             ///去畸变和计算归一化坐标
             inst.curr_un_points= UndistortedPts(inst.curr_points, camera_);
@@ -400,7 +403,6 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
 
         /// 右边相机图像的跟踪
 
-*/
 /*if((!img.gray1.empty() || !img.gray1_gpu.empty()) && is_stereo_){
             for(auto& [key,inst] : instances_){
                 inst.right_points.clear();
@@ -423,7 +425,6 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
                 }
             }
         }*/
-/*
 
 
         ManageInstances();
@@ -465,10 +466,10 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
     prev_img = img;
 }
 
-*/
 
 
 
+/*
 void InstsFeatManager::InstsTrackByMatching(SegImage img)
 {
     TicToc tic_toc;
@@ -630,7 +631,9 @@ void InstsFeatManager::InstsTrackByMatching(SegImage img)
         }
         Infot("instsTrack UndistortedPts & PtsVelocity:{} ms", tic_toc.TocThenTic());
 
-        /*/// 右边相机图像的跟踪
+        */
+/*//*
+// 右边相机图像的跟踪
         if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
             for(auto& [key,inst] : instances_){
                 inst.right_points.clear();
@@ -652,7 +655,8 @@ void InstsFeatManager::InstsTrackByMatching(SegImage img)
                 }
             }
         }
-        Infot("instsTrack flowTrack right:{} ms", tic_toc.TocThenTic());*/
+        Infot("instsTrack flowTrack right:{} ms", tic_toc.TocThenTic());*//*
+
 
         ManageInstances();
         ///输出实例数据
@@ -697,6 +701,7 @@ void InstsFeatManager::InstsTrackByMatching(SegImage img)
     prev_img = img;
 }
 
+*/
 
 
 /**
@@ -989,9 +994,10 @@ void InstsFeatManager:: AddInstancesByTracking(SegImage &img)
     if(img.insts_info.empty())
         return;
     assert(img.mask_tensor.sizes()[0] == img.insts_info.size());
-    cv::Size mask_size((int)img.mask_tensor.sizes()[2],(int)img.mask_tensor.sizes()[1]);
+    //cv::Size mask_size((int)img.mask_tensor.sizes()[2],(int)img.mask_tensor.sizes()[1]);
     //mask_background = img.merge_mask;
     auto trks = mot_tracker->update(img.insts_info,img.color0);
+
     for(auto &inst : trks){
         unsigned int id=inst.track_id;
         if(instances_.count(id) == 0){

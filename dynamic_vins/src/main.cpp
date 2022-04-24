@@ -102,16 +102,20 @@ cv::Mat ReadFlowTensor(double time){
 void ImageProcess()
 {
     int cnt = 0;
+    TicToc tt, t_all;
+
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
         if(inst_segmentor->GetQueueSize() >= kInferImageListSize){
             std::this_thread::sleep_for(50ms);
             continue;
         }
-        //同步获取图像
+        ///同步获取图像
         Debugs("Start sync");
         SegImage img = callback->SyncProcess();
         Warns("----------Time : {} ----------", std::to_string(img.time0));
+        t_all.Tic();
+
         ///rgb to gray
         if(img.gray0.empty()){
             img.SetGrayImageGpu();
@@ -119,18 +123,21 @@ void ImageProcess()
         else{
             img.SetColorImageGpu();
         }
+        ///均衡化
         static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
         clahe->apply(img.gray0, img.gray0);
         if(!img.gray1.empty())
             clahe->apply(img.gray1, img.gray1);
-        static TicToc tt;
+
         torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
         //torch::Tensor img_clone = img_tensor.clone();
         //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
+
         ///启动光流估计线程
-        if(cfg::slam == SlamType::kDynamic){
+        if(cfg::slam == SlamType::kDynamic && cfg::use_dense_flow){
             //feature_tracker->insts_tracker->StartFlowEstimating(img_tensor);
         }
+
         ///实例分割
         if(!cfg::is_input_seg){
             if(cfg::slam != SlamType::kRaw){
@@ -154,19 +161,21 @@ void ImageProcess()
             }
             Infos("sync_process SetMask: {}", tt.TocThenTic());
         }
-        tt.Tic();
-        ///等待光流估计结果
-        //auto flow_tensor = feature_tracker->insts_tracker->WaitingFlowEstimating();
-        //auto flow_cv = ReadFlowTensor(img.time0);
-        cv::Mat flow_cv;
-        if(!flow_cv.empty()){
-            img.flow = flow_cv;
+
+        if(cfg::use_dense_flow){
+            //等待光流估计结果
+            //auto flow_tensor = feature_tracker->insts_tracker->WaitingFlowEstimating();
+            cv::Mat flow_cv = ReadFlowTensor(img.time0);
+            if(!flow_cv.empty()){
+                img.flow = flow_cv;
+            }
+            else{
+                Warns("Can not find :{}", std::to_string(img.time0));
+                img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
+            }
+            Debugs("ReadFlowTensor:{}", tt.TocThenTic());
         }
-        else{
-            Warns("Can not find :{}", std::to_string(img.time0));
-            img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
-        }
-        Debugs("ReadFlowTensor:{}", tt.TocThenTic());
+
         inst_segmentor->PushBack(img);
         /*cv::Mat show;
         cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
@@ -178,7 +187,10 @@ void ImageProcess()
             cv::imshow("show",show);
             cv::waitKey(1);
         }*/
+
+        Warns("ImageProcess, all:{} ms \n",t_all.Toc());
     }
+
     Warns("ImageProcess 线程退出");
 }
 
@@ -188,9 +200,10 @@ void ImageProcess()
  */
 void FeatureTrack()
 {
-    static TicToc tt;
+    TicToc tt;
     int cnt;
-    while(cfg::ok.load(std::memory_order_seq_cst)){
+    while(cfg::ok.load(std::memory_order_seq_cst))
+    {
         if(auto img = inst_segmentor->WaitForResult();img){
             tt.Tic();
             if(cfg::slam == SlamType::kDynamic){
