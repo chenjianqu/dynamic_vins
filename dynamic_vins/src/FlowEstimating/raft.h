@@ -19,7 +19,7 @@
 #include <NvInfer.h>
 #include <cuda_runtime_api.h>
 
-#include "parameters.h"
+#include "utility/parameters.h"
 #include "TensorRT/tensorrt_utils.h"
 
 

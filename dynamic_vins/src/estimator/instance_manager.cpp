@@ -12,7 +12,8 @@
 
 #include "estimator.h"
 #include "utility/visualization.h"
-#include "utils.h"
+#include "utility/utils.h"
+#include "vio_parameters.h"
 
 namespace dynamic_vins{\
 

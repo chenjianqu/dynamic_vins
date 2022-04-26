@@ -9,9 +9,10 @@
 
 #include "instance_tracker.h"
 #include "segment_image.h"
-#include "utils.h"
+#include "utility/utils.h"
 #include "utility/viode_utils.h"
 #include "FlowEstimating/flow_visual.h"
+#include "front_end_parameters.h"
 
 namespace dynamic_vins{\
 
@@ -32,17 +33,22 @@ color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
 {}
 
 
-InstsFeatManager::InstsFeatManager()
+InstsFeatManager::InstsFeatManager(const string& config_path)
 {
     lk_optical_flow = cv::cuda::SparsePyrLKOpticalFlow::create(
             cv::Size(21, 21), 3, 30);
     lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(
             cv::Size(21, 21),1,30,true);
-    std::array<int64_t, 2> orig_dim{int64_t(cfg::kRow), int64_t(cfg::kCol)};
-    mot_tracker = std::make_unique<DeepSORT>(orig_dim);
+    std::array<int64_t, 2> orig_dim{int64_t(fe_para::kInputHeight), int64_t(fe_para::kInputWidth)};
+    mot_tracker = std::make_unique<DeepSORT>(config_path,orig_dim);
     //flow_estimator_ = std::make_unique<FlowEstimator>();
 
     orb_matcher_ = cv::DescriptorMatcher::create("BruteForce-Hamming");
+
+    camera_ = std::make_shared<PinHoleCamera>(*cam0);
+    if(cfg::kCamNum>1){
+        right_camera_ = std::make_shared<PinHoleCamera>(*cam1);
+    }
 }
 
 
@@ -133,8 +139,8 @@ void InstsFeatManager::InstsTrack(SegImage img)
             max_new_detect += (cfg::kMaxDynamicCnt - (int)inst.curr_points.size());
         }*/
         ExecInst([&](unsigned int key, InstFeat& inst){
-            if( inst.curr_points.size()>= cfg::kMaxDynamicCnt)return;
-            max_new_detect += (cfg::kMaxDynamicCnt - (int)inst.curr_points.size());
+            if( inst.curr_points.size()>= fe_para::kMaxDynamicCnt)return;
+            max_new_detect += (fe_para::kMaxDynamicCnt - (int)inst.curr_points.size());
         });
         if(max_new_detect > 0){
             mask_background = img.merge_mask;
@@ -150,13 +156,13 @@ void InstsFeatManager::InstsTrack(SegImage img)
                 }
             }*/
             ExecInst([&](unsigned int key, InstFeat& inst){
-                if(inst.curr_points.size()>=cfg::kMaxDynamicCnt)return;
+                if(inst.curr_points.size()>=fe_para::kMaxDynamicCnt)return;
                 inst.visual_points_pair.clear();
                 inst.visual_right_points_pair.clear();
                 inst.visual_new_points.clear();
                 for(size_t i=0;i<inst.curr_points.size();++i){
                     inst.visual_points_pair.emplace_back(inst.last_points[i],inst.curr_points[i]);//用于可视化
-                    cv::circle(mask_background, inst.curr_points[i], cfg::kMinDynamicDist, 0, -1);//设置mask
+                    cv::circle(mask_background, inst.curr_points[i], fe_para::kMinDynamicDist, 0, -1);//设置mask
                 }
             });
             Infot("instsTrack prepare detect:{} ms", tic_toc.TocThenTic());
@@ -173,7 +179,7 @@ void InstsFeatManager::InstsTrack(SegImage img)
             for(auto &pt : new_pts){
                 int index_inst=-1;
                 for(auto &[key,inst] : instances_){
-                    if(inst.lost_num>0 || inst.curr_points.size()>cfg::kMaxDynamicCnt) continue;
+                    if(inst.lost_num>0 || inst.curr_points.size()>fe_para::kMaxDynamicCnt) continue;
                     if(inst.mask_img.at<uchar>(pt) >= 1){
                         index_inst=(int)key;
                         break;
@@ -348,22 +354,22 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
         ///添加新的特征点前的准备
         int max_new_detect=0;
         for(auto & [key,inst] : instances_){
-            if(inst.lost_num>0 || inst.curr_points.size()>= cfg::kMaxDynamicCnt)
+            if(inst.lost_num>0 || inst.curr_points.size()>= fe_para::kMaxDynamicCnt)
                 continue;
-            max_new_detect += (cfg::kMaxDynamicCnt - (int)inst.curr_points.size());
+            max_new_detect += (fe_para::kMaxDynamicCnt - (int)inst.curr_points.size());
         }
         ///添加新的特征点
         if(max_new_detect > 0){
             mask_background = img.merge_mask;
             vector<cv::Point2f> points_existed;
             for(auto & [key,inst] : instances_){
-                if(inst.lost_num>0 || inst.curr_points.size()>=cfg::kMaxDynamicCnt)continue;
+                if(inst.lost_num>0 || inst.curr_points.size()>=fe_para::kMaxDynamicCnt)continue;
                 inst.visual_points_pair.clear();
                 inst.visual_right_points_pair.clear();
                 inst.visual_new_points.clear();
                 for(size_t i=0;i<inst.curr_points.size();++i){
                     inst.visual_points_pair.emplace_back(inst.last_points[i],inst.curr_points[i]);//用于可视化
-                    cv::circle(mask_background, inst.curr_points[i], cfg::kMinDynamicDist, 0, -1);//设置mask
+                    cv::circle(mask_background, inst.curr_points[i], fe_para::kMinDynamicDist, 0, -1);//设置mask
                 }
                 points_existed.insert(points_existed.end(),inst.curr_points.begin(),inst.curr_points.end());
             }
@@ -374,7 +380,7 @@ void InstsFeatManager::InstsFlowTrack(SegImage img)
             for(auto &pt : new_pts){
                 int index_inst=-1;
                 for(auto &[key,inst] : instances_){
-                    if(inst.lost_num>0 || inst.curr_points.size()>cfg::kMaxDynamicCnt) continue;
+                    if(inst.lost_num>0 || inst.curr_points.size()>fe_para::kMaxDynamicCnt) continue;
                     if(inst.mask_img.at<uchar>(pt) >= 1){
                         index_inst=(int)key;
                         break;

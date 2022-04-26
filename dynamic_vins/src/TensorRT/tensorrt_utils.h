@@ -10,7 +10,7 @@
 #ifndef DYNAMIC_VINS_TENSORRT_UTILS_H
 #define DYNAMIC_VINS_TENSORRT_UTILS_H
 
-#include "parameters.h"
+#include <string>
 
 namespace dynamic_vins{\
 
@@ -29,7 +29,7 @@ void operator()(T* obj) const{
  * @param tensorrt_path
  * @return
  */
-int BuildTensorRT(const string &onnx_path,const string &tensorrt_path);
+int BuildTensorRT(const std::string &onnx_path,const std::string &tensorrt_path);
 
 
 

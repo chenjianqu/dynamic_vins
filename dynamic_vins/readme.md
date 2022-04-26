@@ -33,7 +33,77 @@
 **Libtorch1.8 + TorchVision0.9.1**
 
 
+## Demo
+### Compile
 
+* use catkin
+```shell
+cd dynamic_ws
+catkin_make -j10
+```
+
+* use clion
+```shell
+#after catkin_make
+/home/chen/app/clion-2021.2/bin/cmake/linux/bin/cmake --build /home/chen/ws/dynamic_ws/src/dynamic_vins/cmake-build-debug --target dynamic_vins -- -j10
+```
+
+### Run
+
+* launch ros core:
+```shell
+roscore
+```
+
+* launch rviz
+```shell
+rosrun rviz rviz -d (dynamic_vins_dir)/config/rviz.rviz
+# such as:
+rosrun rviz rviz -d /home/chen/ws/dynamic_ws/src/dynamic_vins/config/rviz.rviz
+```
+
+* launch  
+loop_fusion
+```shell
+#loop_fusion
+source ~/ws/vio_ws/devel/setup.bash && \ 
+rosrun loop_fusion loop_fusion_node ~/ws/vio_ws/src/dynamic_vins/config/viode/calibration.yaml 
+
+```
+
+dynamic_vins
+```shell
+#VINS
+source ~/ws/vio_ws/devel/setup.bash && \ 
+rosrun dynamic_vins dynamic_vins ~/ws/vio_ws/src/dynamic_vins/config/viode/calibration.yaml
+
+kitti参数
+/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml
+/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
+/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+
+viode参数：
+/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/calibration.yaml
+
+```
+
+* play dataset
+```shell
+#viode
+rosbag play  /media/chen/EC4A17F64A17BBF0/datasets/viode/city_day/3_high.bag
+rosbag play /home/chen/Datasets/viode/3_high.bag
+
+#kitti
+rosbag play /media/chen/EC4A17F64A17BBF0/datasets/kitti/odometry/colors/odometry_color_07.bag
+rosbag play /media/chen/EC4A17F64A17BBF0/datasets/kitti/odometry/colors/odometry_color_04.bag
+rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
+```
+
+
+直接读取数据集
+```shell
+
+```
 
 
 

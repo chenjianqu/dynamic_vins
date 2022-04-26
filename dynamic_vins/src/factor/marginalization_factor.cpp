@@ -8,7 +8,7 @@
  *******************************************************/
 
 #include "marginalization_factor.h"
-#include "parameters.h"
+#include "utility/parameters.h"
 
 namespace dynamic_vins{\
 

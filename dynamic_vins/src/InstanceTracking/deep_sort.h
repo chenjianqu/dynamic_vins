@@ -17,7 +17,7 @@
 
 #include "extractor.h"
 #include "tracker_manager.h"
-#include "utils.h"
+#include "utility/utils.h"
 
 namespace dynamic_vins{\
 
@@ -97,7 +97,7 @@ private:
 class DeepSORT {
 public:
     using Ptr=std::unique_ptr<DeepSORT>;
-    explicit DeepSORT(const std::array<int64_t, 2> &dim);
+    explicit DeepSORT(const string& config_path,const std::array<int64_t, 2> &dim);
 
     std::vector<InstInfo> update(const std::vector<InstInfo> &detections, cv::Mat ori_img);
 

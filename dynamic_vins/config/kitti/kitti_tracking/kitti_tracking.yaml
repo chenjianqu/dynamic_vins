@@ -10,34 +10,15 @@ dataset_type: "kitti"
 image0_topic: "/kitti_pub/left"
 image1_topic: "/kitti_pub/right"
 
-cam0_calib: "cam_09_30.yaml"
-cam1_calib: "cam_09_30.yaml"
 image_width: 1226
 image_height: 370
+
+kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0003.txt"
 
 
 # Extrinsic parameter between IMU and Camera.
 estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
                         # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
-
-body_T_cam0: !!opencv-matrix
-   rows: 4
-   cols: 4
-   dt: d
-   data: [1, 0, 0, 0,
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1]
-
-body_T_cam1: !!opencv-matrix
-   rows: 4
-   cols: 4
-   dt: d
-   data: [1, 0, 0, 0.537150653267924,
-          0, 1, 0, 0,
-          0, 0, 1, 0,
-          0, 0, 0, 1]
-
 
 #feature traker paprameters
 max_cnt: 250            # max feature number in feature tracking
@@ -116,6 +97,8 @@ update_tensorrt_path: "weights/raft/kitti_update.bin"
 
 solo_onnx_path: "weights/solo/SOLOv2_light_R34_1152x384_cuda102.onnx"
 solo_serialize_path: "weights/solo/tensorrt_model_1152x384.bin"
+
+warn_up_image: "/home/chen/ws/vio_ws/src/dynamic_vins/config/kitti.png"
 
 use_dense_flow: 0 #是否使用稠密光流
 

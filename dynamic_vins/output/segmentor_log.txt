@@ -1,9 +1,1 @@
-[2022-04-24 22:41:59.150] [segmentor_log] [debug] seg_masks.dims:[16, 96, 288]
-[2022-04-24 22:41:59.150] [segmentor_log] [debug] cate_labels.dims:[16]
-[2022-04-24 22:41:59.156] [segmentor_log] [debug] id:0,cls:bicycle,prob:0.882977
-[2022-04-24 22:41:59.156] [segmentor_log] [debug] id:1,cls:car,prob:0.651026
-[2022-04-24 22:41:59.156] [segmentor_log] [debug] id:2,cls:car,prob:0.591074
-[2022-04-24 22:41:59.156] [segmentor_log] [debug] id:3,cls:person,prob:0.458387
-[2022-04-24 22:41:59.156] [segmentor_log] [debug] id:4,cls:car,prob:0.386738
-[2022-04-24 22:41:59.156] [segmentor_log] [debug] seg_preds.dims:[5, 96, 288]
-[2022-04-24 22:41:59.310] [segmentor_log] [debug] Start sync
+[2022-04-26 12:15:37.466] [segmentor] [debug] Start sync

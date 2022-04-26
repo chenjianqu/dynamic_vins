@@ -10,15 +10,13 @@
 #include "viode_utils.h"
 #include "featureTracker/feature_utils.h"
 
-namespace dynamic_vins{\
-
-namespace VIODE{
+namespace dynamic_vins{
 
 /**
  * 根据VIODE的seg0设置背景掩码img.merge_mask、img.merge_mask_gpu 和 物体掩码img.inv_merge_mask_gpu、img.inv_merge_mask_gpu
  * @param img
  */
-void SetViodeMaskSimple(SegImage &img)
+void VIODE::SetViodeMaskSimple(SegImage &img)
 {
     auto &semantic_img = img.seg0;
     cv::Mat merge_mask = cv::Mat(semantic_img.rows, semantic_img.cols, CV_8UC1, cv::Scalar(0));
@@ -72,7 +70,7 @@ void SetViodeMaskSimple(SegImage &img)
  * 以及对每个物体，设置其背景mask，并进行形态学滤波
  * @param img
  */
-void SetViodeMask(SegImage &img)
+void VIODE::SetViodeMask(SegImage &img)
 {
     struct MiniInstance{
         MiniInstance()=default;
@@ -191,5 +189,64 @@ void SetViodeMask(SegImage &img)
 }
 
 
+/**
+ * 读取VIODE数据集的rgb_ids.txt
+ * @param rgb_to_label_file
+ * @return
+ */
+std::unordered_map<unsigned int,int> VIODE::ReadViodeRgbIds(const string &rgb_to_label_file){
+    vector<vector<int>> label_data;
+    std::ifstream fp(rgb_to_label_file); //定义声明一个ifstream对象，指定文件路径
+    if(!fp.is_open()){
+        throw std::runtime_error(fmt::format("Can not open:{}", rgb_to_label_file));
+    }
+    string line;
+    getline(fp,line); //跳过列名，第一行不做处理
+    while (getline(fp,line)){ //循环读取每行数据
+        vector<int> data_line;
+        string number;
+        std::istringstream read_str(line); //string数据流化
+        for(int j = 0;j < 4;j++){ //可根据数据的实际情况取循环获取
+            getline(read_str,number,','); //将一行数据按'，'分割
+            data_line.push_back(atoi(number.c_str())); //字符串传int
+        }
+        label_data.push_back(data_line); //插入到vector中
+    }
+    fp.close();
+
+    std::unordered_map<unsigned int,int> rgb_to_key;
+    for(const auto& v : label_data){
+        rgb_to_key.insert(std::make_pair(VIODE::PixelToKey(v[1], v[2], v[3]), v[0]));
+    }
+    return rgb_to_key;
 }
+
+
+void VIODE::SetParameters(const std::string &config_path)
+{
+    cv::FileStorage fs(config_path, cv::FileStorage::READ);
+    if(!fs.isOpened()){
+        throw std::runtime_error(std::string("ERROR: Wrong path to settings:" + config_path));
+    }
+
+    std::string kBasicDir;
+    fs["basic_dir"] >> kBasicDir;
+
+    ///读取VIODE动态物体对应的Label Index
+    cv::FileNode labelIDNode=fs["dynamic_label_id"];
+    for(auto && it : labelIDNode){
+        ViodeDynamicIndex.insert((int)it);
+    }
+    ///设置VIODE的RGB2Label
+    string rgb2label_file;
+    fs["rgb_to_label_file"]>>rgb2label_file;
+    rgb2label_file = kBasicDir + rgb2label_file;
+    ViodeKeyToIndex = VIODE::ReadViodeRgbIds(rgb2label_file);
+
+    fs.release();
+
+}
+
+
+
 }

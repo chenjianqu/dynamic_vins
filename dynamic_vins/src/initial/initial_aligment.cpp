@@ -11,6 +11,8 @@
 
 #include "initial_alignment.h"
 
+#include "estimator/vio_parameters.h"
+
 
 namespace dynamic_vins{
 
@@ -67,7 +69,7 @@ Eigen::MatrixXd TangentBasis(Vec3d &g0)
 
 void RefineGravity(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Eigen::VectorXd &x)
 {
-    Vec3d g0 = g.normalized() * Config::G.norm();
+    Vec3d g0 = g.normalized() * para::G.norm();
     Vec3d lx, ly;
     //Eigen::VectorXd x;
     int all_frame_count = all_image_frame.size();
@@ -100,7 +102,9 @@ void RefineGravity(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Eige
             tmp_A.block<3, 3>(0, 0) = -dt * Mat3d::Identity();
             tmp_A.block<3, 2>(0, 6) = frame_i->second.R.transpose() * dt * dt / 2 * Mat3d::Identity() * lxly;
             tmp_A.block<3, 1>(0, 8) = frame_i->second.R.transpose() * (frame_j->second.T - frame_i->second.T) / 100.0;     
-            tmp_b.block<3, 1>(0, 0) = frame_j->second.pre_integration->delta_p + frame_i->second.R.transpose() * frame_j->second.R * Config::TIC[0] - Config::TIC[0] - frame_i->second.R.transpose() * dt * dt / 2 * g0;
+            tmp_b.block<3, 1>(0, 0) = frame_j->second.pre_integration->delta_p +
+                    frame_i->second.R.transpose() * frame_j->second.R * para::TIC[0] - para::TIC[0] -
+                    frame_i->second.R.transpose() * dt * dt / 2 * g0;
 
             tmp_A.block<3, 3>(3, 0) = -Mat3d::Identity();
             tmp_A.block<3, 3>(3, 3) = frame_i->second.R.transpose() * frame_j->second.R;
@@ -129,7 +133,7 @@ void RefineGravity(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Eige
             b = b * 1000.0;
             x = A.ldlt().solve(b);
             Eigen::VectorXd dg = x.segment<2>(n_state - 3);
-            g0 = (g0 + lxly * dg).normalized() * Config::G.norm();
+            g0 = (g0 + lxly * dg).normalized() * para::G.norm();
             //double s = x(n_state - 1);
     }   
     g = g0;
@@ -162,7 +166,8 @@ bool LinearAlignment(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Ei
         tmp_A.block<3, 3>(0, 0) = -dt * Mat3d::Identity();
         tmp_A.block<3, 3>(0, 6) = frame_i->second.R.transpose() * dt * dt / 2 * Mat3d::Identity();
         tmp_A.block<3, 1>(0, 9) = frame_i->second.R.transpose() * (frame_j->second.T - frame_i->second.T) / 100.0;     
-        tmp_b.block<3, 1>(0, 0) = frame_j->second.pre_integration->delta_p + frame_i->second.R.transpose() * frame_j->second.R * Config::TIC[0] - Config::TIC[0];
+        tmp_b.block<3, 1>(0, 0) = frame_j->second.pre_integration->delta_p +
+                frame_i->second.R.transpose() * frame_j->second.R * para::TIC[0] - para::TIC[0];
         //cout << "delta_p   " << frame_j->second.pre_integration->delta_p.transpose() << endl;
         tmp_A.block<3, 3>(3, 0) = -Mat3d::Identity();
         tmp_A.block<3, 3>(3, 3) = frame_i->second.R.transpose() * frame_j->second.R;
@@ -194,7 +199,7 @@ bool LinearAlignment(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Ei
     ROS_DEBUG("estimated scale: %f", s);
     g = x.segment<3>(n_state - 4);
     ROS_DEBUG_STREAM(" result g     " << g.norm() << " " << g.transpose());
-    if(fabs(g.norm() - Config::G.norm()) > 0.5 || s < 0)
+    if(fabs(g.norm() - para::G.norm()) > 0.5 || s < 0)
     {
         return false;
     }

@@ -13,7 +13,7 @@
 #include <eigen3/Eigen/Dense>
 
 #include "utility/utility.h"
-#include "parameters.h"
+#include "utility/parameters.h"
 #include "integration_base.h"
 
 #include <ceres/ceres.h>
@@ -97,7 +97,7 @@ class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9>
 
                 jacobian_pose_i.block<3, 3>(O_P, O_P) = -Qi.inverse().toRotationMatrix();
                 jacobian_pose_i.block<3, 3>(O_P, O_R) = Utility::skewSymmetric(Qi.inverse() *
-                        (0.5 * Config::G * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt));
+                        (0.5 * para::G * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt));
 
 #if 0
             jacobian_pose_i.block<3, 3>(O_R, O_R) = -(Qj.inverse() * Qi).toRotationMatrix();
@@ -107,7 +107,7 @@ class IMUFactor : public ceres::SizedCostFunction<15, 7, 9, 7, 9>
                         Utility::Qright(corrected_delta_q)).bottomRightCorner<3, 3>();
 #endif
 
-                jacobian_pose_i.block<3, 3>(O_V, O_R) = Utility::skewSymmetric(Qi.inverse() * (Config::G * sum_dt + Vj - Vi));
+                jacobian_pose_i.block<3, 3>(O_V, O_R) = Utility::skewSymmetric(Qi.inverse() * (para::G * sum_dt + Vj - Vi));
                 jacobian_pose_i = sqrt_info * jacobian_pose_i;
 
                 if (jacobian_pose_i.maxCoeff() > 1e8 || jacobian_pose_i.minCoeff() < -1e8){

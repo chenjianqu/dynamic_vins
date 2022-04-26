@@ -14,8 +14,8 @@
 #include <Eigen/Dense>
 #include <sophus/so3.hpp>
 
-#include "parameters.h"
-#include "utils.h"
+#include "utility/parameters.h"
+#include "utility/utils.h"
 #include "estimator/dynamic.h"
 
 namespace dynamic_vins{\

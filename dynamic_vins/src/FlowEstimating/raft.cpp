@@ -12,7 +12,7 @@
 
 #include <torch/script.h>
 
-#include "utils.h"
+#include "utility/utils.h"
 #include "TensorRT/common.h"
 #include "TensorRT/logger.h"
 

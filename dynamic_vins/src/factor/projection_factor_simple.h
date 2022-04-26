@@ -14,8 +14,8 @@
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
 #include "utility/utility.h"
-#include "utils.h"
-#include "parameters.h"
+#include "utility/utils.h"
+#include "utility/parameters.h"
 
 namespace dynamic_vins{\
 

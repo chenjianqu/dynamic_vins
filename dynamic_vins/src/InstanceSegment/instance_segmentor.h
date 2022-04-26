@@ -21,6 +21,7 @@
 #include "pipeline.h"
 #include "solo_head.h"
 #include "buffer.h"
+#include "segment_parameter.h"
 
 namespace dynamic_vins{\
 
@@ -28,7 +29,8 @@ namespace dynamic_vins{\
 class InstanceSegmentor {
 public:
     using Ptr = std::shared_ptr<InstanceSegmentor>;
-    InstanceSegmentor();
+    InstanceSegmentor(const std::string& config_path);
+
     std::tuple<std::vector<cv::Mat>,std::vector<InstInfo> > Forward(cv::Mat &img);
     void ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);
     void ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);

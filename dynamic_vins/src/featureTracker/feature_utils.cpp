@@ -8,6 +8,7 @@
  *******************************************************/
 
 #include "feature_utils.h"
+#include "front_end_parameters.h"
 
 namespace dynamic_vins{\
 
@@ -33,7 +34,7 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
                              cv::Size(21, 21), 3);
 
     //反向光流计算 判断之前光流跟踪的特征点的质量
-    if(Config::is_flow_back){
+    if(fe_para::is_flow_back){
         vector<uchar> reverse_status;
         std::vector<cv::Point2f> reverse_pts = pts1;
         cv::calcOpticalFlowPyrLK(img2, img1, pts2, reverse_pts,
@@ -89,7 +90,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
     Debugt("flowTrackGpu forward success:{}", forward_success);
 
     //反向光流计算 判断之前光流跟踪的特征点的质量
-    if(Config::is_flow_back){
+    if(fe_para::is_flow_back){
         cv::cuda::GpuMat d_reverse_status;
         cv::cuda::GpuMat d_reverse_pts = d_prevPts;
         lkOpticalFlowBack->calc(img_next,img_prev,d_nextPts,d_reverse_pts,d_reverse_status);
@@ -168,7 +169,7 @@ void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2)
  * @param cam
  * @return
  */
-vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam)
+vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts,PinHoleCamera::Ptr &cam)
 {
     vector<cv::Point2f> un_pts;
     for (auto & pt : pts){
@@ -291,6 +292,17 @@ void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, 
         ids.push_back(id);
         track_cnt.push_back(t_cnt);
     }
+}
+
+
+std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask)
+{
+    auto detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, detect_num, 0.01, fe_para::kMinDist);
+    cv::cuda::GpuMat d_new_pts;
+    detector->detect(img,d_new_pts,mask);
+    std::vector<cv::Point2f> points;
+    GpuMat2Points(d_new_pts, points);
+    return points;
 }
 
 

@@ -30,12 +30,9 @@
 #include <eigen3/Eigen/Dense>
 #include <opencv2/opencv.hpp>
 
-#include <camodocal/camera_models/CameraFactory.h>
-#include <camodocal/camera_models/CataCamera.h>
-#include <camodocal/camera_models/PinholeCamera.h>
 
-#include "parameters.h"
-#include "utils.h"
+#include "utility/parameters.h"
+#include "utility/utils.h"
 #include "estimator/dynamic.h"
 #include "instance_tracker.h"
 #include "InstanceSegment/instance_segmentor.h"
@@ -47,12 +44,12 @@ class FeatureTracker
 {
 public:
     using Ptr=std::unique_ptr<FeatureTracker>;
-    FeatureTracker();
+    FeatureTracker(const string& config_path);
+
     FeatureMap TrackImage(SegImage &img);
     FeatureMap TrackImageNaive(SegImage &img);
     FeatureMap TrackSemanticImage(SegImage &img);
 
-    void ReadIntrinsicParameter(const vector<string> &calib_file);
     void ShowUndistortion(const string &name);
     void RejectWithF();
     vector<cv::Point2f> PtsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
@@ -89,7 +86,6 @@ private:
     std::map<int, cv::Point2f> cur_un_pts_map, prev_un_pts_map;
     std::map<int, cv::Point2f> cur_un_right_pts_map, prev_un_right_pts_map;
     std::map<int, cv::Point2f> prev_left_map;
-    vector<camodocal::CameraPtr> m_camera;
     double cur_time{};
     double prev_time{};
     int n_id;

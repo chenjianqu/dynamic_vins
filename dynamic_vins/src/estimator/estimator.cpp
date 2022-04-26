@@ -22,13 +22,16 @@
 
 #include "estimator.h"
 #include "utility/visualization.h"
-#include "utils.h"
+#include "utility/utils.h"
+#include "vio_parameters.h"
 
 namespace dynamic_vins{\
 
 
-Estimator::Estimator(): f_manager{Rs}
+Estimator::Estimator(const string& config_path): f_manager{Rs}
 {
+    para::SetParameters(config_path);
+
     ClearState();
     insts_manager.set_estimator(this);
     /*    std::string path_test="/home/chen/slam/expriments/DynamicVINS/FlowTrack/1_vel";
@@ -167,14 +170,14 @@ void Estimator::Optimization()
     options.linear_solver_type = ceres::DENSE_SCHUR;
     //options.num_threads = 2;
     options.trust_region_strategy_type = ceres::DOGLEG;
-    options.max_num_iterations = cfg::KNumIter;
+    options.max_num_iterations = para::KNumIter;
     //options.use_explicit_schur_complement = true;
     //options.minimizer_progress_to_stdout = true;
     //options.use_nonmonotonic_steps = true;
     if (margin_flag == MarginFlag::kMarginOld)
-        options.max_solver_time_in_seconds = cfg::kMaxSolverTime * 4.0 / 5.0;
+        options.max_solver_time_in_seconds = para::kMaxSolverTime * 4.0 / 5.0;
     else
-        options.max_solver_time_in_seconds = cfg::kMaxSolverTime;
+        options.max_solver_time_in_seconds = para::kMaxSolverTime;
 
     ///求解
     TicToc t_solver;
@@ -447,8 +450,8 @@ void Estimator::SetParameter()
 {
     process_mutex.lock();
     for (int i = 0; i < cfg::kCamNum; i++){
-        tic[i] = cfg::TIC[i];
-        ric[i] = cfg::RIC[i];
+        tic[i] = para::TIC[i];
+        ric[i] = para::RIC[i];
         Infov("SetParameter Extrinsic Cam {}:\n{} \n{}",i,EigenToStr(ric[i]),VecToStr(tic[i]));
     }
     f_manager.SetRic(ric);
@@ -465,8 +468,8 @@ void Estimator::SetParameter()
     ProjInst12Factor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
     ProjInst12FactorSimple::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
 
-    td = cfg::TD;
-    g = cfg::G;
+    td = para::TD;
+    g = para::G;
 
     Infov("SetParameter Set g:{}", VecToStr(g));
     process_mutex.unlock();
@@ -694,7 +697,7 @@ bool Estimator::InitialStructure()
         cv::Mat r, rvec, t, D, tmp_r;
         if((frame_it->first) == headers[i]){
             frame_it->second.is_key_frame = true;
-            frame_it->second.R = Q[i].toRotationMatrix() * cfg::RIC[0].transpose();
+            frame_it->second.R = Q[i].toRotationMatrix() * para::RIC[0].transpose();
             frame_it->second.T = T[i];
             i++;
             continue;
@@ -743,7 +746,7 @@ bool Estimator::InitialStructure()
         MatrixXd T_pnp;
         cv::cv2eigen(t, T_pnp);
         T_pnp = R_pnp * (-T_pnp);
-        frame_it->second.R = R_pnp * cfg::RIC[0].transpose();
+        frame_it->second.R = R_pnp * para::RIC[0].transpose();
         frame_it->second.T = T_pnp;
     }
     if (VisualInitialAlign()){
@@ -783,7 +786,7 @@ bool Estimator::VisualInitialAlign()
         pre_integrations[i]->repropagate(Vec3d::Zero(), Bgs[i]);
     }
     for (int i = frame; i >= 0; i--)
-        Ps[i] = s * Ps[i] - Rs[i] * cfg::TIC[0] - (s * Ps[0] - Rs[0] * cfg::TIC[0]);
+        Ps[i] = s * Ps[i] - Rs[i] * para::TIC[0] - (s * Ps[0] - Rs[0] * para::TIC[0]);
     int kv = -1;
     map<double, ImageFrame>::iterator frame_i;
     for (frame_i = all_image_frame.begin(); frame_i != all_image_frame.end(); frame_i++)
@@ -1360,7 +1363,7 @@ void Estimator::ProcessImage(const FeatureMap &image, const double header){
                 Debugv("initial extrinsic rotation calib success");
                 Debugv("initial extrinsic rotation:\n{}", EigenToStr(calib_ric));
                 ric[0] = calib_ric;
-                cfg::RIC[0] = calib_ric;
+                para::RIC[0] = calib_ric;
                 cfg::is_estimate_ex = 1;
             }
         }

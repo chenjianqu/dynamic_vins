@@ -20,6 +20,7 @@
 
 #include "dynamic.h"
 #include "landmark.h"
+#include "vio_parameters.h"
 
 namespace dynamic_vins{\
 

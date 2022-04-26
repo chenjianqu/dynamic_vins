@@ -27,7 +27,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 
-#include "parameters.h"
+#include "utility/parameters.h"
 
 namespace dynamic_vins{\
 

@@ -11,8 +11,8 @@
 #include <cuda_runtime_api.h>
 
 #include "buffer.h"
-#include "TensorRT/common.h"
-#include "parameters.h"
+#include "utility/log_utils.h"
+
 namespace dynamic_vins{\
 
 
@@ -38,7 +38,7 @@ MyBuffer::~MyBuffer(){
     cudaStreamDestroy(stream);
     for(int i=0;i<binding_num;++i){
         if(auto s=cudaFree(gpu_buffer[i]);s!=cudaSuccess)
-            sg_logger->error("cudaFree failed, status:{}", s);
+            Errors("cudaFree failed, status:{}", s);
         delete cpu_buffer[i];
     }
     delete[] cpu_buffer;

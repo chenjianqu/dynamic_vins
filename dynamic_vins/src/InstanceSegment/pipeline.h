@@ -10,24 +10,20 @@
 #ifndef DYNAMIC_VINS_PIPELINE_H
 #define DYNAMIC_VINS_PIPELINE_H
 
-#include <iostream>
-
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
-#include <torchvision/vision.h>
 
-#include "parameters.h"
-#include "utils.h"
 #include "featureTracker/segment_image.h"
+#include "utility/utils.h"
 
 namespace dynamic_vins{\
+
 
 class Pipeline {
 public:
     using Ptr=std::shared_ptr<Pipeline>;
 
-    Pipeline(){
-    }
+    Pipeline()=default;
 
     std::tuple<float,float> GetXYWHS(int img_h,int img_w);
 
@@ -43,16 +39,21 @@ public:
         auto t = ImageToTensor(img);
         return ProcessInput(t);
     }
-    void* ProcessInput(torch::Tensor &img);
 
     cv::Mat ProcessMask(cv::Mat &mask, std::vector<InstInfo> &insts);
+
+    static void SetBufferWithNorm(const cv::Mat &img, float *buffer);
+
+    static torch::Tensor ImageToTensor(cv::cuda::GpuMat &img);
+
+
+    void* ProcessInput(torch::Tensor &img);
+
 
     ImageInfo image_info;
     torch::Tensor input_tensor;
 
-    static void SetBufferWithNorm(const cv::Mat &img, float *buffer);
     static torch::Tensor ImageToTensor(cv::Mat &img);
-    static torch::Tensor ImageToTensor(cv::cuda::GpuMat &img);
 
 private:
 };

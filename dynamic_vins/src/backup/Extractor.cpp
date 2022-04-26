@@ -3,8 +3,8 @@
 //
 
 #include "Extractor.h"
-#include "../parameters.h"
-#include "../utils.h"
+#include "utility/parameters.h"
+#include "utility/utils.h"
 
 namespace nn=torch::nn;
 

@@ -9,7 +9,7 @@
  *******************************************************/
 
 #include "flow_visual.h"
-#include "utils.h"
+#include "utility/utils.h"
 
 namespace dynamic_vins{\
 

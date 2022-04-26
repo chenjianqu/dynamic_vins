@@ -4,8 +4,8 @@
 
 #include "DeepSORT.h"
 #include "track.h"
-#include "../parameters.h"
-#include "../utils.h"
+#include "utility/parameters.h"
+#include "utility/utils.h"
 
 
 

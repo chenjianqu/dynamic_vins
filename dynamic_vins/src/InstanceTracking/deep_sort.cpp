@@ -13,6 +13,7 @@
 #include "deep_sort.h"
 #include "extractor.h"
 #include "tracker_manager.h"
+#include "tracking_parameter.h"
 
 namespace dynamic_vins{\
 
@@ -49,10 +50,12 @@ torch::Tensor CalIouDist(const vector<Rect2f> &dets, const vector<Rect2f> &trks)
 
 
 
-DeepSORT::DeepSORT(const array<int64_t, 2> &dim)
-: extractor(make_unique<Extractor>()),
-manager(make_unique<TrackerManager<TrackData>>(data, dim)),
-feat_metric(make_unique<FeatureMetric<TrackData>>(data)) {
+DeepSORT::DeepSORT(const string& config_path,const array<int64_t, 2> &dim)
+    : extractor(make_unique<Extractor>()),
+    manager(make_unique<TrackerManager<TrackData>>(data, dim)),
+    feat_metric(make_unique<FeatureMetric<TrackData>>(data)) {
+
+    track_para::SetParameters(config_path);
 
 }
 

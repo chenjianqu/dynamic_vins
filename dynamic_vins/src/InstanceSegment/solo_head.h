@@ -16,9 +16,8 @@
 #include <torch/torch.h>
 #include <torchvision/vision.h>
 
-#include "parameters.h"
 #include "featureTracker/segment_image.h"
-#include "utils.h"
+#include "utility/utils.h"
 
 namespace dynamic_vins{\
 
@@ -26,10 +25,7 @@ namespace dynamic_vins{\
 class Solov2 {
 public:
     using Ptr=std::shared_ptr<Solov2>;
-    Solov2(){
-        size_trans_=torch::from_blob(kSoloNumGrids.data(), {int(kSoloNumGrids.size())}, torch::kFloat).clone();
-        size_trans_=size_trans_.pow(2).cumsum(0);
-    }
+    Solov2();
     static torch::Tensor MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_labels,torch::Tensor &cate_scores,torch::Tensor &sum_mask);
     cv::Mat GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device device, std::vector<InstInfo> &insts);
     std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> GetSingleSeg(std::vector<torch::Tensor> &outputs, ImageInfo& img_info);

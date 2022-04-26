@@ -26,12 +26,8 @@
 
 #include <torch/torch.h>
 
-#include "camodocal/camera_models/CameraFactory.h"
-#include "camodocal/camera_models/CataCamera.h"
-#include "camodocal/camera_models/PinholeCamera.h"
-
 #include "segment_image.h"
-#include "parameters.h"
+#include "utility/parameters.h"
 #include "estimator/dynamic.h"
 #include "estimator/landmark.h"
 #include "InstanceTracking/deep_sort.h"
@@ -101,7 +97,7 @@ struct InstFeat{
 class InstsFeatManager {
 public:
     using Ptr=std::shared_ptr<InstsFeatManager>;
-    InstsFeatManager();
+    InstsFeatManager(const string& config_path);
 
     void InstsTrack(SegImage img);
     void InstsFlowTrack(SegImage img);
@@ -129,8 +125,6 @@ public:
     }
 
     void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
-    void set_camera(camodocal::CameraPtr& camera){camera_ = camera;}
-    void set_right_camera(camodocal::CameraPtr& right_camera){right_camera_ = right_camera;}
 private:
     void ManageInstances();
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
@@ -146,7 +140,7 @@ private:
     std::unordered_map<unsigned int,InstFeat> instances_;
     std::unordered_map<unsigned int,Vel3d> vel_map_;
 
-    camodocal::CameraPtr camera_,right_camera_;
+    PinHoleCamera::Ptr camera_,right_camera_;
 
     unsigned int global_frame_id{0};
     cv::Mat mask_background;

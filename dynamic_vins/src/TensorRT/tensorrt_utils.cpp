@@ -17,6 +17,10 @@
 #include "tensorrt_utils.h"
 #include "common.h"
 
+using std::cout;
+using std::endl;
+using std::cerr;
+using std::string;
 
 namespace dynamic_vins{\
 

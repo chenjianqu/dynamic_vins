@@ -1,19 +1,18 @@
-[2022-04-24 22:41:54.464] [estimator_log] [info] 读取模型文件
-[2022-04-24 22:41:54.648] [estimator_log] [info] createInferRuntime
-[2022-04-24 22:41:55.225] [estimator_log] [info] deserializeCudaEngine
-[2022-04-24 22:41:59.022] [estimator_log] [info] createExecutionContext
-[2022-04-24 22:41:59.065] [estimator_log] [warning] warn up model
-[2022-04-24 22:41:59.157] [estimator_log] [info] infer init finished
-[2022-04-24 22:41:59.295] [estimator_log] [info] SetParameter Extrinsic Cam 0:
-1.00 0.00 0.00 
-0.00 1.00 0.00 
-0.00 0.00 1.00 
+[2022-04-26 12:15:33.886] [estimator] [info] start init segmentor
+[2022-04-26 12:15:34.043] [estimator] [info] createInferRuntime
+[2022-04-26 12:15:34.465] [estimator] [info] deserializeCudaEngine
+[2022-04-26 12:15:37.337] [estimator] [info] createExecutionContext
+[2022-04-26 12:15:37.359] [estimator] [info] infer init finished
+[2022-04-26 12:15:37.455] [estimator] [info] SetParameter Extrinsic Cam 0:
+0.01 -0.00 1.00 
+-1.00 0.00 0.01 
+-0.00 -1.00 -0.00 
  
-0.00 0.00 0.00 
-[2022-04-24 22:41:59.295] [estimator_log] [info] SetParameter Extrinsic Cam 1:
-1.00 0.00 0.00 
-0.00 1.00 0.00 
-0.00 0.00 1.00 
+1.01 -0.81 0.25 
+[2022-04-26 12:15:37.455] [estimator] [info] SetParameter Extrinsic Cam 1:
+0.01 -0.00 1.00 
+-1.00 0.00 0.01 
+-0.00 -1.00 -0.00 
  
-0.54 0.00 0.00 
-[2022-04-24 22:41:59.295] [estimator_log] [info] SetParameter Set g:0.00 0.00 9.80 
+1.08 -0.81 0.25 
+[2022-04-26 12:15:37.455] [estimator] [info] SetParameter Set g:0.00 0.00 9.80 

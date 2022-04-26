@@ -15,8 +15,8 @@
 #include <NvInferPlugin.h>
 
 #include "instance_segmentor.h"
-#include "parameters.h"
-#include "utils.h"
+#include "utility/utils.h"
+#include "segment_parameter.h"
 
 namespace dynamic_vins{\
 
@@ -25,8 +25,8 @@ namespace dynamic_vins{\
 std::optional<int> GetQueueShapeIndex(int c, int h, int w)
 {
     int index=-1;
-    for(int i=0;i< (int)kTensorQueueShapes.size(); ++i){
-        if(c == kTensorQueueShapes[i][1] && h == kTensorQueueShapes[i][2] && w == kTensorQueueShapes[i][3]){
+    for(int i=0;i< (int)seg_para::kTensorQueueShapes.size(); ++i){
+        if(c == seg_para::kTensorQueueShapes[i][1] && h == seg_para::kTensorQueueShapes[i][2] && w == seg_para::kTensorQueueShapes[i][3]){
             index=i;
             break;
         }
@@ -39,19 +39,16 @@ std::optional<int> GetQueueShapeIndex(int c, int h, int w)
 
 
 
-InstanceSegmentor::InstanceSegmentor()
+InstanceSegmentor::InstanceSegmentor(const std::string& config_path)
 {
-    if(Config::is_input_seg || Config::slam == SlamType::kRaw){
-        auto msg="set input seg, the segmentor does not initial";
-        Warnv(msg);
-        cerr<<msg<<endl;
-        return;
-    }
+    ///初始化参数
+    seg_para::SetParameters(config_path);
+
     ///注册预定义的和自定义的插件
     initLibNvInferPlugins(&sample::gLogger.getTRTLogger(),"");
-    Infov("读取模型文件");
+    Infov("start init segmentor");
     std::string model_str;
-    if(std::ifstream ifs(Config::kDetectorSerializePath);ifs.is_open()){
+    if(std::ifstream ifs(seg_para::kDetectorSerializePath); ifs.is_open()){
         while(ifs.peek() != EOF){
             std::stringstream ss;
             ss<<ifs.rdbuf();
@@ -60,9 +57,7 @@ InstanceSegmentor::InstanceSegmentor()
         ifs.close();
     }
     else{
-        auto msg=fmt::format("Can not open the kDetectorSerializePath:{}",Config::kDetectorSerializePath);
-        vio_logger->critical(msg);
-        throw std::runtime_error(msg);
+        throw std::runtime_error(fmt::format("Can not open the kDetectorSerializePath:{}", seg_para::kDetectorSerializePath));
     }
     Infov("createInferRuntime");
     ///创建runtime
@@ -79,28 +74,35 @@ InstanceSegmentor::InstanceSegmentor()
     if(!context_){
         throw std::runtime_error("can not create context");
     }
+
     ///创建输入输出的内存
     buffer = std::make_shared<MyBuffer>(*engine_);
-    Config::kInputHeight=buffer->dims[0].d[2];
-    Config::kInputWidth=buffer->dims[0].d[3];
-    Config::kInputChannel=3;
+
+    seg_para::model_input_height=buffer->dims[0].d[2];
+    seg_para::model_input_width=buffer->dims[0].d[3];
+    seg_para::model_input_channel=3;
+
     pipeline_=std::make_shared<Pipeline>();
+
     solo_ = std::make_shared<Solov2>();
-    //cv::Mat warn_up_input(cv::Size(1226,370),CV_8UC3,cv::Scalar(128));
-    const std::string warn_up_path="/home/chen/ws/vio_ws/src/dynamic_vins/config/kitti.png";
+
+/*    //cv::Mat warn_up_input(cv::Size(1226,370),CV_8UC3,cv::Scalar(128));
+    const std::string warn_up_path= seg_para::kWarnUpImagePath ;
     cv::Mat warn_up_input = cv::imread(warn_up_path);
     if(warn_up_input.empty()){
-        vio_logger->error("Can not open warn up image:{}", warn_up_path);
+        Errorv("Can not open warn up image:{}", warn_up_path);
         return;
     }
-    cv::resize(warn_up_input,warn_up_input,cv::Size(Config::kCol, Config::kRow));
+    cv::resize(warn_up_input,warn_up_input,cv::Size(seg_para::model_input_width, seg_para::model_input_height));
     Warnv("warn up model");
     //[[maybe_unused]] auto result = forward(warn_up_input);
     [[maybe_unused]] torch::Tensor mask_tensor;
     [[maybe_unused]] std::vector<InstInfo> insts_info;
     ForwardTensor(warn_up_input, mask_tensor, insts_info);
     if(insts_info.empty())
-        throw std::runtime_error("model not init");
+        throw std::runtime_error("model not init");*/
+
+
     Infov("infer init finished");
 }
 
@@ -166,11 +168,14 @@ InstanceSegmentor::Forward(cv::Mat &img)
 }
 
 void InstanceSegmentor::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts){
-    buffer->gpu_buffer[0] = pipeline_->ProcessInput(img);
-    ///推断
-    context_->enqueue(kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
 
-    std::vector<torch::Tensor> outputs(kTensorQueueShapes.size());
+    Debugs("ForwardTensor | img_tensor.shape:{}", DimsToStr(img.sizes()));
+    buffer->gpu_buffer[0] = pipeline_->ProcessInput(img);
+    Debugs("ForwardTensor | input_tensor.shape:{}", DimsToStr(pipeline_->input_tensor.sizes()));
+    ///推断
+    context_->enqueue(seg_para::kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
+
+    std::vector<torch::Tensor> outputs(seg_para::kTensorQueueShapes.size());
     auto opt=torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat);
     for(int i=1;i<buffer->binding_num;++i){
         torch::Tensor tensor=torch::from_blob(
@@ -184,7 +189,7 @@ void InstanceSegmentor::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_te
         else{
             auto msg=fmt::format("GetQueueShapeIndex failed:({},{},{},{})",buffer->dims[i].d[0],buffer->dims[i].d[1],
                                  buffer->dims[i].d[2],buffer->dims[i].d[3]);
-            sg_logger->error(msg);
+            Errors(msg);
             throw std::runtime_error(msg);
         }
     }
@@ -216,8 +221,8 @@ void InstanceSegmentor::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, 
     solo_->is_resized_ = false;
     pipeline_->image_info.rect_x=0;
     pipeline_->image_info.rect_y=0;
-    pipeline_->image_info.rect_w= std::min(Config::kInputWidth,img.cols) ;
-    pipeline_->image_info.rect_h= std::min(Config::kInputHeight,img.rows) ;*/
+    pipeline_->image_info.rect_w= std::min(para::kInputWidth,img.cols) ;
+    pipeline_->image_info.rect_h= std::min(para::kInputHeight,img.rows) ;*/
     /*cv::Mat input=pipeline_->ProcessPadCuda(img);
     pipeline_->SetBufferWithNorm(input,buffer->cpu_buffer[0]);
     buffer->cpyInputToGPU();*/

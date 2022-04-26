@@ -7,8 +7,10 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include <fstream>
 #include "extractor.h"
+
+#include <fstream>
+#include "tracking_parameter.h"
 
 namespace dynamic_vins{\
 
@@ -136,8 +138,7 @@ void NetImpl::load_form(const std::string &bin_path) {
 }
 
 Extractor::Extractor() {
-    const std::string base_dir="/home/chen/CLionProjects/DeepSort/libtorch-yolov3-deepsort-master/";
-    net->load_form(base_dir+"weights/ckpt.bin");
+    net->load_form(track_para::kExtractorModelPath);
     net->to(torch::kCUDA);
     net->eval();
 }

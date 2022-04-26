@@ -29,7 +29,7 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-#include "parameters.h"
+#include "utility/parameters.h"
 #include "feature_manager.h"
 #include "utility/utility.h"
 #include "initial/solve_5pts.h"
@@ -45,8 +45,9 @@
 #include "featureTracker/feature_tracker.h"
 #include "dynamic.h"
 #include "instance_manager.h"
-#include "utils.h"
+#include "utility/utils.h"
 #include "landmark.h"
+#include "vio_parameters.h"
 
 namespace dynamic_vins{\
 
@@ -56,7 +57,7 @@ class Estimator
   public:
     using Ptr=std::shared_ptr<Estimator>;
 
-    Estimator();
+    Estimator(const string& config_path);
     ~Estimator();
     void SetParameter();
 

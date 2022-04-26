@@ -18,6 +18,7 @@
 
 #include "feature_manager.h"
 #include "dynamic.h"
+#include "vio_parameters.h"
 
 
 namespace dynamic_vins{\
@@ -128,7 +129,7 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureMap &
         Debugv("addFeatureCheckParallax parallax_sum: {}, parallax_num: {}", parallax_sum, parallax_num);
         Debugv("addFeatureCheckParallax current parallax: {}", parallax_sum / parallax_num * kFocalLength);
         last_average_parallax = parallax_sum / parallax_num * kFocalLength;
-        return parallax_sum / parallax_num >= Config::kMinParallax;
+        return parallax_sum / parallax_num >= para::kMinParallax;
     }
 }
 
@@ -350,7 +351,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
             if (depth > 0)
                 it_per_id.estimated_depth = depth;
             else
-                it_per_id.estimated_depth = Config::kInitDepth;
+                it_per_id.estimated_depth = para::kInitDepth;
             continue;
         }
         else if(it_per_id.feature_per_frame.size() > 1)
@@ -380,7 +381,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
             if (depth > 0)
                 it_per_id.estimated_depth = depth;
             else
-                it_per_id.estimated_depth = Config::kInitDepth;
+                it_per_id.estimated_depth = para::kInitDepth;
             continue;
         }
 
@@ -430,7 +431,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
 
         if (it_per_id.estimated_depth < 0.1)
         {
-            it_per_id.estimated_depth = Config::kInitDepth;
+            it_per_id.estimated_depth = para::kInitDepth;
         }
 
     }
@@ -474,7 +475,7 @@ void FeatureManager::RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg
                 if (dep_j > 0)
                     it->estimated_depth = dep_j;
                 else
-                    it->estimated_depth = Config::kInitDepth;
+                    it->estimated_depth = para::kInitDepth;
             }
         }
         /*

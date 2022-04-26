@@ -9,8 +9,7 @@
 
 
 #include "segment_image.h"
-#include "parameters.h"
-#include "utils.h"
+#include "utility/log_utils.h"
 
 namespace dynamic_vins{\
 

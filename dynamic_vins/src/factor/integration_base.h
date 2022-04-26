@@ -10,9 +10,8 @@
 #pragma once
 
 #include "utility/utility.h"
-#include "parameters.h"
 #include <ceres/ceres.h>
-
+#include "estimator/vio_parameters.h"
 
 namespace dynamic_vins{\
 
@@ -36,12 +35,12 @@ class IntegrationBase
         delta_v{Eigen::Vector3d::Zero()}
     {
         noise = Eigen::Matrix<double, 18, 18>::Zero();
-        noise.block<3, 3>(0, 0) =  (Config::ACC_N * Config::ACC_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(3, 3) =  (Config::GYR_N * Config::GYR_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(6, 6) =  (Config::ACC_N * Config::ACC_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(9, 9) =  (Config::GYR_N * Config::GYR_N) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(12, 12) =  (Config::ACC_W * Config::ACC_W) * Eigen::Matrix3d::Identity();
-        noise.block<3, 3>(15, 15) =  (Config::GYR_W * Config::GYR_W) * Eigen::Matrix3d::Identity();
+        noise.block<3, 3>(0, 0) =  (para::ACC_N * para::ACC_N) * Eigen::Matrix3d::Identity();
+        noise.block<3, 3>(3, 3) =  (para::GYR_N * para::GYR_N) * Eigen::Matrix3d::Identity();
+        noise.block<3, 3>(6, 6) =  (para::ACC_N * para::ACC_N) * Eigen::Matrix3d::Identity();
+        noise.block<3, 3>(9, 9) =  (para::GYR_N * para::GYR_N) * Eigen::Matrix3d::Identity();
+        noise.block<3, 3>(12, 12) =  (para::ACC_W * para::ACC_W) * Eigen::Matrix3d::Identity();
+        noise.block<3, 3>(15, 15) =  (para::GYR_W * para::GYR_W) * Eigen::Matrix3d::Identity();
     }
 
     void push_back(double dt, const Eigen::Vector3d &acc, const Eigen::Vector3d &gyr)
@@ -193,9 +192,9 @@ class IntegrationBase
         Eigen::Vector3d corrected_delta_v = delta_v + dv_dba * dba + dv_dbg * dbg;
         Eigen::Vector3d corrected_delta_p = delta_p + dp_dba * dba + dp_dbg * dbg;
 
-        residuals.block<3, 1>(O_P, 0) = Qi.inverse() * (0.5 * Config::G * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt) - corrected_delta_p;
+        residuals.block<3, 1>(O_P, 0) = Qi.inverse() * (0.5 * para::G * sum_dt * sum_dt + Pj - Pi - Vi * sum_dt) - corrected_delta_p;
         residuals.block<3, 1>(O_R, 0) = 2 * (corrected_delta_q.inverse() * (Qi.inverse() * Qj)).vec();
-        residuals.block<3, 1>(O_V, 0) = Qi.inverse() * (Config::G * sum_dt + Vj - Vi) - corrected_delta_v;
+        residuals.block<3, 1>(O_V, 0) = Qi.inverse() * (para::G * sum_dt + Vj - Vi) - corrected_delta_v;
         residuals.block<3, 1>(O_BA, 0) = Baj - Bai;
         residuals.block<3, 1>(O_BG, 0) = Bgj - Bgi;
         return residuals;

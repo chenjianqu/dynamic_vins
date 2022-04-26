@@ -8,7 +8,7 @@
  *******************************************************/
 
 #include "kalman_tracker.h"
-#include "parameters.h"
+#include "tracking_parameter.h"
 
 namespace dynamic_vins{\
 
@@ -71,7 +71,7 @@ void KalmanTracker::update(cv::Rect2f stateMat) {
     time_since_update = 0;
     ++hits;
 
-    if (_state == TrackState::Tentative && hits > Config::kTrackingNInit) {
+    if (_state == TrackState::Tentative && hits > track_para::kTrackingNInit ) {
         _state = TrackState::Confirmed;
         _id = count++;
     }
@@ -89,7 +89,7 @@ void KalmanTracker::update(cv::Rect2f stateMat) {
 void KalmanTracker::miss() {
     if (_state == TrackState::Tentative) {
         _state = TrackState::Deleted;
-    } else if (time_since_update > Config::kTrackingMaxAge) {
+    } else if (time_since_update > track_para::kTrackingMaxAge) {
         _state = TrackState::Deleted;
     }
 }

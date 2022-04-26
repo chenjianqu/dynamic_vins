@@ -16,12 +16,7 @@
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
 
-#include <camodocal/camera_models/CameraFactory.h>
-#include <camodocal/camera_models/CataCamera.h>
-#include <camodocal/camera_models/PinholeCamera.h>
-
-#include "parameters.h"
-#include "utils.h"
+#include "utility/utils.h"
 #include "segment_image.h"
 
 namespace dynamic_vins{\
@@ -90,19 +85,13 @@ inline void ErodeMaskGpu(cv::cuda::GpuMat &in, cv::cuda::GpuMat &out,int kernel_
     erode_filter->apply(in,out);
 }
 
-inline void SetMask(const cv::Mat &init_mask, cv::Mat &mask_out, std::vector<cv::Point2f> &points){
-    mask_out = init_mask.clone();
-    for(const auto& pt : points){
-        cv::circle(mask_out, pt, cfg::kMinDist, 0, -1);
-    }
-}
 
 inline void SetStatusByMask(vector<uchar> &status,vector<cv::Point2f> &points,cv::Mat &mask){
     for(size_t i=0;i<status.size();++i) if(status[i] && mask.at<uchar>(points[i]) == 0) status[i]=0;
 }
 
 
-std::vector<cv::Point2f> UndistortedPts(std::vector<cv::Point2f> &pts, camodocal::CameraPtr cam);
+std::vector<cv::Point2f> UndistortedPts(std::vector<cv::Point2f> &pts, PinHoleCamera::Ptr &cam);
 
 std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2,
                                     std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2);
@@ -122,29 +111,9 @@ std::vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
  * @param mask
  * @return
  */
-static std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask)
-{
-    auto detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, detect_num, 0.01, cfg::kMinDist);
-    cv::cuda::GpuMat d_new_pts;
-    detector->detect(img,d_new_pts,mask);
-    std::vector<cv::Point2f> points;
-    GpuMat2Points(d_new_pts, points);
-    return points;
-}
+std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask);
 
-/**
- * 检测Shi Tomasi角点
- * @param detect_num
- * @param img
- * @param mask
- * @return
- */
-inline std::vector<cv::Point2f> DetectShiTomasiCorners(int detect_num, const cv::Mat &img, const cv::Mat &mask)
-{
-    std::vector<cv::Point2f> points;
-    cv::goodFeaturesToTrack(img, points, detect_num, 0.01, cfg::kMinDist, mask);
-    return points;
-}
+
 
 /**
  * 输出mask中规则点，规则点是指像素(10,15)、(10+delta,15+delta)...这样的点
@@ -192,7 +161,7 @@ inline void SetIdPointPair(vector<unsigned int> &ids,
 void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr_un_pts,
                         std::map<unsigned int, cv::Point2f> &prev_id_pts,vector<cv::Point2f> &output_velocity);
 
-vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts, camodocal::CameraPtr cam);
+
 
 void SortPoints(vector<cv::Point2f> &cur_pts, vector<int> &track_cnt, vector<int> &ids);
 
