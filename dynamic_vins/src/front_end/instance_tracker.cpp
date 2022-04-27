@@ -300,8 +300,6 @@ void InstsFeatManager::InstsTrack(SegImage img)
 
 
 
-
-
 /**
  *
  * @param img
@@ -785,6 +783,8 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
         }
         auto &inst = instances_[key];
         inst.mask_img = inst_info.mask_cv;
+        inst.box_max_pt = inst_info.max_pt;
+        inst.box_min_pt = inst_info.min_pt;
         inst.box_vel = cv::Point2f(0,0);
         inst.last_frame_cnt = global_frame_id;
         inst.last_time = img.time0;
@@ -794,9 +794,9 @@ void InstsFeatManager::AddViodeInstances(SegImage &img)
     }
     for(auto &[key,inst]: instances_){
         if(inst.last_frame_cnt == global_frame_id){
-            auto rect = cv::boundingRect(inst.mask_img);
-            inst.box_min_pt= rect.tl();
-            inst.box_max_pt = rect.br();
+            //auto rect = cv::boundingRect(inst.mask_img);
+            //inst.box_min_pt= rect.tl();
+            //inst.box_max_pt = rect.br();
             inst.box_center_pt = (inst.box_min_pt+inst.box_max_pt)/2;
             inst.color = img.seg0.at<cv::Vec3b>(inst.box_center_pt);
         }

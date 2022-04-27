@@ -48,8 +48,8 @@ Detector::Detector(const std::string& config_path)
     ///初始化参数
     det_para::SetParameters(config_path);
 
-    if(cfg::slam == SlamType::kRaw || cfg::dataset==DatasetType::kViode){
-        fmt::print("Don't need detector\n");
+    if(cfg::slam == SlamType::kRaw || cfg::is_input_seg){
+        fmt::print("cfg::slam == SlamType::kRaw || cfg::is_input_seg. So don't need detector\n");
         return;
     }
 

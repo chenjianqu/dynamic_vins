@@ -117,7 +117,7 @@ Config::Config(const std::string &file_name)
     fs["image0_topic"] >> kImage0Topic;
     fs["image1_topic"] >> kImage1Topic;
 
-    if(!is_input_seg){
+    if(is_input_seg){
         fs["image0_segmentation_topic"] >> kImage0SegTopic;
         fs["image1_segmentation_topic"] >> kImage1SegTopic;
     }

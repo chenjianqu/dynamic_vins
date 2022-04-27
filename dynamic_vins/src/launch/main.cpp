@@ -110,30 +110,29 @@ void ImageProcess()
                 flow_estimator->SynchronizeForward(img_tensor);
             }
         }
-
         Infos("ImageProcess prepare: {}", tt.TocThenTic());
-
 
         ///实例分割
         tt.Tic();
-        if(!cfg::is_input_seg){
-            if(cfg::slam != SlamType::kRaw){
+        if(cfg::slam != SlamType::kRaw){
+            if(!cfg::is_input_seg){
                 detector->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
                 if(cfg::slam == SlamType::kNaive)
                     img.SetMaskGpuSimple();
                 else if(cfg::slam == SlamType::kDynamic)
                     img.SetMaskGpu();
             }
-        }
-        else{
-            if(cfg::dataset == DatasetType::kViode){
-                if(cfg::slam == SlamType::kNaive)
-                    VIODE::SetViodeMaskSimple(img);
-                else if(cfg::slam == SlamType::kDynamic)
-                    VIODE::SetViodeMask(img);
+            else{
+                if(cfg::dataset == DatasetType::kViode){
+                    if(cfg::slam == SlamType::kNaive)
+                        VIODE::SetViodeMaskSimple(img);
+                    else if(cfg::slam == SlamType::kDynamic)
+                        VIODE::SetViodeMask(img);
+                }
             }
+            Infos("ImageProcess SetMask: {}", tt.TocThenTic());
         }
-        Infos("ImageProcess SetMask: {}", tt.TocThenTic());
+
 
         ///获得光流估计
         if(cfg::use_dense_flow){

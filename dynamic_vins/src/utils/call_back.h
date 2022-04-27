@@ -33,29 +33,37 @@ public:
 
     void Img0Callback(const sensor_msgs::ImageConstPtr &img_msg){
         img0_mutex.lock();
-        if(img0_buf.size() < kQueueSize)
-            img0_buf.push(img_msg);
+        if(img0_buf.size() == kQueueSize){
+            img0_buf.pop_front();
+        }
+        img0_buf.push_back(img_msg);
         img0_mutex.unlock();
     }
 
     void Seg0Callback(const sensor_msgs::ImageConstPtr &img_msg){
         seg0_mutex.lock();
-        if(seg0_buf.size() < kQueueSize)
-            seg0_buf.push(img_msg);
+        if(seg0_buf.size() == kQueueSize){
+            seg0_buf.pop_front();
+        }
+        seg0_buf.push_back(img_msg);
         seg0_mutex.unlock();
     }
 
     void Img1Callback(const sensor_msgs::ImageConstPtr &img_msg){
         img1_mutex.lock();
-        if(img1_buf.size() < kQueueSize)
-            img1_buf.push(img_msg);
+        if(img1_buf.size() == kQueueSize){
+            img1_buf.pop_front();
+        }
+        img1_buf.push_back(img_msg);
         img1_mutex.unlock();
     }
 
     void Seg1Callback(const sensor_msgs::ImageConstPtr &img_msg){
         seg1_mutex.lock();
-        if(seg1_buf.size() < kQueueSize)
-            seg1_buf.push(img_msg);
+        if(seg1_buf.size() == kQueueSize){
+            seg1_buf.pop_front();
+        }
+        seg1_buf.push_back(img_msg);
         seg1_mutex.unlock();
     }
 
@@ -64,10 +72,10 @@ public:
 
 
 private:
-    std::queue<sensor_msgs::ImageConstPtr> img0_buf;
-    std::queue<sensor_msgs::ImageConstPtr> seg0_buf;
-    std::queue<sensor_msgs::ImageConstPtr> img1_buf;
-    std::queue<sensor_msgs::ImageConstPtr> seg1_buf;
+    std::list<sensor_msgs::ImageConstPtr> img0_buf;
+    std::list<sensor_msgs::ImageConstPtr> seg0_buf;
+    std::list<sensor_msgs::ImageConstPtr> img1_buf;
+    std::list<sensor_msgs::ImageConstPtr> seg1_buf;
 
     std::mutex m_buf;
     std::mutex img0_mutex,img1_mutex,seg0_mutex,seg1_mutex;

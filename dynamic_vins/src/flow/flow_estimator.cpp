@@ -23,7 +23,7 @@ using Tensor = torch::Tensor;
 
 FlowEstimator::FlowEstimator(const std::string& config_path){
     flow_para::SetParameters(config_path);
-    if(!cfg::use_preprocess_flow || !cfg::use_dense_flow){
+    if(cfg::use_dense_flow && !cfg::use_preprocess_flow){
         raft_ = std::make_unique<RAFT>();
         data_ = std::make_shared<RaftData>();
     }

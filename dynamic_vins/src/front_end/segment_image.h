@@ -39,7 +39,7 @@ struct SegImage{
     cv::Mat flow;//光流估计结果
 
     unsigned int seq;
-    bool exist_inst;
+    bool exist_inst{false};
 
     void SetMask();
     void SetMaskGpu();

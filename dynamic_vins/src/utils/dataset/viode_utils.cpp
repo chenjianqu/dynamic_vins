@@ -75,15 +75,16 @@ void VIODE::SetViodeMaskSimple(SegImage &img)
  */
 void VIODE::SetViodeMask(SegImage &img)
 {
-    struct MiniInstance{
-        MiniInstance()=default;
-        MiniInstance(int row_start_,int row_end_,int col_start_,int col_end_):
+    struct InstanceSimple{
+        InstanceSimple()=default;
+        InstanceSimple(int row_start_, int row_end_, int col_start_, int col_end_):
         row_start(row_start_),row_end(row_end_),col_start(col_start_),col_end(col_end_){
             mask=cv::Mat(row_end-row_start,col_end-col_start,CV_8UC1,cv::Scalar(0));
         }
         cv::Mat mask;
         size_t num_pixel{0};
         int row_start{},row_end{},col_start{},col_end{};
+        int row_min,row_max,col_min,col_max;
     };
 
     static TicToc tt;
@@ -92,12 +93,12 @@ void VIODE::SetViodeMask(SegImage &img)
     cv::Mat merge_mask = cv::Mat(img_row, img_col, CV_8UC1, cv::Scalar(0));
 
     tt.Tic();
-    std::unordered_map<unsigned int,MiniInstance> insts;
+    std::unordered_map<unsigned int,InstanceSimple> insts;
 
 
     auto calBlock=[&merge_mask,&img](int row_start,int row_end,int col_start,int col_end,
-            std::unordered_map<unsigned int,MiniInstance> *blockInsts){
-        std::unordered_map<unsigned int, MiniInstance>::iterator it;
+            std::unordered_map<unsigned int,InstanceSimple> *blockInsts){
+        std::unordered_map<unsigned int, InstanceSimple>::iterator it;
         for (int i = row_start; i < row_end; ++i) {
             uchar* seg_ptr = img.seg0.data + i * img.seg0.step + col_start*3;
             uchar* merge_ptr=merge_mask.data + i * merge_mask.step + col_start*3;
@@ -105,13 +106,24 @@ void VIODE::SetViodeMask(SegImage &img)
                 if(auto key= PixelToKey(seg_ptr);VIODE::IsDynamic(key)){
                     merge_ptr[0]=255;
                     it=blockInsts->find(key);
+                    int r=i-row_start;
+                    int c=j-col_start;
                     if(it==blockInsts->end()){//创建实例
-                        MiniInstance inst(row_start,row_end,col_start,col_end);
+                        InstanceSimple inst(row_start, row_end, col_start, col_end);
                         blockInsts->insert({key,inst});
-                        (*blockInsts)[key].mask.at<uchar>(i-row_start,j-col_start)=255;
+                        it=blockInsts->find(key);
+                        it->second.mask.at<uchar>(r,c)=255;
+                        it->second.row_min = r;
+                        it->second.row_max = r;
+                        it->second.col_min = c;
+                        it->second.col_max = c;
                     }
                     else{//设置实例的mask
-                        it->second.mask.at<uchar>(i-row_start,j-col_start)=255;
+                        it->second.mask.at<uchar>(r,c)=255;
+                        it->second.row_min = std::min(it->second.row_min,r);
+                        it->second.row_max = std::max(it->second.row_max,r);
+                        it->second.col_min = std::min(it->second.col_min,c);
+                        it->second.col_max = std::max(it->second.col_max,c);
                     }
                 }
                 seg_ptr += 3;
@@ -123,10 +135,10 @@ void VIODE::SetViodeMask(SegImage &img)
 
     bool use_multi_thread = false;
     if(use_multi_thread){
-        auto *insts1=new std::unordered_map<unsigned int,MiniInstance>;
-        auto *insts2=new std::unordered_map<unsigned int,MiniInstance>;
-        auto *insts3=new std::unordered_map<unsigned int,MiniInstance>;
-        auto *insts4=new std::unordered_map<unsigned int,MiniInstance>;
+        auto *insts1=new std::unordered_map<unsigned int,InstanceSimple>;
+        auto *insts2=new std::unordered_map<unsigned int,InstanceSimple>;
+        auto *insts3=new std::unordered_map<unsigned int,InstanceSimple>;
+        auto *insts4=new std::unordered_map<unsigned int,InstanceSimple>;
 
         //4线程并行
         auto half_row=img_row/2, half_col=img_col/2;
@@ -140,7 +152,7 @@ void VIODE::SetViodeMask(SegImage &img)
         block_thread3.join();
         Debugs("SetViodeMask calBlock :{} ms", tt.TocThenTic());
 
-        std::unordered_multimap<unsigned int,MiniInstance> insts_all;//线程结果合并
+        std::unordered_multimap<unsigned int,InstanceSimple> insts_all;//线程结果合并
         insts_all.insert(insts1->begin(),insts1->end());
         insts_all.insert(insts2->begin(),insts2->end());
         insts_all.insert(insts3->begin(),insts3->end());
@@ -148,7 +160,7 @@ void VIODE::SetViodeMask(SegImage &img)
 
         for(auto &[key,m_inst]: insts_all){
             if(insts.count(key)==0){
-                MiniInstance inst(0,img_row,0,img_col);
+                InstanceSimple inst(0, img_row, 0, img_col);
                 insts.insert({key,inst});
             }
             auto block=insts[key].mask(cv::Range(m_inst.row_start, m_inst.row_end),
@@ -173,11 +185,13 @@ void VIODE::SetViodeMask(SegImage &img)
         info.id = key;
         info.track_id=key;
         Debugs("SetViodeMask id:{}", key);
-        Debugs("SetViodeMask mask:{} {} {}", inst.mask.empty(), inst.mask.rows, inst.mask.cols);
         info.mask_gpu.upload(inst.mask);
         ErodeMaskGpu(info.mask_gpu, info.mask_gpu);
         info.mask_gpu.download(info.mask_cv);
+        info.min_pt = cv::Point2f(inst.col_min,inst.row_min);
+        info.max_pt = cv::Point2f(inst.col_max,inst.row_max);
         img.insts_info.push_back(info);
+        Debugs("SetViodeMask max_pt:(c{},r{}), min_pt:(c{},r{})", inst.col_min,inst.row_min, inst.col_max,inst.row_max);
     }
 
     img.exist_inst = !img.insts_info.empty();

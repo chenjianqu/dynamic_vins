@@ -83,7 +83,7 @@ kitti参数
 /home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
 
 viode参数：
-/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/calibration.yaml
+/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/viode.yaml
 
 ```
 
