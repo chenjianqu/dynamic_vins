@@ -24,77 +24,35 @@
 #include <chrono>
 #include <future>
 #include <filesystem>
+#include <iostream>
 
 #include <spdlog/spdlog.h>
 #include <ros/ros.h>
-#include <opencv2/opencv.hpp>
-#include <opencv2/optflow.hpp>
 
-#include "utility/parameters.h"
+#include "utils/def.h"
+#include "utils/parameters.h"
+#include "utils/visualization.h"
+#include "utils/dataset/viode_utils.h"
+#include "utils/call_back.h"
+#include "flow/flow_estimator.h"
+#include "flow/flow_visual.h"
 #include "estimator/estimator.h"
-#include "utility/visualization.h"
 #include "estimator/dynamic.h"
-#include "featureTracker/segment_image.h"
-#include "utility/viode_utils.h"
-#include "featureTracker/feature_tracker.h"
-#include "FlowEstimating/flow_estimator.h"
-#include "FlowEstimating/flow_visual.h"
-#include "utility/call_back.h"
-#include "featureTracker/front_end_parameters.h"
-
+#include "front_end/segment_image.h"
+#include "front_end/front_end.h"
+#include "front_end/front_end_parameters.h"
 
 namespace dynamic_vins{\
 
 namespace fs=std::filesystem;
+using namespace std;
 
 
 Estimator::Ptr estimator;
-InstanceSegmentor::Ptr inst_segmentor;
+Detector::Ptr detector;
+FlowEstimator::Ptr flow_estimator;
 FeatureTracker::Ptr feature_tracker;
 CallBack* callback;
-
-
-//摆烂了，直接读取离线估计的光流
-cv::Mat ReadFlowTensor(double time){
-    static vector<fs::path> names;
-    constexpr char* dataset_path = "/home/chen/temp/flow0/";
-    if(names.empty()){
-        fs::path dir_path(dataset_path);
-        if(!fs::exists(dir_path))
-            return {};
-        fs::directory_iterator dir_iter(dir_path);
-        for(auto &it : dir_iter)
-            names.emplace_back(it.path().filename());
-        std::sort(names.begin(),names.end());
-    }
-    cv::Mat read_flow;
-    string input_time = std::to_string(time);
-    //二分查找
-    int low=0,high=names.size()-1;
-    while(low<=high){
-        int mid=(low+high)/2;
-        string name=names[mid];
-        string name_time = name.substr(0,name.find_last_of('_'));
-        double n_time=std::atof(name_time.c_str());
-        if(input_time==name_time){
-            string n_path = (dataset_path/names[mid]).string();
-            read_flow = cv::optflow::readOpticalFlow(n_path);
-            break;
-        }
-        else if(n_time>time){
-            high = mid-1;
-        }
-        else{
-            low = mid+1;
-        }
-    }
-    return read_flow;
-    /*if(read_flow.empty())
-        return {};
-    torch::Tensor tensor = torch::from_blob(read_flow.data, {read_flow.rows,read_flow.cols ,2}, torch::kFloat32).to(torch::kCUDA);
-    tensor = tensor.permute({2,0,1});
-    return tensor;*/
-}
 
 
 
@@ -108,7 +66,7 @@ void ImageProcess()
 
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(inst_segmentor->GetQueueSize() >= kInferImageListSize){
+        if(detector->GetQueueSize() >= kInferImageListSize){
             std::this_thread::sleep_for(50ms);
             continue;
         }
@@ -118,67 +76,86 @@ void ImageProcess()
         Warns("----------Time : {} ----------", std::to_string(img.time0));
         t_all.Tic();
 
+        if(img.color0.rows!=cfg::kInputHeight || img.color0.cols!=cfg::kInputWidth){
+            cerr<<fmt::format("The input image sizes is:{}x{},but config size is:{}x{}",
+                              img.color0.rows,img.color0.cols,cfg::kInputHeight,cfg::kInputWidth)<<endl;
+            std::terminate();
+        }
+
         ///rgb to gray
+        tt.Tic();
         if(img.gray0.empty()){
             img.SetGrayImageGpu();
         }
         else{
             img.SetColorImageGpu();
         }
+
         ///均衡化
-        static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
-        clahe->apply(img.gray0, img.gray0);
-        if(!img.gray1.empty())
-            clahe->apply(img.gray1, img.gray1);
+        //static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+        //clahe->apply(img.gray0, img.gray0);
+        //if(!img.gray1.empty())
+        //    clahe->apply(img.gray1, img.gray1);
 
         torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
         //torch::Tensor img_clone = img_tensor.clone();
         //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
 
         ///启动光流估计线程
-        if(cfg::slam == SlamType::kDynamic && cfg::use_dense_flow){
-            //feature_tracker->insts_tracker->StartFlowEstimating(img_tensor);
+        if(cfg::slam != SlamType::kRaw && cfg::use_dense_flow ){
+            if(cfg::use_preprocess_flow){
+                flow_estimator->SynchronizeReadFlow(img.seq);
+            }
+            else{
+                flow_estimator->SynchronizeForward(img_tensor);
+            }
         }
 
+        Infos("ImageProcess prepare: {}", tt.TocThenTic());
+
+
         ///实例分割
+        tt.Tic();
         if(!cfg::is_input_seg){
             if(cfg::slam != SlamType::kRaw){
-                tt.Tic();
-                inst_segmentor->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
-                Infos("sync_process forward: {}", tt.TocThenTic());
+                detector->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
                 if(cfg::slam == SlamType::kNaive)
                     img.SetMaskGpuSimple();
                 else if(cfg::slam == SlamType::kDynamic)
                     img.SetMaskGpu();
-                Infos("sync_process SetMask: {}", tt.TocThenTic());
             }
         }
         else{
-            tt.Tic();
             if(cfg::dataset == DatasetType::kViode){
                 if(cfg::slam == SlamType::kNaive)
                     VIODE::SetViodeMaskSimple(img);
                 else if(cfg::slam == SlamType::kDynamic)
                     VIODE::SetViodeMask(img);
             }
-            Infos("sync_process SetMask: {}", tt.TocThenTic());
         }
+        Infos("ImageProcess SetMask: {}", tt.TocThenTic());
 
+        ///获得光流估计
         if(cfg::use_dense_flow){
-            //等待光流估计结果
-            //auto flow_tensor = feature_tracker->insts_tracker->WaitingFlowEstimating();
-            cv::Mat flow_cv = ReadFlowTensor(img.time0);
+            cv::Mat flow_cv;
+            if(cfg::use_preprocess_flow){
+                flow_cv = flow_estimator->WaitingReadFlowImage();
+            }
+            else{
+                auto flow_tensor = flow_estimator->WaitingForwardResult();
+                flow_tensor = flow_tensor.to(torch::kCPU);
+                img.flow = cv::Mat(flow_tensor.sizes()[1],flow_tensor.sizes()[2],CV_8UC2,flow_tensor.data_ptr()).clone();
+            }
+
             if(!flow_cv.empty()){
                 img.flow = flow_cv;
             }
             else{
-                Warns("Can not find :{}", std::to_string(img.time0));
                 img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
             }
-            Debugs("ReadFlowTensor:{}", tt.TocThenTic());
         }
 
-        inst_segmentor->PushBack(img);
+        detector->PushBack(img);
         /*cv::Mat show;
         cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
         cv::scaleAdd(img.color0,0.5,show,show);
@@ -206,8 +183,9 @@ void FeatureTrack()
     int cnt;
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(auto img = inst_segmentor->WaitForResult();img){
+        if(auto img = detector->WaitForResult();img){
             tt.Tic();
+            Warnt("----------Time : {} ----------", std::to_string(img->time0));
             if(cfg::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
                 FeatureMap features = feature_tracker->TrackSemanticImage(*img);
@@ -305,9 +283,10 @@ int Run(int argc, char **argv){
     try{
         cfg cfg(cfg_file);
         estimator.reset(new Estimator(cfg_file));
-        inst_segmentor.reset(new InstanceSegmentor(cfg_file));
+        detector.reset(new Detector(cfg_file));
         feature_tracker = std::make_unique<FeatureTracker>(cfg_file);
         callback = new CallBack();
+        flow_estimator = std::make_unique<FlowEstimator>(cfg_file);
     }
     catch(std::runtime_error &e){
         cerr<<e.what()<<endl;
@@ -359,7 +338,7 @@ int Run(int argc, char **argv){
 int main(int argc, char **argv)
 {
     if(argc != 2){
-        cerr<<"please input: rosrun vins vins_node [cfg file]"<<endl;
+        std::cerr<<"please input: rosrun vins vins_node [cfg file]"<< std::endl;
         return 1;
     }
 

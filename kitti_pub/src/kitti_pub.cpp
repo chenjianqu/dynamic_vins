@@ -145,9 +145,12 @@ int main(int argc, char** argv)
         cv::Mat left_img = cv::imread(left_names[index],-1);
         cv::Mat right_img = cv::imread(right_names[index],-1);
 
+        std::filesystem::path name(left_names[index]);
+        std::string name_stem =  name.stem().string();//获得文件名(不含后缀)
+
         std_msgs::Header header;
         header.stamp=ros::Time(time);
-        header.seq=index;
+        header.seq= std::stoi(name_stem);
 
         sensor_msgs::ImagePtr msg_left = cv_bridge::CvImage(header, "bgr8", left_img).toImageMsg();
         sensor_msgs::ImagePtr msg_right = cv_bridge::CvImage(header, "bgr8", right_img).toImageMsg();

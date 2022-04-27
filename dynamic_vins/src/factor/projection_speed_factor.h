@@ -11,12 +11,10 @@
 #define DYNAMIC_VINS_PROJECTION_SPEED_FACTOR_H
 
 #include <ceres/ceres.h>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include <sophus/so3.hpp>
 
-#include "utility/parameters.h"
-#include "utility/utils.h"
-#include "estimator/dynamic.h"
+#include "utils/def.h"
 
 namespace dynamic_vins{\
 

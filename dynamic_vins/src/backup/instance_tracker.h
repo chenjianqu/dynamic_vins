@@ -27,7 +27,7 @@
 #include "camodocal/camera_models/PinholeCamera.h"
 
 #include "SegmentationImage.h"
-#include "utility/parameters.h"
+#include "utils/parameters.h"
 #include "../estimator/dynamic.h"
 
 #include "../InstanceTracking/deep_sort.h"

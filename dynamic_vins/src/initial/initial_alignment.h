@@ -18,7 +18,7 @@
 #include <eigen3/Eigen/Dense>
 
 #include "factor/imu_factor.h"
-#include "utility/utility.h"
+#include "utils/utility.h"
 #include "estimator/feature_manager.h"
 
 namespace dynamic_vins{\

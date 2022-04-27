@@ -23,11 +23,11 @@
 #include "camodocal/camera_models/CameraFactory.h"
 #include "camodocal/camera_models/CataCamera.h"
 #include "camodocal/camera_models/PinholeCamera.h"
-#include "utility/parameters.h"
+#include "utils/parameters.h"
 #include "../estimator/dynamic.h"
 #include "../featureTracker/instance_tracker.h"
 #include "../InstanceSegmentation/infer.h"
-#include "utility/utils.h"
+#include "utils/def.h"
 
 using namespace std;
 using namespace camodocal;

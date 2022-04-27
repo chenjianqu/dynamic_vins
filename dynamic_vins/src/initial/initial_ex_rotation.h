@@ -11,15 +11,7 @@
 
 #pragma once 
 
-#include <vector>
-#include "utility/parameters.h"
-using namespace std;
-
-#include <opencv2/opencv.hpp>
-
-#include <eigen3/Eigen/Dense>
-using namespace Eigen;
-#include <ros/console.h>
+#include "utils/def.h"
 
 namespace dynamic_vins{\
 
@@ -29,9 +21,9 @@ class InitialEXRotation
 {
 public:
 	InitialEXRotation();
-    bool CalibrationExRotation(vector<pair<Vector3d, Vector3d>> corres, Quaterniond delta_q_imu, Matrix3d &calib_ric_result);
+    bool CalibrationExRotation(vector<pair<Vec3d, Vec3d>> corres, Eigen::Quaterniond delta_q_imu, Mat3d &calib_ric_result);
 private:
-	Matrix3d solveRelativeR(const vector<pair<Vector3d, Vector3d>> &corres);
+	Mat3d solveRelativeR(const vector<pair<Vec3d, Vec3d>> &corres);
 
     double testTriangulation(const vector<cv::Point2f> &l,
                              const vector<cv::Point2f> &r,
@@ -41,10 +33,10 @@ private:
                     cv::Mat_<double> &t1, cv::Mat_<double> &t2);
     int frame_count;
 
-    vector< Matrix3d > Rc;
-    vector< Matrix3d > Rimu;
-    vector< Matrix3d > Rc_g;
-    Matrix3d ric;
+    vector< Mat3d > Rc;
+    vector< Mat3d > Rimu;
+    vector< Mat3d > Rc_g;
+    Mat3d ric;
 };
 
 

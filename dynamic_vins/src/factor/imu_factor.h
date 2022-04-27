@@ -8,15 +8,16 @@
  *******************************************************/
 
 #pragma once
-#include <ros/assert.h>
-#include <iostream>
-#include <eigen3/Eigen/Dense>
 
-#include "utility/utility.h"
-#include "utility/parameters.h"
+#include <iostream>
+
+#include <ros/assert.h>
+#include <eigen3/Eigen/Dense>
+#include <ceres/ceres.h>
+
+#include "utils/utility.h"
 #include "integration_base.h"
 
-#include <ceres/ceres.h>
 
 namespace dynamic_vins{\
 

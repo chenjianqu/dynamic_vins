@@ -9,8 +9,8 @@
 #include <iostream>
 #include <memory>
 
-#include "TensorRT/tensorrt_utils.h"
-#include "InstanceSegment/segment_parameter.h"
+#include "utils/tensorrt/tensorrt_utils.h"
+#include "detector/segment_parameter.h"
 
 using namespace std;
 namespace dv = dynamic_vins;

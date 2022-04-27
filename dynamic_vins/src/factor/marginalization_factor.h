@@ -9,15 +9,16 @@
 
 #pragma once
 
-#include <ros/ros.h>
-#include <ros/console.h>
+#include <unordered_map>
 #include <cstdlib>
 #include <pthread.h>
-#include <ceres/ceres.h>
-#include <unordered_map>
 
-#include "utility/utility.h"
-#include "utility/utils.h"
+#include <ceres/ceres.h>
+#include <ros/ros.h>
+#include <ros/console.h>
+
+#include "utils/utility.h"
+#include "utils/def.h"
 
 namespace dynamic_vins{\
 

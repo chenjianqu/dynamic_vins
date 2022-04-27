@@ -6,8 +6,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "utility/kitti_utils.h"
-#include "utility/parameters.h"
+#include "utils/dataset/kitti_utils.h"
+#include "utils/def.h"
 
 
 namespace dynamic_vins{\

@@ -11,7 +11,7 @@
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
 
-#include "utility/parameters.h"
+#include "utils/parameters.h"
 
 struct Track {
     int id{};

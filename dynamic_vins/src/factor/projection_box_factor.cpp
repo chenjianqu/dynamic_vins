@@ -9,6 +9,8 @@
 
 #include "projection_box_factor.h"
 
+#include "utils/utility.h"
+
 namespace dynamic_vins{\
 
 double ProjBoxFactor::sum_t;

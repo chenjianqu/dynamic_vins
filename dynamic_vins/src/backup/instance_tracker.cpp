@@ -4,7 +4,7 @@
 
 #include "instance_tracker.h"
 #include "SegmentationImage.h"
-#include "utility/utils.h"
+#include "utils/def.h"
 
 
 using namespace torch::indexing;

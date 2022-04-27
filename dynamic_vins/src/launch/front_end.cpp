@@ -18,9 +18,9 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 
-#include "utility/parameters.h"
+#include "utils/parameters.h"
 #include "estimator/dynamic.h"
-#include "featureTracker/feature_tracker.h"
+#include "front_end/front_end.h"
 
 using namespace std::literals;
 

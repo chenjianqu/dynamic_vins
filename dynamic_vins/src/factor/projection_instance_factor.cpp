@@ -9,6 +9,7 @@
 
 #include "projection_instance_factor.h"
 
+#include "utils/utility.h"
 #include "estimator/dynamic.h"
 
 namespace dynamic_vins{\

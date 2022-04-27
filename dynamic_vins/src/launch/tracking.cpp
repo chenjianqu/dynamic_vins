@@ -13,7 +13,7 @@
 
 #include "InstanceSegment/instance_segmentor.h"
 #include "InstanceTracking/deep_sort.h"
-#include "utility/utils.h"
+#include "utils/def.h"
 
 
 Infer::Ptr infer;

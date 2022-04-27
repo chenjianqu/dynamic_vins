@@ -11,6 +11,8 @@
 
 #include "projection_two_frame_one_cam_factor.h"
 
+#include "utils/utility.h"
+
 
 namespace dynamic_vins{\
 

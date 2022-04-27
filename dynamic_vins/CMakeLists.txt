@@ -125,30 +125,28 @@ target_link_libraries(build_model  ${TensorRT_LIBS} parameter)]]
 
 include_directories(src)
 
-aux_source_directory(src/utility Basic_Sources)
-aux_source_directory(src/InstanceSegment InstanceSegmentation_SOURCES)
-aux_source_directory(src/InstanceTracking InstanceTracking_SOURCES)
-#aux_source_directory(src/FlowEstimating OpticalFlowEstimating_SOURCES)
-aux_source_directory(src/TensorRT TensorRT_SOURCES)
-aux_source_directory(src/featureTracker featureTracker_SOURCES)
-aux_source_directory(src/initial initial_SOURCES)
-aux_source_directory(src/utility utility_SOURCES)
-aux_source_directory(src/factor factor_SOURCES)
-aux_source_directory(src/estimator estimator_SOURCES)
+aux_source_directory(src/utils utils_sources)
+aux_source_directory(src/utils/dataset dataset_sources)
+aux_source_directory(src/utils/tensorrt tensorrt_sources)
+aux_source_directory(src/detector detector_sources)
+aux_source_directory(src/mot mot_sources)
+aux_source_directory(src/flow flow_sources)
+aux_source_directory(src/front_end front_end_sources)
+aux_source_directory(src/initial initial_sources)
+aux_source_directory(src/factor factor_sources)
+aux_source_directory(src/estimator estimator_sources)
 
-message("estimator_SOURCES: ${estimator_SOURCES} ")
+message("estimator: ${estimator} ")
 
-add_executable(dynamic_vins src/launch/main.cpp ${Basic_Sources} ${InstanceSegmentation_SOURCES} ${InstanceTracking_SOURCES}
-        ${featureTracker_SOURCES} ${initial_SOURCES} ${utility_SOURCES} ${factor_SOURCES} ${estimator_SOURCES}
-        # ${OpticalFlowEstimating_SOURCES}
-        ${TensorRT_SOURCES})
+add_executable(dynamic_vins src/launch/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources} ${detector_sources}
+        ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
-add_executable(build_raft src/launch/build_raft.cpp ${TensorRT_SOURCES} src/FlowEstimating/flow_parameter.cpp)
+add_executable(build_raft src/launch/build_raft.cpp ${utils_sources} ${tensorrt_sources} src/flow/flow_parameter.cpp)
 target_link_libraries(build_raft  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
         TorchVision::TorchVision ${TensorRT_LIBS})
 
-add_executable(build_solo src/launch/build_solo.cpp ${TensorRT_SOURCES} src/InstanceSegment/segment_parameter.cpp)
+add_executable(build_solo src/launch/build_solo.cpp ${utils_sources} ${tensorrt_sources} src/detector/detector_parameter.cpp)
 target_link_libraries(build_solo  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
         TorchVision::TorchVision ${TensorRT_LIBS})

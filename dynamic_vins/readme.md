@@ -57,9 +57,9 @@ roscore
 
 * launch rviz
 ```shell
-rosrun rviz rviz -d (dynamic_vins_dir)/config/rviz.rviz
+rosrun rviz rviz -d (dynamic_vins_dir)/config/rviz/rviz.rviz
 # such as:
-rosrun rviz rviz -d /home/chen/ws/dynamic_ws/src/dynamic_vins/config/rviz.rviz
+rosrun rviz rviz -d /home/chen/ws/dynamic_ws/src/dynamic_vins/config/rviz/rviz.rviz
 ```
 
 * launch  
@@ -102,6 +102,8 @@ rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
 
 直接读取数据集
 ```shell
+
+/home/chen/ws/dynamic_ws/src/kitti_pub/cmake-build-debug/devel/lib/kitti_pub/kitti_pub  /home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0018  /home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0018
 
 ```
 

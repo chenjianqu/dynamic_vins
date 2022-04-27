@@ -10,19 +10,20 @@
  *******************************************************/
 
 #include "initial_ex_rotation.h"
+#include "utils/parameters.h"
 
 namespace dynamic_vins{\
 
 
 InitialEXRotation::InitialEXRotation(){
     frame_count = 0;
-    Rc.push_back(Matrix3d::Identity());
-    Rc_g.push_back(Matrix3d::Identity());
-    Rimu.push_back(Matrix3d::Identity());
-    ric = Matrix3d::Identity();
+    Rc.push_back(Mat3d::Identity());
+    Rc_g.push_back(Mat3d::Identity());
+    Rimu.push_back(Mat3d::Identity());
+    ric = Mat3d::Identity();
 }
 
-bool InitialEXRotation::CalibrationExRotation(vector<pair<Vector3d, Vector3d>> corres, Quaterniond delta_q_imu, Matrix3d &calib_ric_result)
+bool InitialEXRotation::CalibrationExRotation(vector<pair<Vec3d, Vec3d>> corres, Quaterniond delta_q_imu, Mat3d &calib_ric_result)
 {
     frame_count++;
     Rc.push_back(solveRelativeR(corres));
@@ -38,16 +39,15 @@ bool InitialEXRotation::CalibrationExRotation(vector<pair<Vector3d, Vector3d>> c
         Quaterniond r2(Rc_g[i]);
 
         double angular_distance = 180 / M_PI * r1.angularDistance(r2);
-        ROS_DEBUG(
-            "%d %f", i, angular_distance);
+        ROS_DEBUG("%d %f", i, angular_distance);
 
         double huber = angular_distance > 5.0 ? 5.0 / angular_distance : 1.0;
         ++sum_ok;
-        Matrix4d L, R;
+        Mat4d L, R;
 
         double w = Quaterniond(Rc[i]).w();
-        Vector3d q = Quaterniond(Rc[i]).vec();
-        L.block<3, 3>(0, 0) = w * Matrix3d::Identity() + Utility::skewSymmetric(q);
+        Vec3d q = Quaterniond(Rc[i]).vec();
+        L.block<3, 3>(0, 0) = w * Mat3d::Identity() + Utility::skewSymmetric(q);
         L.block<3, 1>(0, 3) = q;
         L.block<1, 3>(3, 0) = -q.transpose();
         L(3, 3) = w;
@@ -55,7 +55,7 @@ bool InitialEXRotation::CalibrationExRotation(vector<pair<Vector3d, Vector3d>> c
         Quaterniond R_ij(Rimu[i]);
         w = R_ij.w();
         q = R_ij.vec();
-        R.block<3, 3>(0, 0) = w * Matrix3d::Identity() - Utility::skewSymmetric(q);
+        R.block<3, 3>(0, 0) = w * Mat3d::Identity() - Utility::skewSymmetric(q);
         R.block<3, 1>(0, 3) = q;
         R.block<1, 3>(3, 0) = -q.transpose();
         R(3, 3) = w;
@@ -63,13 +63,13 @@ bool InitialEXRotation::CalibrationExRotation(vector<pair<Vector3d, Vector3d>> c
         A.block<4, 4>((i - 1) * 4, 0) = huber * (L - R);
     }
 
-    JacobiSVD<MatrixXd> svd(A, ComputeFullU | ComputeFullV);
-    Matrix<double, 4, 1> x = svd.matrixV().col(3);
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Matrix<double, 4, 1> x = svd.matrixV().col(3);
     Quaterniond estimated_R(x);
     ric = estimated_R.toRotationMatrix().inverse();
     //cout << svd.singularValues().transpose() << endl;
     //cout << ric << endl;
-    Vector3d ric_cov;
+    Vec3d ric_cov;
     ric_cov = svd.singularValues().tail<3>();
     if (frame_count >= kWinSize && ric_cov(1) > 0.25)
     {
@@ -80,7 +80,7 @@ bool InitialEXRotation::CalibrationExRotation(vector<pair<Vector3d, Vector3d>> c
         return false;
 }
 
-Matrix3d InitialEXRotation::solveRelativeR(const vector<pair<Vector3d, Vector3d>> &corres)
+Mat3d InitialEXRotation::solveRelativeR(const vector<pair<Vec3d, Vec3d>> &corres)
 {
     if (corres.size() >= 9)
     {
@@ -99,17 +99,17 @@ Matrix3d InitialEXRotation::solveRelativeR(const vector<pair<Vector3d, Vector3d>
             E = -E;
             decomposeE(E, R1, R2, t1, t2);
         }
-        double ratio1 = max(testTriangulation(ll, rr, R1, t1), testTriangulation(ll, rr, R1, t2));
-        double ratio2 = max(testTriangulation(ll, rr, R2, t1), testTriangulation(ll, rr, R2, t2));
+        double ratio1 = std::max(testTriangulation(ll, rr, R1, t1), testTriangulation(ll, rr, R1, t2));
+        double ratio2 = std::max(testTriangulation(ll, rr, R2, t1), testTriangulation(ll, rr, R2, t2));
         cv::Mat_<double> ans_R_cv = ratio1 > ratio2 ? R1 : R2;
 
-        Matrix3d ans_R_eigen;
+        Mat3d ans_R_eigen;
         for (int i = 0; i < 3; i++)
             for (int j = 0; j < 3; j++)
                 ans_R_eigen(j, i) = ans_R_cv(i, j);
         return ans_R_eigen;
     }
-    return Matrix3d::Identity();
+    return Mat3d::Identity();
 }
 
 double InitialEXRotation::testTriangulation(const vector<cv::Point2f> &l,

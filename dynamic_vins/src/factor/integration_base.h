@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include "utility/utility.h"
 #include <ceres/ceres.h>
+#include "utils/utility.h"
 #include "estimator/vio_parameters.h"
 
 namespace dynamic_vins{\

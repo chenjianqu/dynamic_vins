@@ -1,32 +1,73 @@
 %YAML:1.0
+####################### 通用参数 ########################
 
-#common parameters
-imu: 0
-num_of_cam: 2
+imu: 0 #是否使用IMU
+num_of_cam: 2 #相机的数量
 
-dataset_type: "kitti"
+only_frontend: 0  #是否仅仅启动前端
 
+dataset_type: "kitti" #数据集类型,支持kitti,viode
+slam_type: "raw" #SLAM模式,可选:raw,naive,dynamic
+
+#是否估计相机和IMU之间的外参数,
+# 0表示已有固定的外参,不估计外参;
+# 1表示估计外参,且有初始外参
+# 2表示估计外参,但无初始外参
+estimate_extrinsic: 0
+
+visual_inst_duration: 120  #物体可视化的持续时间
+
+basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
+
+####################### 相机参数 ########################
+
+#kitti tracking
+image_width: 1242
+image_height: 375
+kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0007.txt"
+
+####################### 光流的参数 ########################
+
+use_dense_flow: 0 #是否使用稠密光流
+use_background_flow: 1 #背景特征点是否使用稠密光流
+use_preprocess_flow: 1 #是否使用预计算的光流
+#flow_preprocess_path: "/home/chen/datasets/kitti/tracking/flow_02/training/image_02/0007/"
+flow_preprocess_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0007/"
+
+fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
+fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
+cnet_onnx_path: "weights/raft/kitti_cnet.onnx"
+cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
+update_onnx_path: "weights/raft/kitti_update.onnx"
+update_tensorrt_path: "weights/raft/kitti_update.bin"
+
+####################### 订阅和发布的ROS话题名 ########################
+##### 订阅的话题
 #kitti
 image0_topic: "/kitti_pub/left"
 image1_topic: "/kitti_pub/right"
 
-image_width: 1226
-image_height: 370
+##### 发布的话题
+vins_vio_topic: "/dynamic_vins/odometry"
+vins_keyframe_pose_topic: "/dynamic_vins/keyframe_pose"
+vins_extrinsic_topic: "/dynamic_vins/extrinsic"
+vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
+vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
 
-kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0003.txt"
 
+####################### 前端的参数 ########################
 
-# Extrinsic parameter between IMU and Camera.
-estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
-                        # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
-
-#feature traker paprameters
 max_cnt: 250            # max feature number in feature tracking
 min_dist: 25            # min distance between two features
 freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
 F_threshold: 1.0        # ransac threshold (pixel)
 show_track: 1           # publish tracking image as topic
 flow_back: 1            # perform forward and backward optical flow to improve feature tracking accuracy
+
+min_dynamic_dist: 10 #检测动态特征点时每个点之间的最小距离
+max_dynamic_cnt: 50 #前端中每个动态物体上最多同时跟踪的特征数量
+
+####################### VIO的参数 ########################
 
 #optimization parameters
 max_solver_time: 0.08  # max solver itration time (s), to guarantee real time
@@ -48,15 +89,10 @@ INIT_DEPTH: 5.0
 BIAS_ACC_THRESHOLD: 0.1
 BIAS_GYR_THRESHOLD: 0.1
 
-vins_vio_topic: "/dynamic_vins/odometry"
-vins_keyframe_pose_topic: "/dynamic_vins/keyframe_pose"
-vins_extrinsic_topic: "/dynamic_vins/extrinsic"
-vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
-vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
 
-output_path: "/home/chen/ws/dynamic_ws/output/"
 
-#SOLO
+####################### 实例分割SOLO的参数 ########################
+
 SOLO_NMS_PRE: 500
 SOLO_MAX_PER_IMG: 100
 SOLO_NMS_KERNEL: "gaussian"
@@ -66,18 +102,18 @@ SOLO_SCORE_THR: 0.1
 SOLO_MASK_THR: 0.5
 SOLO_UPDATE_THR: 0.2
 
+solo_onnx_path: "weights/solo/SOLOv2_light_R34_1152x384_cuda102.onnx"
+solo_serialize_path: "weights/solo/tensorrt_model_1152x384.bin"
+
+warn_up_image: "/home/chen/ws/vio_ws/src/dynamic_vins/config/kitti.png"
+
+####################### MOT的参数 ########################
 tracking_max_age: 30
 tracking_n_init: 3
 
-min_dynamic_dist: 10
-max_dynamic_cnt: 50
-
-
-basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
-
 extractor_model_path: "weights/deepsort/ckpt.bin"
 
-#log
+####################### log的参数 ########################
 estimator_log_path: "output/estimator_log.txt"
 estimator_log_level: "debug"
 estimator_log_flush: "debug"
@@ -88,24 +124,9 @@ segmentor_log_path: "output/segmentor_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
 
-fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
-fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
-cnet_onnx_path: "weights/raft/kitti_cnet.onnx"
-cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
-update_onnx_path: "weights/raft/kitti_update.onnx"
-update_tensorrt_path: "weights/raft/kitti_update.bin"
 
-solo_onnx_path: "weights/solo/SOLOv2_light_R34_1152x384_cuda102.onnx"
-solo_serialize_path: "weights/solo/tensorrt_model_1152x384.bin"
 
-warn_up_image: "/home/chen/ws/vio_ws/src/dynamic_vins/config/kitti.png"
 
-use_dense_flow: 0 #是否使用稠密光流
 
-#物体可视化的持续时间
-visual_inst_duration: 120
-#是否仅仅启动前端
-only_frontend: 1
 
-#0表示raw,1表示naive,2表示dynamic
-slam_type: 2
+

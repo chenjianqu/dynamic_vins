@@ -16,8 +16,8 @@
 #include "KalmanTracker.h"
 #include "TrackerManager.h"
 #include "Hungarian.h"
-#include "utility/parameters.h"
-#include "utility/utils.h"
+#include "utils/parameters.h"
+#include "utils/def.h"
 
 
 

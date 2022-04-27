@@ -10,11 +10,6 @@
 #ifndef DYNAMIC_VINS_DYNAMIC_H
 #define DYNAMIC_VINS_DYNAMIC_H
 
-#include <queue>
-#include <vector>
-#include <unordered_map>
-#include <map>
-#include <chrono>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 #include <opencv2/core/eigen.hpp>
@@ -24,7 +19,8 @@
 #include <sophus/so3.hpp>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
-#include "utility/parameters.h"
+
+#include "utils/def.h"
 
 namespace dynamic_vins{\
 

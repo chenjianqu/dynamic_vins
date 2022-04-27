@@ -28,8 +28,8 @@
 #include <ros/console.h>
 #include <ros/assert.h>
 
-#include "utility/parameters.h"
-#include "utility/utils.h"
+#include "utils/def.h"
+#include "utils/parameters.h"
 
 
 namespace dynamic_vins{\

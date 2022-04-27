@@ -11,8 +11,8 @@
 #include <algorithm>
 
 #include "estimator.h"
-#include "utility/visualization.h"
-#include "utility/utils.h"
+#include "utils/visualization.h"
+#include "utils/def.h"
 #include "vio_parameters.h"
 
 namespace dynamic_vins{\

@@ -14,9 +14,9 @@
 #include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <Eigen/Dense>
-#include "utility/utility.h"
-#include "utility/utils.h"
-#include "utility/parameters.h"
+#include "utils/utility.h"
+#include "utils/def.h"
+#include "utils/parameters.h"
 
 namespace dynamic_vins{\
 

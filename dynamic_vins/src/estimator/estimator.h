@@ -20,18 +20,17 @@
  
 #include <thread>
 #include <mutex>
+
 #include <std_msgs/Header.h>
 #include <std_msgs/Float32.h>
 #include <ceres/ceres.h>
-#include <unordered_map>
-#include <queue>
 #include <opencv2/core/eigen.hpp>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-#include "utility/parameters.h"
+#include "utils/parameters.h"
 #include "feature_manager.h"
-#include "utility/utility.h"
+#include "utils/utility.h"
 #include "initial/solve_5pts.h"
 #include "initial/initial_sfm.h"
 #include "initial/initial_alignment.h"
@@ -42,15 +41,17 @@
 #include "factor/projection_two_frame_one_cam_factor.h"
 #include "factor/projection_two_frame_two_cam_factor.h"
 #include "factor/projection_one_frame_two_cam_factor.h"
-#include "featureTracker/feature_tracker.h"
+#include "front_end/front_end.h"
 #include "dynamic.h"
 #include "instance_manager.h"
-#include "utility/utils.h"
+#include "utils/def.h"
 #include "landmark.h"
 #include "vio_parameters.h"
 
 namespace dynamic_vins{\
 
+using std::set;
+using std::queue;
 
 class Estimator
 {

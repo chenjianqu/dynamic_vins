@@ -8,7 +8,7 @@
  *******************************************************/
 
 #include "../estimator/estimator.h"
-#include "../utility/visualization.h"
+#include "utils/visualization.h"
 
 Estimator::Estimator(): f_manager{Rs}
 {

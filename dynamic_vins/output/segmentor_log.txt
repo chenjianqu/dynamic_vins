@@ -1,1 +1,11 @@
-[2022-04-26 12:15:37.466] [segmentor] [debug] Start sync
+[2022-04-27 16:37:47.843] [segmentor] [info] Read model param
+[2022-04-27 16:37:47.855] [segmentor] [info] createInferRuntime
+[2022-04-27 16:37:48.301] [segmentor] [info] deserializeCudaEngine
+[2022-04-27 16:37:51.962] [segmentor] [info] createExecutionContext
+[2022-04-27 16:37:51.978] [segmentor] [info] createInferRuntime
+[2022-04-27 16:37:51.978] [segmentor] [info] deserializeCudaEngine
+[2022-04-27 16:37:51.987] [segmentor] [info] createExecutionContext
+[2022-04-27 16:37:52.001] [segmentor] [info] createInferRuntime
+[2022-04-27 16:37:52.001] [segmentor] [info] deserializeCudaEngine
+[2022-04-27 16:37:52.020] [segmentor] [info] createExecutionContext
+[2022-04-27 16:37:52.034] [segmentor] [debug] Start sync

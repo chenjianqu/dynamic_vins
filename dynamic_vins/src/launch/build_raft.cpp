@@ -15,9 +15,9 @@
 #include <NvInfer.h>
 #include <NvOnnxParser.h>
 
-#include "TensorRT/tensorrt_utils.h"
-#include "utility/utils.h"
-#include "FlowEstimating/flow_parameter.h"
+#include "utils/tensorrt/tensorrt_utils.h"
+#include "utils/def.h"
+#include "flow/flow_parameter.h"
 
 using namespace std;
 namespace dv = dynamic_vins;

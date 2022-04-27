@@ -9,6 +9,9 @@
 
 #include "projection_speed_factor.h"
 
+#include "estimator/dynamic.h"
+
+
 namespace dynamic_vins{\
 
 

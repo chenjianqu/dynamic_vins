@@ -23,7 +23,7 @@
 #include "factor/projection_speed_factor.h"
 #include "factor/projection_box_factor.h"
 #include "factor/projection_factor_simple.h"
-#include "utility/parameters.h"
+#include "utils/parameters.h"
 #include "estimator/dynamic.h"
 #include "instance.h"
 #include "landmark.h"
