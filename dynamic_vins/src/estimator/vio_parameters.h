@@ -1,6 +1,11 @@
-//
-// Created by chen on 2022/4/26.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #ifndef DYNAMIC_VINS_VIO_PARAMETERS_H
 #define DYNAMIC_VINS_VIO_PARAMETERS_H
@@ -10,6 +15,13 @@
 #include <eigen3/Eigen/Dense>
 
 namespace dynamic_vins{\
+
+
+constexpr double kDynamicDepthMin=0.1;//动态特征点深度的最小值
+constexpr double kDynamicDepthMax=100;//动态特征点深度的最大值
+
+constexpr int kInstanceInitMinNum=5;//为了初始化实例,在某一帧的最少三角化特征数量
+
 
 enum SizeParameterization{
     kSizePose = 7,

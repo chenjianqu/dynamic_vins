@@ -50,6 +50,15 @@ public:
     double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo);
     void GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
 
+    double AverageDepth(){
+        if(triangle_num>0){
+            return depth_sum/double(triangle_num);
+        }
+        else{
+            return 0;
+        }
+    }
+
     vector<Eigen::Vector3d> point3d_curr;
     std::list<LandmarkPoint> landmarks;
 
@@ -72,6 +81,9 @@ public:
     double para_inv_depth[kInstFeatSize][kSizeFeature]{};//逆深度参数数组
 
     Estimator* e{nullptr};
+
+    int triangle_num{0};//已经三角化的路标点的数量
+    double depth_sum{0};//所有路标点的平均深度
 };
 
 }

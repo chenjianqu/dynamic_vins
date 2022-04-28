@@ -17,8 +17,6 @@
 #include <pcl/point_cloud.h>
 #include <pcl/common/common.h>
 #include <sophus/so3.hpp>
-#include <visualization_msgs/MarkerArray.h>
-#include <visualization_msgs/Marker.h>
 
 #include "utils/def.h"
 
@@ -48,17 +46,6 @@ struct FeatureFrame{
 inline Mat3d Hat(Vec3d v){
     return Sophus::SO3d::hat(v).matrix();
 }
-
-
-template<typename T>
-void ReduceVector(std::vector<T> &v, std::vector<uchar> status){
-    int j = 0;
-    for (int i = 0; i < (int)v.size(); i++)
-        if (status[i])
-            v[j++] = v[i];
-    v.resize(j);
-}
-
 
 
 inline bool IsInBox(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,

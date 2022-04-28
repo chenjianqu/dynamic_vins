@@ -40,6 +40,17 @@ inline bool InBorder(const cv::Point2f &pt, int row, int col)
 }
 
 
+template<typename T>
+void ReduceVector(std::vector<T> &v, std::vector<uchar> status){
+    int j = 0;
+    for (int i = 0; i < (int)v.size(); i++){
+        if (status[i])
+            v[j++] = v[i];
+    }
+    v.resize(j);
+}
+
+
 /**
  * 将gpu mat转换为point2f
  * @param d_mat

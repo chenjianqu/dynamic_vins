@@ -73,7 +73,7 @@ public:
     void InitialInstance(){
         InstExec([](int key,Instance& inst){
             inst.InitialPose();
-        });
+        },true);
     }
 
     void SetInstanceCurrentPoint3d(){
@@ -88,6 +88,19 @@ public:
         });
     }
 
+    void SetVelMap(){
+        std::unique_lock<std::mutex> lk(vel_mutex_);
+        vel_map_.clear();
+        Debugv("SetVelMap 物体的速度信息:");
+        InstExec([this](int key,Instance& inst){
+            Debugv("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
+            if(inst.vel.v.norm() > 0)
+                vel_map_.insert({inst.id, inst.vel});;
+        });
+    }
+
+    string PrintInstanceInfo();
+
     std::unordered_map<unsigned int,Vel3d> vel_map(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
         return vel_map_;
@@ -98,22 +111,22 @@ public:
 
     std::unordered_map<unsigned int,Instance> instances;
 private:
-    void InstExec(std::function<void(unsigned int,Instance&)> function){
+    void InstExec(std::function<void(unsigned int,Instance&)> function,bool exec_all=false){
         if(tracking_number_ < 1)
             return;
-        for(auto &[key,inst] : instances){
-            if(!inst.is_initial || !inst.is_tracking) continue;
-            function(key,inst);
+        if(exec_all){
+            for(auto &[key,inst] : instances){
+                function(key,inst);
+            }
+        }
+        else{
+            for(auto &[key,inst] : instances){
+                if(!inst.is_initial || !inst.is_tracking) continue;
+                function(key,inst);
+            }
         }
     }
 
-    void SetVelMap(){
-        std::unique_lock<std::mutex> lk(vel_mutex_);
-        vel_map_.clear();
-        InstExec([this](int key,Instance& inst){
-            if(inst.vel.v.norm() > 0)vel_map_.insert({inst.id, inst.vel});;
-        });
-    }
 
     std::mutex vel_mutex_;
     std::unordered_map<unsigned int,Vel3d> vel_map_;

@@ -1,12 +1,4 @@
 /*******************************************************
- * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
- *
- * This file is part of VINS.
- *
- * Licensed under the GNU General Public License v3.0;
- * you may not use this file except in compliance with the License.
- *******************************************************/
-/*******************************************************
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
@@ -14,6 +6,15 @@
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
  *******************************************************/
+/*******************************************************
+ * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
+ *
+ * This file is part of VINS.
+ *
+ * Licensed under the GNU General Public License v3.0;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+
 
 
 #include "feature_manager.h"
@@ -74,9 +75,6 @@ int FeatureManager::GetFeatureCount()
  */
 bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureMap &image, double td)
 {
-    Debugv("addFeatureCheckParallax | input feature num: {}", (int) image.size());
-    Debugv("addFeatureCheckParallax | factor of feature: {}", GetFeatureCount());
-
     double parallax_sum = 0;
     int parallax_num = 0;
     last_track_num = 0;
@@ -126,7 +124,7 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureMap &
         return true;
     }
     else{
-        Debugv("addFeatureCheckParallax parallax_sum: {}, parallax_num: {}", parallax_sum, parallax_num);
+        //Debugv("addFeatureCheckParallax parallax_sum: {}, parallax_num: {}", parallax_sum, parallax_num);
         Debugv("addFeatureCheckParallax current parallax: {}", parallax_sum / parallax_num * kFocalLength);
         last_average_parallax = parallax_sum / parallax_num * kFocalLength;
         return parallax_sum / parallax_num >= para::kMinParallax;

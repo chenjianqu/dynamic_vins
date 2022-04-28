@@ -116,7 +116,7 @@ extractor_model_path: "weights/deepsort/ckpt.bin"
 ####################### log的参数 ########################
 estimator_log_path: "output/estimator_log.txt"
 estimator_log_level: "debug"
-estimator_log_flush: "debug"
+estimator_log_flush: "info"
 feature_tracker_log_path: "output/tracker_log.txt"
 feature_tracker_log_level: "debug"
 feature_tracker_log_flush: "debug"

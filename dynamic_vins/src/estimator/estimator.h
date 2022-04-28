@@ -1,4 +1,12 @@
 /*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+/*******************************************************
  * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
  * 
  * This file is part of VINS.
@@ -7,14 +15,6 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-/*******************************************************
- * Copyright (C) 2022, Chen Jianqu, Shanghai University
- *
- * This file is part of dynamic_vins.
- *
- * Licensed under the MIT License;
- * you may not use this file except in compliance with the License.
- *******************************************************/
 
 #pragma once
  
@@ -62,46 +62,16 @@ class Estimator
     ~Estimator();
     void SetParameter();
 
-    // interface
     void InputIMU(double t, const Vec3d &linearAcceleration, const Vec3d &angularVelocity);
-    void ProcessIMU(double t, double dt, const Vec3d &linear_acceleration, const Vec3d &angular_velocity);
-    void ProcessImage(const FeatureMap & image, const double header);
 
     void ProcessMeasurements();
     void ChangeSensorType(int use_imu, int use_stereo);
 
-    // internal
-    void ClearState();
-    bool InitialStructure();
-    bool VisualInitialAlign();
-    bool RelativePose(Mat3d &relative_R, Vec3d &relative_T, int &l);
-    void SlideWindow();
-    void SlideWindowNew();
-    void SlideWindowOld();
-    void Optimization();
-    void Vector2double();
-    void Double2vector();
-    bool FailureDetection();
-    bool GetIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &acc_vec,
-                        vector<pair<double, Vec3d>> &gyr_vec);
     void GetPoseInWorldFrame(Eigen::Matrix4d &T);
     void GetPoseInWorldFrame(int index, Eigen::Matrix4d &T);
     void PredictPtsInNextFrame();
-    void OutliersRejection(set<int> &removeIndex);
-    static double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
-                             Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
-                             double depth, Vec3d &uvi, Vec3d &uvj);
-    void UpdateLatestStates();
-    void FastPredictIMU(double t, const Vec3d& linear_acceleration,const Vec3d& angular_velocity);
 
-    void InitFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
-
-    bool IMUAvailable(double t){
-        if(!acc_buf.empty() && t <= acc_buf.back().first)
-            return true;
-        else
-            return false;
-    }
+    void ClearState();
 
     void PushBack(double time, FeatureMap &feats, InstancesFeatureMap &insts){
         input_image_cnt++;
@@ -143,6 +113,47 @@ class Estimator
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;
 private:
+
+    void SetMarginalizationInfo();
+
+    void ProcessImage(const FeatureMap & image,InstancesFeatureMap &input_insts, const double header);
+    void ProcessIMU(double t, double dt, const Vec3d &linear_acceleration, const Vec3d &angular_velocity);
+
+    void SlideWindow();
+    void SlideWindowNew();
+    void SlideWindowOld();
+    void Optimization();
+    void Vector2double();
+    void Double2vector();
+
+    bool InitialStructure();
+    bool VisualInitialAlign();
+    bool RelativePose(Mat3d &relative_R, Vec3d &relative_T, int &l);
+
+    bool FailureDetection();
+    bool GetIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &acc_vec,
+                        vector<pair<double, Vec3d>> &gyr_vec);
+
+    void OutliersRejection(set<int> &removeIndex);
+    static double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
+                                    Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
+                                    double depth, Vec3d &uvi, Vec3d &uvj);
+    void UpdateLatestStates();
+    void FastPredictIMU(double t, const Vec3d& linear_acceleration,const Vec3d& angular_velocity);
+
+    void InitFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
+
+    void AddInstanceParameterBlock(ceres::Problem &problem);
+    int AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
+
+
+    bool IMUAvailable(double t){
+        if(!acc_buf.empty() && t <= acc_buf.back().first)
+            return true;
+        else
+            return false;
+    }
+
     string LogCurrentPose(){
         string result;
         for(int i=0; i <= kWinSize; ++i)
@@ -157,10 +168,6 @@ private:
         initP = p;
         initR = r;
     }
-
-
-    void SetMarginalizationInfo();
-
 
 
     std::mutex process_mutex;

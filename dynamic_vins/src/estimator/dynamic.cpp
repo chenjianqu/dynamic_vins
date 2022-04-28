@@ -112,9 +112,6 @@ Eigen::Vector3d CalDelta(Eigen::Vector3d &pts_j, Eigen::Vector3d &pts_i, double 
 
     auto delta=pts_w_i-pts_w_j;
 
-    printf(" 测试:depth:%.2lf,feat_j:(%.2lf,%.2lf) feat_i:(%.2lf,%.2lf) delta:(%.2lf,%.2lf,%.2lf) =wj(%.2lf,%.2lf,%.2lf)-wi(%.2lf,%.2lf,%.2lf)\n",
-           depth,pts_j_td.x(),pts_j_td.y(),pts_i_td.x(),pts_i_td.y(),delta.x(),delta.y(),delta.z(),
-           pts_w_j.x(),pts_w_j.y(),pts_w_j.z(),pts_w_i.x(),pts_w_i.y(),pts_w_i.z());
 
     return delta;
 }
@@ -131,7 +128,8 @@ Eigen::Vector3d CalDelta(Eigen::Vector3d &pts_j, Eigen::Vector3d &pts_i, double 
  * @param point1
  * @param point_3d
  */
-void TriangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1, Eigen::Vector2d &point0, Eigen::Vector2d &point1, Eigen::Vector3d &point_3d)
+void TriangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
+                      Eigen::Vector2d &point0, Eigen::Vector2d &point1, Eigen::Vector3d &point_3d)
 {
     Eigen::Matrix4d design_matrix = Eigen::Matrix4d::Zero();
     design_matrix.row(0) = point0[0] * Pose0.row(2) - Pose0.row(0);//

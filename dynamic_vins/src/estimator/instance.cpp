@@ -55,81 +55,78 @@ void Instance::SetWindowPose()
  */
 void Instance::InitialPose()
 {
-    if(is_initial) return;
+    if(is_initial || !is_tracking)
+        return;
 
     ///初始化的思路是找到某一帧，该帧拥有已经三角化的特征点的开始帧数量最多。
-    int cnt[kWinSize + 1]={0};
+    int win_cnt[kWinSize + 1]={0};
     for(auto &lm : landmarks){
         if(lm.depth > 0){
-            cnt[lm.feats[0].frame]++;
+            win_cnt[lm.feats[0].frame]++;
         }
     }
-    int frame_cnt=-1;//将作为初始化位姿的帧号
-    int cnt_max=0;
-    int cnt_sum=0;
+    int frame_index=-1;//将作为初始化位姿的帧号
+    int cnt_max=0, cnt_sum=0;
     for(int i=0; i <= kWinSize; ++i){
-        if(cnt[i]>cnt_max){
-            cnt_max=cnt[i];
-            frame_cnt=i;
+        if(win_cnt[i] > cnt_max){
+            cnt_max=win_cnt[i];
+            frame_index=i;
         }
-        cnt_sum+=cnt[i];
+        cnt_sum+=win_cnt[i];
     }
-
-    //太少了
-    if(cnt_sum<2){
+    if(cnt_sum < kInstanceInitMinNum)
         return;
+
+    ///计算初始位姿
+    Vec3d center=Vec3d::Zero(),minPt=center,maxPt=center;
+    for(auto &landmark : landmarks){
+        if(landmark.depth > 0 && landmark.feats[0].frame == frame_index){
+            Vec3d point_cam= landmark.feats[0].point * landmark.depth;//相机坐标
+            auto point_imu=e->ric[0] * point_cam + e->tic[0];//IMU坐标
+            Vec3d p= e->Rs[frame_index] * point_imu + e->Ps[frame_index];//世界坐标
+            center+=p;
+
+            if(p.x() < minPt.x()) minPt.x()=p.x();
+            if(p.x() > maxPt.x()) maxPt.x()=p.x();
+            if(p.y() < minPt.y()) minPt.y()=p.y();
+            if(p.y() > maxPt.y()) maxPt.y()=p.y();
+            if(p.z() < minPt.z()) minPt.z()=p.z();
+            if(p.z() > maxPt.z()) maxPt.z()=p.z();
+        }
     }
+    vel.SetZero();
 
-    if(frame_cnt >= 0)
-    {
-        ///计算初始位姿
-        Vec3d center=Vec3d::Zero(),minPt=center,maxPt=center;
-        int index=0;
-        for(auto &landmark : landmarks){
-            if(landmark.depth > 0 && landmark.feats[0].frame == frame_cnt){
-                Vec3d point_cam= landmark.feats[0].point * landmark.depth;//相机坐标
-                auto point_imu=e->ric[0] * point_cam + e->tic[0];//IMU坐标
-                Vec3d p=e->Rs[frame_cnt] * point_imu + e->Ps[frame_cnt];//世界坐标
-                center+=p;
-                index++;
-                if(p.x() < minPt.x()) minPt.x()=p.x();
-                if(p.x() > maxPt.x()) maxPt.x()=p.x();
-                if(p.y() < minPt.y()) minPt.y()=p.y();
-                if(p.y() > maxPt.y()) maxPt.y()=p.y();
-                if(p.z() < minPt.z()) minPt.z()=p.z();
-                if(p.z() > maxPt.z()) maxPt.z()=p.z();
-            }
+    state[0].P=center/double(cnt_sum);
+    state[0].R=Mat3d::Identity();
+    state[0].time=e->headers[0];
+    SetWindowPose();
+
+    /*box.x()=(box_max_pt.x()-box_min_pt.x())/2.0;
+    box.y()=(box_max_pt.y()-box_min_pt.y())/2.0;
+    box.z()=(box_max_pt.z()-box_min_pt.z())/2.0;*/
+    box = Vec3d::Ones();
+    is_initial=true;
+
+    Debugv("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
+           id, cnt_max, frame_index, VecToStr(center), VecToStr(box));
+
+    ///删去初始化之前的观测
+    for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
+        it_next++;
+        if(it->feats.size() == 1 && it->feats[0].frame < frame_index){
+            landmarks.erase(it);
         }
-        vel.SetZero();
-
-        state[0].P=center/index;
-        state[0].R=Mat3d::Identity();
-        state[0].time=e->headers[0];
-        SetWindowPose();
-
-
-        /*box.x()=(box_max_pt.x()-box_min_pt.x())/2.0;
-        box.y()=(box_max_pt.y()-box_min_pt.y())/2.0;
-        box.z()=(box_max_pt.z()-box_min_pt.z())/2.0;*/
-        box = Vec3d::Ones();
-        is_initial=true;
-
-        Debugv("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
-               id, cnt_max, frame_cnt, VecToStr(center), VecToStr(box));
-
-        ///删去初始化之前的观测
-        for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
-            it_next++;
-            if(it->feats.size() == 1 && it->feats[0].frame < frame_cnt)
-                landmarks.erase(it);
-        }
-        for(auto &lm:landmarks){
-            if(lm.feats[0].frame < frame_cnt){
-                for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
-                    it_next++;
-                    if(it->frame < frame_cnt) lm.feats.erase(it); ///删掉掉前面的观测
+    }
+    for(auto &lm:landmarks){
+        if(lm.feats[0].frame < frame_index){
+            for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
+                it_next++;
+                if(it->frame < frame_index) {
+                    lm.feats.erase(it); ///删掉掉前面的观测
                 }
-                if(lm.depth > 0) lm.depth=-1.0;///需要重新进行三角化
+            }
+            if(lm.depth > 0){
+                lm.depth=-1.0;///需要重新进行三角化
             }
         }
     }
@@ -173,33 +170,25 @@ int Instance::SlideWindowOld()
     for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next)
     {
         it_next++;
-
-        ///测试
-        //printf("(");
-        //for(auto& feat:it->feats)
-        //    printf("%d ",feat.frame);
-        //printf(" | ");
-
-        if(it->feats[0].frame != 0)
-        {
-            for(auto &feat : it->feats) feat.frame--;
+        if(it->feats[0].frame != 0){
+            for(auto &feat : it->feats)
+                feat.frame--;
         }
-        //该路标点只有刚开始这个观测，故将其删掉
-        else if(it->feats.size() <= 1)
-        {
+        else if(it->feats.size() <= 1){ ///该路标点只有刚开始这个观测，故将其删掉
+            if(it->depth>0){
+                triangle_num--;
+                depth_sum -= it->depth;
+            }
             landmarks.erase(it);
             debug_num++;
             continue;
         }
-        //将估计的逆深度值转移到新的开始帧
-        else
-        {
+        else{ ///将估计的逆深度值转移到新的开始帧
             Vec3d point_old=it->feats[0].point;
-            //首先删除该观测
-            it->feats.erase(it->feats.begin());
-
-            //计算新的深度
+            it->feats.erase(it->feats.begin());//首先删除该观测
+            ///计算新的深度
             if(it->depth > 0){
+                depth_sum -= it->depth;
                 auto pts_cam_j= point_old * it->depth;
                 Vec3d pts_cam_i;
                 if(it->feats[0].frame == 1){ //满足了使用预计算的矩阵的条件，可减少计算量
@@ -221,20 +210,21 @@ int Instance::SlideWindowOld()
                     t_margin=temp_2+temp_3+temp_4+temp_5;
                     pts_cam_i = R_margin * pts_cam_j + t_margin;
                 }
-                if(pts_cam_i.z() > 0)
+                //设置深度
+                if(pts_cam_i.z() > 0){
                     it->depth=pts_cam_i.z();
+                    depth_sum += it->depth;
+                }
+                else{
+                    it->depth = -1;
+                    triangle_num--;
+                }
             }
 
             //将观测的frame--
             for(auto & feature_point : it->feats)
                 feature_point.frame--;
         }
-
-
-        ///测试
-        //for(auto& feat:it->feats)
-        //    printf("%d ",feat.frame);
-        //printf(")\n");
     }
 
     ///将最老帧的相关变量去掉
@@ -242,9 +232,6 @@ int Instance::SlideWindowOld()
         state[i].swap(state[i+1]);
     }
     state[kWinSize]=state[kWinSize - 1];
-
-    //state[0]=state[1];
-    //SetWindowPose(e);
 
     return debug_num;
 }
@@ -257,15 +244,8 @@ int Instance::SlideWindowNew()
 {
     int debug_num=0;
 
-    for (auto it = landmarks.begin(), it_next = it; it != landmarks.end(); it = it_next)
-    {
+    for (auto it = landmarks.begin(), it_next = it; it != landmarks.end(); it = it_next){
         it_next++;
-
-        ///测试
-        //printf("(");
-        //for(auto& feat:it->feats)printf("%d ",feat.frame);
-        //printf(" | ");
-
 
         if(it->feats.empty()){
             landmarks.erase(it);
@@ -276,23 +256,17 @@ int Instance::SlideWindowNew()
         int index=-1;
         for(auto& feat:it->feats){
             index++;
-            if(feat.frame == e->frame - 1)
+            if(feat.frame == e->frame - 1){
                 it->feats.erase(it->feats.begin() + index);
+            }
         }
         for(auto& feat:it->feats){
             if(feat.frame == e->frame)
                 feat.frame--;
         }
-
-
-        ///测试
-        //for(auto& feat:it->feats)printf("%d ",feat.frame);
-        //printf(")\n");
     }
 
-
     state[kWinSize - 1] = state[kWinSize];
-
     return debug_num;
 }
 

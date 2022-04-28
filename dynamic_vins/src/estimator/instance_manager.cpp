@@ -22,12 +22,24 @@ void InstanceManager::set_estimator(Estimator* estimator){
     e_=estimator;
 }
 
+
+string InstanceManager::PrintInstanceInfo(){
+    string s="InstanceInfo :\n";
+    InstExec([&s](int key,Instance& inst){
+        s+= fmt::format("id:{} landmarks:{} is_init:{} is_tracking:{} \n",
+                        inst.id,inst.landmarks.size(),inst.is_initial,inst.is_tracking);
+        for(auto &landmark : inst.landmarks){
+            s+=fmt::format("lid:{} feat_size:{} depth:{} \n",landmark.id,landmark.feats.size(),landmark.depth);
+        }
+    },true);
+    return s;
+}
+
+
 void InstanceManager::Triangulate(int frame_cnt)
 {
     if(tracking_number_ < 1)
         return;
-    Infov("triangulate 三角化:");
-
     auto getCamPose=[this](int index,int cam_id){
         assert(cam_id == 0 || cam_id == 1);
         Eigen::Matrix<double, 3, 4> pose;
@@ -37,36 +49,33 @@ void InstanceManager::Triangulate(int frame_cnt)
         pose.rightCols<1>() = -R0.transpose() * t0;
         return pose;
     };
+    Infov("InstanceManager::Triangulate:");
 
     int num_triangle=0,num_failed=0,num_delete_landmark=0,num_mono=0;
-    for(auto &[key,inst] : instances)
-    {
+    for(auto &[key,inst] : instances){
         if(! inst.is_tracking)
             continue;
 
-        string lm_msg;
-        int inst_add_num=0;
-
-        //计算平均深度
-        double avg_depth=0.;
-        int depth_cnt=0;
-        for(auto &ld : inst.landmarks){
-            if(ld.depth > 0){
-                depth_cnt++;
-                avg_depth+=ld.depth;
+        inst.triangle_num = 0;
+        inst.depth_sum = 0;
+        for(auto &landmark : inst.landmarks){
+            if(landmark.depth >0){
+                inst.triangle_num++;
+                inst.depth_sum += landmark.depth;
             }
         }
-        avg_depth /= depth_cnt;
 
-        for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next)
-        {
+        string lm_msg;
+        int inst_add_num=0;
+        double avg_depth= inst.AverageDepth();//平均深度
+
+        for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next){
             it_next++;
             auto &lm=*it;
             if(lm.depth > 0 || lm.feats.empty())
                 continue;
             ///双目三角化
-            if(cfg::is_stereo && lm.feats[0].is_stereo)
-            {
+            if(cfg::is_stereo && lm.feats[0].is_stereo){
                 int imu_i = lm.feats[0].frame;
                 auto leftPose = getCamPose(imu_i,0);
                 auto rightPose= getCamPose(imu_i,1);
@@ -77,19 +86,22 @@ void InstanceManager::Triangulate(int frame_cnt)
                 TriangulatePoint(leftPose, rightPose, point0, point1, point3d_w);
                 Eigen::Vector3d localPoint = leftPose.leftCols<3>() * point3d_w + leftPose.rightCols<1>();
                 double depth = localPoint.z();
-                if (depth > 0.1){
-                    //若未初始化或路标点太少，则加入
-                    if(!inst.is_initial || depth_cnt < 5){
+
+                if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){
+                    if(!inst.is_initial || inst.triangle_num < 5){ //若未初始化或路标点太少，则加入
                         lm.depth = depth;
+                        inst.triangle_num++;
+                        inst.depth_sum += lm.depth;
                         inst_add_num++;
                         lm_msg+=fmt::format("lid:{} NotInit S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
                     }
-                    //判断深度值是否符合
-                    else{
+                    else{ //判断深度值是否符合
                         Eigen::Vector3d pts_obj_j=inst.state[lm.feats[0].frame].R.transpose() *
                                 (point3d_w - inst.state[lm.feats[0].frame].P);
                         if(pts_obj_j.norm() < inst.box.norm()*4){
                             lm.depth = depth;
+                            inst.triangle_num++;
+                            inst.depth_sum += lm.depth;
                             inst_add_num++;
                             lm_msg+=fmt::format("lid:{} S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
                         }
@@ -98,7 +110,7 @@ void InstanceManager::Triangulate(int frame_cnt)
                         }
                     }
                 }
-                else{
+                else{///深度值太大或太小
                     num_failed++;
                     if(lm.feats.size() == 1){//删除该路标
                         inst.landmarks.erase(it);
@@ -139,9 +151,11 @@ void InstanceManager::Triangulate(int frame_cnt)
                 Vec3d localPoint;
                 localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
                 double depth = localPoint.z();
-                if (depth > 0.1){
-                    if(!inst.is_initial || depth_cnt < 5 || depth <= 4 * avg_depth){
+                if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){
+                    if(!inst.is_initial || inst.triangle_num < 5 || depth <= 4 * avg_depth){
                         lm.depth = depth;
+                        inst.triangle_num++;
+                        inst.depth_sum += lm.depth;
                         num_mono++;
                         inst_add_num++;
                         lm_msg+=fmt::format("lid:{} M d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d));
@@ -160,18 +174,19 @@ void InstanceManager::Triangulate(int frame_cnt)
             }
         }
 
-        int num_depth=0;
-        for(auto &ld : inst.landmarks){
-            if(ld.depth > 0)num_depth++;
+        Debugv("inst:{} landmarks.size:{} depth.size:{} avg_depth:{} new_add:{}",
+               inst.id, inst.landmarks.size(), inst.triangle_num, avg_depth, inst_add_num);
+        if(lm_msg.empty()){
+            Debugv(lm_msg);
         }
-        Debugv("inst:{} landmarks.size{} depth.size:{} avg_depth:{} new_add:{} \n{}",
-               inst.id, inst.landmarks.size(), num_depth, avg_depth, inst_add_num, lm_msg);
         num_triangle += inst_add_num;
     }
 
-    if(num_triangle>0 || num_delete_landmark>0)
-        Debugv("增加:{}=(M:{},S:{}) 失败:{} 删除:{}", num_triangle, num_mono, num_triangle - num_mono,
+    if(num_triangle>0 || num_delete_landmark>0){
+        Debugv("InstanceManager::Triangulate: 增加:{}=(M:{},S:{}) 失败:{} 删除:{}",
+               num_triangle, num_mono, num_triangle - num_mono,
                num_failed, num_delete_landmark);
+    }
 }
 
 
@@ -183,27 +198,16 @@ void InstanceManager::PredictCurrentPose()
     if(tracking_number_ < 1)
         return;
 
-    SetVelMap();
-
-    Infov("predictCurrentPose 位姿递推");
-
     int i=e_->frame;
     int j= e_->frame - 1;
-
     double time_ij= e_->headers[i] - e_->headers[j];
 
-
-    for(auto &[key,inst] : instances){
-        if(!inst.is_tracking || !inst.is_initial){
-            continue;
-        }
+    InstExec([&](int key,Instance& inst){
         inst.state[i].time = e_->headers[i];
         Mat3d Roioj=Sophus::SO3d::exp(inst.vel.a*time_ij).matrix();
         Vec3d Poioj=inst.vel.v*time_ij;
         inst.state[i].R=Roioj * inst.state[j].R;
         inst.state[i].P=Roioj* inst.state[j].P + Poioj;
-
-        Debugv("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
         /*      State new_pose;
                 new_pose.time=e->Headers[1];
                 double time_ij=new_pose.time - inst.state[0].time;
@@ -228,43 +232,32 @@ void InstanceManager::PredictCurrentPose()
 
                 inst.state[0] = new_pose;
                 inst.SetWindowPose(e);*/
-    }
+    });
+
 }
 
 
 
 void InstanceManager::SlideWindow()
 {
-    if(tracking_number_ < 1)
-        return;
-
     if(e_->frame != kWinSize)
         return;
-    Infov("动态特征边缘化:");
+    Debugv("动态特征边缘化:");
     //printf("动态特征边缘化:");
     if(e_->margin_flag == MarginFlag::kMarginOld)
-        Infov("最老帧 | ");
+        Debugv("最老帧 | ");
     else
-        Infov("次新帧 | ");
+        Debugv("次新帧 | ");
 
 
     for(auto &[key,inst] : instances){
         if(!inst.is_tracking)
             continue;
-        ///测试
-        /*
-        if(inst.id==108091207){
-            printf("Instance%d Landmarks Info:\n",inst.id);
-            for(auto &landmark : inst.landmarks){
-                printf("Landmark%d start_frame:%d feature_num:%d \n",landmark.id,landmark.start_frame,landmark.feats.size());
-            }
-        }*/
-        /// 边缘化最老的帧
+
         int debug_num=0;
-        if (e_->margin_flag == MarginFlag::kMarginOld)
+        if (e_->margin_flag == MarginFlag::kMarginOld)/// 边缘化最老的帧
             debug_num= inst.SlideWindowOld();
-        /// 去掉次新帧
-        else
+        else/// 去掉次新帧
             debug_num= inst.SlideWindowNew();
 
         ///当物体没有正在跟踪的特征点时，将其设置为不在跟踪状态
@@ -272,18 +265,8 @@ void InstanceManager::SlideWindow()
             inst.is_tracking=false;
             tracking_number_--;
         }
-        ///
-        if(inst.is_tracking){
-            int tri_num=0;
-            for(auto& lm: inst.landmarks){
-                if(lm.depth>0){
-                    tri_num++;
-                }
-            }
-            if(tri_num==0){
-                inst.is_initial=false;
-            }
-
+        if(inst.is_tracking && inst.triangle_num==0){
+            inst.is_initial=false;
         }
 
         if(debug_num>0){
@@ -303,9 +286,14 @@ void InstanceManager::SlideWindow()
  */
 void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input_insts)
 {
-    if(e_->solver_flag == SolverFlag::kInitial)
+    if(e_->solver_flag == SolverFlag::kInitial || input_insts.empty()){
         return;
-    Debugv("PushBack | push_back current insts size:{}", instances.size());
+    }
+    Debugv("PushBack 输入的实例和特征数量:{},{}",
+          input_insts.size(),
+          std::accumulate(input_insts.begin(), input_insts.end(), 0,
+                          [](int sum, auto &p) { return sum + p.second.size(); }));
+    Debugv("PushBack | 总的的实例数量:{}", instances.size());
 
     for(auto &[instance_id , inst_feat] : input_insts){
         ///创建物体
@@ -353,31 +341,14 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
         }
     }
 
-    ///输出的信息
-    Debugv("push_back all insts:");
-    for(const auto& [key,inst] : instances){
-        if(inst.is_tracking)
-            Debugv("inst:{} landmarks.size:{} ", key, inst.landmarks.size());
-    }
-    if(!input_insts.empty()){
-        Infov("push_back 观测增加:{},{}",
-              input_insts.size(),
-              std::accumulate(input_insts.begin(), input_insts.end(), 0,
-                              [](int sum, auto &p) { return sum + p.second.size(); }));
-    }
 
 }
 
 
 void InstanceManager::GetOptimizationParameters()
 {
-    if(tracking_number_ < 1)
-        return;
     Debugv("InstanceManager 优化前后的位姿对比:");
-    for(auto &[key,inst] : instances){
-        if(!inst.is_initial || !inst.is_tracking)
-            continue;
-
+    InstExec([](int key,Instance& inst){
         Debugv("Inst {}", inst.id);
 
         string lm_msg="优化前 Depth: ";
@@ -418,7 +389,7 @@ void InstanceManager::GetOptimizationParameters()
             lm_msg += fmt::format("<lid:{},n:{},d:{:.2f}>",lm.id,lm.feats.size(),lm.depth);
         }
         Debugv(lm_msg);
-    }
+    });
 }
 
 
@@ -430,13 +401,11 @@ void InstanceManager::GetOptimizationParameters()
  */
 void InstanceManager::AddInstanceParameterBlock(ceres::Problem &problem)
 {
-    if(tracking_number_ < 1) return;
-    for(auto &[key,inst] : instances){
-        if(!inst.is_initial || !inst.is_tracking)continue;
+    InstExec([&problem,this](int key,Instance& inst){
         for(int i=0;i<=(int)e_->frame; i++){
             problem.AddParameterBlock(inst.para_state[i], kSizePose, new PoseLocalParameterization());
         }
-    }
+    });
 }
 
 
@@ -449,7 +418,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
 {
     if(tracking_number_ < 1)
         return;
-    Infov("添加Instance残差:");
+    Debugv("添加Instance残差:");
     int res21=0,res22=0,res12=0;
 
     for(auto &[key,inst] : instances){

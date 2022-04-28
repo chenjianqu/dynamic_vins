@@ -1,4 +1,12 @@
 /*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
+/*******************************************************
  * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
  *
  * This file is part of VINS.
@@ -7,14 +15,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-/*******************************************************
- * Copyright (C) 2022, Chen Jianqu, Shanghai University
- *
- * This file is part of dynamic_vins.
- *
- * Licensed under the MIT License;
- * you may not use this file except in compliance with the License.
- *******************************************************/
+
 
 #include <dirent.h>
 #include <cstdio>
@@ -48,20 +49,11 @@ Estimator::~Estimator()
     printf("join thread \n");
 }
 
-
 /**
- * 执行非线性优化
+ * 添加残差块
+ * @param problem
  */
-void Estimator::Optimization()
-{
-    TicToc t_whole, t_prepare;
-
-    Vector2double();
-
-    ceres::Problem problem;
-    ceres::LossFunction *loss_function = new ceres::HuberLoss(1.0);
-    //loss_function = new ceres::CauchyLoss(1.0 / kFocalLength);
-
+void Estimator::AddInstanceParameterBlock(ceres::Problem &problem) {
     ///添加位姿顶点和bias顶点
     for (int i = 0; i < frame + 1; i++){
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
@@ -81,12 +73,6 @@ void Estimator::Optimization()
             openExEstimation = true;
         else
             problem.SetParameterBlockConstant(para_ex_pose[i]);
-    }
-
-    ///添加动态物体的相关顶点
-    if(cfg::slam == SlamType::kDynamic){
-        insts_manager.SetOptimizationParameters();//将优化变量写入double数组
-        insts_manager.AddInstanceParameterBlock(problem);
     }
 
     ///Td变量
@@ -114,7 +100,15 @@ void Estimator::Optimization()
         }
     }
 
-    ///添加重投影误差
+}
+
+
+/**
+ * 添加重投影残差
+ * @param problem
+ * @param loss_function
+ */
+int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function) {
     int f_m_cnt = 0;
     int feature_index = -1;
     for (auto &it_per_id : f_manager.feature){
@@ -157,11 +151,38 @@ void Estimator::Optimization()
             f_m_cnt++;
         }
     }
+    return f_m_cnt;
+}
+
+
+/**
+ * 执行非线性优化
+ */
+void Estimator::Optimization()
+{
+    TicToc tt;
+
+    Vector2double();
+
+    ceres::Problem problem;
+    ceres::LossFunction *loss_function = new ceres::HuberLoss(1.0);
+    //loss_function = new ceres::CauchyLoss(1.0 / kFocalLength);
+    ///添加残差块
+    AddInstanceParameterBlock(problem);
+    ///添加动态物体的相关顶点
+    if(cfg::slam == SlamType::kDynamic){
+        insts_manager.SetOptimizationParameters();//将优化变量写入double数组
+        insts_manager.AddInstanceParameterBlock(problem);
+    }
+
+    ///添加重投影误差
+    int f_m_cnt=AddResidualBlock(problem,loss_function);
 
     ///添加动态物体的残差项
     if(cfg::slam == SlamType::kDynamic)
         insts_manager.AddResidualBlock(problem, loss_function);
 
+    Debugt("optimization | prepare:{} ms",tt.TocThenTic());
     Debugv("optimization 开始优化 visual measurement count: {}", f_m_cnt);
 
     //设置ceres选项
@@ -183,12 +204,11 @@ void Estimator::Optimization()
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    Debugv("Iterations: {}", summary.iterations.size());
-    Infov("优化完成");
+    Debugv("optimization 优化完成 Iterations: {}", summary.iterations.size());
+    Debugt("optimization | Solve:{} ms",tt.TocThenTic());
 
     if(cfg::slam == SlamType::kDynamic)
         insts_manager.GetOptimizationParameters();
-
 
     string msg="相机位姿 优化前：\n" + LogCurrentPose();
 
@@ -197,11 +217,15 @@ void Estimator::Optimization()
     msg+="相机位姿 优化后：\n" + LogCurrentPose();
     Debugv(msg);
 
+    Debugt("optimization | postprocess:{} ms",tt.TocThenTic());
+
     if(frame < kWinSize)
         return;
 
     ///执行边缘化,设置先验残差
     SetMarginalizationInfo();
+
+    Debugt("optimization | 边缘化:{} ms",tt.TocThenTic());
 }
 
 /**
@@ -1332,13 +1356,18 @@ void Estimator::UpdateLatestStates(){
  * @param image
  * @param header
  */
-void Estimator::ProcessImage(const FeatureMap &image, const double header){
+void Estimator::ProcessImage(const FeatureMap &image,InstancesFeatureMap &input_insts ,const double header){
     ///添加背景特征点到管理器,并判断视差
-    Infov("processImage Adding feature points:{}", image.size());
+    Infov("processImage Adding feature points number:{}", image.size());
     if (f_manager.AddFeatureCheckParallax(frame, image, td))
         margin_flag = MarginFlag::kMarginOld;
     else
         margin_flag = MarginFlag::kMarginSecondNew;
+
+    ///添加动态特征点,并创建物体
+    if(cfg::slam == SlamType::kDynamic){
+        insts_manager.PushBack(frame, input_insts);
+    }
 
     Debugv("processImage margin_flag:{}", margin_flag == MarginFlag::kMarginSecondNew ? "Non-keyframe" : "Keyframe");
     Debugv("processImage frame_count {}", frame);
@@ -1366,15 +1395,6 @@ void Estimator::ProcessImage(const FeatureMap &image, const double header){
                 cfg::is_estimate_ex = 1;
             }
         }
-    }
-
-    if(cfg::slam == SlamType::kDynamic){
-        ///动态物体的位姿递推
-        insts_manager.PredictCurrentPose();
-        ///动态特征点的三角化
-        insts_manager.Triangulate(frame);
-        ///若动态物体未初始化, 则进行初始化
-        insts_manager.InitialInstance();
     }
 
     ///VINS的初始化
@@ -1453,22 +1473,36 @@ void Estimator::ProcessImage(const FeatureMap &image, const double header){
     ///VIO的非线性优化, 以及滑动窗口
     else
     {
-        TicToc t_solve;
+        TicToc tt;
+
         ///若没有IMU,则需要根据PnP得到当前帧的位姿
         if(!cfg::is_use_imu)
             f_manager.initFramePoseByPnP(frame, Ps, Rs, tic, ric);
         ///三角化背景特征点
         f_manager.triangulate(frame, Ps, Rs, tic, ric);
+        Infov("processImage background Triangulate:{} ms",tt.TocThenTic());
+
+        if(cfg::slam == SlamType::kDynamic){
+            insts_manager.SetVelMap();//将输出实例的速度信息
+            ///动态物体的位姿递推
+            insts_manager.PredictCurrentPose();
+            ///动态特征点的三角化
+            insts_manager.Triangulate(frame);
+            ///若动态物体未初始化, 则进行初始化
+            insts_manager.InitialInstance();
+            Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
+            Debugv(insts_manager.PrintInstanceInfo());
+        }
 
         ///VIO窗口的非线性优化
         Optimization();
+
+        Debugv("processImage Optimization:{} ms", tt.TocThenTic());
 
         ///外点剔除
         set<int> removeIndex;
         OutliersRejection(removeIndex);
         f_manager.RemoveOutlier(removeIndex);
-
-        Debugv("solver costs:{} ms", t_solve.Toc());
 
         if (FailureDetection()){
             Warnv("failure detection!");
@@ -1479,18 +1513,21 @@ void Estimator::ProcessImage(const FeatureMap &image, const double header){
             return;
         }
 
+        Debugv("processImage OutliersRejection:{} ms", tt.TocThenTic());
+
         ///动态物体的滑动窗口
         if(cfg::slam == SlamType::kDynamic){
             //insts_manager.SetWindowPose();
             insts_manager.SlideWindow();
         }
-
         /// 滑动窗口
         SlideWindow();
 
         ///动态物体的外点剔除
         if(cfg::slam == SlamType::kDynamic)
             insts_manager.OutliersRejection();
+
+        Debugv("processImage SlideWindow:{} ms", tt.TocThenTic());
 
         f_manager.RemoveFailures();
 
@@ -1506,7 +1543,6 @@ void Estimator::ProcessImage(const FeatureMap &image, const double header){
         UpdateLatestStates();
     }
 
-
     if(cfg::slam == SlamType::kDynamic){
         insts_manager.SetInstanceCurrentPoint3d();
     }
@@ -1520,99 +1556,98 @@ void Estimator::ProcessMeasurements(){
     static TicToc tt;
     while (cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(!feature_buf.empty())
-        {
-            FeatureFrame feature_frame = feature_buf.front();
-            cur_time = feature_frame.time + td;
-            if(cfg::is_use_imu && !IMUAvailable(cur_time)){
-                std::cerr<<"wait for imu ..."<<endl;
-                std::this_thread::sleep_for(5ms);
-                continue;
-            }
-            InstancesFeatureMap curr_insts;
-            if(cfg::slam == SlamType::kDynamic)
-                curr_insts=instances_buf.front();
-
-            Warnv("----------Time : {} ----------", feature_frame.time);
-
-            tt.Tic();
-            vector<pair<double, Vec3d>> acc_vec, gyr_vec;
-
-            buf_mutex.lock();
-            //获取上一帧时刻到当前时刻的IMU测量值
-            if(cfg::is_use_imu)
-                GetIMUInterval(prev_time, cur_time, acc_vec, gyr_vec);
-
-            feature_buf.pop();
-            if(cfg::slam == SlamType::kDynamic)
-                instances_buf.pop();
-
-            buf_mutex.unlock();
-
-            ///IMU预积分 和 状态递推
-            if(cfg::is_use_imu){
-                if(!is_init_first_pose)
-                    InitFirstIMUPose(acc_vec);
-                for(size_t i = 0; i < acc_vec.size(); i++){
-                    double dt;
-                    if(i == 0)
-                        dt = acc_vec[i].first - prev_time;
-                    else if (i == acc_vec.size() - 1)
-                        dt = cur_time - acc_vec[i - 1].first;
-                    else
-                        dt = acc_vec[i].first - acc_vec[i - 1].first;
-
-                    ProcessIMU(acc_vec[i].first, dt, acc_vec[i].second, gyr_vec[i].second);
-                }
-            }
-
-            process_mutex.lock();
-
-            Infov("get input time: {} ms", tt.TocThenTic());
-            Debugv("solver_flag:{}", solver_flag == SolverFlag::kInitial ? "INITIAL" : "NO-LINEAR");
-
-            ///添加动态特征点,并创建物体
-            if(cfg::slam == SlamType::kDynamic)
-                insts_manager.PushBack(frame, curr_insts);
-
-            ///进入主函数
-            ProcessImage(feature_frame.features, feature_frame.time);
-            prev_time = cur_time;
-
-            printStatistics(*this, 0);
-
-            std_msgs::Header header;
-            header.frame_id = "world";
-            header.stamp = ros::Time(feature_frame.time);
-
-
-            if(cfg::slam == SlamType::kDynamic){
-                //printInstanceData(*this);
-                pubInstancePointCloud(*this,header);
-            }
-
-
-            pubOdometry(*this, header);
-            pubKeyPoses(*this, header);
-            pubCameraPose(*this, header);
-            pubPointCloud(*this, header);
-            pubKeyframe(*this);
-            pubTF(*this, header);
-            process_mutex.unlock();
-
-            static unsigned int estimator_cnt=0;
-            estimator_cnt++;
-            auto output_msg=fmt::format("cnt:{} ___________process time: {} ms_____________\n",estimator_cnt,
-                                        tt.TocThenTic());
-            Infov(output_msg);
-            cerr<<output_msg<<endl;
+        if(feature_buf.empty()){
+            std::this_thread::sleep_for(2ms);
+            continue;
         }
-        std::this_thread::sleep_for(2ms);
+
+        ///获取VIO的处理数据
+        FeatureFrame feature_frame = feature_buf.front();
+        cur_time = feature_frame.time + td;
+        if(cfg::is_use_imu && !IMUAvailable(cur_time)){
+            std::cerr<<"wait for imu ..."<<endl;
+            std::this_thread::sleep_for(5ms);
+            continue;
+        }
+        InstancesFeatureMap curr_insts;
+        if(cfg::slam == SlamType::kDynamic)
+            curr_insts=instances_buf.front();
+
+        Warnv("----------Time : {} ----------", std::to_string(feature_frame.time));
+
+        tt.Tic();
+        vector<pair<double, Vec3d>> acc_vec, gyr_vec;
+
+        buf_mutex.lock();
+        //获取上一帧时刻到当前时刻的IMU测量值
+        if(cfg::is_use_imu)
+            GetIMUInterval(prev_time, cur_time, acc_vec, gyr_vec);
+
+        feature_buf.pop();
+        if(cfg::slam == SlamType::kDynamic)
+            instances_buf.pop();
+
+        buf_mutex.unlock();
+
+        ///IMU预积分 和 状态递推
+        if(cfg::is_use_imu){
+            if(!is_init_first_pose)
+                InitFirstIMUPose(acc_vec);
+            for(size_t i = 0; i < acc_vec.size(); i++){
+                double dt;
+                if(i == 0)
+                    dt = acc_vec[i].first - prev_time;
+                else if (i == acc_vec.size() - 1)
+                    dt = cur_time - acc_vec[i - 1].first;
+                else
+                    dt = acc_vec[i].first - acc_vec[i - 1].first;
+
+                ProcessIMU(acc_vec[i].first, dt, acc_vec[i].second, gyr_vec[i].second);
+            }
+        }
+
+        process_mutex.lock();
+
+        Infov("ProcessMeasurements prepare time: {} ms", tt.TocThenTic());
+        Debugv("solver_flag:{}", solver_flag == SolverFlag::kInitial ? "INITIAL" : "NO-LINEAR");
+
+        ///进入主函数
+        ProcessImage(feature_frame.features, curr_insts ,feature_frame.time);
+        prev_time = cur_time;
+
+        printStatistics(*this, 0);
+
+        std_msgs::Header header;
+        header.frame_id = "world";
+        header.stamp = ros::Time(feature_frame.time);
+
+
+        if(cfg::slam == SlamType::kDynamic){
+            //printInstanceData(*this);
+            pubInstancePointCloud(*this,header);
+        }
+
+        pubOdometry(*this, header);
+        pubKeyPoses(*this, header);
+        pubCameraPose(*this, header);
+        pubPointCloud(*this, header);
+        pubKeyframe(*this);
+        pubTF(*this, header);
+        process_mutex.unlock();
+
+        static unsigned int estimator_cnt=0;
+        estimator_cnt++;
+        auto output_msg=fmt::format("cnt:{} ___________estimator process time: {} ms_____________\n",
+                                    estimator_cnt,tt.TocThenTic());
+        Infov(output_msg);
+        cerr<<output_msg<<endl;
     }
 
     Warnv("ProcessMeasurements 线程退出");
 
 }
+
+
 
 
 }

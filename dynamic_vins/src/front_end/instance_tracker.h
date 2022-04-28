@@ -28,10 +28,10 @@
 
 #include "segment_image.h"
 #include "utils/parameters.h"
-#include "estimator/dynamic.h"
 #include "estimator/landmark.h"
 #include "mot/deep_sort.h"
 #include "feature_utils.h"
+#include "estimator/dynamic.h"
 
 namespace dynamic_vins{\
 

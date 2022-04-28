@@ -1090,7 +1090,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
             continue;
 
         //画包围框
-        cv::rectangle(img,inst.box_min_pt,inst.box_max_pt,inst.color);
+        cv::rectangle(img,inst.box_min_pt,inst.box_max_pt,inst.color,2);
 
         for(const auto &[pt1,pt2] : inst.visual_points_pair){
             //cv::circle(img, pt1, 2, cv::Scalar(255, 255, 255), 2);//上一帧的点
