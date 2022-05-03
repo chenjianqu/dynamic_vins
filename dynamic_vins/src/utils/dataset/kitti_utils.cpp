@@ -10,17 +10,11 @@
 #include "kitti_utils.h"
 #include <regex>
 #include "utils/def.h"
+#include "utils/utils.h"
 
 namespace dynamic_vins::kitti{ \
 
 
-
-void split(const std::string& source, std::vector<std::string>& tokens, const string& delimiters = " ") {
-    std::regex re(delimiters);
-    std::copy(std::sregex_token_iterator(source.begin(), source.end(),re,-1),
-              std::sregex_token_iterator(),
-              std::back_inserter(tokens));
-}
 
 std::map<string,Eigen::MatrixXd> ReadCalibFile(const string &path){
     std::map<string,Eigen::MatrixXd> calib_map;

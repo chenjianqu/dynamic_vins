@@ -41,7 +41,7 @@ public:
         ProjectionInstanceFactor::sqrt_info = kFocalLength / 1.5 * Eigen::Matrix2d::Identity();//初始化因子的信息矩阵
     }
 
-    void PushBack(unsigned int  frame_id, InstancesFeatureMap &input_insts);
+    void PushBack(unsigned int  frame_id, std::map<unsigned int,InstanceFeatureSimple> &input_insts);
     void Triangulate(int frame_cnt);
     void PredictCurrentPose();
     void GetOptimizationParameters();
@@ -67,14 +67,8 @@ public:
         });
     }
 
-    /**
- * 进行物体的位姿初始化
- */
-    void InitialInstance(){
-        InstExec([](int key,Instance& inst){
-            inst.InitialPose();
-        },true);
-    }
+
+    void InitialInstance(vector<Box3D> &boxes3d);
 
     void SetInstanceCurrentPoint3d(){
         InstExec([](int key,Instance& inst){
@@ -88,16 +82,13 @@ public:
         });
     }
 
-    void SetVelMap(){
-        std::unique_lock<std::mutex> lk(vel_mutex_);
-        vel_map_.clear();
-        Debugv("SetVelMap 物体的速度信息:");
-        InstExec([this](int key,Instance& inst){
-            Debugv("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
-            if(inst.vel.v.norm() > 0)
-                vel_map_.insert({inst.id, inst.vel});;
-        });
+    void SetDynamicOrStatic(){
+        InstExec([](int key,Instance& inst){
+            inst.SetDynamicOrStatic();
+        },true);
     }
+
+    void SetVelMap();
 
     string PrintInstanceInfo();
 
@@ -131,7 +122,7 @@ private:
     std::mutex vel_mutex_;
     std::unordered_map<unsigned int,Vel3d> vel_map_;
 
-    Estimator* e_{nullptr};
+    Estimator* e{nullptr};
     int opt_inst_num_{0};//优化位姿的数量
     int tracking_number_{0};//正在跟踪的物体数量
 };

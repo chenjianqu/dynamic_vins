@@ -19,6 +19,7 @@
 #include <sophus/so3.hpp>
 
 #include "utils/def.h"
+#include "front_end/box3d.h"
 
 namespace dynamic_vins{\
 
@@ -33,15 +34,25 @@ public:
     cv::Scalar color;
 };
 
-//格式：{instnce_id,{feature_id,}}
-using InstancesFeatureMap=std::map<unsigned int,InstanceFeatureSimple>;
 
+/**
+ * 用于在前端和VIO之间传递信息
+ */
 struct FeatureFrame{
     FeatureFrame()=default;
-    FeatureFrame(FeatureMap &&features_,double time_):features(features_),time(time_){} //移动构造函数
+    ///背景特征点
     FeatureMap features;
     double time{0.0};
+
+    ///根据物体的实例信息,格式：{instnce_id,{feature_id,}}
+    std::map<unsigned int,InstanceFeatureSimple> instances;
+
+    ///3D box信息
+    vector<Box3D> boxes;
 };
+
+
+
 
 inline Mat3d Hat(Vec3d v){
     return Sophus::SO3d::hat(v).matrix();

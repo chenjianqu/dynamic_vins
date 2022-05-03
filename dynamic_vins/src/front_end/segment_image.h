@@ -19,6 +19,7 @@
 #include <torch/torch.h>
 
 #include "detector/detector_def.h"
+#include "box3d.h"
 
 namespace dynamic_vins{\
 
@@ -38,6 +39,8 @@ struct SegImage{
 
     cv::Mat flow;//光流估计结果
 
+    std::vector<Box3D> boxes;
+
     unsigned int seq;
     bool exist_inst{false};
 
@@ -52,32 +55,7 @@ struct SegImage{
 };
 
 
-float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
-                const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt);
 
-float CalBoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
-
-template <typename T>
-static std::string DimsToStr(torch::ArrayRef<T> list){
-    int i = 0;
-    std::string text= "[";
-    for(auto e : list) {
-        if (i++ > 0) text+= ", ";
-        text += std::to_string(e);
-    }
-    text += "]";
-    return text;
-}
-
-
-static std::string DimsToStr(cv::Size list){
-    return "[" + std::to_string(list.height) + ", " + std::to_string(list.width) + "]";
-}
-
-
-inline cv::Point2f operator*(const cv::Point2f &lp,const cv::Point2f &rp){
-    return {lp.x * rp.x,lp.y * rp.y};
-}
 
 }
 

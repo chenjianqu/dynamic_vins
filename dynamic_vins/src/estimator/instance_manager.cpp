@@ -11,31 +11,59 @@
 #include <algorithm>
 
 #include "estimator.h"
-#include "utils/visualization.h"
-#include "utils/def.h"
+ #include "utils/def.h"
 #include "vio_parameters.h"
 
 namespace dynamic_vins{\
 
 
 void InstanceManager::set_estimator(Estimator* estimator){
-    e_=estimator;
+    e=estimator;
 }
 
 
 string InstanceManager::PrintInstanceInfo(){
+    if(tracking_number_<1){
+        return {};
+    }
     string s="InstanceInfo :\n";
     InstExec([&s](int key,Instance& inst){
-        s+= fmt::format("id:{} landmarks:{} is_init:{} is_tracking:{} \n",
-                        inst.id,inst.landmarks.size(),inst.is_initial,inst.is_tracking);
-        for(auto &landmark : inst.landmarks){
-            s+=fmt::format("lid:{} feat_size:{} depth:{} \n",landmark.id,landmark.feats.size(),landmark.depth);
+        if(inst.is_tracking){
+            s+= fmt::format("id:{} landmarks:{} is_init:{} is_tracking:{} is_static:{} triangle_num:{} avg_depth:{}\n",
+                            inst.id,inst.landmarks.size(),inst.is_initial,inst.is_tracking,inst.is_static,inst.triangle_num,inst.AverageDepth());
+            for(auto &landmark : inst.landmarks){
+                if(landmark.depth>0){
+                    s+=fmt::format("lid:{} feat_size:{} depth:{} start:{} \n",landmark.id,landmark.feats.size(),
+                                   landmark.depth,landmark.feats[0].frame);
+                }
+            }
         }
+
     },true);
     return s;
 }
 
 
+void InstanceManager::SetVelMap(){
+    std::unique_lock<std::mutex> lk(vel_mutex_);
+    vel_map_.clear();
+    if(tracking_number_<1){
+        return;
+    }
+    string log_text = "SetVelMap 物体的速度信息:";
+    InstExec([&log_text,this](int key,Instance& inst){
+        log_text += fmt::format("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
+        if(inst.vel.v.norm() > 0)
+            vel_map_.insert({inst.id, inst.vel});;
+    });
+    Debugv(log_text);
+}
+
+
+/**
+ * 三角化动态特征点,并限制三角化的点的数量在50以内
+ * @param frame_cnt
+ */
 void InstanceManager::Triangulate(int frame_cnt)
 {
     if(tracking_number_ < 1)
@@ -43,17 +71,18 @@ void InstanceManager::Triangulate(int frame_cnt)
     auto getCamPose=[this](int index,int cam_id){
         assert(cam_id == 0 || cam_id == 1);
         Eigen::Matrix<double, 3, 4> pose;
-        Vec3d t0 = e_->Ps[index] + e_->Rs[index] * e_->tic[cam_id];
-        Mat3d R0 = e_->Rs[index] * e_->ric[cam_id];
+        Vec3d t0 = e->Ps[index] + e->Rs[index] * e->tic[cam_id];
+        Mat3d R0 = e->Rs[index] * e->ric[cam_id];
         pose.leftCols<3>() = R0.transpose();
         pose.rightCols<1>() = -R0.transpose() * t0;
         return pose;
     };
-    Infov("InstanceManager::Triangulate:");
+
+    string log_text = "InstanceManager::Triangulate:";
 
     int num_triangle=0,num_failed=0,num_delete_landmark=0,num_mono=0;
     for(auto &[key,inst] : instances){
-        if(! inst.is_tracking)
+        if(!inst.is_tracking )
             continue;
 
         inst.triangle_num = 0;
@@ -65,7 +94,7 @@ void InstanceManager::Triangulate(int frame_cnt)
             }
         }
 
-        string lm_msg;
+        string log_inst_text;
         int inst_add_num=0;
         double avg_depth= inst.AverageDepth();//平均深度
 
@@ -93,21 +122,21 @@ void InstanceManager::Triangulate(int frame_cnt)
                         inst.triangle_num++;
                         inst.depth_sum += lm.depth;
                         inst_add_num++;
-                        lm_msg+=fmt::format("lid:{} NotInit S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                        log_inst_text+=fmt::format("lid:{} NotInit S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
                     }
                     else{ //判断深度值是否符合
-                        Eigen::Vector3d pts_obj_j=inst.state[lm.feats[0].frame].R.transpose() *
-                                (point3d_w - inst.state[lm.feats[0].frame].P);
-                        if(pts_obj_j.norm() < inst.box.norm()*4){
+                        //Eigen::Vector3d pts_obj_j=inst.state[lm.feats[0].frame].R.transpose() *
+                        //        (point3d_w - inst.state[lm.feats[0].frame].P);
+                        //if(pts_obj_j.norm() < inst.box.norm()*4){
                             lm.depth = depth;
                             inst.triangle_num++;
                             inst.depth_sum += lm.depth;
                             inst_add_num++;
-                            lm_msg+=fmt::format("lid:{} S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
-                        }
-                        else{
-                            lm_msg+=fmt::format("lid:{} outbox d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
-                        }
+                            log_inst_text+=fmt::format("lid:{} S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                        //}
+                        //else{
+                        //    log_inst_text+=fmt::format("lid:{} outbox d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                        //}
                     }
                 }
                 else{///深度值太大或太小
@@ -158,7 +187,7 @@ void InstanceManager::Triangulate(int frame_cnt)
                         inst.depth_sum += lm.depth;
                         num_mono++;
                         inst_add_num++;
-                        lm_msg+=fmt::format("lid:{} M d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d));
+                        log_inst_text+=fmt::format("lid:{} M d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d));
                     }
                 }
                 else{
@@ -174,18 +203,40 @@ void InstanceManager::Triangulate(int frame_cnt)
             }
         }
 
-        Debugv("inst:{} landmarks.size:{} depth.size:{} avg_depth:{} new_add:{}",
-               inst.id, inst.landmarks.size(), inst.triangle_num, avg_depth, inst_add_num);
-        if(lm_msg.empty()){
-            Debugv(lm_msg);
-        }
+        log_text += fmt::format("inst:{} landmarks.size:{} depth.size:{} avg_depth:{} new_add:{}\n",
+                                inst.id, inst.landmarks.size(), inst.triangle_num, avg_depth, inst_add_num);
+        log_text += log_inst_text;
         num_triangle += inst_add_num;
     }
 
     if(num_triangle>0 || num_delete_landmark>0){
-        Debugv("InstanceManager::Triangulate: 增加:{}=(M:{},S:{}) 失败:{} 删除:{}",
+        log_text += fmt::format("InstanceManager::Triangulate: 增加:{}=(M:{},S:{}) 失败:{} 删除:{}",
                num_triangle, num_mono, num_triangle - num_mono,
                num_failed, num_delete_landmark);
+    }
+    Debugv(log_text);
+
+
+    ///管理路标点
+    for(auto &[key,inst] : instances){
+        if(!inst.is_tracking)
+            continue;
+        if(inst.triangle_num < 50)
+            continue;
+
+        for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next){
+            it_next++;
+            if(it->feats.size()<=1 && it->feats[0].frame < e->frame){ //只有一个观测,且该观测不在当前帧
+                if(it->depth>0){
+                    inst.triangle_num--;
+                    inst.depth_sum -= it->depth;
+                }
+                inst.landmarks.erase(it);
+            }
+            if(inst.triangle_num <10){
+                break;
+            }
+        }
     }
 }
 
@@ -198,12 +249,12 @@ void InstanceManager::PredictCurrentPose()
     if(tracking_number_ < 1)
         return;
 
-    int i=e_->frame;
-    int j= e_->frame - 1;
-    double time_ij= e_->headers[i] - e_->headers[j];
+    int i=e->frame;
+    int j= e->frame - 1;
+    double time_ij= e->headers[i] - e->headers[j];
 
     InstExec([&](int key,Instance& inst){
-        inst.state[i].time = e_->headers[i];
+        inst.state[i].time = e->headers[i];
         Mat3d Roioj=Sophus::SO3d::exp(inst.vel.a*time_ij).matrix();
         Vec3d Poioj=inst.vel.v*time_ij;
         inst.state[i].R=Roioj * inst.state[j].R;
@@ -240,11 +291,11 @@ void InstanceManager::PredictCurrentPose()
 
 void InstanceManager::SlideWindow()
 {
-    if(e_->frame != kWinSize)
+    if(e->frame != kWinSize)
         return;
     Debugv("动态特征边缘化:");
     //printf("动态特征边缘化:");
-    if(e_->margin_flag == MarginFlag::kMarginOld)
+    if(e->margin_flag == MarginFlag::kMarginOld)
         Debugv("最老帧 | ");
     else
         Debugv("次新帧 | ");
@@ -255,7 +306,7 @@ void InstanceManager::SlideWindow()
             continue;
 
         int debug_num=0;
-        if (e_->margin_flag == MarginFlag::kMarginOld)/// 边缘化最老的帧
+        if (e->margin_flag == MarginFlag::kMarginOld)/// 边缘化最老的帧
             debug_num= inst.SlideWindowOld();
         else/// 去掉次新帧
             debug_num= inst.SlideWindowNew();
@@ -284,34 +335,34 @@ void InstanceManager::SlideWindow()
  * @param instance_id
  * @param input_insts
  */
-void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input_insts)
+void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,InstanceFeatureSimple> &input_insts)
 {
-    if(e_->solver_flag == SolverFlag::kInitial || input_insts.empty()){
+    if(e->solver_flag == SolverFlag::kInitial || input_insts.empty()){
         return;
     }
-    Debugv("PushBack 输入的实例和特征数量:{},{}",
+    Debugv("PushBack 输入的跟踪实例的数量和特征数量:{},{}",
           input_insts.size(),
           std::accumulate(input_insts.begin(), input_insts.end(), 0,
                           [](int sum, auto &p) { return sum + p.second.size(); }));
-    Debugv("PushBack | 总的的实例数量:{}", instances.size());
-
+    string log_text;
     for(auto &[instance_id , inst_feat] : input_insts){
+        log_text += fmt::format("PushBack 跟踪实例id:{} 特征点数:{}\n",instance_id,inst_feat.size());
         ///创建物体
         auto inst_iter = instances.find(instance_id);
         if(inst_iter == instances.end()){
-            Instance new_inst(frame_id, instance_id, e_);
+            Instance new_inst(frame_id, instance_id, e);
             auto [it,is_insert] = instances.insert({instance_id, new_inst});
             it->second.is_initial=false;
             it->second.color = inst_feat.color;
             tracking_number_++;
 
             for(auto &[feat_id,feat_vector] : inst_feat){
-                FeaturePoint featPoint(feat_vector, e_->frame, e_->td);
+                FeaturePoint featPoint(feat_vector, e->frame, e->td);
                 LandmarkPoint landmarkPoint(feat_id);//创建Landmark
                 it->second.landmarks.push_back(landmarkPoint);
                 it->second.landmarks.back().feats.emplace_back(featPoint);//添加第一个观测
             }
-            Debugv("PushBack | create new inst:{}", instance_id);
+            log_text += fmt::format("PushBack | 创建实例:{}\n", instance_id);
         }
         ///将特征添加到物体中
         else
@@ -319,7 +370,7 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
             auto &landmarks = inst_iter->second.landmarks;
             for(auto &[feat_id,feat_vector] : inst_feat)
             {
-                FeaturePoint feat_point(feat_vector, e_->frame, e_->td);
+                FeaturePoint feat_point(feat_vector, e->frame, e->td);
                 //若不存在，则创建路标
                 if (auto it = std::find_if(landmarks.begin(),landmarks.end(),
                                            [id=feat_id](const LandmarkPoint &it){ return it.id == id;});
@@ -341,15 +392,30 @@ void InstanceManager::PushBack(unsigned int frame_id, InstancesFeatureMap &input
         }
     }
 
+    Debugv(log_text);
 
 }
+
+
+/**
+* 进行物体的位姿初始化
+*/
+void InstanceManager::InitialInstance(vector<Box3D> &boxes3d){
+
+
+    InstExec([](int key,Instance& inst){
+        inst.InitialPose();
+        },true);
+}
+
+
 
 
 void InstanceManager::GetOptimizationParameters()
 {
     Debugv("InstanceManager 优化前后的位姿对比:");
     InstExec([](int key,Instance& inst){
-        Debugv("Inst {}", inst.id);
+        /*Debugv("Inst {}", inst.id);
 
         string lm_msg="优化前 Depth: ";
         int lm_cnt=0;
@@ -368,11 +434,11 @@ void InstanceManager::GetOptimizationParameters()
             pose_msg+=fmt::format("{}:({}) ", i, VecToStr(inst.state[i].P));
             if(i==4)pose_msg+="\n";
         }
-        pose_msg+="\n";
+        pose_msg+="\n";*/
 
         inst.GetOptimizationParameters();
 
-        pose_msg +="优化后 Pose:";
+        /*pose_msg +="优化后 Pose:";
         for(int i=0; i <= kWinSize; ++i){
             pose_msg+=fmt::format("{}:({}) ", i, VecToStr(inst.state[i].P));
             if(i==4)pose_msg+="\n";
@@ -388,7 +454,7 @@ void InstanceManager::GetOptimizationParameters()
             if(lm_cnt%5==0) lm_msg += "\n";
             lm_msg += fmt::format("<lid:{},n:{},d:{:.2f}>",lm.id,lm.feats.size(),lm.depth);
         }
-        Debugv(lm_msg);
+        Debugv(lm_msg);*/
     });
 }
 
@@ -402,7 +468,7 @@ void InstanceManager::GetOptimizationParameters()
 void InstanceManager::AddInstanceParameterBlock(ceres::Problem &problem)
 {
     InstExec([&problem,this](int key,Instance& inst){
-        for(int i=0;i<=(int)e_->frame; i++){
+        for(int i=0;i<=(int)e->frame; i++){
             problem.AddParameterBlock(inst.para_state[i], kSizePose, new PoseLocalParameterization());
         }
     });
@@ -463,15 +529,15 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
 
             auto feat_j=lm.feats[0];
             int fj=feat_j.frame;
-            debug_msg += fmt::format("lid:{} depth:{} feats.size:{}\n", lm.id, lm.depth, lm.feats.size());
+            //debug_msg += fmt::format("lid:{} depth:{} feats.size:{}\n", lm.id, lm.depth, lm.feats.size());
 
             ///第一个特征点只用来优化深度
             if(cfg::is_stereo && feat_j.is_stereo){
                 problem.AddResidualBlock(
                         new ProjInst12Factor(feat_j.point,feat_j.point_right),
                         loss_function,
-                        e_->para_ex_pose[0],
-                        e_->para_ex_pose[1],
+                        e->para_ex_pose[0],
+                        e->para_ex_pose[1],
                         inst.para_inv_depth[depth_index]);
                 /*problem.AddResidualBlock(
                         new ProjInst12FactorSimple(feat_j.point,feat_j.point_right,e->ric[0],e->tic[0],e->ric[1],e->tic[1]),
@@ -505,6 +571,10 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                             inst.para_inv_depth[depth_index]);*/
 
 
+            if(inst.is_static){ //对于静态物体,仅仅refine包围框
+                continue;
+            }
+
             ///位姿、点云、速度的约束
             /*problem.AddResidualBlock(new InstanceInitPowFactor(
                             feat_j.point,feat_j.vel,e->Rs[fj],e->Ps[fj],
@@ -513,9 +583,9 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                             inst.para_state[fj],
                             inst.para_inv_depth[depth_index]);*/
             /*problem.AddResidualBlock(new InstanceInitPowFactorSpeed(
-                    feat_j.point, feat_j.vel, e_->Rs[fj], e_->Ps[fj],
-                    e_->ric[0], e_->tic[0], feat_j.td, e_->td,
-                    e_->headers[fj], e_->headers[0], 1.0),
+                    feat_j.point, feat_j.vel, e->Rs[fj], e->Ps[fj],
+                    e->ric[0], e->tic[0], feat_j.td, e->td,
+                    e->headers[fj], e->headers[0], 1.0),
                                      loss_function,
                                      inst.para_state[0],
                                      inst.para_speed[0],
@@ -532,7 +602,8 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                 int fi = feat_i.frame;
 
                 ///优化物体位姿和特征点深度
-                /*problem.AddResidualBlock(
+                /* //这一项效果不好, TODO
+                 problem.AddResidualBlock(
                         new ProjInst21SimpleFactor(
                                 feat_j.point,feat_i.point,feat_j.vel,feat_i.vel,
                                 e->Rs[feat_j.frame],e->Ps[feat_j.frame],
@@ -542,8 +613,8 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                 loss_function,
                                 inst.para_state[feat_j.frame],
                                 inst.para_state[feat_i.frame],
-                                inst.para_inv_depth[depth_index]);*/
-                res21++;
+                                inst.para_inv_depth[depth_index]);
+                res21++;*/
 
                 double factor= 1.;//track_3>=5 ? 5. : 1.;
                 ///优化相机位姿、物体的速度和位姿
@@ -578,9 +649,9 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                         );*/
                 ///优化物体的速度和位姿
                 /*problem.AddResidualBlock(new SpeedPoseSimpleFactor(
-                        feat_j.point, e_->headers[feat_j.frame], e_->headers[feat_i.frame],
-                        e_->Rs[feat_j.frame], e_->Ps[feat_j.frame], e_->ric[0],
-                        e_->tic[0],feat_j.vel, feat_j.td, e_->td),
+                        feat_j.point, e->headers[feat_j.frame], e->headers[feat_i.frame],
+                        e->Rs[feat_j.frame], e->Ps[feat_j.frame], e->ric[0],
+                        e->tic[0],feat_j.vel, feat_j.td, e->td),
                                          loss_function,
                                          inst.para_state[feat_j.frame],
                                          inst.para_state[feat_i.frame],
@@ -590,7 +661,8 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
 
                 if(cfg::is_stereo && feat_i.is_stereo){
                     ///优化物体的位姿
-                    /*problem.AddResidualBlock(
+                    /* //这一项效果不好,TODO
+                     problem.AddResidualBlock(
                             new ProjInst22SimpleFactor(
                                     feat_j.point,feat_i.point,feat_j.vel,feat_i.vel,
                                     e->Rs[feat_j.frame],e->Ps[feat_j.frame],
@@ -630,12 +702,13 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
             }
         }
 
-        ///添加恒定速度误差
-        /*problem.AddResidualBlock(new ConstSpeedSimpleFactor(
-                inst.last_vel.v,inst.last_vel.a,number_speed*10),
-                nullptr,
-                inst.para_speed[0]);*/
-
+        if(!inst.is_static){
+            ///添加恒定速度误差
+            problem.AddResidualBlock(new ConstSpeedSimpleFactor(
+                    inst.last_vel.v,inst.last_vel.a,number_speed*10),
+                                     nullptr,
+                                     inst.para_speed[0]);
+        }
 
         Debugv("inst:{} landmarks.size:{} isOptimizeVel:{} track_3:{} \n {}", inst.id, inst.landmarks.size(),
                inst.opt_vel, track_3, debug_msg);

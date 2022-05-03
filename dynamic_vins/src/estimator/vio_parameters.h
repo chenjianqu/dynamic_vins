@@ -20,8 +20,6 @@ namespace dynamic_vins{\
 constexpr double kDynamicDepthMin=0.1;//动态特征点深度的最小值
 constexpr double kDynamicDepthMax=100;//动态特征点深度的最大值
 
-constexpr int kInstanceInitMinNum=5;//为了初始化实例,在某一帧的最少三角化特征数量
-
 
 enum SizeParameterization{
     kSizePose = 7,
@@ -75,7 +73,11 @@ public:
     inline static double kMaxSolverTime;
     inline static int KNumIter;
 
+    inline static int kInstanceInitMinNum;//为了初始化实例,在某一帧的最少三角化特征数量
+    inline static double kInstanceStaticErrThreshold;//判断物体是否运动的重投影误差阈值
+
     inline static double TD;
+
 
     static void SetParameters(const std::string &config_path);
 };

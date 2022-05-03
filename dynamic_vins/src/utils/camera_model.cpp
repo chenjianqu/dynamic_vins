@@ -47,6 +47,7 @@ void InitCamera(const std::string& config_path){
         cam0->cy = calib_map["P2"](1,2);
         cam0->baseline = 0;
         double baseline_2 = calib_map["P2"](0,3) / (- cam0->fx);
+        cout<<"baseline_2:"<<baseline_2<<endl;
 
         cam1 = std::make_shared<PinHoleCamera>();
         cam1->image_width = cfg::kInputWidth;
@@ -56,6 +57,8 @@ void InitCamera(const std::string& config_path){
         cam1->cx = calib_map["P3"](0,2);
         cam1->cy = calib_map["P3"](1,2);
         double baseline_3 = calib_map["P3"](0,3) / (- cam1->fx);
+        cout<<"baseline_3:"<<baseline_3<<endl;
+
         cam1->baseline = baseline_3 - baseline_2;
 
         cout<<"P2:\n"<<calib_map["P2"]<<endl;

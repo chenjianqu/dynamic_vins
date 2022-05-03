@@ -73,24 +73,15 @@ class Estimator
 
     void ClearState();
 
-    void PushBack(double time, FeatureMap &feats, InstancesFeatureMap &insts){
+    void PushBack(FeatureFrame &frame_feature){
         input_image_cnt++;
         if(input_image_cnt % 2 == 0){
             buf_mutex.lock();
-            feature_buf.emplace(std::move(feats), time);//放入特征队列中
-            instances_buf.push(std::move(insts));
+            feature_buf.emplace(frame_feature);//放入特征队列中
             buf_mutex.unlock();
         }
     }
 
-    void PushBack(double time, FeatureMap &feats){
-        input_image_cnt++;
-        if(input_image_cnt % 2 == 0){
-            buf_mutex.lock();
-            feature_buf.emplace(std::move(feats), time);//放入特征队列中
-            buf_mutex.unlock();
-        }
-    }
 
     Mat3d ric[2];
     Vec3d tic[2];
@@ -116,7 +107,7 @@ private:
 
     void SetMarginalizationInfo();
 
-    void ProcessImage(const FeatureMap & image,InstancesFeatureMap &input_insts, const double header);
+    void ProcessImage( FeatureFrame & image, const double header);
     void ProcessIMU(double t, double dt, const Vec3d &linear_acceleration, const Vec3d &angular_velocity);
 
     void SlideWindow();
@@ -176,7 +167,6 @@ private:
     queue<pair<double, Vec3d>> acc_buf;
     queue<pair<double, Vec3d>> gyr_buf;
     queue<FeatureFrame> feature_buf;
-    queue<InstancesFeatureMap> instances_buf;
     double prev_time{}, cur_time{};
     bool openExEstimation{};
 

@@ -52,14 +52,14 @@ void ReadCameraToIMU(const std::string& config_path){
         //将点从IMU坐标系变换到相机坐标系0的变换矩阵
         Mat4d T_imu_c0 =calib_map["Tr_imu_velo"] * calib_map["Tr_velo_cam"];
 
-        double baseline_2 = calib_map["P2"](0,3) / (- cam0->fx);
+        double baseline_2 = calib_map["P2"](0,3) / (- cam0->fx);//如 baseline_2=4.485728000000e+01 / (-7.215377000000e+02) =−0.062169004
 
         Mat4d T_c0_c2 = Mat4d::Identity();
         T_c0_c2(0,3) = -baseline_2;
         Mat4d T_imu_c2 = T_imu_c0*T_c0_c2;
         Mat4d T_ic0 = T_imu_c2.inverse();
 
-        para::RIC.emplace_back(T_ic0.block<3, 3>(0, 0));
+        /*para::RIC.emplace_back(T_ic0.block<3, 3>(0, 0));
         para::TIC.emplace_back(T_ic0.block<3, 1>(0, 3));
 
         if(cfg::kCamNum == 2){
@@ -70,6 +70,17 @@ void ReadCameraToIMU(const std::string& config_path){
             Mat4d T_ic1 = T_imu_c3.inverse();
             para::RIC.emplace_back(T_ic1.block<3, 3>(0, 0));
             para::TIC.emplace_back(T_ic1.block<3, 1>(0, 3));
+        }*/
+
+        ///简单的设置IMU坐标系在cam2上
+        para::RIC.emplace_back(Mat3d::Identity());
+        para::TIC.emplace_back(Vec3d::Zero());
+
+        if(cfg::kCamNum == 2){
+            double baseline_3 = calib_map["P3"](0,3) / (- cam1->fx); //如 baseline_2=-3.395242000000e+02 / (-7.215377000000e+02) = 0.470556424
+            double baseline = baseline_3-baseline_2;//0.5
+            para::RIC.emplace_back(Mat3d::Identity());
+            para::TIC.emplace_back(Vec3d(baseline,0,0));
         }
 
     }
@@ -128,6 +139,11 @@ void VioParameters::SetParameters(const std::string &config_path)
     fs["BIAS_GYR_THRESHOLD"]>>BIAS_GYR_THRESHOLD;
 
     TD = fs["td"];
+
+    kInstanceStaticErrThreshold = fs["instance_static_err_threshold"];
+    kInstanceInitMinNum = fs["instance_init_min_num"];
+
+
 
     fs.release();
 

@@ -103,26 +103,13 @@ public:
     void InstsFlowTrack(SegImage img);
     void InstsTrackByMatching(SegImage img);
 
-    InstancesFeatureMap GetOutputFeature();
+    std::map<unsigned int,InstanceFeatureSimple> GetOutputFeature();
     void AddViodeInstances(SegImage &img);
     cv::Mat AddInstances(SegImage &img);
     void AddInstancesGPU(const SegImage &img);
     void AddInstancesByTracking(SegImage &img);
     void VisualizeInst(cv::Mat &img);
     void DrawInsts(cv::Mat& img);
-
-    void StartFlowEstimating(torch::Tensor &img){
-/*        while(flow_estimator_->is_running()){
-            std::this_thread::sleep_for(5ms);
-            Debugs("flow_estimator is_running");
-        }
-        flow_estimator_->StartForward(img);*/
-    }
-
-    torch::Tensor WaitingFlowEstimating(){
-        //return flow_estimator_->WaitingResult();
-        return {};
-    }
 
     void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
 private:

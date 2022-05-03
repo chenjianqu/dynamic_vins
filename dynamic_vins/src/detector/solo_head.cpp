@@ -11,7 +11,6 @@
 #include "detector_parameter.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/log_utils.h"
-#include "front_end/segment_image.h"
 
 namespace dynamic_vins{\
 

@@ -103,7 +103,7 @@ rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
 直接读取数据集
 ```shell
 
-/home/chen/ws/dynamic_ws/src/kitti_pub/cmake-build-debug/devel/lib/kitti_pub/kitti_pub  /home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0018  /home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0018
+/home/chen/ws/dynamic_ws/src/kitti_pub/cmake-build-debug/devel/lib/kitti_pub/kitti_pub  /home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0003  /home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0003
 
 ```
 

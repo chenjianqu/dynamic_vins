@@ -38,6 +38,7 @@
 #include "flow/flow_visual.h"
 #include "estimator/estimator.h"
 #include "estimator/dynamic.h"
+#include "front_end/box3d.h"
 #include "front_end/segment_image.h"
 #include "front_end/front_end.h"
 #include "front_end/front_end_parameters.h"
@@ -53,6 +54,9 @@ Detector::Ptr detector;
 FlowEstimator::Ptr flow_estimator;
 FeatureTracker::Ptr feature_tracker;
 CallBack* callback;
+
+
+
 
 
 
@@ -154,6 +158,12 @@ void ImageProcess()
             }
         }
 
+
+        ///读取 预先检测的3D包围框
+        img.boxes = ReadBox3D(img.seq);
+
+
+
         detector->PushBack(img);
         /*cv::Mat show;
         cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
@@ -185,23 +195,24 @@ void FeatureTrack()
         if(auto img = detector->WaitForResult();img){
             tt.Tic();
             Warnt("----------Time : {} ----------", std::to_string(img->time0));
+            FeatureFrame frame;
+            frame.time = img->time0;
+
             if(cfg::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
-                FeatureMap features = feature_tracker->TrackSemanticImage(*img);
-                auto instances= feature_tracker->insts_tracker->GetOutputFeature();
-                if(!cfg::is_only_frontend)
-                    estimator->PushBack(img->time0, features, instances);
+                frame.features  = feature_tracker->TrackSemanticImage(*img);
+                frame.instances = feature_tracker->insts_tracker->GetOutputFeature();
+                frame.boxes = feature_tracker->cur_img.boxes;
             }
             else if(cfg::slam == SlamType::kNaive){
-                FeatureMap features = feature_tracker->TrackImageNaive(*img);
-                if(!cfg::is_only_frontend)
-                    estimator->PushBack(img->time0, features);
+                frame.features = feature_tracker->TrackImageNaive(*img);
             }
             else{
-                FeatureMap features = feature_tracker->TrackImage(*img);
-                if(!cfg::is_only_frontend)
-                    estimator->PushBack(img->time0, features);
+                frame.features = feature_tracker->TrackImage(*img);
             }
+
+            if(!cfg::is_only_frontend)
+                estimator->PushBack(frame);
 
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){

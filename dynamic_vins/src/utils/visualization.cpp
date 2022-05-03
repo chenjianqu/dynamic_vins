@@ -111,18 +111,10 @@ void printStatistics(const Estimator &estimator, double t)
 {
     if (estimator.solver_flag != SolverFlag::kNonLinear)
         return;
-    //printf("position: %f, %f, %f\r", e.Ps[kWindowSize].x(), e.Ps[kWindowSize].y(), e.Ps[kWindowSize].z());
-    ROS_DEBUG_STREAM("position: " << estimator.Ps[kWinSize].transpose());
-    ROS_DEBUG_STREAM("orientation: " << estimator.Vs[kWinSize].transpose());
     if (cfg::is_estimate_ex)
     {
         cv::FileStorage fs(cfg::kExCalibResultPath, cv::FileStorage::WRITE);
-        for (int i = 0; i < cfg::kCamNum; i++)
-        {
-            //ROS_DEBUG("calibration result for camera %d", i);
-            ROS_DEBUG_STREAM("extirnsic Tic: " << estimator.tic[i].transpose());
-            ROS_DEBUG_STREAM("extrinsic ric: " << Utility::R2ypr(estimator.ric[i]).transpose());
-
+        for (int i = 0; i < cfg::kCamNum; i++){
             Eigen::Matrix4d eigen_T = Eigen::Matrix4d::Identity();
             eigen_T.block<3, 3>(0, 0) = estimator.ric[i];
             eigen_T.block<3, 1>(0, 3) = estimator.tic[i];
@@ -140,14 +132,9 @@ void printStatistics(const Estimator &estimator, double t)
     static int sum_of_calculation = 0;
     sum_of_time += t;
     sum_of_calculation++;
-    ROS_DEBUG("vo solver costs: %f ms", t);
-    ROS_DEBUG("average of time %f ms", sum_of_time / sum_of_calculation);
 
     sum_of_path += (estimator.Ps[kWinSize] - last_path).norm();
     last_path = estimator.Ps[kWinSize];
-    ROS_DEBUG("sum of path %f", sum_of_path);
-    if (cfg::is_estimate_td)
-        ROS_INFO("td %f", estimator.td);
 }
 
 void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
@@ -474,7 +461,6 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
         color_inv[1] = 1. - color_norm[1];
         color_inv[2] = 1. - color_norm[2];
         color_inv[3] = 1.;
-        //vio_logger->debug("inst:{} point3d_curr num:{}",inst.id,inst.point3d_curr.size());
 
         PointCloud cloud;
         for(auto &pt : inst.point3d_curr){
@@ -482,7 +468,6 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
             p.x = (float)pt(0);p.y = (float)pt(1);p.z = (float)pt(2);
             p.r=(uint8_t)inst.color[2];p.g=(uint8_t)inst.color[1];p.b=(uint8_t)inst.color[0];
             cloud.push_back(p);
-            //DebugV("({})", VecToStr(pt));
         }
 
         /*
@@ -509,9 +494,11 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
          */
 
         //各个时刻的位姿
-        for(int i=0; i <= kWinSize; i++){
-            auto text_marker = BuildTextMarker(inst.state[i].P,i,to_string(i),color_transparent);
-            markers.markers.push_back(text_marker);
+        if(!inst.is_static){
+            for(int i=0; i <= kWinSize; i++){
+                auto text_marker = BuildTextMarker(inst.state[i].P,i,to_string(i),color_transparent);
+                markers.markers.push_back(text_marker);
+            }
         }
 
         //auto lineStripMarker = BuildLineStripMarker(maxPt,minPt,key,color_norm);
@@ -520,16 +507,21 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
         auto lineStripMarker = BuildLineStripMarker(vertex,key,color_norm);
 
         //计算可视化的速度
-        Eigen::Vector3d vel = Hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
-        auto text=fmt::format("{}\n({})", inst.id, VecToStr(vel));
-        auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2);
-
-        Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 4;
-        auto arrowMarker = BuildArrowMarker(inst.state[kWinSize].P, end, key, color_norm);
-
+        if(!inst.is_static){
+            Eigen::Vector3d vel = Hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
+            string text=fmt::format("{}\n({})", inst.id, VecToStr(vel));
+            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2);
+            Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 4;
+            auto arrowMarker = BuildArrowMarker(inst.state[kWinSize].P, end, key, color_norm);
+            markers.markers.push_back(textMarker);
+            markers.markers.push_back(arrowMarker);
+        }
+        else{
+            string text=fmt::format("{} static", inst.id);
+            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2);
+            markers.markers.push_back(textMarker);
+        }
         markers.markers.push_back(lineStripMarker);
-        markers.markers.push_back(textMarker);
-        markers.markers.push_back(arrowMarker);
 
         pointCloud+=cloud;
     }
@@ -589,32 +581,7 @@ void printInstanceData(const Estimator &estimator)
 }
 
 
-void printInstancePose(Instance &inst)
-{
-    if(!inst.is_tracking || !inst.is_initial){
-        return;
-    }
-    //printf("Inst:%d | ",inst.id);
-    for(int i=0; i <= kWinSize; ++i){
-        //Eigen::Quaterniond q(inst.state[i].R);
-        //printf("%d:<%.2lf,%.2lf,%.2lf | %.2lf,%.2lf,%.2lf,%.2lf> ",i,inst.state[i].P.x(),inst.state[i].P.y(),inst.state[i].P.z(),q.x(),q.y(),q.z(),q.w());
-        printf("%d:<%.2lf,%.2lf,%.2lf> ",i,inst.state[i].P.x(),inst.state[i].P.y(),inst.state[i].P.z());
-        //if(i==5) printf("\n  ");
-    }
-    printf("\n");
-}
 
-void printInstanceDepth(Instance &inst)
-{
-    if(!inst.is_tracking || !inst.is_initial)
-        return;
-    //printf("Inst:%d | ",inst.id);
-
-    for(auto& landmark : inst.landmarks)
-        if(landmark.depth > 0.)
-            printf("<lid:%d:d:%.2lf> ",landmark.id,landmark.depth);
-        printf("\n");
-}
 
 
 visualization_msgs::Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,int id,const cv::Scalar &color)

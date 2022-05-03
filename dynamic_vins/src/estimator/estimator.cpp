@@ -210,12 +210,12 @@ void Estimator::Optimization()
     if(cfg::slam == SlamType::kDynamic)
         insts_manager.GetOptimizationParameters();
 
-    string msg="相机位姿 优化前：\n" + LogCurrentPose();
+    //string msg="相机位姿 优化前：\n" + LogCurrentPose();
 
     Double2vector();
 
-    msg+="相机位姿 优化后：\n" + LogCurrentPose();
-    Debugv(msg);
+    //msg+="相机位姿 优化后：\n" + LogCurrentPose();
+    //Debugv(msg);
 
     Debugt("optimization | postprocess:{} ms",tt.TocThenTic());
 
@@ -1356,27 +1356,26 @@ void Estimator::UpdateLatestStates(){
  * @param image
  * @param header
  */
-void Estimator::ProcessImage(const FeatureMap &image,InstancesFeatureMap &input_insts ,const double header){
+void Estimator::ProcessImage( FeatureFrame &image,const double header){
     ///添加背景特征点到管理器,并判断视差
-    Infov("processImage Adding feature points number:{}", image.size());
-    if (f_manager.AddFeatureCheckParallax(frame, image, td))
+    Infov("processImage Adding feature points number:{}", image.features.size());
+    if (f_manager.AddFeatureCheckParallax(frame, image.features, td))
         margin_flag = MarginFlag::kMarginOld;
     else
         margin_flag = MarginFlag::kMarginSecondNew;
 
     ///添加动态特征点,并创建物体
     if(cfg::slam == SlamType::kDynamic){
-        insts_manager.PushBack(frame, input_insts);
+        insts_manager.PushBack(frame, image.instances);
     }
 
-    Debugv("processImage margin_flag:{}", margin_flag == MarginFlag::kMarginSecondNew ? "Non-keyframe" : "Keyframe");
-    Debugv("processImage frame_count {}", frame);
-    Debugv("processImage all feature size: {}", f_manager.GetFeatureCount());
+    Debugv("processImage margin_flag:{}", margin_flag == MarginFlag::kMarginSecondNew ? "kMarginSecondNew" : "kMarginOld");
+    Debugv("processImage 地图中被观测4次以上的地点的数量: {}", f_manager.GetFeatureCount());
 
     headers[frame] = header;
 
     ///创建帧,并设置该帧的预积分
-    ImageFrame img_frame(image, header);
+    ImageFrame img_frame(image.features, header);
     img_frame.pre_integration = tmp_pre_integration;
     all_image_frame.insert({header, img_frame});
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, Bas[frame], Bgs[frame]};
@@ -1489,7 +1488,9 @@ void Estimator::ProcessImage(const FeatureMap &image,InstancesFeatureMap &input_
             ///动态特征点的三角化
             insts_manager.Triangulate(frame);
             ///若动态物体未初始化, 则进行初始化
-            insts_manager.InitialInstance();
+            insts_manager.InitialInstance(image.boxes);
+            ///根据重投影误差和对极几何判断物体是运动的还是静态的
+            insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
             Debugv(insts_manager.PrintInstanceInfo());
         }
@@ -1569,9 +1570,6 @@ void Estimator::ProcessMeasurements(){
             std::this_thread::sleep_for(5ms);
             continue;
         }
-        InstancesFeatureMap curr_insts;
-        if(cfg::slam == SlamType::kDynamic)
-            curr_insts=instances_buf.front();
 
         Warnv("----------Time : {} ----------", std::to_string(feature_frame.time));
 
@@ -1584,9 +1582,6 @@ void Estimator::ProcessMeasurements(){
             GetIMUInterval(prev_time, cur_time, acc_vec, gyr_vec);
 
         feature_buf.pop();
-        if(cfg::slam == SlamType::kDynamic)
-            instances_buf.pop();
-
         buf_mutex.unlock();
 
         ///IMU预积分 和 状态递推
@@ -1612,7 +1607,7 @@ void Estimator::ProcessMeasurements(){
         Debugv("solver_flag:{}", solver_flag == SolverFlag::kInitial ? "INITIAL" : "NO-LINEAR");
 
         ///进入主函数
-        ProcessImage(feature_frame.features, curr_insts ,feature_frame.time);
+        ProcessImage(feature_frame ,feature_frame.time);
         prev_time = cur_time;
 
         printStatistics(*this, 0);

@@ -26,6 +26,10 @@ public:
 
     inline static int kInputHeight,kInputWidth,kInputChannel=3;
 
+    inline static std::string kDet3dPreprocessPath;
+    inline static double kDet3dScoreThreshold;
+
+
     static void SetParameters(const std::string &config_path);
 
 };

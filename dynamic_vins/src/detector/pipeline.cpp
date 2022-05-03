@@ -11,7 +11,6 @@
 
 #include <opencv2/cudaimgproc.hpp>
 
-#include "front_end/segment_image.h"
 #include "detector_parameter.h"
 
 namespace dynamic_vins{\

@@ -33,6 +33,10 @@ void FrontendParemater::SetParameters(const std::string &config_path)
     is_show_track = fs["show_track"];
     is_flow_back = fs["flow_back"];
 
+    fs["det3d_preprocess_path"] >> kDet3dPreprocessPath;
+    fs["det3d_score_threshold"] >> kDet3dScoreThreshold;
+
+
     fs.release();
 
 }

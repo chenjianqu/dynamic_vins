@@ -15,7 +15,7 @@ slam_type: "dynamic" #SLAM模式,可选:raw,naive,dynamic
 # 2表示估计外参,但无初始外参
 estimate_extrinsic: 0
 
-visual_inst_duration: 120  #物体可视化的持续时间
+visual_inst_duration: 240  #物体可视化的持续时间
 
 basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
@@ -130,8 +130,9 @@ segmentor_log_path: "output/segmentor_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
 
-
-
+####################### 动态物体参数 ########################
+instance_init_min_num: 8
+instance_static_err_threshold: 10.0
 
 
 

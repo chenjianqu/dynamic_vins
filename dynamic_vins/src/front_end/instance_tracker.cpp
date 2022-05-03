@@ -728,9 +728,9 @@ void InstsFeatManager::ManageInstances()
  ** 用于将特征点传到VIO模块
  * @param result
  */
-InstancesFeatureMap InstsFeatManager::GetOutputFeature()
+std::map<unsigned int,InstanceFeatureSimple> InstsFeatManager::GetOutputFeature()
 {
-    InstancesFeatureMap result;
+    std::map<unsigned int,InstanceFeatureSimple> result;
 
     ExecInst([&](unsigned int key, InstFeat& inst){
         InstanceFeatureSimple  features_map;

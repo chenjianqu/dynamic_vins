@@ -29,6 +29,7 @@ namespace dynamic_vins{\
 class Estimator;
 
 
+
 class Instance{
 public:
     using Ptr=std::shared_ptr<Instance>;
@@ -50,7 +51,9 @@ public:
     double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo);
     void GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
 
-    double AverageDepth(){
+    void SetDynamicOrStatic();
+
+    double AverageDepth() const{
         if(triangle_num>0){
             return depth_sum/double(triangle_num);
         }
@@ -84,6 +87,9 @@ public:
 
     int triangle_num{0};//已经三角化的路标点的数量
     double depth_sum{0};//所有路标点的平均深度
+
+    bool is_static{false};//物体是运动的还是静态的
+    int static_cnt{0};//辅助判断物体是否运动,
 };
 
 }

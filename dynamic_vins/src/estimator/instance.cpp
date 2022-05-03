@@ -74,7 +74,7 @@ void Instance::InitialPose()
         }
         cnt_sum+=win_cnt[i];
     }
-    if(cnt_sum < kInstanceInitMinNum)
+    if(cnt_sum < para::kInstanceInitMinNum)
         return;
 
     ///计算初始位姿
@@ -348,14 +348,15 @@ void Instance::OutlierRejection()
         auto &lm=*it;
         if(lm.feats.empty() || lm.depth <= 0)
             continue;
-        if(int frame=lm.feats[0].frame; !IsInBox(
+        ///根据包围框去除外点
+/*        if(int frame=lm.feats[0].frame; !IsInBox(
                 e->Rs[frame], e->Ps[frame], e->ric[0], e->tic[0], state[frame].R,
                 state[frame].P, lm.depth, lm.feats[0].point, box)){
             debug_msg += fmt::format("lid:{} ", lm.id);
             landmarks.erase(it);
             num_delete++;
             continue;
-        }
+        }*/
         lm_msg += fmt::format("\nlid:{} depth:{:.2f} ", lm.id,lm.depth);
         double err = 0;
         int err_cnt = 0;
@@ -499,6 +500,71 @@ void Instance::GetOptimizationParameters()
 }
 
 
+
+
+/**
+ * 判断物体是运动的还是静止的
+ */
+void Instance::SetDynamicOrStatic()
+{
+    if(!is_tracking || triangle_num<5){
+        return;
+    }
+
+    double err = 0;
+    int err_cnt = 0;
+
+    for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
+        it_next++;
+        auto &lm=*it;
+        if(lm.feats.empty() || lm.depth <= 0)
+            continue;
+
+        ///单目重投影误差
+        for(int i=1;i<(int)lm.feats.size(); ++i){
+            int imu_i = lm.feats[0].frame;
+            int imu_j = lm.feats[i].frame;
+            Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
+            Vec3d pts_cj = e->ric[0].transpose() * (e->Rs[imu_j].transpose() * (pts_w - e->Ps[imu_j]) - e->tic[0]);
+            Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
+            double re = residual.norm();
+            err+=re;
+            err_cnt++;
+        }
+        ///双目重投影误差
+        /*for(int i=0;i<(int)lm.feats.size(); ++i){
+            if(lm.feats[i].is_stereo){
+                int imu_i = lm.feats[0].frame;
+                int imu_j = lm.feats[i].frame;
+                Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
+                Vec3d pts_cj = e->ric[1].transpose() * (e->Rs[imu_j].transpose() * (pts_w - e->Ps[imu_j]) - e->tic[1]);
+                Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
+                double re = residual.norm();
+                err+=re;
+                err_cnt++;
+            }
+        }*/
+    }
+
+    if(err_cnt>0){
+        double avg_err = err / err_cnt * kFocalLength;
+        if(avg_err < para::kInstanceStaticErrThreshold){
+            if(!is_static){
+                if(static_cnt >=3 ){
+                    static_cnt=0;
+                    is_static=true;
+                }
+                else{
+                    static_cnt++;
+                }
+            }
+
+        }
+        Debugv("SetDynamicOrStatic id:{} triangle_num:{} avg_err:{} is_static:{}",id,triangle_num,avg_err,is_static);
+    }
+
+
+}
 
 
 }

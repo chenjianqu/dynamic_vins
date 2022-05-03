@@ -188,6 +188,24 @@ void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label = "
 cv::Scalar color_map(int64_t n);
 
 
+float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
+                const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt);
+
+float CalBoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
+
+
+
+
+static std::string DimsToStr(cv::Size list){
+    return "[" + std::to_string(list.height) + ", " + std::to_string(list.width) + "]";
+}
+
+
+inline cv::Point2f operator*(const cv::Point2f &lp,const cv::Point2f &rp){
+    return {lp.x * rp.x,lp.y * rp.y};
+}
+
+
 }
 
 #endif //DYNAMIC_VINS_FEATURE_UTILS_H

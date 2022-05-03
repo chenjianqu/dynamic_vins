@@ -44,6 +44,16 @@ public:
     FeatureMap TrackImageNaive(SegImage &img);
     FeatureMap TrackSemanticImage(SegImage &img);
 
+    cv::Mat img_track(){return img_track_;}
+
+    InstsFeatManager::Ptr insts_tracker;
+    SegImage prev_img, cur_img;
+
+private:
+    FeatureMap SetOutputFeats();
+    void SetPrediction(std::map<int, Eigen::Vector3d> &predictPts);
+    void RemoveOutliers(std::set<int> &removePtsIds);
+
     void ShowUndistortion(const string &name);
     void RejectWithF();
     vector<cv::Point2f> PtsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
@@ -54,21 +64,12 @@ public:
                    vector<cv::Point2f> &curLeftPts,
                    vector<cv::Point2f> &curRightPts,
                    std::map<int, cv::Point2f> &prevLeftPts);
-    void SetPrediction(std::map<int, Eigen::Vector3d> &predictPts);
-    void RemoveOutliers(std::set<int> &removePtsIds);
-
-    cv::Mat img_track(){return img_track_;}
-
-    InstsFeatManager::Ptr insts_tracker;
-private:
-    FeatureMap SetOutputFeats();
 
     int row{}, col{};
     cv::Mat img_track_;
     cv::Mat mask,semantic_mask;
     cv::cuda::GpuMat mask_gpu,semantic_mask_gpu;
     cv::Mat fisheye_mask;
-    SegImage prev_img, cur_img;
     vector<cv::Point2f> n_pts;
     vector<cv::Point2f> predict_pts;
     vector<cv::Point2f> predict_pts_debug;
