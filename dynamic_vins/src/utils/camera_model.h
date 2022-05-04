@@ -15,6 +15,8 @@
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
 
+#include "utils/def.h"
+
 namespace dynamic_vins{\
 
 
@@ -24,8 +26,14 @@ public:
     PinHoleCamera(){}
 
 
-    bool readFromYamlFile(const std::string& filename);
-    void liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) const;
+    bool ReadFromYamlFile(const std::string& filename);
+
+    void LiftProjective(const Vec2d& p, Vec3d& P) const;
+
+    void ProjectPoint(const Vec3d& p3d, Vec2d& p2d) const{
+        p2d.x() = p3d.x()/p3d.z() * fx + cx;
+        p2d.y() = p3d.y()/p3d.z() * fy + cy;
+    }
 
     float fx,fy,cx,cy;
     float baseline;

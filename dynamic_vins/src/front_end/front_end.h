@@ -28,7 +28,7 @@
 #include "utils/def.h"
 #include "utils/parameters.h"
 #include "instance_tracker.h"
-#include "detector/detector.h"
+#include "det2d/detector2d.h"
 #include "feature_utils.h"
 #include "estimator/dynamic.h"
 
@@ -38,7 +38,7 @@ class FeatureTracker
 {
 public:
     using Ptr=std::unique_ptr<FeatureTracker>;
-    FeatureTracker(const string& config_path);
+    explicit FeatureTracker(const string& config_path);
 
     FeatureMap TrackImage(SegImage &img);
     FeatureMap TrackImageNaive(SegImage &img);
@@ -56,6 +56,7 @@ private:
 
     void ShowUndistortion(const string &name);
     void RejectWithF();
+
     vector<cv::Point2f> PtsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
                                     std::map<int, cv::Point2f> &cur_id_pts,
                                     std::map<int, cv::Point2f> &prev_id_pts) const;
@@ -67,12 +68,10 @@ private:
 
     int row{}, col{};
     cv::Mat img_track_;
-    cv::Mat mask,semantic_mask;
-    cv::cuda::GpuMat mask_gpu,semantic_mask_gpu;
+    cv::Mat mask;
+    cv::cuda::GpuMat mask_gpu;
     cv::Mat fisheye_mask;
     vector<cv::Point2f> n_pts;
-    vector<cv::Point2f> predict_pts;
-    vector<cv::Point2f> predict_pts_debug;
     vector<cv::Point2f> prev_pts, cur_pts, cur_right_pts;
     vector<cv::Point2f> prev_un_pts, cur_un_pts, cur_un_right_pts;
     vector<cv::Point2f> pts_velocity, right_pts_velocity;

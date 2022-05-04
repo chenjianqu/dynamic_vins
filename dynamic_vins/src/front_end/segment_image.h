@@ -18,8 +18,8 @@
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
 
-#include "detector/detector_def.h"
-#include "box3d.h"
+#include "det2d/det2d_def.h"
+#include "utils/box3d.h"
 
 namespace dynamic_vins{\
 
@@ -39,14 +39,13 @@ struct SegImage{
 
     cv::Mat flow;//光流估计结果
 
-    std::vector<Box3D> boxes;
+    std::vector<Box3D::Ptr> boxes;//3D检测结果
 
     unsigned int seq;
-    bool exist_inst{false};
+    bool exist_inst{false};//当前帧是否检测到物体
 
     void SetMask();
-    void SetMaskGpu();
-    void SetMaskGpuSimple();
+    void SetBackgroundMask();
 
     void SetGrayImage();
     void SetGrayImageGpu();

@@ -63,7 +63,6 @@ public:
 
     explicit Config(const std::string &file_name);
 
-    inline static int ROLLING_SHUTTER;
     inline static std::string kExCalibResultPath;
     inline static std::string kVinsResultPath;
     inline static std::string kOutputFolder;

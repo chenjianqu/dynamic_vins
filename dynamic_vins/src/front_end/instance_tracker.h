@@ -32,6 +32,7 @@
 #include "mot/deep_sort.h"
 #include "feature_utils.h"
 #include "estimator/dynamic.h"
+#include "utils/box3d.h"
 
 namespace dynamic_vins{\
 
@@ -72,7 +73,6 @@ struct InstFeat{
     cv::Point2f feats_center_pt;//当前跟踪的特征点的中心坐标
     int row{},col{};
 
-    cv::Point2f box_min_pt,box_max_pt,box_center_pt;//边界框的两个点
     cv::Point2f box_vel;
     double last_time{-1.},delta_time{};
 
@@ -85,8 +85,8 @@ struct InstFeat{
 
     unsigned int last_frame_cnt{0};
 
-    cv::Mat orb_descriptors,orb_last_descriptors;
-    std::vector<cv::KeyPoint> orb_keypoints,orb_last_keypoints;
+    Box2D::Ptr box2d;
+    Box3D::Ptr box3d;
 };
 
 
@@ -97,29 +97,32 @@ struct InstFeat{
 class InstsFeatManager {
 public:
     using Ptr=std::shared_ptr<InstsFeatManager>;
-    InstsFeatManager(const string& config_path);
+    explicit InstsFeatManager(const string& config_path);
 
     void InstsTrack(SegImage img);
-    void InstsFlowTrack(SegImage img);
     void InstsTrackByMatching(SegImage img);
 
     std::map<unsigned int,InstanceFeatureSimple> GetOutputFeature();
     void AddViodeInstances(SegImage &img);
-    cv::Mat AddInstances(SegImage &img);
-    void AddInstancesGPU(const SegImage &img);
+    cv::Mat AddInstancesByIoU(SegImage &img);
+    void AddInstancesByIouWithGPU(const SegImage &img);
     void AddInstancesByTracking(SegImage &img);
-    void VisualizeInst(cv::Mat &img);
     void DrawInsts(cv::Mat& img);
 
     void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
+
 private:
     void ManageInstances();
 
     void ClearState();
 
+    void BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes);
+
 
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
+
     std::tuple<int,float,float> GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor);
+
     void ExecInst(std::function<void(unsigned int, InstFeat&)> func){
         for(auto & [ key,inst] : instances_){
             if(inst.lost_num>0)
@@ -146,8 +149,6 @@ private:
 
     double curr_time{},last_time{};
 
-    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow;
-    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow_back;
     cv::Ptr<cv::cuda::CornersDetector> detector;
 
     DeepSORT::Ptr mot_tracker;

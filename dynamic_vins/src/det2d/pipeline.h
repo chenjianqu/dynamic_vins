@@ -14,7 +14,7 @@
 #include <torch/torch.h>
 
 #include "utils/def.h"
-#include "detector_def.h"
+#include "det2d_def.h"
 
 namespace dynamic_vins{\
 

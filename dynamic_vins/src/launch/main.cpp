@@ -1,14 +1,4 @@
 /*******************************************************
- * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
- *
- * This file is part of VINS.
- *
- * Licensed under the GNU General Public License v3.0;
- * you may not use this file except in compliance with the License.
- *
- * Author: Qin Tong (qintonguav@gmail.com)
- *******************************************************/
-/*******************************************************
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
@@ -18,13 +8,13 @@
  *******************************************************/
 
 #include <memory>
-#include <queue>
 #include <thread>
 #include <mutex>
 #include <chrono>
 #include <future>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 
 #include <spdlog/spdlog.h>
 #include <ros/ros.h>
@@ -36,9 +26,10 @@
 #include "utils/call_back.h"
 #include "flow/flow_estimator.h"
 #include "flow/flow_visual.h"
+#include "det3d/detector3d.h"
+#include "det2d/detector2d.h"
 #include "estimator/estimator.h"
 #include "estimator/dynamic.h"
-#include "front_end/box3d.h"
 #include "front_end/segment_image.h"
 #include "front_end/front_end.h"
 #include "front_end/front_end_parameters.h"
@@ -48,20 +39,52 @@ namespace dynamic_vins{\
 namespace fs=std::filesystem;
 using namespace std;
 
+constexpr int kInferImageListSize=30;
+
 
 Estimator::Ptr estimator;
-Detector::Ptr detector;
+Detector2D::Ptr detector2d;
+Detector3D::Ptr detector3d;
 FlowEstimator::Ptr flow_estimator;
 FeatureTracker::Ptr feature_tracker;
 CallBack* callback;
 
 
+class ImageQueue{
+public:
+    void PushBack(SegImage& img){
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        if(seg_img_list_.size() < kInferImageListSize){
+            seg_img_list_.push_back(img);
+        }
+        queue_cond_.notify_one();
+    }
 
+    int GetQueueSize(){
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        return (int)seg_img_list_.size();
+    }
 
+    std::optional<SegImage> WaitForResult() {
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        if(!queue_cond_.wait_for(lock, 30ms, [&]{return !seg_img_list_.empty();}))
+            return std::nullopt;
+        //queue_cond_.wait(lock,[&]{return !seg_img_list_.empty();});
+        SegImage frame=std::move(seg_img_list_.front());
+        seg_img_list_.pop_front();
+        return frame;
+    }
+
+    std::mutex queue_mutex_;
+    std::condition_variable queue_cond_;
+    std::list<SegImage> seg_img_list_;
+};
+
+ImageQueue image_queue;
 
 
 /**
- * 实例分割线程
+ * 前端线程,包括同步图像流,实例分割,光流估计,3D目标检测等
  */
 void ImageProcess()
 {
@@ -70,7 +93,7 @@ void ImageProcess()
 
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(detector->GetQueueSize() >= kInferImageListSize){
+        if(image_queue.GetQueueSize() >= kInferImageListSize){
             std::this_thread::sleep_for(50ms);
             continue;
         }
@@ -120,11 +143,11 @@ void ImageProcess()
         tt.Tic();
         if(cfg::slam != SlamType::kRaw){
             if(!cfg::is_input_seg){
-                detector->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
+                detector2d->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
                 if(cfg::slam == SlamType::kNaive)
-                    img.SetMaskGpuSimple();
+                    img.SetBackgroundMask();
                 else if(cfg::slam == SlamType::kDynamic)
-                    img.SetMaskGpu();
+                    img.SetMask();
             }
             else{
                 if(cfg::dataset == DatasetType::kViode){
@@ -135,8 +158,14 @@ void ImageProcess()
                 }
             }
             Infos("ImageProcess SetMask: {}", tt.TocThenTic());
+
+            ///读取离线检测的3D包围框
+            img.boxes = detector3d->ReadBox3D(img.seq);
         }
 
+        //log
+        //for(auto &inst : img.insts_info)
+        //    Debugs("img.insts_info id:{} min_pt:({},{}),max_pt:({},{})",inst.id,inst.min_pt.x,inst.min_pt.y,inst.max_pt.x,inst.max_pt.y);
 
         ///获得光流估计
         if(cfg::use_dense_flow){
@@ -159,12 +188,7 @@ void ImageProcess()
         }
 
 
-        ///读取 预先检测的3D包围框
-        img.boxes = ReadBox3D(img.seq);
-
-
-
-        detector->PushBack(img);
+        image_queue.PushBack(img);
         /*cv::Mat show;
         cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
         cv::scaleAdd(img.color0,0.5,show,show);
@@ -192,17 +216,17 @@ void FeatureTrack()
     int cnt;
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(auto img = detector->WaitForResult();img){
+        if(auto img = image_queue.WaitForResult();img){
             tt.Tic();
             Warnt("----------Time : {} ----------", std::to_string(img->time0));
             FeatureFrame frame;
             frame.time = img->time0;
 
+            ///前端跟踪
             if(cfg::slam == SlamType::kDynamic){
                 feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
                 frame.features  = feature_tracker->TrackSemanticImage(*img);
                 frame.instances = feature_tracker->insts_tracker->GetOutputFeature();
-                frame.boxes = feature_tracker->cur_img.boxes;
             }
             else if(cfg::slam == SlamType::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
@@ -210,9 +234,17 @@ void FeatureTrack()
             else{
                 frame.features = feature_tracker->TrackImage(*img);
             }
-
-            if(!cfg::is_only_frontend)
-                estimator->PushBack(frame);
+            ///将数据传入到后端
+            if(!cfg::is_only_frontend){
+                if(cfg::dataset == DatasetType::kKitti){
+                    estimator->PushBack(frame);
+                }
+                else{
+                    if((cnt++)%2==0){ //对于其它数据集,控制输入数据到后端的频率
+                        estimator->PushBack(frame);
+                    }
+                }
+            }
 
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){
@@ -293,7 +325,8 @@ int Run(int argc, char **argv){
     try{
         cfg cfg(cfg_file);
         estimator.reset(new Estimator(cfg_file));
-        detector.reset(new Detector(cfg_file));
+        detector2d.reset(new Detector2D(cfg_file));
+        detector3d.reset(new Detector3D(cfg_file));
         feature_tracker = std::make_unique<FeatureTracker>(cfg_file);
         callback = new CallBack();
         flow_estimator = std::make_unique<FlowEstimator>(cfg_file);
@@ -332,6 +365,8 @@ int Run(int argc, char **argv){
         vio_thread = std::thread(&Estimator::ProcessMeasurements, estimator);
 
     ros::spin();
+
+    cfg::ok= false;
 
     sync_thread.join();
     fk_thread.join();

@@ -1481,6 +1481,8 @@ void Estimator::ProcessImage( FeatureFrame &image,const double header){
         f_manager.triangulate(frame, Ps, Rs, tic, ric);
         Infov("processImage background Triangulate:{} ms",tt.TocThenTic());
 
+        Debugv("--开始处理动态物体--");
+
         if(cfg::slam == SlamType::kDynamic){
             insts_manager.SetVelMap();//将输出实例的速度信息
             ///动态物体的位姿递推
@@ -1488,12 +1490,14 @@ void Estimator::ProcessImage( FeatureFrame &image,const double header){
             ///动态特征点的三角化
             insts_manager.Triangulate(frame);
             ///若动态物体未初始化, 则进行初始化
-            insts_manager.InitialInstance(image.boxes);
+            insts_manager.InitialInstance(image.instances);
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
             Debugv(insts_manager.PrintInstanceInfo());
         }
+        Debugv("--完成处理动态物体--");
+
 
         ///VIO窗口的非线性优化
         Optimization();
@@ -1628,6 +1632,9 @@ void Estimator::ProcessMeasurements(){
         pubPointCloud(*this, header);
         pubKeyframe(*this);
         pubTF(*this, header);
+
+        //PubPredictBox3D(*this,feature_frame.boxes);
+
         process_mutex.unlock();
 
         static unsigned int estimator_cnt=0;

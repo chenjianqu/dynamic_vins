@@ -45,6 +45,7 @@
 #include "camera_pose_visualization.h"
 #include "estimator/estimator.h"
 #include "parameters.h"
+#include "box3d.h"
 
 namespace dynamic_vins{\
 
@@ -91,9 +92,10 @@ void printInstanceData(const Estimator &estimator);
 void printInstancePose(Instance &inst);
 void printInstanceDepth(Instance &inst);
 
+void PubPredictBox3D(const Estimator & estimator,std::vector<Box3D> &boxes);
 
-visualization_msgs::Marker BuildTextMarker(const PointT &point,int id,const std::string &text,const cv::Scalar &color,const double scale);
-visualization_msgs::Marker BuildTextMarker(const Eigen::Vector3d &point,int id,const std::string &text,const cv::Scalar &color,const double scale=0.7);
+visualization_msgs::Marker BuildTextMarker(const PointT &point,int id,const std::string &text,const cv::Scalar &color,double scale);
+visualization_msgs::Marker BuildTextMarker(const Eigen::Vector3d &point,int id,const std::string &text,const cv::Scalar &color,double scale=0.7);
 
 visualization_msgs::Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,int id,const cv::Scalar &color);
 visualization_msgs::Marker BuildLineStripMarker(geometry_msgs::Point p[8],int id,const cv::Scalar &color);
@@ -103,6 +105,7 @@ visualization_msgs::Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> 
 visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,int id,const cv::Scalar &color);
 
 
+void PubPredictBox3D(const Estimator & estimator,std::vector<Box3D> &boxes);
 
 
 

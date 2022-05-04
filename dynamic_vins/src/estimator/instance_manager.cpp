@@ -122,7 +122,7 @@ void InstanceManager::Triangulate(int frame_cnt)
                         inst.triangle_num++;
                         inst.depth_sum += lm.depth;
                         inst_add_num++;
-                        log_inst_text+=fmt::format("lid:{} NotInit S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                       // log_inst_text+=fmt::format("lid:{} NotInit S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
                     }
                     else{ //判断深度值是否符合
                         //Eigen::Vector3d pts_obj_j=inst.state[lm.feats[0].frame].R.transpose() *
@@ -132,7 +132,7 @@ void InstanceManager::Triangulate(int frame_cnt)
                             inst.triangle_num++;
                             inst.depth_sum += lm.depth;
                             inst_add_num++;
-                            log_inst_text+=fmt::format("lid:{} S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                          //  log_inst_text+=fmt::format("lid:{} S d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
                         //}
                         //else{
                         //    log_inst_text+=fmt::format("lid:{} outbox d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
@@ -187,7 +187,7 @@ void InstanceManager::Triangulate(int frame_cnt)
                         inst.depth_sum += lm.depth;
                         num_mono++;
                         inst_add_num++;
-                        log_inst_text+=fmt::format("lid:{} M d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d));
+                      //  log_inst_text+=fmt::format("lid:{} M d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d));
                     }
                 }
                 else{
@@ -330,7 +330,7 @@ void InstanceManager::SlideWindow()
 
 
 /**
- * 添加动态物体的特征点
+ * 添加动态物体的特征点,创建新的Instance, 更新box3d
  * @param frame_id
  * @param instance_id
  * @param input_insts
@@ -341,10 +341,15 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Inst
         return;
     }
     Debugv("PushBack 输入的跟踪实例的数量和特征数量:{},{}",
-          input_insts.size(),
-          std::accumulate(input_insts.begin(), input_insts.end(), 0,
+          input_insts.size(),std::accumulate(input_insts.begin(), input_insts.end(), 0,
                           [](int sum, auto &p) { return sum + p.second.size(); }));
     string log_text;
+
+    ///开始前,将实例中的box清空
+    for(auto &[instance_id , inst] : instances){
+        inst.box3d.reset();
+    }
+
     for(auto &[instance_id , inst_feat] : input_insts){
         log_text += fmt::format("PushBack 跟踪实例id:{} 特征点数:{}\n",instance_id,inst_feat.size());
         ///创建物体
@@ -354,6 +359,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Inst
             auto [it,is_insert] = instances.insert({instance_id, new_inst});
             it->second.is_initial=false;
             it->second.color = inst_feat.color;
+            it->second.box3d = inst_feat.box3d;
             tracking_number_++;
 
             for(auto &[feat_id,feat_vector] : inst_feat){
@@ -368,6 +374,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Inst
         else
         {
             auto &landmarks = inst_iter->second.landmarks;
+            inst_iter->second.box3d = inst_feat.box3d;
             for(auto &[feat_id,feat_vector] : inst_feat)
             {
                 FeaturePoint feat_point(feat_vector, e->frame, e->td);
@@ -400,12 +407,92 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Inst
 /**
 * 进行物体的位姿初始化
 */
-void InstanceManager::InitialInstance(vector<Box3D> &boxes3d){
+void InstanceManager::InitialInstance(std::map<unsigned int,InstanceFeatureSimple> &input_insts){
+
+    for(auto &[inst_id,inst] : instances){
+        if(inst.is_initial || !inst.is_tracking)
+            return;
+        if(!inst.box3d){ //未检测到box3d
+            continue;
+        }
+
+        ///寻找当前帧三角化的路标点
+        Vec3d center_point;
+        int cnt=0;
+        for(auto &lm : inst.landmarks){
+            if(lm.feats.empty() || lm.depth<=0)
+                continue;
+            if(lm.feats[0].frame == e->frame){
+                Vec3d p = lm.feats[0].point * lm.depth;
+                center_point += p;
+                cnt++;
+            }
+        }
+
+        if(cnt<para::kInstanceInitMinNum){ //路标数量太少了
+            return;
+        }
+
+        ///根据box初始化物体的位姿和包围框
+        auto cam_to_world = [this](const Vec3d &p){
+            Vec3d p_imu = e->ric[0] * p + e->tic[0];
+            Vec3d p_world = e->Rs[e->frame] * p_imu + e->Ps[e->frame];
+            return p_world;
+        };
+
+        //首先将box中心点从相机坐标系转换到世界坐标系
+        center_point = center_point / cnt;
+        center_point = cam_to_world(center_point);
+        Debugv("InitialInstance id:{} center:{}",inst.id, VecToStr(center_point));
+        inst.state[0].P = center_point;
+        //将包围框的8个顶点转换到世界坐标系下
+        Eigen::Matrix<double,3,8> corners;
+        for(int i=0;i<8;++i){
+            corners.col(i) = cam_to_world( inst.box3d->corners.col(i));
+        }
+        //在box中构建坐标系
+        VecVector3d axis_v = Box3D::GetCoordinateVectorFromCorners(corners);
+        Mat3d R = Mat3d::Identity();
+        R.col(0) = axis_v[0];
+        R.col(1) = axis_v[1];
+        R.col(2) = axis_v[2];
+        inst.state[0].R = R;
+
+        inst.state[0].time=e->headers[0];
+        inst.vel.SetZero();
+        SetWindowPose();
+
+        inst.box = inst.box3d->dims;
+        inst.is_initial=true;
+
+        Debugv("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P:{} 初始box:{}",
+               inst.id, cnt, VecToStr(inst.state[0].P), VecToStr(inst.box));
+
+        ///删去初始化之前的观测
+        for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next){
+            it_next++;
+            if(it->feats.size() == 1 && it->feats[0].frame < e->frame){
+                inst.landmarks.erase(it);
+            }
+        }
+        for(auto &lm:inst.landmarks){
+            if(lm.feats[0].frame < e->frame){
+                for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
+                    it_next++;
+                    if(it->frame < e->frame) {
+                        lm.feats.erase(it); ///删掉掉前面的观测
+                    }
+                }
+                if(lm.depth > 0){
+                    lm.depth=-1.0;///需要重新进行三角化
+                }
+            }
+        }
 
 
-    InstExec([](int key,Instance& inst){
-        inst.InitialPose();
-        },true);
+    }
+
+
 }
 
 

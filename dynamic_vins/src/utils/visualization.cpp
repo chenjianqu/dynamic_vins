@@ -439,6 +439,267 @@ void pubKeyframe(const Estimator &estimator)
 
 
 
+visualization_msgs::Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,int id,const cv::Scalar &color)
+{
+    //设置立方体的八个顶点
+    geometry_msgs::Point p[8];
+    p[0].x=minPt.x;p[0].y=minPt.y;p[0].z=minPt.z;
+    p[1].x=maxPt.x;p[1].y=minPt.y;p[1].z=minPt.z;
+    p[2].x=maxPt.x;p[2].y=minPt.y;p[2].z=maxPt.z;
+    p[3].x=minPt.x;p[3].y=minPt.y;p[3].z=maxPt.z;
+    p[4].x=minPt.x;p[4].y=maxPt.y;p[4].z=maxPt.z;
+    p[5].x=maxPt.x;p[5].y=maxPt.y;p[5].z=maxPt.z;
+    p[6].x=maxPt.x;p[6].y=maxPt.y;p[6].z=minPt.z;
+    p[7].x=minPt.x;p[7].y=maxPt.y;p[7].z=minPt.z;
+
+    return BuildLineStripMarker(p,id,color);
+}
+
+
+visualization_msgs::Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,int id,const cv::Scalar &color)
+{
+    geometry_msgs::Point points[8];
+    for(int i=0;i<8;++i){
+        points[i].x = p[i].x();
+        points[i].y = p[i].y();
+        points[i].z = p[i].z();
+    }
+    return BuildLineStripMarker(points,id,color);
+}
+
+
+visualization_msgs::Marker BuildLineStripMarker(geometry_msgs::Point p[8],int id,const cv::Scalar &color)
+{
+    visualization_msgs::Marker msg;
+    msg.header.stamp=ros::Time::now();
+    msg.header.frame_id="world";
+    msg.ns="box_strip";
+    msg.action=visualization_msgs::Marker::ADD;
+    msg.pose.orientation.w=1.0;
+
+    //暂时使用类别代替这个ID
+    msg.id=id * MarkerTypeNumber + 0;//当存在多个marker时用于标志出来
+    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
+
+    msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
+    msg.scale.x=0.05;//线宽
+    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];//颜色:0-1
+    msg.color.a=1.0;//不透明度
+
+    //这个类型仅将相邻点进行连线
+    for(int i=0;i<8;++i){
+        msg.points.push_back(p[i]);
+    }
+    //为了保证矩形框的其它边存在：
+    msg.points.push_back(p[0]);
+    msg.points.push_back(p[3]);
+    msg.points.push_back(p[2]);
+    msg.points.push_back(p[5]);
+    msg.points.push_back(p[6]);
+    msg.points.push_back(p[1]);
+    msg.points.push_back(p[0]);
+    msg.points.push_back(p[7]);
+    msg.points.push_back(p[4]);
+
+    return msg;
+}
+
+
+visualization_msgs::Marker BuildTextMarker(const Eigen::Vector3d &point,int id,const std::string &text,const cv::Scalar &color,const double scale){
+    visualization_msgs::Marker msg;
+    msg.header.stamp=ros::Time::now();
+    msg.header.frame_id="world";
+    msg.ns="box_text";
+    msg.action=visualization_msgs::Marker::ADD;
+
+    //暂时使用类别代替这个ID
+    msg.id=id * MarkerTypeNumber + 1;//当存在多个marker时用于标志出来
+    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间4s，若为ros::Duration()表示一直持续
+
+    msg.type=visualization_msgs::Marker::TEXT_VIEW_FACING;//marker的类型
+    msg.scale.z=scale;//字体大小
+    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
+    msg.color.a=(float)color[3];//不透明度
+
+    geometry_msgs::Pose pose;
+    pose.position.x=point.x();pose.position.y=point.y();pose.position.z=point.z();
+    pose.orientation.w=1.0;
+    msg.pose=pose;
+
+    msg.text=text.c_str();
+
+    return msg;
+}
+
+
+visualization_msgs::Marker  BuildTextMarker(const PointT &point,int id,const std::string &text,const cv::Scalar &color,const double scale)
+{
+    Eigen::Vector3d eigen_pt;
+    eigen_pt<<point.x,point.y,point.z;
+    return BuildTextMarker(eigen_pt,id,text,color,scale);
+}
+
+visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,int id,const cv::Scalar &color)
+{
+    visualization_msgs::Marker msg;
+    msg.header.frame_id="world";
+    msg.header.stamp=ros::Time::now();
+    msg.ns="arrow_strip";
+    msg.action=visualization_msgs::Marker::ADD;
+    msg.pose.orientation.w=1.0;
+
+    //暂时使用类别代替这个ID
+    msg.id=id * MarkerTypeNumber + 2;//当存在多个marker时用于标志出来
+    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);
+
+    msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
+    msg.scale.x=0.01;//线宽
+    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
+    msg.color.a=1.0;//不透明度
+
+    geometry_msgs::Point start,end;
+    start.x=start_pt.x();start.y=start_pt.y();start.z=start_pt.z();
+    end.x=end_pt.x();end.y=end_pt.y();end.z=end_pt.z();
+
+    const double arrow_len=std::sqrt((start.x-end.x) * (start.x-end.x) +(start.y-end.y) * (start.y-end.y) + (start.z-end.z) * (start.z-end.z)) /8.;
+
+    geometry_msgs::Point p[7];
+    p[0]=start;
+    p[1]=end;
+    p[2]=end;
+    if(start.x < end.x){
+        p[2].x -= arrow_len;
+    }else{
+        p[2].x += arrow_len;
+    }
+    p[3]=end;
+    p[4]=end;
+    if(start.y < end.y){
+        p[4].y -= arrow_len;
+    }else{
+        p[4].y += arrow_len;
+    }
+    p[5]=end;
+    p[6]=end;
+    if(start.z < end.z){
+        p[6].z -= arrow_len;
+    }else{
+        p[6].z += arrow_len;
+    }
+
+    //这个类型仅将相邻点进行连线
+    for(auto &pt : p)
+        msg.points.push_back(pt);
+
+    return msg;
+}
+
+
+visualization_msgs::Marker BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,int id){
+    visualization_msgs::Marker msg;
+
+    msg.header.frame_id="world";
+    msg.header.stamp=ros::Time::now();
+    msg.ns="box_strip";
+    msg.action=visualization_msgs::Marker::ADD;
+    msg.pose.orientation.w=1.0;
+
+    //暂时使用类别代替这个ID
+    msg.id=id;//当存在多个marker时用于标志出来
+    //cout<<msg.id<<endl;
+    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间3s，若为ros::Duration()表示一直持续
+
+    msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
+    msg.scale.x=0.01;//线宽
+    msg.color.r=1.0;msg.color.g=1.0;msg.color.b=1.0;
+    msg.color.a=1.0;//不透明度
+
+    //设置立方体的八个顶点
+    geometry_msgs::Point p[8];
+    p[0].x= corners(0,0);p[0].y=corners(0,1);p[0].z=corners(0,2);
+    p[1].x= corners(1,0);p[1].y=corners(1,1);p[1].z=corners(1,2);
+    p[2].x= corners(2,0);p[2].y=corners(2,1);p[2].z=corners(2,2);
+    p[3].x= corners(3,0);p[3].y=corners(3,1);p[3].z=corners(3,2);
+    p[4].x= corners(4,0);p[4].y=corners(4,1);p[4].z=corners(4,2);
+    p[5].x= corners(5,0);p[5].y=corners(5,1);p[5].z=corners(5,2);
+    p[6].x= corners(6,0);p[6].y=corners(6,1);p[6].z=corners(6,2);
+    p[7].x= corners(7,0);p[7].y=corners(7,1);p[7].z=corners(7,2);
+    /**
+             .. code-block:: none
+
+                             front z
+                                    /
+                                   /
+                   p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
+                                 /|            / |
+                                / |           /  |
+                p0(x0, y0, z0) + ----------- +   + p6(x1, y1, z1)
+                               |  /      .   |  /
+                               | / origin    | /
+                p3(x0, y1, z0) + ----------- + -------> x right
+                               |             p7(x1, y1, z0)
+                               |
+                               v
+                        down y
+     输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
+
+     */
+    msg.points.push_back(p[0]);
+    msg.points.push_back(p[1]);
+    msg.points.push_back(p[5]);
+    msg.points.push_back(p[4]);
+    msg.points.push_back(p[0]);
+    msg.points.push_back(p[3]);
+    msg.points.push_back(p[7]);
+    msg.points.push_back(p[4]);
+    msg.points.push_back(p[7]);
+    msg.points.push_back(p[6]);
+    msg.points.push_back(p[5]);
+    msg.points.push_back(p[6]);
+    msg.points.push_back(p[2]);
+    msg.points.push_back(p[1]);
+    msg.points.push_back(p[2]);
+    msg.points.push_back(p[3]);
+
+    return msg;
+}
+
+void PubPredictBox3D(const Estimator & estimator,std::vector<Box3D> &boxes)
+{
+    visualization_msgs::MarkerArray markers;
+
+    ///根据box初始化物体的位姿和包围框
+    auto cam_to_world = [&estimator](const Vec3d &p){
+        Vec3d p_imu = estimator.ric[0] * p + estimator.tic[0];
+        Vec3d p_world = estimator.Rs[estimator.frame] * p_imu + estimator.Ps[estimator.frame];
+        return p_world;
+    };
+
+    int index=0;
+    for(auto &box : boxes){
+        //将包围框的8个顶点转换到世界坐标系下
+        Eigen::Matrix<double,3,8> corners = box.corners;
+        for(int i=0;i<8;++i){
+            corners.col(i) = cam_to_world(corners.col(i));
+        }
+        Eigen::Matrix<double,8,3> corners8x3=corners.transpose();
+        string log_text = fmt::format("id:{} class:{} score:{}\n",index,box.class_id,box.score);
+        log_text += EigenToStr(box.corners);
+        Debugv(log_text);
+        auto cube_marker = BuildCubeMarker(corners8x3,index+4000);
+
+        markers.markers.push_back(cube_marker);
+
+        index++;
+    }
+
+    pub_instance_marker.publish(markers);
+}
+
+
+
+
+
 void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header)
 {
     if(estimator.insts_manager.tracking_number() < 1)
@@ -448,9 +709,10 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
     PointCloud pointCloud;
 
     for(auto &[key,inst] : estimator.insts_manager.instances){
-        if(!inst.is_tracking || !inst.is_initial){
+        if(!inst.is_tracking ){
             continue;
         }
+
 
         cv::Scalar color_norm = inst.color / 255.f;
         color_norm[3]=1.0;
@@ -463,7 +725,22 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
         color_inv[3] = 1.;
 
         PointCloud cloud;
-        for(auto &pt : inst.point3d_curr){
+        /*for(auto &pt : inst.point3d_curr){
+            PointT p;
+            p.x = (float)pt(0);p.y = (float)pt(1);p.z = (float)pt(2);
+            p.r=(uint8_t)inst.color[2];p.g=(uint8_t)inst.color[1];p.b=(uint8_t)inst.color[0];
+            cloud.push_back(p);
+        }*/
+
+        for(auto &lm : inst.landmarks){
+            if(lm.depth <= 0)
+                continue;
+            int frame_j=lm.feats[0].frame;
+            int frame_i=estimator.frame;
+            Vec3d pts_cam_j = lm.feats[0].point * lm.depth;//k点在j时刻的相机坐标
+            Vec3d pts_imu_j = estimator.ric[0] * pts_cam_j + estimator.tic[0];//k点在j时刻的IMU坐标
+            Vec3d pt=estimator.Rs[frame_j] * pts_imu_j + estimator.Ps[frame_j];//k点在j时刻的世界坐标
+
             PointT p;
             p.x = (float)pt(0);p.y = (float)pt(1);p.z = (float)pt(2);
             p.r=(uint8_t)inst.color[2];p.g=(uint8_t)inst.color[1];p.b=(uint8_t)inst.color[0];
@@ -533,212 +810,6 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
     pcl::toROSMsg(pointCloud,point_cloud_msg);
     point_cloud_msg.header = header;
     pub_instance_pointcloud.publish(point_cloud_msg);
-}
-
-
-
-
-
-void printInstanceData(const Estimator &estimator)
-{
-    if(estimator.insts_manager.tracking_number() < 1)
-        return;
-
-    printf("实例数量:%d\n",estimator.insts_manager.tracking_number());
-    for(auto &pair : estimator.insts_manager.instances){
-        auto &inst = pair.second;
-        auto &key=pair.first;
-
-        if(!inst.is_tracking)
-            continue;
-
-        int num_triangular=0,num_feat=0;
-        for(auto &landmark : inst.landmarks){
-            num_feat+=landmark.feats.size();
-            if(landmark.depth > 0)
-                num_triangular++;
-        }
-
-        printf("Instance:%d is_initial:%d is_tracking:%d feats:%d landmarks:%ld num_triangle:%d | ",
-               key, inst.is_initial, inst.is_tracking, num_feat, inst.landmarks.size(), num_triangular);
-
-        int cnt[kWinSize + 1]={0};
-        for(auto &landmark : inst.landmarks){
-            cnt[landmark.feats[0].frame]++;
-        }
-        for(int i=0; i <= kWinSize; ++i){
-            printf("%d:%d  ",i,cnt[i]);
-        }
-
-        printf("\nInst:%d ",inst.id);
-        for(int i=0; i <= kWinSize; ++i){
-            printf("%d:(%.2lf,%.2lf,%.2lf)  ",i,inst.state[i].P.x(),inst.state[i].P.y(),inst.state[i].P.z());
-        }
-
-        printf("\n");
-    }
-
-}
-
-
-
-
-
-visualization_msgs::Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,int id,const cv::Scalar &color)
-{
-    //设置立方体的八个顶点
-    geometry_msgs::Point p[8];
-    p[0].x=minPt.x;p[0].y=minPt.y;p[0].z=minPt.z;
-    p[1].x=maxPt.x;p[1].y=minPt.y;p[1].z=minPt.z;
-    p[2].x=maxPt.x;p[2].y=minPt.y;p[2].z=maxPt.z;
-    p[3].x=minPt.x;p[3].y=minPt.y;p[3].z=maxPt.z;
-    p[4].x=minPt.x;p[4].y=maxPt.y;p[4].z=maxPt.z;
-    p[5].x=maxPt.x;p[5].y=maxPt.y;p[5].z=maxPt.z;
-    p[6].x=maxPt.x;p[6].y=maxPt.y;p[6].z=minPt.z;
-    p[7].x=minPt.x;p[7].y=maxPt.y;p[7].z=minPt.z;
-
-    return BuildLineStripMarker(p,id,color);
-}
-
-
-visualization_msgs::Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,int id,const cv::Scalar &color)
-{
-    geometry_msgs::Point points[8];
-    for(int i=0;i<8;++i){
-        points[i].x = p[i].x();
-        points[i].y = p[i].y();
-        points[i].z = p[i].z();
-    }
-    return BuildLineStripMarker(points,id,color);
-}
-
-
-
-visualization_msgs::Marker BuildLineStripMarker(geometry_msgs::Point p[8],int id,const cv::Scalar &color)
-{
-    visualization_msgs::Marker msg;
-    msg.header.stamp=ros::Time::now();
-    msg.header.frame_id="world";
-    msg.ns="box_strip";
-    msg.action=visualization_msgs::Marker::ADD;
-    msg.pose.orientation.w=1.0;
-
-    //暂时使用类别代替这个ID
-    msg.id=id * MarkerTypeNumber + 0;//当存在多个marker时用于标志出来
-    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
-
-    msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
-    msg.scale.x=0.01;//线宽
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];//颜色:0-1
-    msg.color.a=1.0;//不透明度
-
-    //这个类型仅将相邻点进行连线
-    for(int i=0;i<8;++i){
-        msg.points.push_back(p[i]);
-    }
-    //为了保证矩形框的其它边存在：
-    msg.points.push_back(p[0]);
-    msg.points.push_back(p[3]);
-    msg.points.push_back(p[2]);
-    msg.points.push_back(p[5]);
-    msg.points.push_back(p[6]);
-    msg.points.push_back(p[1]);
-    msg.points.push_back(p[0]);
-    msg.points.push_back(p[7]);
-    msg.points.push_back(p[4]);
-
-    return msg;
-}
-
-
-visualization_msgs::Marker BuildTextMarker(const Eigen::Vector3d &point,int id,const std::string &text,const cv::Scalar &color,const double scale){
-    visualization_msgs::Marker msg;
-    msg.header.stamp=ros::Time::now();
-    msg.header.frame_id="world";
-    msg.ns="box_text";
-    msg.action=visualization_msgs::Marker::ADD;
-
-    //暂时使用类别代替这个ID
-    msg.id=id * MarkerTypeNumber + 1;//当存在多个marker时用于标志出来
-    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间4s，若为ros::Duration()表示一直持续
-
-    msg.type=visualization_msgs::Marker::TEXT_VIEW_FACING;//marker的类型
-    msg.scale.z=scale;//字体大小
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
-    msg.color.a=(float)color[3];//不透明度
-
-    geometry_msgs::Pose pose;
-    pose.position.x=point.x();pose.position.y=point.y();pose.position.z=point.z();
-    pose.orientation.w=1.0;
-    msg.pose=pose;
-
-    msg.text=text.c_str();
-
-    return msg;
-}
-
-
-
-visualization_msgs::Marker  BuildTextMarker(const PointT &point,int id,const std::string &text,const cv::Scalar &color,const double scale)
-{
-    Eigen::Vector3d eigen_pt;
-    eigen_pt<<point.x,point.y,point.z;
-    return BuildTextMarker(eigen_pt,id,text,color,scale);
-}
-
-visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,int id,const cv::Scalar &color)
-{
-    visualization_msgs::Marker msg;
-    msg.header.frame_id="world";
-    msg.header.stamp=ros::Time::now();
-    msg.ns="arrow_strip";
-    msg.action=visualization_msgs::Marker::ADD;
-    msg.pose.orientation.w=1.0;
-
-    //暂时使用类别代替这个ID
-    msg.id=id * MarkerTypeNumber + 2;//当存在多个marker时用于标志出来
-    msg.lifetime=ros::Duration(cfg::kVisualInstDuration);
-
-    msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
-    msg.scale.x=0.01;//线宽
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
-    msg.color.a=1.0;//不透明度
-
-    geometry_msgs::Point start,end;
-    start.x=start_pt.x();start.y=start_pt.y();start.z=start_pt.z();
-    end.x=end_pt.x();end.y=end_pt.y();end.z=end_pt.z();
-
-    const double arrow_len=std::sqrt((start.x-end.x) * (start.x-end.x) +(start.y-end.y) * (start.y-end.y) + (start.z-end.z) * (start.z-end.z)) /8.;
-
-    geometry_msgs::Point p[7];
-    p[0]=start;
-    p[1]=end;
-    p[2]=end;
-    if(start.x < end.x){
-        p[2].x -= arrow_len;
-    }else{
-        p[2].x += arrow_len;
-    }
-    p[3]=end;
-    p[4]=end;
-    if(start.y < end.y){
-        p[4].y -= arrow_len;
-    }else{
-        p[4].y += arrow_len;
-    }
-    p[5]=end;
-    p[6]=end;
-    if(start.z < end.z){
-        p[6].z -= arrow_len;
-    }else{
-        p[6].z += arrow_len;
-    }
-
-    //这个类型仅将相邻点进行连线
-    for(auto &pt : p)
-        msg.points.push_back(pt);
-
-    return msg;
 }
 
 

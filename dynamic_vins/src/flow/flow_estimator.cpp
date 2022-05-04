@@ -103,7 +103,11 @@ Tensor FlowEstimator::Forward(Tensor &img) {
     return flow;
 }
 
-
+/**
+ * 读取离线估计的光流数据
+ * @param seq_id
+ * @return
+ */
 cv::Mat FlowEstimator::ReadFlowImage(unsigned int seq_id){
     ///补零
     int name_width=6;

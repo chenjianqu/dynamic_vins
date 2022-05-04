@@ -137,8 +137,7 @@ std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cud
  * @param curr_pts 已有的点
  * @return
  */
-std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask,
-                                              std::vector<cv::Point2f> &curr_pts, cv::Rect rect=cv::Rect());
+std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask, cv::Rect rect=cv::Rect());
 
 
 /**
@@ -188,15 +187,15 @@ void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label = "
 cv::Scalar color_map(int64_t n);
 
 
-float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
-                const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt);
+float BoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
+             const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt);
 
-float CalBoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
-
-
+float BoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
 
 
-static std::string DimsToStr(cv::Size list){
+
+
+inline std::string DimsToStr(cv::Size list){
     return "[" + std::to_string(list.height) + ", " + std::to_string(list.width) + "]";
 }
 

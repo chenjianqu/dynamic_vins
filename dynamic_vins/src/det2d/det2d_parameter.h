@@ -7,17 +7,16 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_DETECTOR_PARAMETER_H
-#define DYNAMIC_VINS_DETECTOR_PARAMETER_H
+#ifndef DYNAMIC_VINS_DET2D_PARAMETER_H
+#define DYNAMIC_VINS_DET2D_PARAMETER_H
 
 #include <vector>
 #include <string>
 
 namespace dynamic_vins{\
 
-constexpr int kInferImageListSize=30;
 
-class DetectorParameter{
+class Det2dParameter{
 public:
 
     //图像归一化参数，注意是以RGB的顺序排序
@@ -66,8 +65,8 @@ public:
 
 };
 
-using det_para=DetectorParameter;
+using det2d_para=Det2dParameter;
 
 }
 
-#endif //DYNAMIC_VINS_DETECTOR_PARAMETER_H
+#endif //DYNAMIC_VINS_DET2D_PARAMETER_H

@@ -74,14 +74,14 @@ void InitCamera(const std::string& config_path){
         std::string cam0Path = config_dir + "/" + cam0_calib;
 
         cam0 = std::make_shared<PinHoleCamera>();
-        cam0->readFromYamlFile(cam0Path);
+        cam0->ReadFromYamlFile(cam0Path);
 
         if(cfg::kCamNum>1){
             std::string cam1Calib;
             fs["cam1_calib"] >> cam1Calib;
             std::string cam1Path = config_dir + "/" + cam1Calib;
             cam1 = std::make_shared<PinHoleCamera>();
-            cam1->readFromYamlFile(cam1Path);
+            cam1->ReadFromYamlFile(cam1Path);
         }
     }
 
@@ -107,7 +107,7 @@ void InitCamera(const std::string& config_path){
 
 
 
-bool PinHoleCamera::readFromYamlFile(const std::string& filename)
+bool PinHoleCamera::ReadFromYamlFile(const std::string& filename)
 {
     cv::FileStorage fs(filename, cv::FileStorage::READ);
 
@@ -149,7 +149,7 @@ bool PinHoleCamera::readFromYamlFile(const std::string& filename)
  * @param p
  * @param P
  */
-void PinHoleCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P) const
+void PinHoleCamera::LiftProjective(const Vec2d& p, Vec3d& P) const
 {
     double mx_d, my_d,mx2_d, mxy_d, my2_d, mx_u, my_u;
 
@@ -183,6 +183,12 @@ void PinHoleCamera::liftProjective(const Eigen::Vector2d& p, Eigen::Vector3d& P)
     // Obtain a projective ray
     P << mx_u, my_u, 1.0;
 }
+
+
+
+
+
+
 
 
 }

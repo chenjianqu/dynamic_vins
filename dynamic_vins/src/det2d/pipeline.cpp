@@ -11,7 +11,7 @@
 
 #include <opencv2/cudaimgproc.hpp>
 
-#include "detector_parameter.h"
+#include "det2d_parameter.h"
 
 namespace dynamic_vins{\
 
@@ -24,19 +24,19 @@ std::tuple<float,float> Pipeline::GetXYWHS(int img_h,int img_w)
     image_info.origin_h = img_h;
     image_info.origin_w = img_w;
     int w, h, x, y;
-    float r_w = static_cast<float>(det_para::model_input_width / (img_w * 1.0f));
-    float r_h = static_cast<float>(det_para::model_input_height / (img_h * 1.0f));
+    float r_w = static_cast<float>(det2d_para::model_input_width / (img_w * 1.0f));
+    float r_h = static_cast<float>(det2d_para::model_input_height / (img_h * 1.0f));
     if (r_h > r_w) {
-        w = det_para::model_input_width;
+        w = det2d_para::model_input_width;
         h = static_cast<int>(r_w * img_h);
         if(h%2==1)h++;//这里确保h为偶数，便于后面的使用
         x = 0;
-        y = (det_para::model_input_height - h) / 2;
+        y = (det2d_para::model_input_height - h) / 2;
     } else {
         w = static_cast<int>(r_h* img_w);
         if(w%2==1)w++;
-        h = det_para::model_input_height;
-        x = (det_para::model_input_width - w) / 2;
+        h = det2d_para::model_input_height;
+        x = (det2d_para::model_input_width - w) / 2;
         y = 0;
     }
     image_info.rect_x = x;
@@ -203,9 +203,9 @@ void* Pipeline::SetInputTensor(cv::Mat &img)
 void* Pipeline::ProcessInput(torch::Tensor &img){
     auto [r_h,r_w] = GetXYWHS(img.sizes()[1],img.sizes()[2]);
     input_tensor= img;
-    static torch::Tensor mean_t=torch::from_blob(det_para::kSoloImgMean, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).
+    static torch::Tensor mean_t=torch::from_blob(det2d_para::kSoloImgMean, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).
             expand({3, image_info.origin_h, image_info.origin_w});
-    static torch::Tensor std_t=torch::from_blob(det_para::kSoloImgStd, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).
+    static torch::Tensor std_t=torch::from_blob(det2d_para::kSoloImgStd, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).
             expand({3, image_info.origin_h, image_info.origin_w});
     input_tensor = ((input_tensor-mean_t)/std_t);
     ///resize
@@ -214,15 +214,15 @@ void* Pipeline::ProcessInput(torch::Tensor &img){
     input_tensor = torch::nn::functional::interpolate(input_tensor.unsqueeze(0),options).squeeze(0);
     ///拼接图像边缘
     static auto op = torch::TensorOptions(torch::kCUDA).dtype(torch::kFloat32);
-    static cv::Scalar mag_color(det_para::kSoloImgMean[2], det_para::kSoloImgMean[1], det_para::kSoloImgMean[0]);
+    static cv::Scalar mag_color(det2d_para::kSoloImgMean[2], det2d_para::kSoloImgMean[1], det2d_para::kSoloImgMean[0]);
     if (r_h > r_w) { //在图像顶部和下部拼接空白图像
-        int cat_w = det_para::model_input_width;
-        int cat_h = (det_para::model_input_height - image_info.rect_h) / 2;
+        int cat_w = det2d_para::model_input_width;
+        int cat_h = (det2d_para::model_input_height - image_info.rect_h) / 2;
         torch::Tensor cat_t = torch::zeros({3,cat_h,cat_w},op);
         input_tensor = torch::cat({cat_t,input_tensor,cat_t},1);
     } else {
-        int cat_w= (det_para::model_input_width - image_info.rect_w) / 2;
-        int cat_h=det_para::model_input_height;
+        int cat_w= (det2d_para::model_input_width - image_info.rect_w) / 2;
+        int cat_h=det2d_para::model_input_height;
         torch::Tensor cat_t = torch::zeros({3,cat_h,cat_w},op);
         input_tensor = torch::cat({cat_t,input_tensor,cat_t},2);
     }

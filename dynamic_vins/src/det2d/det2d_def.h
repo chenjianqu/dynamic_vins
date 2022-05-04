@@ -7,8 +7,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_DETECTOR_DEF_H
-#define DYNAMIC_VINS_DETECTOR_DEF_H
+#ifndef DYNAMIC_VINS_DET2D_DEF_H
+#define DYNAMIC_VINS_DET2D_DEF_H
 
 #include <string>
 #include <opencv2/opencv.hpp>
@@ -56,4 +56,4 @@ static std::string DimsToStr(torch::ArrayRef<T> list){
 }
 
 
-#endif //DYNAMIC_VINS_DETECTOR_DEF_H
+#endif //DYNAMIC_VINS_DET2D_DEF_H

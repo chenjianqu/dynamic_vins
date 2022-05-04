@@ -68,7 +68,7 @@ public:
     }
 
 
-    void InitialInstance(vector<Box3D> &boxes3d);
+    void InitialInstance(std::map<unsigned int,InstanceFeatureSimple> &input_insts);
 
     void SetInstanceCurrentPoint3d(){
         InstExec([](int key,Instance& inst){
@@ -91,6 +91,8 @@ public:
     void SetVelMap();
 
     string PrintInstanceInfo();
+
+
 
     std::unordered_map<unsigned int,Vel3d> vel_map(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
@@ -117,7 +119,6 @@ private:
             }
         }
     }
-
 
     std::mutex vel_mutex_;
     std::unordered_map<unsigned int,Vel3d> vel_map_;

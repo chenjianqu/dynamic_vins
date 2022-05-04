@@ -7,11 +7,12 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "detector.h"
+#include "detector2d.h"
 
 #include <cstdlib>
 #include <iostream>
 #include <tuple>
+#include <optional>
 
 #include <NvOnnxParser.h>
 #include <NvInferPlugin.h>
@@ -19,7 +20,7 @@
 #include "utils/tensorrt/common.h"
 #include "utils/tensorrt/tensorrt_utils.h"
 
-#include "detector_parameter.h"
+#include "det2d_parameter.h"
 #include "utils/parameters.h"
 
 namespace dynamic_vins{\
@@ -29,8 +30,8 @@ namespace dynamic_vins{\
 std::optional<int> GetQueueShapeIndex(int c, int h, int w)
 {
     int index=-1;
-    for(int i=0;i< (int)det_para::kTensorQueueShapes.size(); ++i){
-        if(c == det_para::kTensorQueueShapes[i][1] && h == det_para::kTensorQueueShapes[i][2] && w == det_para::kTensorQueueShapes[i][3]){
+    for(int i=0;i< (int)det2d_para::kTensorQueueShapes.size(); ++i){
+        if(c == det2d_para::kTensorQueueShapes[i][1] && h == det2d_para::kTensorQueueShapes[i][2] && w == det2d_para::kTensorQueueShapes[i][3]){
             index=i;
             break;
         }
@@ -43,10 +44,10 @@ std::optional<int> GetQueueShapeIndex(int c, int h, int w)
 
 
 
-Detector::Detector(const std::string& config_path)
+Detector2D::Detector2D(const std::string& config_path)
 {
     ///初始化参数
-    det_para::SetParameters(config_path);
+    det2d_para::SetParameters(config_path);
 
     if(cfg::slam == SlamType::kRaw || cfg::is_input_seg){
         fmt::print("cfg::slam == SlamType::kRaw || cfg::is_input_seg. So don't need detector\n");
@@ -57,7 +58,7 @@ Detector::Detector(const std::string& config_path)
     initLibNvInferPlugins(&sample::gLogger.getTRTLogger(),"");
     Infov("start init segmentor");
     std::string model_str;
-    if(std::ifstream ifs(det_para::kDetectorSerializePath); ifs.is_open()){
+    if(std::ifstream ifs(det2d_para::kDetectorSerializePath); ifs.is_open()){
         while(ifs.peek() != EOF){
             std::stringstream ss;
             ss<<ifs.rdbuf();
@@ -66,7 +67,7 @@ Detector::Detector(const std::string& config_path)
         ifs.close();
     }
     else{
-        throw std::runtime_error(fmt::format("Can not open the kDetectorSerializePath:{}", det_para::kDetectorSerializePath));
+        throw std::runtime_error(fmt::format("Can not open the kDetectorSerializePath:{}", det2d_para::kDetectorSerializePath));
     }
     Infov("createInferRuntime");
     ///创建runtime
@@ -87,9 +88,9 @@ Detector::Detector(const std::string& config_path)
     ///创建输入输出的内存
     buffer = std::make_shared<MyBuffer>(*engine_);
 
-    det_para::model_input_height=buffer->dims[0].d[2];
-    det_para::model_input_width=buffer->dims[0].d[3];
-    det_para::model_input_channel=3;
+    det2d_para::model_input_height=buffer->dims[0].d[2];
+    det2d_para::model_input_width=buffer->dims[0].d[3];
+    det2d_para::model_input_channel=3;
 
     pipeline_=std::make_shared<Pipeline>();
 
@@ -116,7 +117,7 @@ Detector::Detector(const std::string& config_path)
 }
 
 std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>>
-Detector::Forward(cv::Mat &img)
+Detector2D::Forward(cv::Mat &img)
 {
 /*    TicToc ticToc,tt;
     //cv::Mat input=pipeline_->ProcessPad(img);
@@ -176,15 +177,21 @@ Detector::Forward(cv::Mat &img)
     return {mask_v,insts_info};*/
 }
 
-void Detector::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts){
+/**
+ * 前向传播图像张量,完成实例分割
+ * @param img
+ * @param mask_tensor
+ * @param insts
+ */
+void Detector2D::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts){
 
     Debugs("ForwardTensor | img_tensor.shape:{}", DimsToStr(img.sizes()));
     buffer->gpu_buffer[0] = pipeline_->ProcessInput(img);
     Debugs("ForwardTensor | input_tensor.shape:{}", DimsToStr(pipeline_->input_tensor.sizes()));
     ///推断
-    context_->enqueue(det_para::kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
+    context_->enqueue(det2d_para::kBatchSize, buffer->gpu_buffer, buffer->stream, nullptr);
 
-    std::vector<torch::Tensor> outputs(det_para::kTensorQueueShapes.size());
+    std::vector<torch::Tensor> outputs(det2d_para::kTensorQueueShapes.size());
     auto opt=torch::TensorOptions().device(torch::kCUDA).dtype(torch::kFloat);
     for(int i=1;i<buffer->binding_num;++i){
         torch::Tensor tensor=torch::from_blob(
@@ -207,7 +214,7 @@ void Detector::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std
 }
 
 
-void Detector::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
+void Detector2D::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
 {
     ///将图片数据复制到输入buffer,同时实现了图像的归一化
     /*
@@ -242,7 +249,7 @@ void Detector::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vect
 
 
 
-void Detector::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
+void Detector2D::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
 {
 /*    TicToc tic_toc,tt;
 
@@ -287,7 +294,7 @@ void Detector::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, 
 
 
 
-void Detector::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts)
+void Detector2D::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts)
 {
 /*    if(mask.empty()){
         cv::imshow("test",input);

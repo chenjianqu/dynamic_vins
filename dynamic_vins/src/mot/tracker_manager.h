@@ -17,7 +17,7 @@
 #include "kalman_tracker.h"
 #include "utils/def.h"
 #include "mot_def.h"
-#include "detector/detector_def.h"
+#include "det2d/det2d_def.h"
 
 
 namespace dynamic_vins{\

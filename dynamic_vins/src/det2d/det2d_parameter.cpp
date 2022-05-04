@@ -7,13 +7,13 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "detector_parameter.h"
+#include "det2d_parameter.h"
 
 #include <opencv2/opencv.hpp>
 
 
 
-void dynamic_vins::DetectorParameter::SetParameters(const std::string &config_path) {
+void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path) {
 
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){

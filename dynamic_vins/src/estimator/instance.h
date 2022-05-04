@@ -22,6 +22,7 @@
 #include "landmark.h"
 #include "vio_parameters.h"
 #include "utils/parameters.h"
+#include "utils/box3d.h"
 
 namespace dynamic_vins{\
 
@@ -53,7 +54,7 @@ public:
 
     void SetDynamicOrStatic();
 
-    double AverageDepth() const{
+    [[nodiscard]] double AverageDepth() const{
         if(triangle_num>0){
             return depth_sum/double(triangle_num);
         }
@@ -90,6 +91,8 @@ public:
 
     bool is_static{false};//物体是运动的还是静态的
     int static_cnt{0};//辅助判断物体是否运动,
+
+    Box3D::Ptr box3d;
 };
 
 }

@@ -128,7 +128,8 @@ include_directories(src)
 aux_source_directory(src/utils utils_sources)
 aux_source_directory(src/utils/dataset dataset_sources)
 aux_source_directory(src/utils/tensorrt tensorrt_sources)
-aux_source_directory(src/detector detector_sources)
+aux_source_directory(src/det2d det2d_sources)
+aux_source_directory(src/det3d det3d_sources)
 aux_source_directory(src/mot mot_sources)
 aux_source_directory(src/flow flow_sources)
 aux_source_directory(src/front_end front_end_sources)
@@ -138,7 +139,7 @@ aux_source_directory(src/estimator estimator_sources)
 
 message("estimator: ${estimator} ")
 
-add_executable(dynamic_vins src/launch/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources} ${detector_sources}
+add_executable(dynamic_vins src/launch/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources} ${det2d_sources} ${det3d_sources}
         ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
@@ -147,6 +148,6 @@ add_executable(build_raft src/launch/build_raft.cpp ${utils_sources} ${tensorrt_
 target_link_libraries(build_raft  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
         TorchVision::TorchVision ${TensorRT_LIBS})
 
-add_executable(build_solo src/launch/build_solo.cpp ${utils_sources} ${tensorrt_sources} src/detector/detector_parameter.cpp)
+add_executable(build_solo src/launch/build_solo.cpp ${utils_sources} ${tensorrt_sources} src/det2d/det2d_parameter.cpp)
 target_link_libraries(build_solo  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
         TorchVision::TorchVision ${TensorRT_LIBS})

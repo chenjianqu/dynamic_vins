@@ -8,7 +8,7 @@
  *******************************************************/
 
 #include "solo_head.h"
-#include "detector_parameter.h"
+#include "det2d_parameter.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/log_utils.h"
 
@@ -21,7 +21,7 @@ namespace idx=torch::indexing;
 
 
 Solov2::Solov2(){
-    size_trans_=torch::from_blob(det_para::kSoloNumGrids.data(), {int(det_para::kSoloNumGrids.size())}, torch::kFloat).clone();
+    size_trans_=torch::from_blob(det2d_para::kSoloNumGrids.data(), {int(det2d_para::kSoloNumGrids.size())}, torch::kFloat).clone();
     size_trans_=size_trans_.pow(2).cumsum(0);
 }
 
@@ -50,12 +50,12 @@ torch::Tensor Solov2::MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_lab
 
     ///计算实例置信度的衰减系数
     torch::Tensor decay_coefficient;
-    if(det_para::kSoloNmsKernel == "gaussian"){
-        auto decay_matrix = torch::exp(-1 * det_para::kSoloNmsSigma * (decay_iou.pow(2)));
-        auto compensate_matrix= torch::exp(-1 * det_para::kSoloNmsSigma * (compensate_iou.pow(2)));
+    if(det2d_para::kSoloNmsKernel == "gaussian"){
+        auto decay_matrix = torch::exp(-1 * det2d_para::kSoloNmsSigma * (decay_iou.pow(2)));
+        auto compensate_matrix= torch::exp(-1 * det2d_para::kSoloNmsSigma * (compensate_iou.pow(2)));
         decay_coefficient = std::get<0>( (decay_matrix / compensate_matrix).min(0) );
     }
-    else if(det_para::kSoloNmsKernel == "linear"){
+    else if(det2d_para::kSoloNmsKernel == "linear"){
         auto decay_matrix = (1-decay_iou) / (1-compensate_iou) ;
         decay_coefficient = std::get<0>( (decay_matrix).min(0) );
     }
@@ -409,11 +409,11 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     torch::Device device = outputs[0].device();
 
     constexpr int kBatchIndex=0;
-    const int kNumStage= det_para::kSoloNumGrids.size();//FPN共输出5个层级
+    const int kNumStage= det2d_para::kSoloNumGrids.size();//FPN共输出5个层级
 
-    auto kernel_tensor=outputs[0][kBatchIndex].view({det_para::kSoloTensorChannel, -1}).permute({1, 0});
+    auto kernel_tensor=outputs[0][kBatchIndex].view({det2d_para::kSoloTensorChannel, -1}).permute({1, 0});
     for(int i=1; i < kNumStage; ++i){
-        auto kt=outputs[i][kBatchIndex].view({det_para::kSoloTensorChannel, -1}); //kt的维度是(128,h*w)
+        auto kt=outputs[i][kBatchIndex].view({det2d_para::kSoloTensorChannel, -1}); //kt的维度是(128,h*w)
         kernel_tensor = torch::cat({kernel_tensor,kt.permute({1,0})},0);
     }
 
@@ -431,7 +431,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     const int kPredNum=cate_tensor.sizes()[0];//所有的实例数量(3872)
 
     ///过滤掉低于0.1置信度的实例
-    auto inds= cate_tensor > det_para::kSoloScoreThr;
+    auto inds= cate_tensor > det2d_para::kSoloScoreThr;
     if(inds.sum(torch::IntArrayRef({0,1})).item().toInt() == 0){
         Warns("GetSegTensor | inds.sum(dims) == 0");
         return;
@@ -452,11 +452,11 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
 
     //计算各个层级上的实例的strides
     int index0=size_trans_[0].item().toInt();
-    strides.index_put_({idx::Slice(idx::None,index0)}, det_para::kSoloStrides[0]);
+    strides.index_put_({idx::Slice(idx::None,index0)}, det2d_para::kSoloStrides[0]);
     for(int i=1; i < kNumStage; ++i){
         int index_start=size_trans_[i - 1].item().toInt();
         int index_end=size_trans_[i].item().toInt();
-        strides.index_put_({idx::Slice(index_start,index_end)}, det_para::kSoloStrides[i]);
+        strides.index_put_({idx::Slice(index_start,index_end)}, det2d_para::kSoloStrides[i]);
     }
     //保留满足阈值的实例的strides
     strides=strides.index({pred_index});
@@ -470,7 +470,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     seg_preds=torch::squeeze(seg_preds,0).sigmoid();
 
     ///计算mask
-    auto seg_masks= seg_preds > det_para::kSoloMaskThr;
+    auto seg_masks= seg_preds > det2d_para::kSoloMaskThr;
     auto sum_masks=seg_masks.sum({1,2}).to(torch::kFloat);
 
     ///根据strides过滤掉像素点太少的实例
@@ -491,8 +491,8 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
 
     ///根据cate_score进行排序，用于NMS
     auto sort_inds = torch::argsort(cate_tensor,-1,true);
-    if(sort_inds.sizes()[0] > det_para::kSoloNmsPre){
-        sort_inds=sort_inds.index({idx::Slice(idx::None, det_para::kSoloNmsPre)});
+    if(sort_inds.sizes()[0] > det2d_para::kSoloNmsPre){
+        sort_inds=sort_inds.index({idx::Slice(idx::None, det2d_para::kSoloNmsPre)});
     }
     seg_masks=seg_masks.index({sort_inds,"..."});
     seg_preds=seg_preds.index({sort_inds,"..."});
@@ -507,7 +507,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     auto cate_scores = MatrixNMS(seg_masks,cate_labels,cate_tensor,sum_masks);
 
     ///根据新的置信度过滤结果
-    keep = cate_scores >= det_para::kSoloUpdateThr;
+    keep = cate_scores >= det2d_para::kSoloUpdateThr;
     if(keep.sum(0).item().toInt() == 0){
         Warns("GetSegTensor | keep.sum(0) == 0");
         return ;
@@ -524,8 +524,8 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
 
     ///再次根据置信度进行排序
     sort_inds = torch::argsort(cate_scores,-1,true);
-    if(sort_inds.sizes()[0] > det_para::kSoloMaxPerImg){
-        sort_inds=sort_inds.index({idx::Slice(idx::None, det_para::kSoloMaxPerImg)});
+    if(sort_inds.sizes()[0] > det2d_para::kSoloMaxPerImg){
+        sort_inds=sort_inds.index({idx::Slice(idx::None, det2d_para::kSoloMaxPerImg)});
     }
     seg_preds=seg_preds.index({sort_inds,"..."});
     cate_scores=cate_scores.index({sort_inds});
@@ -549,7 +549,7 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     seg_preds=seg_preds.squeeze(0);
 
     ///阈值化
-    mask_tensor = seg_preds > det_para::kSoloMaskThr;
+    mask_tensor = seg_preds > det2d_para::kSoloMaskThr;
 
     /*cout<<"cate_labels.sizes"<<cate_labels.sizes()<<endl;
     cout<<"cate_scores.sizes"<<cate_scores.sizes()<<endl;

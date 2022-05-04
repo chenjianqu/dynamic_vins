@@ -44,7 +44,11 @@ FeatureTracker::FeatureTracker(const string& config_path)
 
 
 
-
+/**
+ * 不对动态物体进行任何处理,而直接将所有的特征点当作静态区域
+ * @param img
+ * @return
+ */
 FeatureMap FeatureTracker::TrackImage(SegImage &img)
 {
     TicToc t_r,tt;
@@ -170,7 +174,11 @@ FeatureMap FeatureTracker::SetOutputFeats()
 }
 
 
-
+/**
+ * 简单的去掉动态物体区域来提高物体估计的精度
+ * @param img
+ * @return
+ */
 FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
 {
     TicToc t_r,tt;
@@ -208,7 +216,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
         }
 
         if(cur_img.exist_inst){
-            for(int i=0;i<status.size();++i){
+            for(size_t i=0;i<status.size();++i){
                 if(status[i] && cur_img.inv_merge_mask.at<uchar>(cur_pts[i]) == 0 )
                     status[i]=0;
             }
@@ -310,6 +318,7 @@ FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
 
     if(fe_para::is_show_track)
         DrawTrack(cur_img, ids, cur_pts, cur_right_pts, prev_left_map);
+
     prev_img = cur_img;
     prev_pts = cur_pts;
     prev_un_pts = cur_un_pts;
@@ -515,7 +524,11 @@ void FeatureTracker::RemoveOutliers(std::set<int> &removePtsIds)
 }
 
 
-
+/**
+ * 前端的主函数, 两个线程并行跟踪背景区域和动态区域
+ * @param img
+ * @return
+ */
 FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
 {
     TicToc t_r,tt;
@@ -526,25 +539,19 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     cur_pts.clear();
 
     //为了防止两个线程同时访问图片内存，这里进行复制
-    cur_img.gray0_gpu = img.gray0_gpu.clone();
-    cur_img.gray1_gpu = img.gray1_gpu.clone();
+    //cur_img.gray0_gpu = img.gray0_gpu.clone();
+    //cur_img.gray1_gpu = img.gray1_gpu.clone();
 
     cur_img.gray0_gpu.download(cur_img.gray0);
     cur_img.gray1_gpu.download(cur_img.gray1);
 
     ///开启另一个线程检测动态特征点
-    std::thread t_inst_track;
     TicToc t_i;
-    if(cfg::use_dense_flow){
-        t_inst_track = std::thread(&InstsFeatManager::InstsFlowTrack, insts_tracker.get(), img);
-    }
-    else{
-        t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
-    }
-    //std::thread t_inst_track(&InstsFeatManager::InstsTrackByMatching, insts_tracker.get(), img);
+    std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), img);
 
+    ///形态学运算
     if(img.exist_inst){
-        ErodeMaskGpu(cur_img.inv_merge_mask_gpu, cur_img.inv_merge_mask_gpu);///形态学运算
+        ErodeMaskGpu(cur_img.inv_merge_mask_gpu, cur_img.inv_merge_mask_gpu);
         cur_img.inv_merge_mask_gpu.download(cur_img.inv_merge_mask);
     }
 
@@ -606,6 +613,7 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     pts_velocity = PtsVelocity(ids, cur_un_pts, cur_un_pts_map, prev_un_pts_map);
     //Infot("TrackSemanticImage | vel&&un:{} ms", tt.TocThenTic());
 
+    ///跟踪右图像
     if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !cur_pts.empty())
     {
         ids_right.clear();
@@ -656,7 +664,6 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
         insts_tracker->DrawInsts(img_track_);
 
 
-
     prev_img = cur_img;
     prev_pts = cur_pts;
     prev_un_pts = cur_un_pts;
@@ -671,7 +678,6 @@ FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
     //cv::waitKey(1);
 
     return SetOutputFeats();
-
 }
 
 

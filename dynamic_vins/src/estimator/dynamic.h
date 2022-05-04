@@ -19,7 +19,7 @@
 #include <sophus/so3.hpp>
 
 #include "utils/def.h"
-#include "front_end/box3d.h"
+#include "utils/box3d.h"
 
 namespace dynamic_vins{\
 
@@ -32,6 +32,7 @@ using FeatureMap=std::map<int, std::vector<std::pair<int, Eigen::Matrix<double, 
 class InstanceFeatureSimple : public std::map<unsigned int,std::vector<Eigen::Matrix<double,5,1>>>{
 public:
     cv::Scalar color;
+    Box3D::Ptr box3d;
 };
 
 
@@ -47,8 +48,6 @@ struct FeatureFrame{
     ///根据物体的实例信息,格式：{instnce_id,{feature_id,}}
     std::map<unsigned int,InstanceFeatureSimple> instances;
 
-    ///3D box信息
-    vector<Box3D> boxes;
 };
 
 

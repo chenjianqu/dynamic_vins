@@ -183,7 +183,7 @@ vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts,PinHoleCamera::Ptr &
     for (auto & pt : pts){
         Eigen::Vector2d a(pt.x, pt.y);
         Eigen::Vector3d b;
-        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        cam->LiftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
         un_pts.emplace_back(b.x() / b.z(), b.y() / b.z());
     }
     return un_pts;
@@ -212,14 +212,9 @@ vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
 
 
 
-std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask,
-                                              std::vector<cv::Point2f> &curr_pts, cv::Rect rect){
-    cv::Mat mask = inst_mask.clone();
-    for(int i=0;i<curr_pts.size();++i){
-        cv::circle(mask,curr_pts[i],5,0,-1);
-    }
+std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask, cv::Rect rect){
     int cnt=0;
-    int row_start=0,row_end=mask.rows,col_start=0,col_end=mask.cols;
+    int row_start=0,row_end=inst_mask.rows,col_start=0,col_end=inst_mask.cols;
     if(!rect.empty()){
         row_start = rect.tl().y;
         col_start = rect.tl().x;
@@ -230,7 +225,7 @@ std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &ins
     constexpr int kMinDist=3;
     for(int i=row_start;i<row_end;i+=kMinDist){
         for(int j=col_start;j<col_end;j+=kMinDist){
-            if(mask.at<uchar>(i,j) > 0){
+            if(inst_mask.at<uchar>(i,j) > 0){
                 vec.emplace_back(j,i);
                 cnt++;
             }
@@ -355,9 +350,16 @@ void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label, co
     }
 }
 
-
-float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
-                const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt){
+/**
+ * 计算两个包围框的IoU
+ * @param box1_minPt
+ * @param box1_maxPt
+ * @param box2_minPt
+ * @param box2_maxPt
+ * @return
+ */
+float BoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
+             const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt){
     cv::Point2f center1 = (box1_minPt+box1_maxPt)/2.f;
     cv::Point2f center2 = (box2_minPt+box2_maxPt)/2.f;
     float w1 = box1_maxPt.x - (float)box1_minPt.x;
@@ -381,7 +383,7 @@ float CalBoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
  * @param bb_gt
  * @return
  */
-float CalBoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt) {
+float BoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt) {
     auto in = (bb_test & bb_gt).area();
     auto un = bb_test.area() + bb_gt.area() - in;
     if (un <  DBL_EPSILON)
