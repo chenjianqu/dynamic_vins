@@ -98,8 +98,6 @@ Config::Config(const std::string &file_name)
     fs["use_dense_flow"] >> use_dense_flow;
     cout<<"use_dense_flow: "<<use_dense_flow<<endl;
     if(use_dense_flow){
-        fs["use_preprocess_flow"]>>use_preprocess_flow;
-        cout<<"use_preprocess_flow: "<<use_preprocess_flow<<endl;
         fs["use_background_flow"]>>use_background_flow;
     }
 

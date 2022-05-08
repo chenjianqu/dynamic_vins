@@ -42,11 +42,12 @@
 #include "factor/projection_two_frame_two_cam_factor.h"
 #include "factor/projection_one_frame_two_cam_factor.h"
 #include "front_end/front_end.h"
-#include "dynamic.h"
+#include "vio_util.h"
 #include "instance_manager.h"
 #include "utils/def.h"
 #include "landmark.h"
 #include "vio_parameters.h"
+#include "feature_queue.h"
 
 namespace dynamic_vins{\
 
@@ -58,7 +59,7 @@ class Estimator
   public:
     using Ptr=std::shared_ptr<Estimator>;
 
-    Estimator(const string& config_path);
+    explicit Estimator(const string& config_path);
     ~Estimator();
     void SetParameter();
 
@@ -72,16 +73,6 @@ class Estimator
     void PredictPtsInNextFrame();
 
     void ClearState();
-
-    void PushBack(FeatureFrame &frame_feature){
-        input_image_cnt++;
-        if(input_image_cnt % 2 == 0){
-            buf_mutex.lock();
-            feature_buf.emplace(frame_feature);//放入特征队列中
-            buf_mutex.unlock();
-        }
-    }
-
 
     Mat3d ric[2];
     Vec3d tic[2];
@@ -97,7 +88,14 @@ class Estimator
     vector<Vec3d> key_poses;
     SolverFlag solver_flag;
     MarginFlag margin_flag;
+
     double para_ex_pose[2][kSizePose]{};
+    double para_Pose[kWinSize + 1][kSizePose]{};
+    double para_SpeedBias[kWinSize + 1][kSizeSpeedBias]{};
+    double para_Feature[kNumFeat][kSizeFeature]{};
+    double para_Retrive_Pose[kSizePose]{};
+    double para_Td[1][1]{};
+    double para_Tr[1][1]{};
 
     InstanceManager insts_manager;
     FeatureManager f_manager;
@@ -107,7 +105,7 @@ private:
 
     void SetMarginalizationInfo();
 
-    void ProcessImage( FeatureFrame & image, const double header);
+    void ProcessImage(SemanticFeature & image, double header);
     void ProcessIMU(double t, double dt, const Vec3d &linear_acceleration, const Vec3d &angular_velocity);
 
     void SlideWindow();
@@ -166,7 +164,6 @@ private:
     std::mutex propogate_mutex;
     queue<pair<double, Vec3d>> acc_buf;
     queue<pair<double, Vec3d>> gyr_buf;
-    queue<FeatureFrame> feature_buf;
     double prev_time{}, cur_time{};
     bool openExEstimation{};
 
@@ -192,13 +189,6 @@ private:
     vector<Vec3d> point_cloud;
     vector<Vec3d> margin_cloud;
     double initial_timestamp{};
-
-    double para_Pose[kWinSize + 1][kSizePose]{};
-    double para_SpeedBias[kWinSize + 1][kSizeSpeedBias]{};
-    double para_Feature[kNumFeat][kSizeFeature]{};
-    double para_Retrive_Pose[kSizePose]{};
-    double para_Td[1][1]{};
-    double para_Tr[1][1]{};
 
     int loop_window_index{};
 

@@ -30,7 +30,7 @@
 #include "instance_tracker.h"
 #include "det2d/detector2d.h"
 #include "feature_utils.h"
-#include "estimator/dynamic.h"
+#include "estimator/vio_util.h"
 
 namespace dynamic_vins{\
 
@@ -40,17 +40,17 @@ public:
     using Ptr=std::unique_ptr<FeatureTracker>;
     explicit FeatureTracker(const string& config_path);
 
-    FeatureMap TrackImage(SegImage &img);
-    FeatureMap TrackImageNaive(SegImage &img);
-    FeatureMap TrackSemanticImage(SegImage &img);
+    FeatureBackground TrackImage(SemanticImage &img);
+    FeatureBackground TrackImageNaive(SemanticImage &img);
+    FeatureBackground TrackSemanticImage(SemanticImage &img);
 
     cv::Mat img_track(){return img_track_;}
 
     InstsFeatManager::Ptr insts_tracker;
-    SegImage prev_img, cur_img;
+    SemanticImage prev_img, cur_img;
 
 private:
-    FeatureMap SetOutputFeats();
+    FeatureBackground SetOutputFeats();
     void SetPrediction(std::map<int, Eigen::Vector3d> &predictPts);
     void RemoveOutliers(std::set<int> &removePtsIds);
 
@@ -60,7 +60,7 @@ private:
     vector<cv::Point2f> PtsVelocity(vector<int> &id_vec, vector<cv::Point2f> &pts,
                                     std::map<int, cv::Point2f> &cur_id_pts,
                                     std::map<int, cv::Point2f> &prev_id_pts) const;
-    void DrawTrack(const SegImage &img,
+    void DrawTrack(const SemanticImage &img,
                    vector<int> &curLeftIds,
                    vector<cv::Point2f> &curLeftPts,
                    vector<cv::Point2f> &curRightPts,

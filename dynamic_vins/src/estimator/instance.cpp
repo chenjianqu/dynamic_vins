@@ -62,7 +62,7 @@ void Instance::InitialPose()
     int win_cnt[kWinSize + 1]={0};
     for(auto &lm : landmarks){
         if(lm.depth > 0){
-            win_cnt[lm.feats[0].frame]++;
+            win_cnt[lm.feats.front().frame]++;
         }
     }
     int frame_index=-1;//将作为初始化位姿的帧号
@@ -80,8 +80,8 @@ void Instance::InitialPose()
     ///计算初始位姿
     Vec3d center=Vec3d::Zero(),minPt=center,maxPt=center;
     for(auto &landmark : landmarks){
-        if(landmark.depth > 0 && landmark.feats[0].frame == frame_index){
-            Vec3d point_cam= landmark.feats[0].point * landmark.depth;//相机坐标
+        if(landmark.depth > 0 && landmark.feats.front().frame == frame_index){
+            Vec3d point_cam= landmark.feats.front().point * landmark.depth;//相机坐标
             auto point_imu=e->ric[0] * point_cam + e->tic[0];//IMU坐标
             Vec3d p= e->Rs[frame_index] * point_imu + e->Ps[frame_index];//世界坐标
             center+=p;
@@ -113,12 +113,12 @@ void Instance::InitialPose()
     ///删去初始化之前的观测
     for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
         it_next++;
-        if(it->feats.size() == 1 && it->feats[0].frame < frame_index){
+        if(it->feats.size() == 1 && it->feats.front().frame < frame_index){
             landmarks.erase(it);
         }
     }
     for(auto &lm:landmarks){
-        if(lm.feats[0].frame < frame_index){
+        if(lm.feats.front().frame < frame_index){
             for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
                 it_next++;
                 if(it->frame < frame_index) {
@@ -146,7 +146,7 @@ int Instance::SlideWindowOld()
     Mat3d R_margin;
     Vec3d t_margin;
     for(auto &landmark : landmarks){
-        if(landmark.feats[0].frame == 0 && landmark.feats.size() > 1 && landmark.feats[1].frame == 1){ //此时才有必要计算
+        if(landmark.feats.front().frame == 0 && landmark.feats.size() > 1 && (++landmark.feats.begin())->frame == 1){ //此时才有必要计算
             auto &R_bc = e->ric[0];
             auto R_cb = R_bc.transpose();
             auto &P_bc = e->tic[0];
@@ -170,32 +170,32 @@ int Instance::SlideWindowOld()
     for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next)
     {
         it_next++;
-        if(it->feats[0].frame != 0){
-            for(auto &feat : it->feats)
+        if(it->feats.front().frame != 0){ ///起始观测不在0帧, 则将所有的观测的frame--
+            for(auto &feat : it->feats){
                 feat.frame--;
+            }
+            continue;
         }
-        else if(it->feats.size() <= 1){ ///该路标点只有刚开始这个观测，故将其删掉
+        else if(it->feats.size() <= 1){ ///起始观测在0帧,但是该路标点只有刚开始这个观测，故将其删掉
             if(it->depth>0){
                 triangle_num--;
-                depth_sum -= it->depth;
             }
             landmarks.erase(it);
             debug_num++;
             continue;
         }
-        else{ ///将估计的逆深度值转移到新的开始帧
-            Vec3d point_old=it->feats[0].point;
+        else{ ///起始观测在0帧,且有多个观测, 将估计的逆深度值转移到新的开始帧
+            Vec3d point_old=it->feats.front().point;
             it->feats.erase(it->feats.begin());//首先删除该观测
             ///计算新的深度
             if(it->depth > 0){
-                depth_sum -= it->depth;
                 auto pts_cam_j= point_old * it->depth;
                 Vec3d pts_cam_i;
-                if(it->feats[0].frame == 1){ //满足了使用预计算的矩阵的条件，可减少计算量
+                if(it->feats.front().frame == 1){ ///满足了使用预计算的矩阵的条件，可减少计算量
                     pts_cam_i = R_margin * pts_cam_j + t_margin;
                 }
-                else{
-                    int frame=it->feats[0].frame;
+                else{ ///从头计算,比较费计算量
+                    int frame=it->feats.front().frame;
                     auto &R_bc = e->ric[0];
                     auto R_cb = R_bc.transpose();
                     auto &P_bc = e->tic[0];
@@ -210,10 +210,10 @@ int Instance::SlideWindowOld()
                     t_margin=temp_2+temp_3+temp_4+temp_5;
                     pts_cam_i = R_margin * pts_cam_j + t_margin;
                 }
-                //设置深度
+
+                ///设置深度
                 if(pts_cam_i.z() > 0){
                     it->depth=pts_cam_i.z();
-                    depth_sum += it->depth;
                 }
                 else{
                     it->depth = -1;
@@ -221,9 +221,10 @@ int Instance::SlideWindowOld()
                 }
             }
 
-            //将观测的frame--
-            for(auto & feature_point : it->feats)
+            ///将观测的frame--
+            for(auto & feature_point : it->feats){
                 feature_point.frame--;
+            }
         }
     }
 
@@ -232,6 +233,11 @@ int Instance::SlideWindowOld()
         state[i].swap(state[i+1]);
     }
     state[kWinSize]=state[kWinSize - 1];
+
+    for (int i = 0; i < kWinSize; i++){
+        boxes3d[i].swap(boxes3d[i+1]);
+    }
+    boxes3d[kWinSize].reset();
 
     return debug_num;
 }
@@ -246,25 +252,36 @@ int Instance::SlideWindowNew()
 
     for (auto it = landmarks.begin(), it_next = it; it != landmarks.end(); it = it_next){
         it_next++;
-
+        //删除空路标
         if(it->feats.empty()){
             landmarks.erase(it);
             debug_num++;
             continue;
         }
-
-        int index=-1;
-        for(auto& feat:it->feats){
-            index++;
-            if(feat.frame == e->frame - 1){
-                it->feats.erase(it->feats.begin() + index);
+        //上一帧中开始观测到的,但是只被观测了一次,删除
+        if(it->feats.size()==1 && it->feats.front().frame == e->frame-1){
+            landmarks.erase(it);
+            debug_num++;
+            continue;
+        }
+        //删除上一帧中观测
+        for(auto feat_it=it->feats.begin();feat_it!=it->feats.end();++feat_it){
+            if(feat_it->frame == e->frame-1){
+                it->feats.erase(feat_it);
+                break;
             }
         }
+        //对当前帧的观测的frame--
         for(auto& feat:it->feats){
-            if(feat.frame == e->frame)
+            if(feat.frame == e->frame){
                 feat.frame--;
+                break;
+            }
         }
     }
+
+    boxes3d[kWinSize-1] = boxes3d[kWinSize];
+    boxes3d[kWinSize].reset();
 
     state[kWinSize - 1] = state[kWinSize];
     return debug_num;
@@ -279,9 +296,9 @@ void Instance::SetCurrentPoint3d()
     for(auto &lm : landmarks){
         if(lm.depth <= 0)
             continue;
-        int frame_j=lm.feats[0].frame;
+        int frame_j=lm.feats.front().frame;
         int frame_i=e->frame;
-        Vec3d pts_cam_j = lm.feats[0].point * lm.depth;//k点在j时刻的相机坐标
+        Vec3d pts_cam_j = lm.feats.front().point * lm.depth;//k点在j时刻的相机坐标
         Vec3d pts_imu_j = e->ric[0] * pts_cam_j + e->tic[0];//k点在j时刻的IMU坐标
         Vec3d pts_w_j=e->Rs[frame_j] * pts_imu_j + e->Ps[frame_j];//k点在j时刻的世界坐标
         Vec3d pts_obj_j=state[frame_j].R.transpose() * (pts_w_j - state[frame_j].P);//k点在j时刻的物体坐标
@@ -289,6 +306,36 @@ void Instance::SetCurrentPoint3d()
         point3d_curr.push_back(pts_w_i);
     }
 }
+
+/**
+ * 所有三角化的点在当前帧下的平均深度
+ * @return
+ */
+double Instance::AverageDepth() const{
+    double depth_sum=0;
+    int cnt=0;
+
+    for(auto &lm : landmarks){
+        if(lm.depth <=0)
+            continue;
+        cnt++;
+        int imu_i = lm.feats.front().frame;
+        int imu_j = e->frame;
+        Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats.front().point) + e->tic[0]) + e->Ps[imu_i];
+        Vec3d pts_oi=state[imu_i].R.transpose() * ( pts_w-state[imu_i].P);
+        Vec3d pts_wj=state[imu_j].R * pts_oi + state[imu_j].P;
+        Vec3d pts_cj = e->ric[0].transpose() * (e->Rs[imu_j].transpose() * (pts_wj - e->Ps[imu_j]) - e->tic[0]);
+        depth_sum += pts_cj.z();
+    }
+
+    if(cnt>0){
+        return depth_sum/cnt;
+    }
+    else{
+        return 0;
+    }
+}
+
 
 
 /**
@@ -300,7 +347,7 @@ void Instance::SetCurrentPoint3d()
  * @param isStereo
  * @return
  */
-double Instance::ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo)
+double Instance::ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo) const
 {
     Vec2d delta_j((e->td - feat_j.td) * feat_j.vel);
     //Vec3d pts_j_td = feat_j.point - Vec3d(delta_j.x(),delta_j.y(),0);
@@ -338,84 +385,80 @@ void Instance::OutlierRejection()
     if(!is_initial || !is_tracking)
         return;
     int num_delete=0,index=0;
-    Debugv("Inst:{} landmark_num:{} box:<{}>", id, landmarks.size(), VecToStr(box));
-
-    std::string debug_msg;
-    string lm_msg;
+    string log_text = fmt::format("OutlierRejection Inst:{} landmark_num:{} box:{}\n", id, landmarks.size(), VecToStr(box));
 
     for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
         it_next++;
         auto &lm=*it;
         if(lm.feats.empty() || lm.depth <= 0)
             continue;
+
         ///根据包围框去除外点
-/*        if(int frame=lm.feats[0].frame; !IsInBox(
-                e->Rs[frame], e->Ps[frame], e->ric[0], e->tic[0], state[frame].R,
-                state[frame].P, lm.depth, lm.feats[0].point, box)){
-            debug_msg += fmt::format("lid:{} ", lm.id);
-            landmarks.erase(it);
+        /*int frame=lm.feats[0].frame;
+        Vec3d pts_w = e->Rs[frame] * (e->ric[0] * (lm.feats[0].point * lm.depth) + e->tic[0]) + e->Ps[frame];
+        Vec3d pts_oi=state[frame].R.transpose() * ( pts_w - state[frame].P);
+        constexpr double factor=4.;
+        bool is_in_box = (std::abs(pts_oi.x()) < factor*box.x()) && (std::abs(pts_oi.y())<factor*box.y() ) &&
+                (std::abs(pts_oi.z()) < factor*box.z());
+        if(!is_in_box){
+            log_text += fmt::format("del outbox lid:{},d:{:.2f},pts_oi:{} \n", lm.id, lm.depth, VecToStr(pts_oi));
+            it->feats.erase(it->feats.begin());//删除第一个观测
+            it->depth=-1;
+            if(it->feats.empty()){
+                landmarks.erase(it);
+            }
             num_delete++;
             continue;
         }*/
-        lm_msg += fmt::format("\nlid:{} depth:{:.2f} ", lm.id,lm.depth);
+
         double err = 0;
         int err_cnt = 0;
         ///单目重投影误差
-        for(int i=1;i<(int)lm.feats.size(); ++i){
-            //double repro_e= ReprojectTwoFrameError(lm.feats[0],lm.feats[i],e,lm.depth,false);
-            /*double repro_e=ReprojectError(e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame],e->ric[0], e->tic[0],
-                                             e->Rs[lm.feats[i].frame], e->Ps[lm.feats[i].frame],e->ric[0], e->tic[0],
-                                             lm.depth,lm.feats[0].point,lm.feats[i].point);*/
-            int imu_i = lm.feats[0].frame;
-            int imu_j = lm.feats[i].frame;
-            Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
+        auto feat_it=lm.feats.begin();
+        int imu_i = feat_it->frame;
+        Vec3d &start_observe = feat_it->point;
+        for(++feat_it;feat_it!=lm.feats.end();++feat_it){
+            int imu_j = feat_it->frame;
+            Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * start_observe) + e->tic[0]) + e->Ps[imu_i];
             Vec3d pts_oi=state[imu_i].R.transpose() * ( pts_w-state[imu_i].P);
             Vec3d pts_wj=state[imu_j].R * pts_oi + state[imu_j].P;
             Vec3d pts_cj = e->ric[0].transpose() * (e->Rs[imu_j].transpose() * (pts_wj - e->Ps[imu_j]) - e->tic[0]);
-            Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
+            Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - feat_it->point.head<2>();
             double re = residual.norm();
             err+=re;
             err_cnt++;
-            lm_msg += fmt::format("M({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * kFocalLength);
         }
-        if(lm.feats.size()>5) lm_msg+="\n";
         ///双目重投影误差
-        for(int i=0;i<(int)lm.feats.size(); ++i){
-            if(lm.feats[i].is_stereo){
-                //double repro_e= ReprojectTwoFrameError(lm.feats[0],lm.feats[i],e,lm.depth,true);
-                /*double repro_e=ReprojectError(e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame],e->ric[0], e->tic[0],
-                                                 e->Rs[lm.feats[i].frame], e->Ps[lm.feats[i].frame],e->ric[1], e->tic[1],
-                                                 lm.depth,lm.feats[0].point,lm.feats[i].point_right);*/
-                /*double re= ReprojectDynamicError(
-                        e->Rs[lm.feats[0].frame], e->Ps[lm.feats[0].frame], e->ric[0], e->tic[0],
-                        state[lm.feats[0].frame].R, state[lm.feats[0].frame].P, e->Rs[lm.feats[i].frame],
-                        e->Ps[lm.feats[i].frame], e->ric[1], e->tic[1], state[lm.feats[i].frame].R,
-                        state[lm.feats[i].frame].P, lm.depth, lm.feats[0].point, lm.feats[i].point_right);*/
-                int imu_i = lm.feats[0].frame;
-                int imu_j = lm.feats[i].frame;
-                Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
+        feat_it=lm.feats.begin();
+        for(++feat_it;feat_it!=lm.feats.end();++feat_it){
+            if(feat_it->is_stereo){
+                int imu_j = feat_it->frame;
+                Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * start_observe) + e->tic[0]) + e->Ps[imu_i];
                 Vec3d pts_oi=state[imu_i].R.transpose() * ( pts_w-state[imu_i].P);
                 Vec3d pts_wj=state[imu_j].R * pts_oi + state[imu_j].P;
                 Vec3d pts_cj = e->ric[1].transpose() * (e->Rs[imu_j].transpose() * (pts_wj - e->Ps[imu_j]) - e->tic[1]);
-                Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
+                Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - feat_it->point.head<2>();
                 double re = residual.norm();
                 err+=re;
                 err_cnt++;
-                lm_msg += fmt::format("S({},{},{:.2f}) ", lm.feats[0].frame, lm.feats[i].frame, re * kFocalLength);
             }
         }
+
         double ave_err = err / err_cnt * kFocalLength;
         index++;
-        if(ave_err > 10){
-            Debugv("del lid:{} ,avg:{:.2f},d:{:.2f}> ", lm.id, ave_err, lm.depth);
-            landmarks.erase(it);
+        if(ave_err > 30){
+            log_text += fmt::format("del lid:{},d:{:.2f},avg:{:.2f} \n", lm.id, lm.depth, ave_err);
+            it->feats.erase(it->feats.begin());//删除第一个观测
+            it->depth=-1;
+            if(it->feats.empty()){
+                landmarks.erase(it);
+            }
             num_delete++;
         }
     }
 
-    Debugv(lm_msg);
-    Debugv("outbox:{}", debug_msg);
-    Debugv("Inst:{} delete num:{}", id, num_delete);
+    log_text +=fmt::format("Inst:{} delete num:{}", id, num_delete);
+    Debugv(log_text);
 }
 
 
@@ -447,11 +490,11 @@ void Instance::SetOptimizeParameters()
     }
 
     int index=-1;
-    for(auto &landmark : landmarks){
-        if(landmark.depth > 0){
-            index++;
-            para_inv_depth[index][0]= 1.0 / landmark.depth;
-        }
+    for(auto &lm : landmarks){
+        if(lm.depth<0.2)
+            continue;
+        index++;
+        para_inv_depth[index][0]= 1.0 / lm.depth;
     }
 }
 
@@ -474,21 +517,21 @@ void Instance::GetOptimizationParameters()
     box.y()=para_box[0][1];
     box.z()=para_box[0][2];
 
-    /*for(int i=0;i<=kWindowSize;++i){
+    for(int i=0;i<=kWinSize;++i){
         state[i].P.x()=para_state[i][0];
         state[i].P.y()=para_state[i][1];
         state[i].P.z()=para_state[i][2];
         Eigen::Quaterniond q(para_state[i][6],para_state[i][3],para_state[i][4],para_state[i][5]);
         q.normalize();
         state[i].R=q.toRotationMatrix();
-    }*/
-    state[0].P.x()=para_state[0][0];
+    }
+    /*state[0].P.x()=para_state[0][0];
     state[0].P.y()=para_state[0][1];
     state[0].P.z()=para_state[0][2];
     Eigen::Quaterniond q(para_state[0][6], para_state[0][3], para_state[0][4], para_state[0][5]);
     q.normalize();
     state[0].R=q.toRotationMatrix();
-    SetWindowPose();
+    SetWindowPose();*/
 
     int index=-1;
     for(auto &landmark : landmarks){
@@ -505,12 +548,13 @@ void Instance::GetOptimizationParameters()
 /**
  * 判断物体是运动的还是静止的
  */
-void Instance::SetDynamicOrStatic()
+void Instance::DetermineStatic()
 {
     if(!is_tracking || triangle_num<5){
         return;
     }
-
+    /*
+    ///下面根据重投影误差来判断物体的运动
     double err = 0;
     int err_cnt = 0;
 
@@ -532,7 +576,7 @@ void Instance::SetDynamicOrStatic()
             err_cnt++;
         }
         ///双目重投影误差
-        /*for(int i=0;i<(int)lm.feats.size(); ++i){
+        for(int i=0;i<(int)lm.feats.size(); ++i){
             if(lm.feats[i].is_stereo){
                 int imu_i = lm.feats[0].frame;
                 int imu_j = lm.feats[i].frame;
@@ -543,7 +587,7 @@ void Instance::SetDynamicOrStatic()
                 err+=re;
                 err_cnt++;
             }
-        }*/
+        }
     }
 
     if(err_cnt>0){
@@ -561,8 +605,47 @@ void Instance::SetDynamicOrStatic()
 
         }
         Debugv("SetDynamicOrStatic id:{} triangle_num:{} avg_err:{} is_static:{}",id,triangle_num,avg_err,is_static);
-    }
+    }*/
 
+    ///下面根据场景流判断物体是否运动
+    int cnt=0;
+    Vec3d scene_vec=Vec3d::Zero();
+
+    for(auto &lm : landmarks){
+        if(lm.depth<=0)
+            continue;
+        if(lm.feats.size() <= 1)
+            continue;
+        //计算第一个观测所在的世界坐标
+        Vec3d ref_vec;
+        if(lm.feats.front().is_triangulated){
+            ref_vec = lm.feats.front().p_w;
+        }
+        else{
+            //将深度转换到世界坐标系
+            ref_vec =  e->Rs[lm.feats.front().frame] * (e->ric[0] * (lm.feats.front().point * lm.depth) + e->tic[0]) + e->Ps[lm.feats.front().frame];
+        }
+        int feat_index=1;
+        for(auto feat_it = (++lm.feats.begin());feat_it!=lm.feats.end();++feat_it){
+            if(feat_it->is_triangulated){//计算i观测时点的3D位置
+                scene_vec += ( feat_it->p_w - ref_vec ) / feat_index; //加上平均距离向量
+                cnt++;
+                feat_index++;
+            }
+        }
+
+    }
+    ///根据场景流判断是否是运动物体
+    if(cnt>10){
+        scene_vec /= cnt;
+        if(scene_vec.norm() > 1.){
+            is_static=false;
+        }
+        else{
+            is_static=true;
+        }
+        Debugv("DetermineStatic id:{} is_static:{} scene_vec:{}",id,is_static, VecToStr(scene_vec));
+    }
 
 }
 

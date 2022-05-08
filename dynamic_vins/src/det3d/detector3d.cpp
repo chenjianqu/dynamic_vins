@@ -25,6 +25,29 @@ Detector3D::Detector3D(const std::string& config_path){
 }
 
 
+void Detector3D::Launch(SemanticImage &img){
+    if(det3d_para::use_offline){
+        image_seq_id = img.seq;
+        return;
+    }
+    else{
+        Criticals("det3d_para::use_offline = false, but not implement");
+        std::terminate();
+    }
+}
+
+std::vector<Box3D::Ptr>  Detector3D::WaitResult(){
+    if(det3d_para::use_offline){
+        return Detector3D::ReadBox3D(image_seq_id);
+    }
+    else{
+        Criticals("det3d_para::use_offline = false, but not implement");
+        std::terminate();
+    }
+}
+
+
+
 std::vector<Box3D::Ptr> Detector3D::ReadBox3dFromTxt(const std::string &txt_path,double score_threshold)
 {
     std::vector<Box3D::Ptr> boxes;
@@ -57,17 +80,17 @@ std::vector<Box3D::Ptr> Detector3D::ReadBox3dFromTxt(const std::string &txt_path
         double yaw=std::stod(tokens[9]);
         box->yaw = yaw;
 
-        Eigen::Matrix<double,3,8> corners = corners_norm.transpose(); //得到矩阵 3x8
+        Mat38d corners = corners_norm.transpose(); //得到矩阵 3x8
         corners = corners.array().colwise() * box->dims.array();//广播逐点乘法
 
         ///根据yaw角构造旋转矩阵
-        Eigen::Matrix3d R;
+        Mat3d R;
         R<<cos(yaw),0, -sin(yaw),   0,1,0,   sin(yaw),0,cos(yaw);
 
         Eigen::Matrix<double,8,3> result =  corners.transpose() * R;//8x3
         //加上偏移量
         Eigen::Matrix<double,8,3> output= result.array().rowwise() + box->bottom_center.transpose().array();
-        box->corners = output.transpose();
+        box->corners = output.transpose();///box的8个顶点在相机坐标系下的坐标
         ///计算3D box投影到图像平面
         for(int i=0;i<8;++i){
             Vec2d p;

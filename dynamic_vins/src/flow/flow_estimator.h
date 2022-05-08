@@ -17,6 +17,7 @@
 
 #include "utils/def.h"
 #include "raft.h"
+#include "front_end/semantic_image.h"
 
 namespace dynamic_vins{\
 
@@ -27,6 +28,11 @@ public:
     using Tensor = torch::Tensor;
 
     explicit FlowEstimator(const std::string& config_path);
+
+    ///启动光流估计
+    void Launch(SemanticImage &img);
+    cv::Mat WaitResult();
+
 
     Tensor Forward(Tensor &img);
 

@@ -17,6 +17,10 @@
 
 namespace dynamic_vins{\
 
+
+
+
+
 ///读取相机到IMU的外参
 void ReadCameraToIMU(const std::string& config_path){
     ///设置为单位矩阵
@@ -46,8 +50,6 @@ void ReadCameraToIMU(const std::string& config_path){
         string kitti_calib_path;
         fs["kitti_calib_path"] >> kitti_calib_path;
         auto calib_map = kitti::ReadCalibFile(kitti_calib_path);
-
-        cout<<calib_map.size()<<endl;
 
         //将点从IMU坐标系变换到相机坐标系0的变换矩阵
         Mat4d T_imu_c0 =calib_map["Tr_imu_velo"] * calib_map["Tr_velo_cam"];
@@ -105,14 +107,8 @@ void ReadCameraToIMU(const std::string& config_path){
     fs.release();
 
     cfg::kExCalibResultPath = cfg::kOutputFolder + "/extrinsic_parameter.csv";
-
-    cout<<"RIC0:\n"<<para::RIC[0]<<endl;
-    cout<<"TIC0:\n"<<para::TIC[0]<<endl;
-    if(cfg::kCamNum == 2){
-        cout<<"RIC1:\n"<<para::RIC[1]<<endl;
-        cout<<"TIC1:\n"<<para::TIC[1]<<endl;
-    }
 }
+
 
 void VioParameters::SetParameters(const std::string &config_path)
 {

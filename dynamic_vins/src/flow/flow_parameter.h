@@ -23,7 +23,9 @@ public:
     inline static std::string kRaftUpdateOnnxPath;
     inline static std::string kRaftUpdateTensorrtPath;
 
-    inline static std::string kFlowPreprocessPath;//预计算的光流路径
+    inline static std::string kFlowOfflinePath;//预计算的光流路径
+
+    inline static bool use_offline_flow;
 
     static void SetParameters(const std::string &config_path);
 };

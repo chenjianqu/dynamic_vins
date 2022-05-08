@@ -18,9 +18,9 @@ using namespace std::chrono_literals;
 
 
 
-SegImage CallBack::SyncProcess()
+SemanticImage CallBack::SyncProcess()
 {
-    SegImage img;
+    SemanticImage img;
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
         if( (cfg::is_input_seg  && (img0_buf.empty() || img1_buf.empty() || seg0_buf.empty() || seg1_buf.empty())) || //等待图片

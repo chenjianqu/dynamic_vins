@@ -171,7 +171,7 @@ void Estimator::Optimization()
     AddInstanceParameterBlock(problem);
     ///添加动态物体的相关顶点
     if(cfg::slam == SlamType::kDynamic){
-        insts_manager.SetOptimizationParameters();//将优化变量写入double数组
+        Debugv(insts_manager.PrintInstancePoseInfo(false));
         insts_manager.AddInstanceParameterBlock(problem);
     }
 
@@ -179,8 +179,9 @@ void Estimator::Optimization()
     int f_m_cnt=AddResidualBlock(problem,loss_function);
 
     ///添加动态物体的残差项
-    if(cfg::slam == SlamType::kDynamic)
+    if(cfg::slam == SlamType::kDynamic){
         insts_manager.AddResidualBlock(problem, loss_function);
+    }
 
     Debugt("optimization | prepare:{} ms",tt.TocThenTic());
     Debugv("optimization 开始优化 visual measurement count: {}", f_m_cnt);
@@ -417,7 +418,8 @@ void Estimator::ClearState()
     process_mutex.lock();
     while(!acc_buf.empty())acc_buf.pop();
     while(!gyr_buf.empty())gyr_buf.pop();
-    while(!feature_buf.empty())feature_buf.pop();
+
+    feature_queue.clear();
 
     prev_time = -1;
     cur_time = 0;
@@ -540,7 +542,7 @@ void Estimator::InputIMU(double t, const Vec3d &linear_acc, const Vec3d &angular
     if (solver_flag == SolverFlag::kNonLinear){
         propogate_mutex.lock();
         FastPredictIMU(t, linear_acc, angular_val);
-        pubLatestOdometry(latest_P, latest_Q, latest_V, t);
+        Publisher::pubLatestOdometry(latest_P, latest_Q, latest_V, t);
         propogate_mutex.unlock();
     }
 }
@@ -1356,7 +1358,7 @@ void Estimator::UpdateLatestStates(){
  * @param image
  * @param header
  */
-void Estimator::ProcessImage( FeatureFrame &image,const double header){
+void Estimator::ProcessImage(SemanticFeature &image, const double header){
     ///添加背景特征点到管理器,并判断视差
     Infov("processImage Adding feature points number:{}", image.features.size());
     if (f_manager.AddFeatureCheckParallax(frame, image.features, td))
@@ -1397,8 +1399,7 @@ void Estimator::ProcessImage( FeatureFrame &image,const double header){
     }
 
     ///VINS的初始化
-    if (solver_flag == SolverFlag::kInitial)
-    {
+    if (solver_flag == SolverFlag::kInitial){
         // monocular + IMU initilization
         if (!cfg::is_stereo && cfg::is_use_imu){
             if (frame == kWinSize){
@@ -1494,7 +1495,7 @@ void Estimator::ProcessImage( FeatureFrame &image,const double header){
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
-            Debugv(insts_manager.PrintInstanceInfo());
+            Debugv(insts_manager.PrintInstanceInfo(true,true));
         }
         Debugv("--完成处理动态物体--");
 
@@ -1561,32 +1562,32 @@ void Estimator::ProcessMeasurements(){
     static TicToc tt;
     while (cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(feature_buf.empty()){
+        if(feature_queue.empty()){
             std::this_thread::sleep_for(2ms);
             continue;
         }
 
         ///获取VIO的处理数据
-        FeatureFrame feature_frame = feature_buf.front();
-        cur_time = feature_frame.time + td;
+        auto front_time=feature_queue.front_time();
+        if(!front_time)
+            continue;
+        cur_time = *front_time + td;
         if(cfg::is_use_imu && !IMUAvailable(cur_time)){
             std::cerr<<"wait for imu ..."<<endl;
             std::this_thread::sleep_for(5ms);
             continue;
         }
-
-        Warnv("----------Time : {} ----------", std::to_string(feature_frame.time));
+        Warnv("----------Time : {} ----------", std::to_string(*front_time));
 
         tt.Tic();
+        ///获取上一帧时刻到当前时刻的IMU测量值
         vector<pair<double, Vec3d>> acc_vec, gyr_vec;
-
-        buf_mutex.lock();
-        //获取上一帧时刻到当前时刻的IMU测量值
-        if(cfg::is_use_imu)
+        if(cfg::is_use_imu){
+            std::unique_lock<std::mutex> lock(buf_mutex);
             GetIMUInterval(prev_time, cur_time, acc_vec, gyr_vec);
-
-        feature_buf.pop();
-        buf_mutex.unlock();
+        }
+        //获取前端得到的特征
+        SemanticFeature feature_frame = *(feature_queue.request_frame());
 
         ///IMU预积分 和 状态递推
         if(cfg::is_use_imu){
@@ -1612,26 +1613,28 @@ void Estimator::ProcessMeasurements(){
 
         ///进入主函数
         ProcessImage(feature_frame ,feature_frame.time);
+
         prev_time = cur_time;
 
-        printStatistics(*this, 0);
+        ///输出
+
+        Publisher::printStatistics(*this, 0);
 
         std_msgs::Header header;
         header.frame_id = "world";
         header.stamp = ros::Time(feature_frame.time);
 
-
         if(cfg::slam == SlamType::kDynamic){
             //printInstanceData(*this);
-            pubInstancePointCloud(*this,header);
+            Publisher::pubInstancePointCloud(*this,header);
         }
 
-        pubOdometry(*this, header);
-        pubKeyPoses(*this, header);
-        pubCameraPose(*this, header);
-        pubPointCloud(*this, header);
-        pubKeyframe(*this);
-        pubTF(*this, header);
+        Publisher::pubOdometry(*this, header);
+        Publisher:: pubKeyPoses(*this, header);
+        Publisher::pubCameraPose(*this, header);
+        Publisher::pubPointCloud(*this, header);
+        Publisher::pubKeyframe(*this);
+        Publisher::pubTF(*this, header);
 
         //PubPredictBox3D(*this,feature_frame.boxes);
 
@@ -1642,7 +1645,7 @@ void Estimator::ProcessMeasurements(){
         auto output_msg=fmt::format("cnt:{} ___________estimator process time: {} ms_____________\n",
                                     estimator_cnt,tt.TocThenTic());
         Infov(output_msg);
-        cerr<<output_msg<<endl;
+        cout<<output_msg<<endl;
     }
 
     Warnv("ProcessMeasurements 线程退出");

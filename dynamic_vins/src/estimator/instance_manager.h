@@ -24,9 +24,10 @@
 #include "factor/projection_box_factor.h"
 #include "factor/projection_factor_simple.h"
 #include "utils/parameters.h"
-#include "estimator/dynamic.h"
+#include "estimator/vio_util.h"
 #include "instance.h"
 #include "landmark.h"
+#include "feature_queue.h"
 
 
 namespace dynamic_vins{\
@@ -37,17 +38,31 @@ class Estimator;
 class InstanceManager{
 public:
     using Ptr=std::shared_ptr<InstanceManager>;
+
     InstanceManager(){
         ProjectionInstanceFactor::sqrt_info = kFocalLength / 1.5 * Eigen::Matrix2d::Identity();//初始化因子的信息矩阵
     }
 
-    void PushBack(unsigned int  frame_id, std::map<unsigned int,InstanceFeatureSimple> &input_insts);
+    void PushBack(unsigned int  frame_id, std::map<unsigned int,FeatureInstance> &input_insts);
+
     void Triangulate(int frame_cnt);
+
     void PredictCurrentPose();
+
     void GetOptimizationParameters();
+
     void SlideWindow();
+
     void AddInstanceParameterBlock(ceres::Problem &problem);
+
     void AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
+
+    void SetVelMap();
+
+    string PrintInstanceInfo(bool output_lm,bool output_stereo=false);
+    string PrintInstancePoseInfo(bool output_lm);
+
+    void InitialInstance(std::map<unsigned int,FeatureInstance> &input_insts);
 
     /**
     * 获得优化完成的参数，并重新设置窗口内物体的位姿
@@ -57,18 +72,6 @@ public:
             inst.SetOptimizeParameters();
         });
     }
-
-    /**
- * 根据速度设置物体的位姿
- */
-    void SetWindowPose(){
-        InstExec([](int key,Instance& inst){
-            inst.SetWindowPose();
-        });
-    }
-
-
-    void InitialInstance(std::map<unsigned int,InstanceFeatureSimple> &input_insts);
 
     void SetInstanceCurrentPoint3d(){
         InstExec([](int key,Instance& inst){
@@ -84,15 +87,9 @@ public:
 
     void SetDynamicOrStatic(){
         InstExec([](int key,Instance& inst){
-            inst.SetDynamicOrStatic();
+            inst.DetermineStatic();
         },true);
     }
-
-    void SetVelMap();
-
-    string PrintInstanceInfo();
-
-
 
     std::unordered_map<unsigned int,Vel3d> vel_map(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
@@ -100,6 +97,7 @@ public:
     }
 
     void set_estimator(Estimator* estimator);
+
     int tracking_number() const {return tracking_number_;}
 
     std::unordered_map<unsigned int,Instance> instances;
@@ -126,6 +124,8 @@ private:
     Estimator* e{nullptr};
     int opt_inst_num_{0};//优化位姿的数量
     int tracking_number_{0};//正在跟踪的物体数量
+
+    int frame{0};
 };
 
 }

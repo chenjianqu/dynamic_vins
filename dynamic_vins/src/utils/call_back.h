@@ -16,7 +16,7 @@
 #include <cv_bridge/cv_bridge.h>
 
 #include "parameters.h"
-#include "front_end/segment_image.h"
+#include "front_end/semantic_image.h"
 
 namespace dynamic_vins{\
 
@@ -68,7 +68,7 @@ public:
     }
 
 
-    SegImage SyncProcess();
+    SemanticImage SyncProcess();
 
 
 private:

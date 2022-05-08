@@ -57,6 +57,9 @@ enum class MarginFlag{
     kMarginSecondNew = 1
 };
 
+
+
+
 class VioParameters{
 public:
     inline static double kInitDepth;

@@ -23,11 +23,34 @@ using Tensor = torch::Tensor;
 
 FlowEstimator::FlowEstimator(const std::string& config_path){
     flow_para::SetParameters(config_path);
-    if(cfg::use_dense_flow && !cfg::use_preprocess_flow){
+    if(cfg::use_dense_flow && !flow_para::use_offline_flow){
         raft_ = std::make_unique<RAFT>();
         data_ = std::make_shared<RaftData>();
     }
 }
+
+
+void FlowEstimator::Launch(SemanticImage &img){
+        if(flow_para::use_offline_flow){
+            SynchronizeReadFlow(img.seq);
+        }
+        else{
+            SynchronizeForward(img.img_tensor);
+        }
+}
+
+cv::Mat FlowEstimator::WaitResult(){
+    cv::Mat flow_cv;
+    if(flow_para::use_offline_flow){
+        return WaitingReadFlowImage();
+    }
+    else{
+        auto flow_tensor = WaitingForwardResult();
+        flow_tensor = flow_tensor.to(torch::kCPU);
+        return cv::Mat(flow_tensor.sizes()[1],flow_tensor.sizes()[2],CV_8UC2,flow_tensor.data_ptr()).clone();
+    }
+}
+
 
 
 
@@ -36,7 +59,7 @@ void FlowEstimator::SynchronizeForward(Tensor &img){
     if(is_running_){
         return;
     }
-    if(cfg::use_preprocess_flow){
+    if(flow_para::use_offline_flow){
         cerr<<"because use_preprocess_flow=true,so can not launch FlowEstimator::SynchronizeForward()";
         std::terminate();
     }
@@ -60,7 +83,7 @@ void FlowEstimator::SynchronizeReadFlow(unsigned int seq_id){
     if(is_running_){
         return;
     }
-    if(!cfg::use_preprocess_flow){
+    if(!flow_para::use_offline_flow){
         cerr<<"because use_preprocess_flow=false,so can not launch FlowEstimator::SynchronizeReadFlow()";
         std::terminate();
     }
@@ -119,7 +142,7 @@ cv::Mat FlowEstimator::ReadFlowImage(unsigned int seq_id){
     ///获取目录中所有的文件名
     static vector<fs::path> names;
     if(names.empty()){
-        fs::path dir_path(flow_para::kFlowPreprocessPath);
+        fs::path dir_path(flow_para::kFlowOfflinePath);
         if(!fs::exists(dir_path))
             return {};
         fs::directory_iterator dir_iter(dir_path);
@@ -136,7 +159,7 @@ cv::Mat FlowEstimator::ReadFlowImage(unsigned int seq_id){
         int mid=(low+high)/2;
         string name_stem = names[mid].stem().string();
         if(name_stem == target_name){
-            string n_path = (flow_para::kFlowPreprocessPath/names[mid]).string();
+            string n_path = (flow_para::kFlowOfflinePath / names[mid]).string();
             flow_img = cv::optflow::readOpticalFlow(n_path);
             break;
         }
@@ -149,7 +172,7 @@ cv::Mat FlowEstimator::ReadFlowImage(unsigned int seq_id){
     }
 
     if(flow_img.empty()){
-        string msg=fmt::format("Can not find the target name:{} in dir:{}",target_name,flow_para::kFlowPreprocessPath);
+        string msg=fmt::format("Can not find the target name:{} in dir:{}",target_name,flow_para::kFlowOfflinePath);
         Errors(msg);
         cerr<<msg<<endl;
     }

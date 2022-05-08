@@ -31,32 +31,33 @@ using namespace std;
 using namespace ros;
 using namespace Eigen;
 
-ros::Publisher pub_odometry, pub_latest_odometry;
-ros::Publisher pub_path;
-ros::Publisher pub_point_cloud, pub_margin_cloud;
-ros::Publisher pub_key_poses;
-ros::Publisher pub_camera_pose;
-ros::Publisher pub_camera_pose_visual;
-nav_msgs::Path path;
 
-ros::Publisher pub_keyframe_pose;
-ros::Publisher pub_keyframe_point;
-ros::Publisher pub_extrinsic;
-
-ros::Publisher pub_image_track;
-
-
-ros::Publisher pub_instance_pointcloud;
-ros::Publisher pub_instance_marker;
-
-CameraPoseVisualization cameraposevisual(1, 0, 0, 1);
 static double sum_of_path = 0;
 static Vector3d last_path(0.0, 0.0, 0.0);
+static  CameraPoseVisualization cameraposevisual{1, 0, 0, 1};
+
+static ros::Publisher pub_odometry, pub_latest_odometry;
+static ros::Publisher pub_path;
+static  ros::Publisher pub_point_cloud, pub_margin_cloud;
+static  ros::Publisher pub_key_poses;
+static  ros::Publisher pub_camera_pose;
+static   ros::Publisher pub_camera_pose_visual;
+static   nav_msgs::Path path;
+
+static   ros::Publisher pub_keyframe_pose;
+static   ros::Publisher pub_keyframe_point;
+static   ros::Publisher pub_extrinsic;
+static  ros::Publisher pub_image_track;
+
+static   ros::Publisher pub_instance_pointcloud;
+static   ros::Publisher pub_instance_marker;
+
+static ros::Publisher pub_stereo_pointcloud;
 
 
-unsigned int MarkerTypeNumber=3;
+unsigned int MarkerTypeNumber=4;
 
-void registerPub(ros::NodeHandle &n)
+void Publisher::registerPub(ros::NodeHandle &n)
 {
     pub_latest_odometry = n.advertise<nav_msgs::Odometry>("imu_propagate", 1000);
     pub_path = n.advertise<nav_msgs::Path>("path", 1000);
@@ -74,12 +75,13 @@ void registerPub(ros::NodeHandle &n)
     pub_instance_pointcloud=n.advertise<sensor_msgs::PointCloud2>("instance_point_cloud", 1000);
     pub_instance_marker=n.advertise<visualization_msgs::MarkerArray>("instance_marker", 1000);
 
+    pub_stereo_pointcloud=n.advertise<sensor_msgs::PointCloud2>("instance_stereo_point_cloud", 1000);
 
     cameraposevisual.setScale(0.1);
     cameraposevisual.setLineWidth(0.01);
 }
 
-void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t)
+void Publisher::pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t)
 {
     nav_msgs::Odometry odometry;
     odometry.header.stamp = ros::Time(t);
@@ -97,7 +99,7 @@ void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, co
     pub_latest_odometry.publish(odometry);
 }
 
-void PubTrackImage(const cv::Mat &imgTrack, const double t)
+void Publisher::PubTrackImage(const cv::Mat &imgTrack, const double t)
 {
     std_msgs::Header header;
     header.frame_id = "world";
@@ -107,7 +109,7 @@ void PubTrackImage(const cv::Mat &imgTrack, const double t)
 }
 
 
-void printStatistics(const Estimator &estimator, double t)
+void Publisher::printStatistics(const Estimator &estimator, double t)
 {
     if (estimator.solver_flag != SolverFlag::kNonLinear)
         return;
@@ -137,7 +139,7 @@ void printStatistics(const Estimator &estimator, double t)
     last_path = estimator.Ps[kWinSize];
 }
 
-void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
+void Publisher::pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
 {
     if (estimator.solver_flag == SolverFlag::kNonLinear)
     {
@@ -201,7 +203,7 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
     }
 }
 
-void pubKeyPoses(const Estimator &estimator, const std_msgs::Header &header)
+void Publisher::pubKeyPoses(const Estimator &estimator, const std_msgs::Header &header)
 {
     if (estimator.key_poses.empty())
         return;
@@ -235,7 +237,7 @@ void pubKeyPoses(const Estimator &estimator, const std_msgs::Header &header)
     pub_key_poses.publish(key_poses);
 }
 
-void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
+void Publisher::pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
 {
     int idx2 = kWinSize - 1;
 
@@ -271,7 +273,7 @@ void pubCameraPose(const Estimator &estimator, const std_msgs::Header &header)
 }
 
 
-void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
+void Publisher::pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
 {
     sensor_msgs::PointCloud point_cloud, loop_point_cloud;
     point_cloud.header = header;
@@ -328,7 +330,7 @@ void pubPointCloud(const Estimator &estimator, const std_msgs::Header &header)
 }
 
 
-void pubTF(const Estimator &estimator, const std_msgs::Header &header)
+void Publisher::pubTF(const Estimator &estimator, const std_msgs::Header &header)
 {
     if( estimator.solver_flag != SolverFlag::kNonLinear)
         return;
@@ -378,7 +380,7 @@ void pubTF(const Estimator &estimator, const std_msgs::Header &header)
 
 }
 
-void pubKeyframe(const Estimator &estimator)
+void Publisher::pubKeyframe(const Estimator &estimator)
 {
     // pub camera pose, 2D-3D points of keyframe
     if (estimator.solver_flag == SolverFlag::kNonLinear && estimator.margin_flag == MarginFlag::kMarginOld)
@@ -439,7 +441,7 @@ void pubKeyframe(const Estimator &estimator)
 
 
 
-visualization_msgs::Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,int id,const cv::Scalar &color)
+visualization_msgs::Marker Publisher::BuildLineStripMarker(PointT &maxPt,PointT &minPt,int id,const cv::Scalar &color)
 {
     //设置立方体的八个顶点
     geometry_msgs::Point p[8];
@@ -456,7 +458,7 @@ visualization_msgs::Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,int 
 }
 
 
-visualization_msgs::Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,int id,const cv::Scalar &color)
+visualization_msgs::Marker Publisher::BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,int id,const cv::Scalar &color)
 {
     geometry_msgs::Point points[8];
     for(int i=0;i<8;++i){
@@ -468,7 +470,7 @@ visualization_msgs::Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> 
 }
 
 
-visualization_msgs::Marker BuildLineStripMarker(geometry_msgs::Point p[8],int id,const cv::Scalar &color)
+visualization_msgs::Marker Publisher::BuildLineStripMarker(geometry_msgs::Point p[8],int id,const cv::Scalar &color)
 {
     visualization_msgs::Marker msg;
     msg.header.stamp=ros::Time::now();
@@ -482,7 +484,7 @@ visualization_msgs::Marker BuildLineStripMarker(geometry_msgs::Point p[8],int id
     msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
 
     msg.type=visualization_msgs::Marker::LINE_STRIP;//marker的类型
-    msg.scale.x=0.05;//线宽
+    msg.scale.x=0.08;//线宽
     msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];//颜色:0-1
     msg.color.a=1.0;//不透明度
 
@@ -505,7 +507,7 @@ visualization_msgs::Marker BuildLineStripMarker(geometry_msgs::Point p[8],int id
 }
 
 
-visualization_msgs::Marker BuildTextMarker(const Eigen::Vector3d &point,int id,const std::string &text,const cv::Scalar &color,const double scale){
+visualization_msgs::Marker Publisher::BuildTextMarker(const Eigen::Vector3d &point,int id,const std::string &text,const cv::Scalar &color,const double scale){
     visualization_msgs::Marker msg;
     msg.header.stamp=ros::Time::now();
     msg.header.frame_id="world";
@@ -532,14 +534,14 @@ visualization_msgs::Marker BuildTextMarker(const Eigen::Vector3d &point,int id,c
 }
 
 
-visualization_msgs::Marker  BuildTextMarker(const PointT &point,int id,const std::string &text,const cv::Scalar &color,const double scale)
+visualization_msgs::Marker  Publisher::BuildTextMarker(const PointT &point,int id,const std::string &text,const cv::Scalar &color,const double scale)
 {
     Eigen::Vector3d eigen_pt;
     eigen_pt<<point.x,point.y,point.z;
     return BuildTextMarker(eigen_pt,id,text,color,scale);
 }
 
-visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,int id,const cv::Scalar &color)
+visualization_msgs::Marker Publisher::BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,int id,const cv::Scalar &color)
 {
     visualization_msgs::Marker msg;
     msg.header.frame_id="world";
@@ -595,7 +597,7 @@ visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,cons
 }
 
 
-visualization_msgs::Marker BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,int id){
+visualization_msgs::Marker Publisher::BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,int id){
     visualization_msgs::Marker msg;
 
     msg.header.frame_id="world";
@@ -605,7 +607,7 @@ visualization_msgs::Marker BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,in
     msg.pose.orientation.w=1.0;
 
     //暂时使用类别代替这个ID
-    msg.id=id;//当存在多个marker时用于标志出来
+    msg.id=id * MarkerTypeNumber + 3;//当存在多个marker时用于标志出来
     //cout<<msg.id<<endl;
     msg.lifetime=ros::Duration(cfg::kVisualInstDuration);//持续时间3s，若为ros::Duration()表示一直持续
 
@@ -664,7 +666,7 @@ visualization_msgs::Marker BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,in
     return msg;
 }
 
-void PubPredictBox3D(const Estimator & estimator,std::vector<Box3D> &boxes)
+void Publisher::PubPredictBox3D(const Estimator & estimator,std::vector<Box3D> &boxes)
 {
     visualization_msgs::MarkerArray markers;
 
@@ -678,7 +680,7 @@ void PubPredictBox3D(const Estimator & estimator,std::vector<Box3D> &boxes)
     int index=0;
     for(auto &box : boxes){
         //将包围框的8个顶点转换到世界坐标系下
-        Eigen::Matrix<double,3,8> corners = box.corners;
+        Mat38d corners = box.corners;
         for(int i=0;i<8;++i){
             corners.col(i) = cam_to_world(corners.col(i));
         }
@@ -700,13 +702,14 @@ void PubPredictBox3D(const Estimator & estimator,std::vector<Box3D> &boxes)
 
 
 
-void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header)
+void Publisher::pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header)
 {
     if(estimator.insts_manager.tracking_number() < 1)
         return;
 
     visualization_msgs::MarkerArray markers;
-    PointCloud pointCloud;
+    PointCloud instance_point_cloud;
+    PointCloud stereo_point_cloud;
 
     for(auto &[key,inst] : estimator.insts_manager.instances){
         if(!inst.is_tracking ){
@@ -735,9 +738,9 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
         for(auto &lm : inst.landmarks){
             if(lm.depth <= 0)
                 continue;
-            int frame_j=lm.feats[0].frame;
+            int frame_j=lm.feats.front().frame;
             int frame_i=estimator.frame;
-            Vec3d pts_cam_j = lm.feats[0].point * lm.depth;//k点在j时刻的相机坐标
+            Vec3d pts_cam_j = lm.feats.front().point * lm.depth;//k点在j时刻的相机坐标
             Vec3d pts_imu_j = estimator.ric[0] * pts_cam_j + estimator.tic[0];//k点在j时刻的IMU坐标
             Vec3d pt=estimator.Rs[frame_j] * pts_imu_j + estimator.Ps[frame_j];//k点在j时刻的世界坐标
 
@@ -745,6 +748,16 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
             p.x = (float)pt(0);p.y = (float)pt(1);p.z = (float)pt(2);
             p.r=(uint8_t)inst.color[2];p.g=(uint8_t)inst.color[1];p.b=(uint8_t)inst.color[0];
             cloud.push_back(p);
+
+            for(auto &feat : lm.feats){
+                if(feat.is_triangulated){
+                    PointT ps(255,255,255);
+                    ps.x = feat.p_w.x();
+                    ps.y = feat.p_w.y();
+                    ps.z = feat.p_w.z();
+                    stereo_point_cloud.push_back(ps);
+                }
+            }
         }
 
         /*
@@ -778,14 +791,26 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
             }
         }
 
-        //auto lineStripMarker = BuildLineStripMarker(maxPt,minPt,key,color_norm);
+        ///可视化估计的包围框
         EigenContainer<Eigen::Vector3d> vertex;
         inst.GetBoxVertex(vertex);
         auto lineStripMarker = BuildLineStripMarker(vertex,key,color_norm);
+        markers.markers.push_back(lineStripMarker);
+
+        ///可视化检测得到的包围框
+        for(int i=0;i<=kWinSize;++i){
+            if(inst.boxes3d[i]){
+                Mat38d corners_w = inst.boxes3d[i]->GetCornersInWorld(estimator.Rs[i],estimator.Ps[i],estimator.ric[0],estimator.tic[0]);
+                Eigen::Matrix<double,8,3> corners_w_t = corners_w.transpose();
+                auto detect_cube_marker = BuildCubeMarker(corners_w_t,key);
+                markers.markers.push_back(detect_cube_marker);
+            }
+        }
+
 
         //计算可视化的速度
         if(!inst.is_static){
-            Eigen::Vector3d vel = Hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
+            Eigen::Vector3d vel = hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
             string text=fmt::format("{}\n({})", inst.id, VecToStr(vel));
             auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2);
             Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 4;
@@ -798,18 +823,22 @@ void pubInstancePointCloud( Estimator &estimator, const std_msgs::Header &header
             auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2);
             markers.markers.push_back(textMarker);
         }
-        markers.markers.push_back(lineStripMarker);
 
-        pointCloud+=cloud;
+        instance_point_cloud+=cloud;
     }
 
     pub_instance_marker.publish(markers);
-    printf("实例点云的数量: %ld\n",pointCloud.size());
+    printf("实例点云的数量: %ld\n",instance_point_cloud.size());
 
     sensor_msgs::PointCloud2 point_cloud_msg;
-    pcl::toROSMsg(pointCloud,point_cloud_msg);
+    pcl::toROSMsg(instance_point_cloud,point_cloud_msg);
     point_cloud_msg.header = header;
     pub_instance_pointcloud.publish(point_cloud_msg);
+
+    sensor_msgs::PointCloud2 point_stereo_cloud_msg;
+    pcl::toROSMsg(stereo_point_cloud,point_stereo_cloud_msg);
+    point_stereo_cloud_msg.header = header;
+    pub_stereo_pointcloud.publish(point_stereo_cloud_msg);
 }
 
 

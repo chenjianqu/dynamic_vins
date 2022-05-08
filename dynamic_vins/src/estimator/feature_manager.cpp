@@ -18,7 +18,7 @@
 
 
 #include "feature_manager.h"
-#include "dynamic.h"
+#include "vio_util.h"
 #include "vio_parameters.h"
 
 
@@ -73,7 +73,7 @@ int FeatureManager::GetFeatureCount()
  * @param td
  * @return
  */
-bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureMap &image, double td)
+bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureBackground &image, double td)
 {
     double parallax_sum = 0;
     int parallax_num = 0;

@@ -49,7 +49,7 @@ FeatureTracker::FeatureTracker(const string& config_path)
  * @param img
  * @return
  */
-FeatureMap FeatureTracker::TrackImage(SegImage &img)
+FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 {
     TicToc t_r,tt;
     cur_time = img.time0;
@@ -145,9 +145,9 @@ FeatureMap FeatureTracker::TrackImage(SegImage &img)
 }
 
 
-FeatureMap FeatureTracker::SetOutputFeats()
+FeatureBackground FeatureTracker::SetOutputFeats()
 {
-    FeatureMap fm;
+    FeatureBackground fm;
     //left cam
     for (size_t i = 0; i < ids.size(); i++){
         constexpr int camera_id = 0;
@@ -179,7 +179,7 @@ FeatureMap FeatureTracker::SetOutputFeats()
  * @param img
  * @return
  */
-FeatureMap FeatureTracker::TrackImageNaive(SegImage &img)
+FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
 {
     TicToc t_r,tt;
     cur_time = img.time0;
@@ -437,7 +437,7 @@ vector<cv::Point2f> FeatureTracker::PtsVelocity(vector<int> &id_vec,
 
 
 
-void FeatureTracker::DrawTrack(const SegImage &img,
+void FeatureTracker::DrawTrack(const SemanticImage &img,
                                vector<int> &curLeftIds,
                                vector<cv::Point2f> &curLeftPts,
                                vector<cv::Point2f> &curRightPts,
@@ -529,7 +529,7 @@ void FeatureTracker::RemoveOutliers(std::set<int> &removePtsIds)
  * @param img
  * @return
  */
-FeatureMap FeatureTracker::TrackSemanticImage(SegImage &img)
+FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
 {
     TicToc t_r,tt;
     cur_time = img.time0;

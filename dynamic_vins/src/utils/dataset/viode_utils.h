@@ -12,7 +12,7 @@
 
 #include "utils/parameters.h"
 #include "utils/def.h"
-#include "front_end/segment_image.h"
+#include "front_end/semantic_image.h"
 
 
 namespace dynamic_vins{ \
@@ -61,9 +61,9 @@ public:
         return PixelToKey(pt, label_img) == key;
     }
 
-    static void SetViodeMaskSimple(SegImage &img);
+    static void SetViodeMaskSimple(SemanticImage &img);
 
-    static void SetViodeMask(SegImage &img);
+    static void SetViodeMask(SemanticImage &img);
 
     static std::unordered_map<unsigned int,int> ReadViodeRgbIds(const string &rgb_to_label_file);
 

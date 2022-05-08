@@ -18,7 +18,7 @@
 #include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
 
-#include "dynamic.h"
+#include "vio_util.h"
 #include "landmark.h"
 #include "vio_parameters.h"
 #include "utils/parameters.h"
@@ -29,7 +29,39 @@ namespace dynamic_vins{\
 
 class Estimator;
 
+struct State{
+    State() = default;
 
+    /**
+     * 拷贝构造函数
+     */
+    State(const State& rhs):R(rhs.R),P(rhs.P),time(rhs.time){}
+
+    /**
+     * 拷贝赋值运算符
+     * @param rhs
+     * @return
+     */
+    State& operator=(const State& rhs){
+        R = rhs.R;
+        P = rhs.P;
+        time = rhs.time;
+        return *this;
+    }
+
+    void swap(State &rstate){
+        State temp=rstate;
+        rstate.R=std::move(R);
+        rstate.P=std::move(P);
+        rstate.time=time;
+        R=std::move(temp.R);
+        P=std::move(temp.P);
+        time=temp.time;
+    }
+    Mat3d R;
+    Vec3d P;
+    double time;
+};
 
 class Instance{
 public:
@@ -49,19 +81,12 @@ public:
     void SetWindowPose();
     void OutlierRejection();
 
-    double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo);
+    double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo) const;
     void GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
 
-    void SetDynamicOrStatic();
+    void DetermineStatic();
 
-    [[nodiscard]] double AverageDepth() const{
-        if(triangle_num>0){
-            return depth_sum/double(triangle_num);
-        }
-        else{
-            return 0;
-        }
-    }
+    [[nodiscard]] double AverageDepth() const;
 
     vector<Eigen::Vector3d> point3d_curr;
     std::list<LandmarkPoint> landmarks;
@@ -87,12 +112,11 @@ public:
     Estimator* e{nullptr};
 
     int triangle_num{0};//已经三角化的路标点的数量
-    double depth_sum{0};//所有路标点的平均深度
 
     bool is_static{false};//物体是运动的还是静态的
     int static_cnt{0};//辅助判断物体是否运动,
 
-    Box3D::Ptr box3d;
+    Box3D::Ptr boxes3d[(kWinSize + 1)]{};//实例关联的3d box
 };
 
 }

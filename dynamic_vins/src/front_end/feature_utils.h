@@ -17,7 +17,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "utils/def.h"
-#include "segment_image.h"
+#include "semantic_image.h"
 #include "utils/camera_model.h"
 
 using std::vector;

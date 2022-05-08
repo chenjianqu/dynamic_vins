@@ -38,6 +38,27 @@ public:
 class Box3D{
 public:
     using Ptr = std::shared_ptr<Box3D>;
+
+    Box3D(int class_id_,int attribution_id_,double score_):class_id(class_id_),attribution_id(attribution_id_),score(score_){}
+
+    bool InsideBox(Eigen::Vector3d &point);
+
+    Mat28d CornersProjectTo2D(PinHoleCamera &cam);
+
+    static std::vector<std::pair<int,int>> GetLineVetexPair();
+
+    void VisCorners2d(cv::Mat &img,const cv::Scalar& color,PinHoleCamera &cam);
+
+    Mat38d GetCornersInWorld(const Mat3d &R_wbi,const Vec3d &P_wbi,const Mat3d &R_bc,const Vec3d &P_bc);
+
+    static VecVector3d GetCoordinateVectorFromCorners(Mat38d &corners);
+
+    static Mat3d GetCoordinateRotationFromCorners(Mat38d &corners);
+
+
+    static int CoordinateDirection(int x_d,int y_d,int z_d);
+
+
     ///每行的前3个数字是类别,属性,分数
     int class_id;
     int attribution_id ;
@@ -52,15 +73,6 @@ public:
 
     Eigen::Matrix<double,2,8> corners_2d;////包围框的8个顶点在图像坐标系下的像素坐标
     Box2D box2d;
-
-    Box3D(int class_id_,int attribution_id_,double score_):class_id(class_id_),attribution_id(attribution_id_),score(score_){}
-
-    bool InsideBox(Eigen::Vector3d &point);
-
-    Eigen::Matrix<double,2,8> CornersProjectTo2D(PinHoleCamera &cam);
-
-
-    static VecVector3d GetCoordinateVectorFromCorners(Eigen::Matrix<double,3,8> &corners);
 };
 
 

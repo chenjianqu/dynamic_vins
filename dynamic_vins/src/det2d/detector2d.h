@@ -18,7 +18,7 @@
 #include "pipeline.h"
 #include "solo_head.h"
 #include "buffer.h"
-#include "front_end/segment_image.h"
+#include "front_end/semantic_image.h"
 #include "det2d_parameter.h"
 
 using namespace std::chrono_literals;

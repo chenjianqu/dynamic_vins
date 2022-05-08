@@ -8,7 +8,7 @@
  *******************************************************/
 
 #include "instance_tracker.h"
-#include "segment_image.h"
+#include "semantic_image.h"
 #include "utils/def.h"
 #include "utils/dataset/viode_utils.h"
 #include "front_end_parameters.h"
@@ -98,7 +98,7 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
  * 跟踪动态物体
  * @param img
  */
-void InstsFeatManager::InstsTrack(SegImage img)
+void InstsFeatManager::InstsTrack(SemanticImage img)
 {
     TicToc tic_toc;
     curr_time=img.time0;
@@ -310,14 +310,14 @@ void InstsFeatManager::ManageInstances()
  ** 用于将特征点传到VIO模块
  * @param result
  */
-std::map<unsigned int,InstanceFeatureSimple> InstsFeatManager::GetOutputFeature()
+std::map<unsigned int,FeatureInstance> InstsFeatManager::GetOutputFeature()
 {
-    std::map<unsigned int,InstanceFeatureSimple> result;
+    std::map<unsigned int,FeatureInstance> result;
 
     string log_text="GetOutputFeature:\n";
 
     ExecInst([&](unsigned int key, InstFeat& inst){
-        InstanceFeatureSimple  features_map;
+        FeatureInstance  features_map;
         features_map.color = inst.color;
         features_map.box3d = inst.box3d;
         for(int i=0;i<(int)inst.curr_un_points.size();++i){
@@ -354,7 +354,7 @@ std::map<unsigned int,InstanceFeatureSimple> InstsFeatManager::GetOutputFeature(
  * @param mask_img 原来的mask
  * @param semantic_img 语义标签图像
  */
-void InstsFeatManager::AddViodeInstances(SegImage &img)
+void InstsFeatManager::AddViodeInstances(SemanticImage &img)
 {
     cv::Mat seg = img.seg0;
     for(auto &[key,inst] : instances_){
@@ -441,7 +441,7 @@ std::tuple<int,float,float> InstsFeatManager::GetMatchInst(InstInfo &instInfo, t
     return {id_match,iou_max,inst_mask_area};*/
 }
 
-cv::Mat InstsFeatManager::AddInstancesByIoU(SegImage &img)
+cv::Mat InstsFeatManager::AddInstancesByIoU(SemanticImage &img)
 {
 /*    double current_time = img.time0;
     int n_inst = (int)img.insts_info.size();
@@ -505,7 +505,7 @@ cv::Mat InstsFeatManager::AddInstancesByIoU(SegImage &img)
 }
 
 
-void InstsFeatManager:: AddInstancesByIouWithGPU(const SegImage &img)
+void InstsFeatManager:: AddInstancesByIouWithGPU(const SemanticImage &img)
 {
 /*    double current_time = img.time0;
     int n_inst = (int)img.insts_info.size();
@@ -567,7 +567,7 @@ void InstsFeatManager:: AddInstancesByIouWithGPU(const SegImage &img)
 
 
 
-void InstsFeatManager:: AddInstancesByTracking(SegImage &img)
+void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
 {
     double current_time = img.time0;
     int n_inst = (int)img.insts_info.size();
@@ -652,8 +652,10 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
             continue;
 
         //画包围框
-        if(inst.box3d)
-            cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
+        if(inst.box3d){
+            //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
+            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),*camera_);
+        }
 
         cv::rectangle(img,inst.box2d->min_pt,inst.box2d->max_pt,inst.color,2);
 

@@ -17,7 +17,7 @@ namespace dynamic_vins{
  * 根据VIODE的seg0设置背景掩码img.merge_mask、img.merge_mask_gpu 和 物体掩码img.inv_merge_mask_gpu、img.inv_merge_mask_gpu
  * @param img
  */
-void VIODE::SetViodeMaskSimple(SegImage &img)
+void VIODE::SetViodeMaskSimple(SemanticImage &img)
 {
     img.exist_inst=true;
 
@@ -73,7 +73,7 @@ void VIODE::SetViodeMaskSimple(SegImage &img)
  * 以及对每个物体，设置其背景mask，并进行形态学滤波
  * @param img
  */
-void VIODE::SetViodeMask(SegImage &img)
+void VIODE::SetViodeMask(SemanticImage &img)
 {
     struct InstanceSimple{
         InstanceSimple()=default;

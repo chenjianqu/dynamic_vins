@@ -10,6 +10,7 @@
 #include "flow_parameter.h"
 
 #include <opencv2/opencv.hpp>
+#include "utils/log_utils.h"
 
 
 namespace dynamic_vins{\
@@ -36,8 +37,18 @@ void FlowParameter::SetParameters(const std::string &config_path)
     fs["update_tensorrt_path"] >> kRaftUpdateTensorrtPath;
     kRaftUpdateTensorrtPath = kBasicDir + kRaftUpdateTensorrtPath;
 
-    if(!fs["flow_preprocess_path"].isNone())
-        fs["flow_preprocess_path"] >> kFlowPreprocessPath;
+    fs["use_offline_flow"]>>use_offline_flow;
+
+    if(use_offline_flow){
+        if(fs["flow_offline_path"].isNone()){
+            std::cerr<<fmt::format("use_offline_flow=true,but not set flow_offline_path")<<std::endl;
+            std::terminate();
+        }
+        else{
+            fs["flow_offline_path"] >> kFlowOfflinePath;
+        }
+    }
+
 
     fs.release();
 }

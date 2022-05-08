@@ -44,6 +44,8 @@ constexpr int kNumFeat = 1000;
 
 constexpr int kQueueSize=200;
 constexpr double kDelay=0.005;
+constexpr int kImageQueueSize=100;
+
 
 enum class SlamType{
     kRaw,
@@ -90,10 +92,10 @@ public:
     inline static std::string kBasicDir;
 
     inline static bool use_dense_flow;
-    inline static bool use_preprocess_flow;
     inline static bool use_background_flow;
 
     inline static std::atomic_bool ok{true};
+
 };
 
 using cfg = Config;

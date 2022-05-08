@@ -13,6 +13,7 @@
 #include <memory>
 
 #include "utils/box3d.h"
+#include "front_end/semantic_image.h"
 
 namespace dynamic_vins{\
 
@@ -20,11 +21,17 @@ namespace dynamic_vins{\
 class Detector3D{
 public:
     using Ptr=std::shared_ptr<Detector3D>;
-    Detector3D(const std::string& config_path);
+    explicit Detector3D(const std::string& config_path);
+
+    void Launch(SemanticImage &img);
+
+    std::vector<Box3D::Ptr> WaitResult();
 
     static std::vector<Box3D::Ptr> ReadBox3dFromTxt(const std::string &txt_path,double score_threshold);
 
     static std::vector<Box3D::Ptr> ReadBox3D(unsigned int seq_id);
+private:
+    int image_seq_id{};
 
 };
 

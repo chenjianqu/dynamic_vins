@@ -25,6 +25,8 @@ void Det3dParameter::SetParameters(const std::string &config_path)
     fs["det3d_preprocess_path"] >> kDet3dPreprocessPath;
     fs["det3d_score_threshold"] >> kDet3dScoreThreshold;
 
+    fs["use_offline_det3d"] >> use_offline;
+
     fs.release();
 }
 

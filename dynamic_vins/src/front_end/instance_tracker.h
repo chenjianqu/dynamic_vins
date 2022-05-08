@@ -26,12 +26,12 @@
 
 #include <torch/torch.h>
 
-#include "segment_image.h"
+#include "semantic_image.h"
 #include "utils/parameters.h"
 #include "estimator/landmark.h"
 #include "mot/deep_sort.h"
 #include "feature_utils.h"
-#include "estimator/dynamic.h"
+#include "estimator/feature_queue.h"
 #include "utils/box3d.h"
 
 namespace dynamic_vins{\
@@ -99,14 +99,14 @@ public:
     using Ptr=std::shared_ptr<InstsFeatManager>;
     explicit InstsFeatManager(const string& config_path);
 
-    void InstsTrack(SegImage img);
-    void InstsTrackByMatching(SegImage img);
+    void InstsTrack(SemanticImage img);
+    void InstsTrackByMatching(SemanticImage img);
 
-    std::map<unsigned int,InstanceFeatureSimple> GetOutputFeature();
-    void AddViodeInstances(SegImage &img);
-    cv::Mat AddInstancesByIoU(SegImage &img);
-    void AddInstancesByIouWithGPU(const SegImage &img);
-    void AddInstancesByTracking(SegImage &img);
+    std::map<unsigned int,FeatureInstance> GetOutputFeature();
+    void AddViodeInstances(SemanticImage &img);
+    cv::Mat AddInstancesByIoU(SemanticImage &img);
+    void AddInstancesByIouWithGPU(const SemanticImage &img);
+    void AddInstancesByTracking(SemanticImage &img);
     void DrawInsts(cv::Mat& img);
 
     void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
@@ -141,7 +141,7 @@ private:
     cv::cuda::GpuMat mask_background_gpu;
 
     std::vector<cv::Point2f> visual_new_points_;
-    SegImage prev_img;
+    SemanticImage prev_img;
     bool is_exist_inst_{false};
 
     unsigned long global_id_count{0};//全局特征序号，注意与静态物体上的特征id不共用

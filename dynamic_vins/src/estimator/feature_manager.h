@@ -32,6 +32,7 @@
 
 #include "utils/def.h"
 #include "utils/parameters.h"
+#include "feature_queue.h"
 
 
 namespace dynamic_vins{\
@@ -97,7 +98,7 @@ class FeatureManager
     void SetRic(Mat3d _ric[]);
     void ClearState();
     int GetFeatureCount();
-    bool AddFeatureCheckParallax(int frame_count, const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td);
+    bool AddFeatureCheckParallax(int frame_count, const FeatureBackground &image, double td);
     vector<pair<Vec3d, Vec3d>> GetCorresponding(int frame_count_l, int frame_count_r);
     //void updateDepth(const VectorXd &x);
     void SetDepth(const Eigen::VectorXd &x);

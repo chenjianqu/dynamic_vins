@@ -83,8 +83,12 @@ bool Box3D::InsideBox(Eigen::Vector3d &point)
 }
 
 
-
-VecVector3d Box3D::GetCoordinateVectorFromCorners(Eigen::Matrix<double,3,8> &corners)
+/**
+ * 根据世界坐标系下的8个3D 角点,构建物体坐标系,返回坐标系3各轴的向量
+ * @param corners
+ * @return
+ */
+VecVector3d Box3D::GetCoordinateVectorFromCorners(Mat38d &corners)
 {
     /**
          .. code-block:: none
@@ -108,16 +112,115 @@ VecVector3d Box3D::GetCoordinateVectorFromCorners(Eigen::Matrix<double,3,8> &cor
      下面定义坐标系的原点位于物体中心, z轴垂直向上, x轴不变,y轴为原来的z轴
  */
     VecVector3d axis_vector(3);
-    axis_vector[0] = (corners.col(4) - corners.col(0) ).normalized();//x轴
-    axis_vector[1] = (corners.col(1) - corners.col(0) ).normalized();//y轴
-    axis_vector[2] = (corners.col(0) - corners.col(3) ).normalized();//z轴
+    axis_vector[0] = (corners.col(4) - corners.col(0) ).normalized();//x轴,与上图一致
+    axis_vector[1] = (corners.col(1) - corners.col(0) ).normalized();//y轴,上图的z轴
+    axis_vector[2] = (corners.col(0) - corners.col(3) ).normalized();//z轴,上图的 -y轴
     return axis_vector;
 }
 
+/**
+ * 根据世界坐标系下的8个3D 角点,构建物体坐标系,旋转矩阵
+ * @param corners
+ * @return
+ */
+Mat3d Box3D::GetCoordinateRotationFromCorners(Mat38d &corners){
+    Mat3d R;
+    R.col(0) = (corners.col(4) - corners.col(0) ).normalized();
+    R.col(1) = (corners.col(1) - corners.col(0) ).normalized();
+    R.col(2) = (corners.col(0) - corners.col(3) ).normalized();
+    return R;
+}
 
-Eigen::Matrix<double,2,8> Box3D::CornersProjectTo2D(PinHoleCamera &cam)
+
+
+/**
+ * 根据输入的物体坐标系区域,返回包围框顶点是哪个顶点. 关于物体坐标系的定义,参考 GetCoordinateVectorFromCorners()
+ * @param x_d in {-1,1},表示该顶点在物体坐标系x轴的哪个部分,是大于0 (1) 还是小于0 (-1)
+ * @param y_d in {-1,1}
+ * @param z_d in {-1,1}
+ * @return 顶点的索引
+ */
+ int Box3D::CoordinateDirection(int x_d,int y_d,int z_d){
+    if(x_d > 0){
+        if(y_d > 0){
+            if(z_d > 0){ // x_d>0, y_d>0, z_d>0
+                return 5;//p5
+            }
+            else{ // x_d>0, y_d>0, z_d<0
+                return 6;
+            }
+        }
+        else{
+            if(z_d > 0){ // x_d>0, y_d<0, z_d>0
+                return 4;
+            }
+            else{ // x_d>0, y_d<0, z_d<0
+                return 7;
+            }
+        }
+    }
+    else{
+        if(y_d > 0){
+            if(z_d > 0){ // x_d<0, y_d>0, z_d>0
+                return 1;//p5
+            }
+            else{ // x_d<0, y_d>0, z_d<0
+                return 2;
+            }
+        }
+        else{
+            if(z_d > 0){ // x_d<0, y_d<0, z_d>0
+                return 0;
+            }
+            else{ // x_d<0, y_d<0, z_d<0
+                return 3;
+            }
+        }
+    }
+
+
+}
+
+
+/**
+ * 为了画出cube,顶点之间的连线
+ * @return
+ */
+vector<std::pair<int,int>> Box3D::GetLineVetexPair(){
+    /**
+         .. code-block:: none
+
+                         front z
+                                /
+                               /
+               p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
+                             /|            / |
+                            / |           /  |
+            p0(x0, y0, z0) + ---------p4 +   + p6(x1, y1, z1)
+                           |  /      .   |  /
+                           | / origin    | /
+            p3(x0, y1, z0) + ----------- + -------> x right
+                           |             p7(x1, y1, z0)
+                           |
+                           v
+                    down y
+ 输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
+
+     下面定义坐标系的原点位于物体中心, z轴垂直向上, x轴不变,y轴为原来的z轴
+ */
+    return {{0,1},{1,5},{5,4},{4,0},
+            {3,7},{7,6},{6,2},{2,3},
+            {0,3},{4,7},{5,6},{1,2}};
+}
+
+/**
+ * 将3D角点投影到2D角点
+ * @param cam
+ * @return
+ */
+Mat28d Box3D::CornersProjectTo2D(PinHoleCamera &cam)
 {
-    Eigen::Matrix<double,2,8> corners_2d;
+    Mat28d corners_2d;
     for(int i=0;i<8;++i){
         Vec2d p;
         cam.ProjectPoint(corners.col(i),p);
@@ -126,6 +229,38 @@ Eigen::Matrix<double,2,8> Box3D::CornersProjectTo2D(PinHoleCamera &cam)
     return corners_2d;
 }
 
+/**
+ * 获得世界坐标系下的包围框的顶点,
+ * @param R_wbi
+ * @param P_wbi
+ * @param R_bc
+ * @param P_bc
+ */
+Mat38d Box3D::GetCornersInWorld(const Mat3d &R_wbi,const Vec3d &P_wbi,const Mat3d &R_bc,const Vec3d &P_bc){
+    Mat38d corners_w;
+    for(int i=0;i<8;++i){
+        corners_w.col(i) = R_wbi * (R_bc * corners.col(i) + P_bc) + P_wbi;
+    }
+    return corners_w;
+}
+
+
+
+/**
+ * 在图像上绘制box
+ * @param img
+ * @param color
+ * @param cam
+ */
+void Box3D::VisCorners2d(cv::Mat &img,const cv::Scalar& color,PinHoleCamera &cam){
+    Mat28d corners2d = CornersProjectTo2D(cam);
+    vector<std::pair<int,int>> lines = GetLineVetexPair();
+
+    for(auto line : lines){
+        cv::line(img,cv::Point2f(corners2d(0,line.first),corners2d(1,line.first)),
+                 cv::Point2f(corners2d(0,line.second),corners2d(1,line.second)),color,2);
+    }
+}
 
 
 

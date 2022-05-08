@@ -42,16 +42,21 @@ using EigenContainer = std::vector< EigenType ,Eigen::aligned_allocator<EigenTyp
 
 using Vec2d = Eigen::Vector2d;
 using Vec3d = Eigen::Vector3d;
+using Vec4d = Eigen::Vector4d;
+using Vec5d = Eigen::Matrix<double, 5, 1>;
+using Vec6d = Eigen::Matrix<double, 6, 1>;
 using Vec7d = Eigen::Matrix<double, 7, 1>;
 using Mat2d = Eigen::Matrix2d;
 using Mat3d = Eigen::Matrix3d;
 using Mat4d = Eigen::Matrix4d;
 using Mat23d = Eigen::Matrix<double, 2, 3>;
 using Mat24d = Eigen::Matrix<double, 2, 4>;
+using Mat28d = Eigen::Matrix<double, 2, 8>;
 using Mat34d = Eigen::Matrix<double, 3, 4>;
 using Mat35d = Eigen::Matrix<double, 3, 5>;
 using Mat36d = Eigen::Matrix<double, 3, 6>;
 using Mat37d = Eigen::Matrix<double, 3, 7>;
+using Mat38d = Eigen::Matrix<double, 3, 8>;
 using Quatd = Eigen::Quaterniond;
 using Eigen::Quaterniond;
 

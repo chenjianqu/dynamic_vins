@@ -14,7 +14,6 @@
 #include <future>
 #include <filesystem>
 #include <iostream>
-#include <optional>
 
 #include <spdlog/spdlog.h>
 #include <ros/ros.h>
@@ -25,12 +24,10 @@
 #include "utils/dataset/viode_utils.h"
 #include "utils/call_back.h"
 #include "flow/flow_estimator.h"
-#include "flow/flow_visual.h"
 #include "det3d/detector3d.h"
 #include "det2d/detector2d.h"
 #include "estimator/estimator.h"
-#include "estimator/dynamic.h"
-#include "front_end/segment_image.h"
+#include "front_end/semantic_image.h"
 #include "front_end/front_end.h"
 #include "front_end/front_end_parameters.h"
 
@@ -39,7 +36,6 @@ namespace dynamic_vins{\
 namespace fs=std::filesystem;
 using namespace std;
 
-constexpr int kInferImageListSize=30;
 
 
 Estimator::Ptr estimator;
@@ -48,37 +44,6 @@ Detector3D::Ptr detector3d;
 FlowEstimator::Ptr flow_estimator;
 FeatureTracker::Ptr feature_tracker;
 CallBack* callback;
-
-
-class ImageQueue{
-public:
-    void PushBack(SegImage& img){
-        std::unique_lock<std::mutex> lock(queue_mutex_);
-        if(seg_img_list_.size() < kInferImageListSize){
-            seg_img_list_.push_back(img);
-        }
-        queue_cond_.notify_one();
-    }
-
-    int GetQueueSize(){
-        std::unique_lock<std::mutex> lock(queue_mutex_);
-        return (int)seg_img_list_.size();
-    }
-
-    std::optional<SegImage> WaitForResult() {
-        std::unique_lock<std::mutex> lock(queue_mutex_);
-        if(!queue_cond_.wait_for(lock, 30ms, [&]{return !seg_img_list_.empty();}))
-            return std::nullopt;
-        //queue_cond_.wait(lock,[&]{return !seg_img_list_.empty();});
-        SegImage frame=std::move(seg_img_list_.front());
-        seg_img_list_.pop_front();
-        return frame;
-    }
-
-    std::mutex queue_mutex_;
-    std::condition_variable queue_cond_;
-    std::list<SegImage> seg_img_list_;
-};
 
 ImageQueue image_queue;
 
@@ -93,13 +58,13 @@ void ImageProcess()
 
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(image_queue.GetQueueSize() >= kInferImageListSize){
+        if(image_queue.size() >= kImageQueueSize){
             std::this_thread::sleep_for(50ms);
             continue;
         }
         ///同步获取图像
         Debugs("Start sync");
-        SegImage img = callback->SyncProcess();
+        SemanticImage img = callback->SyncProcess();
         Warns("----------Time : {} ----------", std::to_string(img.time0));
         t_all.Tic();
 
@@ -118,32 +83,31 @@ void ImageProcess()
             img.SetColorImageGpu();
         }
 
+
         ///均衡化
         //static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
         //clahe->apply(img.gray0, img.gray0);
         //if(!img.gray1.empty())
         //    clahe->apply(img.gray1, img.gray1);
 
-        torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0);
+        img.img_tensor = Pipeline::ImageToTensor(img.color0);
+
         //torch::Tensor img_clone = img_tensor.clone();
         //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
 
         ///启动光流估计线程
-        if(cfg::slam != SlamType::kRaw && cfg::use_dense_flow ){
-            if(cfg::use_preprocess_flow){
-                flow_estimator->SynchronizeReadFlow(img.seq);
-            }
-            else{
-                flow_estimator->SynchronizeForward(img_tensor);
-            }
+        if(cfg::use_dense_flow){
+            flow_estimator->Launch(img);
         }
+        ///启动3D目标检测线程
+        detector3d->Launch(img);
         Infos("ImageProcess prepare: {}", tt.TocThenTic());
 
         ///实例分割
         tt.Tic();
         if(cfg::slam != SlamType::kRaw){
             if(!cfg::is_input_seg){
-                detector2d->ForwardTensor(img_tensor, img.mask_tensor, img.insts_info);
+                detector2d->ForwardTensor(img.img_tensor, img.mask_tensor, img.insts_info);
                 if(cfg::slam == SlamType::kNaive)
                     img.SetBackgroundMask();
                 else if(cfg::slam == SlamType::kDynamic)
@@ -158,9 +122,6 @@ void ImageProcess()
                 }
             }
             Infos("ImageProcess SetMask: {}", tt.TocThenTic());
-
-            ///读取离线检测的3D包围框
-            img.boxes = detector3d->ReadBox3D(img.seq);
         }
 
         //log
@@ -169,32 +130,23 @@ void ImageProcess()
 
         ///获得光流估计
         if(cfg::use_dense_flow){
-            cv::Mat flow_cv;
-            if(cfg::use_preprocess_flow){
-                flow_cv = flow_estimator->WaitingReadFlowImage();
-            }
-            else{
-                auto flow_tensor = flow_estimator->WaitingForwardResult();
-                flow_tensor = flow_tensor.to(torch::kCPU);
-                img.flow = cv::Mat(flow_tensor.sizes()[1],flow_tensor.sizes()[2],CV_8UC2,flow_tensor.data_ptr()).clone();
-            }
-
-            if(!flow_cv.empty()){
-                img.flow = flow_cv;
-            }
-            else{
+            img.flow= flow_estimator->WaitResult();
+            if(!img.flow.data){
                 img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
             }
         }
 
+        ///读取离线检测的3D包围框
+        img.boxes = detector3d->WaitResult();
 
-        image_queue.PushBack(img);
+
+        image_queue.push_back(img);
         /*cv::Mat show;
         cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
         cv::scaleAdd(img.color0,0.5,show,show);
         cv::imshow("show",show);
-        cv::waitKey(1);*/
-        /*if(flow_tensor.defined()){
+        cv::waitKey(1);
+         if(flow_tensor.defined()){
             cv::Mat show = VisualFlow(flow_tensor);
             cv::imshow("show",show);
             cv::waitKey(1);
@@ -213,13 +165,13 @@ void ImageProcess()
 void FeatureTrack()
 {
     TicToc tt;
-    int cnt;
+    int cnt=0;
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-        if(auto img = image_queue.WaitForResult();img){
+        if(auto img = image_queue.request_image();img){
             tt.Tic();
             Warnt("----------Time : {} ----------", std::to_string(img->time0));
-            FeatureFrame frame;
+            SemanticFeature frame;
             frame.time = img->time0;
 
             ///前端跟踪
@@ -234,21 +186,22 @@ void FeatureTrack()
             else{
                 frame.features = feature_tracker->TrackImage(*img);
             }
+
             ///将数据传入到后端
             if(!cfg::is_only_frontend){
                 if(cfg::dataset == DatasetType::kKitti){
-                    estimator->PushBack(frame);
+                    feature_queue.push_back(frame);
                 }
                 else{
                     if((cnt++)%2==0){ //对于其它数据集,控制输入数据到后端的频率
-                        estimator->PushBack(frame);
+                        feature_queue.push_back(frame);
                     }
                 }
             }
 
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){
-                PubTrackImage(feature_tracker->img_track(), img->time0);
+                Publisher::PubTrackImage(feature_tracker->img_track(), img->time0);
                 /*cv::imshow("img",feature_tracker->img_track);
                 cv::waitKey(1);*/
                 /*string label=to_string(img.time0)+".jpg";
@@ -339,7 +292,7 @@ int Run(int argc, char **argv){
     estimator->SetParameter();
 
     cout<<"waiting for image and imu..."<<endl;
-    registerPub(n);
+    Publisher:: registerPub(n);
 
     ros::Subscriber sub_imu = n.subscribe(cfg::kImuTopic, 2000, ImuCallback, ros::TransportHints().tcpNoDelay());
     ros::Subscriber sub_img0 = n.subscribe(cfg::kImage0Topic, 100, &CallBack::Img0Callback,callback);

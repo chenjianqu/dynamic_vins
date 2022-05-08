@@ -8,7 +8,7 @@
  *******************************************************/
 
 
-#include "segment_image.h"
+#include "semantic_image.h"
 #include "utils/log_utils.h"
 
 namespace dynamic_vins{\
@@ -17,7 +17,7 @@ namespace dynamic_vins{\
 /**
  * 根据实例分割结果,设置每个实例的mask和背景mask
  */
-void SegImage::SetMask(){
+void SemanticImage::SetMask(){
     exist_inst = !insts_info.empty();
     if(!exist_inst){
         Warns("Can not detect any object in picture");
@@ -58,7 +58,7 @@ void SegImage::SetMask(){
 /**
  * 根据实例分割结果,计算背景区域的mask
  */
-void SegImage::SetBackgroundMask(){
+void SemanticImage::SetBackgroundMask(){
     exist_inst = !insts_info.empty();
     if(!exist_inst){
         Warns("Can not detect any object in picture");
@@ -79,14 +79,14 @@ void SegImage::SetBackgroundMask(){
 }
 
 
-void SegImage::SetGrayImage(){
+void SemanticImage::SetGrayImage(){
     cv::cvtColor(color0, gray0, CV_BGR2GRAY);
     if(!color1.empty())
         cv::cvtColor(color1, gray1, CV_BGR2GRAY);
 }
 
 
-void SegImage::SetGrayImageGpu(){
+void SemanticImage::SetGrayImageGpu(){
     if(color0_gpu.empty()){
         color0_gpu.upload(color0);
     }
@@ -103,14 +103,14 @@ void SegImage::SetGrayImageGpu(){
 }
 
 
-void SegImage::SetColorImage(){
+void SemanticImage::SetColorImage(){
     cv::cvtColor(gray0, color0, CV_GRAY2BGR);
     if(!gray1.empty())
         cv::cvtColor(gray1, color1, CV_GRAY2BGR);
 }
 
 
-void SegImage::SetColorImageGpu(){
+void SemanticImage::SetColorImageGpu(){
     if(gray0_gpu.empty()){
         gray0_gpu.upload(gray0);
     }

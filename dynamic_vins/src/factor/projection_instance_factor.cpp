@@ -10,7 +10,7 @@
 #include "projection_instance_factor.h"
 
 #include "utils/utility.h"
-#include "estimator/dynamic.h"
+#include "estimator/vio_util.h"
 
 namespace dynamic_vins{\
 
@@ -1100,7 +1100,7 @@ bool InstanceInitPowFactorSpeed::Evaluate(double const *const *parameters, doubl
         if(jacobians[1]){
             Mat36d jaco_velocity;
             jaco_velocity.leftCols<3>() = Mat3d::Identity() * time_js;
-            jaco_velocity.rightCols<3>() = -(Hat(P_wos)) * time_js ;
+            jaco_velocity.rightCols<3>() = -(hat(P_wos)) * time_js ;
 
             Eigen::Map<Eigen::Matrix<double, 3, 6, Eigen::RowMajor>> jacobian_v(jacobians[1]);
             jacobian_v = jaco_init * jaco_velocity;
