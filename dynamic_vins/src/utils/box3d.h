@@ -39,7 +39,8 @@ class Box3D{
 public:
     using Ptr = std::shared_ptr<Box3D>;
 
-    Box3D(int class_id_,int attribution_id_,double score_):class_id(class_id_),attribution_id(attribution_id_),score(score_){}
+    Box3D(int class_id_,int attribution_id_,double score_)
+    :class_id(class_id_),attribution_id(attribution_id_),score(score_){}
 
     bool InsideBox(Eigen::Vector3d &point);
 
@@ -55,7 +56,6 @@ public:
 
     static Mat3d GetCoordinateRotationFromCorners(Mat38d &corners);
 
-
     static int CoordinateDirection(int x_d,int y_d,int z_d);
 
 
@@ -64,12 +64,12 @@ public:
     int attribution_id ;
     double score;
 
-    Eigen::Vector3d bottom_center;//单目3D目标检测算法预测的包围框底部中心(在相机坐标系下)
-    Eigen::Vector3d dims;//预测的大小
-    double yaw;//预测的yaw角(沿着垂直向下的z轴)
+    Vec3d bottom_center{0,0,0};//单目3D目标检测算法预测的包围框底部中心(在相机坐标系下)
+    Vec3d dims{0,0,0};//预测的大小
+    double yaw{0};//预测的yaw角(沿着垂直向下的z轴)
 
     Eigen::Matrix<double,3,8> corners;//包围框的8个顶点在相机坐标系下的坐标
-    Eigen::Vector3d center;//包围框中心坐标
+    Vec3d center{0,0,0};//包围框中心坐标
 
     Eigen::Matrix<double,2,8> corners_2d;////包围框的8个顶点在图像坐标系下的像素坐标
     Box2D box2d;

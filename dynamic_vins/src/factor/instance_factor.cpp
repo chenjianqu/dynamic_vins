@@ -7,38 +7,13 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "projection_instance_factor.h"
+#include "instance_factor.h"
 
 #include "utils/utility.h"
 #include "estimator/vio_util.h"
 
 namespace dynamic_vins{\
 
-
-int ProjInst12Factor::debug_num=0;
-int ProjInst21Factor::debug_num=0;
-
-
-Mat2d ProjectionInstanceFactor::sqrt_info;
-double ProjectionInstanceFactor::sum_t;
-
-Mat2d ProjInst12Factor::sqrt_info;
-double ProjInst12Factor::sum_t;
-
-Mat2d ProjInst12FactorSimple::sqrt_info;
-double ProjInst12FactorSimple::sum_t;
-
-Mat2d ProjInst21Factor::sqrt_info;
-double ProjInst21Factor::sum_t;
-
-Mat2d ProjInst21SimpleFactor::sqrt_info;
-double ProjInst21SimpleFactor::sum_t;
-
-Mat2d ProjInst22Factor::sqrt_info;
-double ProjInst22Factor::sum_t;
-
-Mat2d ProjInst22SimpleFactor::sqrt_info;
-double ProjInst22SimpleFactor::sum_t;
 
 /**
  * 计算残差、Jacobian

@@ -25,6 +25,12 @@
 #include "utils/def.h"
 #include "vio_parameters.h"
 
+#include "utils/utility.h"
+#include "factor/pose_local_parameterization.h"
+#include "factor/projection_two_frame_one_cam_factor.h"
+#include "factor/projection_two_frame_two_cam_factor.h"
+#include "factor/projection_one_frame_two_cam_factor.h"
+
 namespace dynamic_vins{\
 
 
@@ -183,7 +189,7 @@ void Estimator::Optimization()
         insts_manager.AddResidualBlock(problem, loss_function);
     }
 
-    Debugt("optimization | prepare:{} ms",tt.TocThenTic());
+    Debugv("optimization | prepare:{} ms",tt.TocThenTic());
     Debugv("optimization 开始优化 visual measurement count: {}", f_m_cnt);
 
     //设置ceres选项
@@ -206,19 +212,22 @@ void Estimator::Optimization()
     ceres::Solve(options, &problem, &summary);
 
     Debugv("optimization 优化完成 Iterations: {}", summary.iterations.size());
-    Debugt("optimization | Solve:{} ms",tt.TocThenTic());
-
-    if(cfg::slam == SlamType::kDynamic)
-        insts_manager.GetOptimizationParameters();
+    Debugv("optimization | Solve:{} ms",tt.TocThenTic());
 
     //string msg="相机位姿 优化前：\n" + LogCurrentPose();
 
+    if(cfg::slam == SlamType::kDynamic){
+        insts_manager.GetOptimizationParameters();
+
+        Debugv(insts_manager.PrintInstancePoseInfo(false));
+    }
+
+
     Double2vector();
 
-    //msg+="相机位姿 优化后：\n" + LogCurrentPose();
-    //Debugv(msg);
+    //Debugv("相机位姿 优化后：\n" + LogCurrentPose());
 
-    Debugt("optimization | postprocess:{} ms",tt.TocThenTic());
+    Debugv("optimization | postprocess:{} ms",tt.TocThenTic());
 
     if(frame < kWinSize)
         return;
@@ -226,7 +235,7 @@ void Estimator::Optimization()
     ///执行边缘化,设置先验残差
     SetMarginalizationInfo();
 
-    Debugt("optimization | 边缘化:{} ms",tt.TocThenTic());
+    Debugv("optimization | 边缘化:{} ms",tt.TocThenTic());
 }
 
 /**
@@ -483,15 +492,6 @@ void Estimator::SetParameter()
     ProjectionTwoFrameOneCamFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
     ProjectionTwoFrameTwoCamFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
     ProjectionOneFrameTwoCamFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
-
-    ProjectionSpeedFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
-    ProjectionSpeedSimpleFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
-
-    ProjInst21Factor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
-    ProjInst21SimpleFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
-    ProjInst22Factor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
-    ProjInst12Factor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
-    ProjInst12FactorSimple::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
 
     td = para::TD;
     g = para::G;
@@ -1487,7 +1487,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
         if(cfg::slam == SlamType::kDynamic){
             insts_manager.SetVelMap();//将输出实例的速度信息
             ///动态物体的位姿递推
-            insts_manager.PredictCurrentPose();
+            insts_manager.PropagatePose();
             ///动态特征点的三角化
             insts_manager.Triangulate(frame);
             ///若动态物体未初始化, 则进行初始化
@@ -1495,7 +1495,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
-            Debugv(insts_manager.PrintInstanceInfo(true,true));
+            Debugv(insts_manager.PrintInstanceInfo(false,false));
         }
         Debugv("--完成处理动态物体--");
 
@@ -1530,8 +1530,9 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
         SlideWindow();
 
         ///动态物体的外点剔除
-        if(cfg::slam == SlamType::kDynamic)
+        if(cfg::slam == SlamType::kDynamic){
             insts_manager.OutliersRejection();
+        }
 
         Debugv("processImage SlideWindow:{} ms", tt.TocThenTic());
 

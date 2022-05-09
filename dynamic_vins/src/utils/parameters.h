@@ -91,8 +91,8 @@ public:
 
     inline static std::string kBasicDir;
 
-    inline static bool use_dense_flow;
-    inline static bool use_background_flow;
+    inline static bool use_dense_flow{false};
+    inline static bool use_background_flow{false};
 
     inline static std::atomic_bool ok{true};
 

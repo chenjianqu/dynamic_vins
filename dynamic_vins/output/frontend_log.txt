@@ -1,1692 +1,830 @@
-[2022-05-08 11:05:08.097] [tracker] [debug] init FeatureTracker
-[2022-05-08 11:05:19.426] [tracker] [warning] ----------Time : 0.050000 ----------
-[2022-05-08 11:05:19.626] [tracker] [debug] AddInstancesByTracking:
-
-[2022-05-08 11:05:19.626] [tracker] [info] instsTrack AddInstances:199.479 ms
-[2022-05-08 11:05:19.628] [tracker] [info] instsTrack flowTrack:2.13477 ms
-[2022-05-08 11:05:19.628] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.008633 ms
-[2022-05-08 11:05:19.628] [tracker] [info] instsTrack track right:0.003826 ms
-[2022-05-08 11:05:19.629] [tracker] [info] TrackSemanticImage | flowTrack left:202.383 ms
-[2022-05-08 11:05:19.643] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:19.643] [tracker] [info] TrackSemanticImage | detect feature:14.4717 ms
-[2022-05-08 11:05:19.647] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:186
-[2022-05-08 11:05:19.647] [tracker] [debug] TrackSemanticImage | flow_track right:3.84487
-[2022-05-08 11:05:19.650] [tracker] [info] TrackSemanticImage 动态检测线程总时间:222.932 ms
-[2022-05-08 11:05:19.650] [tracker] [debug] GetOutputFeature:
-
-[2022-05-08 11:05:19.650] [tracker] [info] **************feature_track:223.683 ms****************
-
-[2022-05-08 11:05:19.653] [tracker] [debug] optimization | prepare:0.966524 ms
-[2022-05-08 11:05:19.653] [tracker] [debug] optimization | Solve:0.645101 ms
-[2022-05-08 11:05:19.653] [tracker] [debug] optimization | postprocess:0.013031 ms
-[2022-05-08 11:05:19.696] [tracker] [warning] ----------Time : 0.100000 ----------
-[2022-05-08 11:05:19.697] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:19.699] [tracker] [debug] TrackSemanticImage | cur_pts.size:180
-[2022-05-08 11:05:19.699] [tracker] [info] TrackSemanticImage | flowTrack left:3.17119 ms
-[2022-05-08 11:05:19.702] [tracker] [debug] AddInstancesByTracking:
-
-[2022-05-08 11:05:19.702] [tracker] [info] instsTrack AddInstances:5.70795 ms
-[2022-05-08 11:05:19.705] [tracker] [info] instsTrack flowTrack:2.58672 ms
-[2022-05-08 11:05:19.705] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.012334 ms
-[2022-05-08 11:05:19.705] [tracker] [info] instsTrack track right:0.005246 ms
-[2022-05-08 11:05:19.706] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:19.706] [tracker] [info] TrackSemanticImage | detect feature:6.38078 ms
-[2022-05-08 11:05:19.708] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:194
-[2022-05-08 11:05:19.708] [tracker] [debug] TrackSemanticImage | flow_track right:1.89243
-[2022-05-08 11:05:19.710] [tracker] [info] TrackSemanticImage 动态检测线程总时间:13.1366 ms
-[2022-05-08 11:05:19.710] [tracker] [debug] GetOutputFeature:
-
-[2022-05-08 11:05:19.710] [tracker] [info] **************feature_track:14.0605 ms****************
-
-[2022-05-08 11:05:19.714] [tracker] [debug] optimization | prepare:0.01739 ms
-[2022-05-08 11:05:19.714] [tracker] [debug] optimization | Solve:0.022174 ms
-[2022-05-08 11:05:19.714] [tracker] [debug] optimization | postprocess:0.00777 ms
-[2022-05-08 11:05:20.197] [tracker] [warning] ----------Time : 0.150000 ----------
-[2022-05-08 11:05:20.198] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:20.201] [tracker] [debug] TrackSemanticImage | cur_pts.size:180
-[2022-05-08 11:05:20.201] [tracker] [info] TrackSemanticImage | flowTrack left:3.3092 ms
-[2022-05-08 11:05:20.204] [tracker] [debug] AddInstancesByTracking:
-
-[2022-05-08 11:05:20.204] [tracker] [info] instsTrack AddInstances:6.66592 ms
-[2022-05-08 11:05:20.207] [tracker] [info] instsTrack flowTrack:2.62977 ms
-[2022-05-08 11:05:20.207] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.021718 ms
-[2022-05-08 11:05:20.207] [tracker] [info] instsTrack track right:0.004893 ms
-[2022-05-08 11:05:20.208] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:20.208] [tracker] [info] TrackSemanticImage | detect feature:7.38525 ms
-[2022-05-08 11:05:20.210] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:191
-[2022-05-08 11:05:20.210] [tracker] [debug] TrackSemanticImage | flow_track right:1.8675
-[2022-05-08 11:05:20.212] [tracker] [info] TrackSemanticImage 动态检测线程总时间:14.3161 ms
-[2022-05-08 11:05:20.212] [tracker] [debug] GetOutputFeature:
-
-[2022-05-08 11:05:20.213] [tracker] [info] **************feature_track:15.2599 ms****************
-
-[2022-05-08 11:05:20.214] [tracker] [debug] optimization | prepare:0.017994 ms
-[2022-05-08 11:05:20.214] [tracker] [debug] optimization | Solve:0.022446 ms
-[2022-05-08 11:05:20.214] [tracker] [debug] optimization | postprocess:0.009563 ms
-[2022-05-08 11:05:20.728] [tracker] [warning] ----------Time : 0.200000 ----------
-[2022-05-08 11:05:20.729] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:20.732] [tracker] [debug] TrackSemanticImage | cur_pts.size:174
-[2022-05-08 11:05:20.732] [tracker] [info] TrackSemanticImage | flowTrack left:3.77317 ms
-[2022-05-08 11:05:20.737] [tracker] [debug] AddInstancesByTracking:
-
-[2022-05-08 11:05:20.737] [tracker] [info] instsTrack AddInstances:8.74741 ms
-[2022-05-08 11:05:20.740] [tracker] [info] instsTrack flowTrack:2.74053 ms
-[2022-05-08 11:05:20.740] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014745 ms
-[2022-05-08 11:05:20.740] [tracker] [info] instsTrack track right:0.006548 ms
-[2022-05-08 11:05:20.740] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:20.740] [tracker] [info] TrackSemanticImage | detect feature:8.35371 ms
-[2022-05-08 11:05:20.742] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:195
-[2022-05-08 11:05:20.742] [tracker] [debug] TrackSemanticImage | flow_track right:2.49952
-[2022-05-08 11:05:20.745] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.2448 ms
-[2022-05-08 11:05:20.746] [tracker] [debug] GetOutputFeature:
-
-[2022-05-08 11:05:20.746] [tracker] [info] **************feature_track:18.3708 ms****************
-
-[2022-05-08 11:05:20.748] [tracker] [debug] optimization | prepare:0.873266 ms
-[2022-05-08 11:05:20.758] [tracker] [debug] optimization | Solve:9.43172 ms
-[2022-05-08 11:05:20.758] [tracker] [debug] optimization | postprocess:0.240556 ms
-[2022-05-08 11:05:21.280] [tracker] [warning] ----------Time : 0.250000 ----------
-[2022-05-08 11:05:21.281] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:21.285] [tracker] [debug] TrackSemanticImage | cur_pts.size:175
-[2022-05-08 11:05:21.285] [tracker] [info] TrackSemanticImage | flowTrack left:5.0201 ms
-[2022-05-08 11:05:21.287] [tracker] [debug] AddInstancesByTracking:
-
-[2022-05-08 11:05:21.287] [tracker] [info] instsTrack AddInstances:7.27522 ms
-[2022-05-08 11:05:21.292] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:21.292] [tracker] [info] TrackSemanticImage | detect feature:7.53958 ms
-[2022-05-08 11:05:21.294] [tracker] [info] instsTrack flowTrack:6.52714 ms
-[2022-05-08 11:05:21.294] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.012628 ms
-[2022-05-08 11:05:21.294] [tracker] [info] instsTrack track right:0.005008 ms
-[2022-05-08 11:05:21.295] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:196
-[2022-05-08 11:05:21.295] [tracker] [debug] TrackSemanticImage | flow_track right:2.49196
-[2022-05-08 11:05:21.297] [tracker] [info] TrackSemanticImage 动态检测线程总时间:16.72 ms
-[2022-05-08 11:05:21.297] [tracker] [debug] GetOutputFeature:
-
-[2022-05-08 11:05:21.298] [tracker] [info] **************feature_track:17.767 ms****************
-
-[2022-05-08 11:05:21.301] [tracker] [debug] optimization | prepare:0.737017 ms
-[2022-05-08 11:05:21.309] [tracker] [debug] optimization | Solve:7.9866 ms
-[2022-05-08 11:05:21.309] [tracker] [debug] optimization | postprocess:0.248735 ms
-[2022-05-08 11:05:21.690] [tracker] [warning] ----------Time : 0.300000 ----------
-[2022-05-08 11:05:21.691] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:21.694] [tracker] [debug] TrackSemanticImage | cur_pts.size:183
-[2022-05-08 11:05:21.694] [tracker] [info] TrackSemanticImage | flowTrack left:3.37596 ms
-[2022-05-08 11:05:21.700] [tracker] [debug] AddInstancesByTracking:
-
-[2022-05-08 11:05:21.700] [tracker] [info] instsTrack AddInstances:9.67963 ms
-[2022-05-08 11:05:21.701] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:21.701] [tracker] [info] TrackSemanticImage | detect feature:7.42444 ms
-[2022-05-08 11:05:21.704] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:195
-[2022-05-08 11:05:21.704] [tracker] [debug] TrackSemanticImage | flow_track right:2.3459
-[2022-05-08 11:05:21.706] [tracker] [info] instsTrack flowTrack:5.65527 ms
-[2022-05-08 11:05:21.706] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.010735 ms
-[2022-05-08 11:05:21.706] [tracker] [info] instsTrack track right:0.005286 ms
-[2022-05-08 11:05:21.708] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.4492 ms
-[2022-05-08 11:05:21.708] [tracker] [debug] GetOutputFeature:
-
-[2022-05-08 11:05:21.709] [tracker] [info] **************feature_track:18.3417 ms****************
-
-[2022-05-08 11:05:21.712] [tracker] [debug] optimization | prepare:0.959413 ms
-[2022-05-08 11:05:21.725] [tracker] [debug] optimization | Solve:12.8787 ms
-[2022-05-08 11:05:21.725] [tracker] [debug] optimization | postprocess:0.334007 ms
-[2022-05-08 11:05:22.225] [tracker] [warning] ----------Time : 0.350000 ----------
-[2022-05-08 11:05:22.226] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:22.228] [tracker] [debug] TrackSemanticImage | cur_pts.size:172
-[2022-05-08 11:05:22.228] [tracker] [info] TrackSemanticImage | flowTrack left:3.28153 ms
-[2022-05-08 11:05:22.235] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:22.235] [tracker] [info] TrackSemanticImage | detect feature:6.77194 ms
-[2022-05-08 11:05:22.236] [tracker] [debug] AddInstancesByTracking:
-
-[2022-05-08 11:05:22.236] [tracker] [info] instsTrack AddInstances:10.997 ms
-[2022-05-08 11:05:22.237] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:199
-[2022-05-08 11:05:22.237] [tracker] [debug] TrackSemanticImage | flow_track right:2.35304
-[2022-05-08 11:05:22.242] [tracker] [info] instsTrack flowTrack:5.38524 ms
-[2022-05-08 11:05:22.242] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.009158 ms
-[2022-05-08 11:05:22.242] [tracker] [info] instsTrack track right:0.003896 ms
-[2022-05-08 11:05:22.243] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.266 ms
-[2022-05-08 11:05:22.244] [tracker] [debug] GetOutputFeature:
-
-[2022-05-08 11:05:22.244] [tracker] [info] **************feature_track:19.2133 ms****************
-
-[2022-05-08 11:05:22.247] [tracker] [debug] optimization | prepare:1.18834 ms
-[2022-05-08 11:05:22.261] [tracker] [debug] optimization | Solve:13.9753 ms
-[2022-05-08 11:05:22.261] [tracker] [debug] optimization | postprocess:0.445743 ms
-[2022-05-08 11:05:22.694] [tracker] [warning] ----------Time : 0.400000 ----------
-[2022-05-08 11:05:22.697] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:22.700] [tracker] [debug] TrackSemanticImage | cur_pts.size:156
-[2022-05-08 11:05:22.700] [tracker] [info] TrackSemanticImage | flowTrack left:5.95994 ms
-[2022-05-08 11:05:22.703] [tracker] [debug] AddInstancesByTracking:
-Create inst:0 cls:car min_pt:(809,198),max_pt:(1199,374)
-
-[2022-05-08 11:05:22.703] [tracker] [info] instsTrack AddInstances:8.24956 ms
-[2022-05-08 11:05:22.703] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:22.706] [tracker] [info] instsTrack flowTrack:2.53035 ms
-[2022-05-08 11:05:22.706] [tracker] [info] instsTrack prepare detect:0.010407 ms
-[2022-05-08 11:05:22.707] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:22.707] [tracker] [info] TrackSemanticImage | detect feature:6.95692 ms
-[2022-05-08 11:05:22.709] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:181
-[2022-05-08 11:05:22.709] [tracker] [debug] TrackSemanticImage | flow_track right:2.04576
-[2022-05-08 11:05:22.713] [tracker] [debug] instsTrack actually detect num:38
-[2022-05-08 11:05:22.713] [tracker] [info] instsTrack detectNewFeaturesGPU:7.37532 ms
-[2022-05-08 11:05:22.713] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.009645 ms
-[2022-05-08 11:05:22.714] [tracker] [info] instsTrack track right:1.52991 ms
-[2022-05-08 11:05:22.715] [tracker] [info] TrackSemanticImage 动态检测线程总时间:19.8353 ms
-[2022-05-08 11:05:22.715] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:38 r_track:17
-[2022-05-08 11:05:22.716] [tracker] [info] **************feature_track:21.267 ms****************
-
-[2022-05-08 11:05:22.719] [tracker] [debug] optimization | prepare:1.38084 ms
-[2022-05-08 11:05:22.734] [tracker] [debug] optimization | Solve:15.5585 ms
-[2022-05-08 11:05:22.735] [tracker] [debug] optimization | postprocess:0.525015 ms
-[2022-05-08 11:05:23.230] [tracker] [warning] ----------Time : 0.450000 ----------
-[2022-05-08 11:05:23.231] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:23.233] [tracker] [debug] TrackSemanticImage | cur_pts.size:151
-[2022-05-08 11:05:23.233] [tracker] [info] TrackSemanticImage | flowTrack left:3.71118 ms
-[2022-05-08 11:05:23.238] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(801,196),max_pt:(1163,367)
-
-[2022-05-08 11:05:23.238] [tracker] [info] instsTrack AddInstances:7.49439 ms
-[2022-05-08 11:05:23.238] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:23.242] [tracker] [debug] inst:0 last_points:38 mask(375x1242,type:0)
-[2022-05-08 11:05:23.242] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:23.242] [tracker] [info] TrackSemanticImage | detect feature:8.3433 ms
-[2022-05-08 11:05:23.244] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:187
-[2022-05-08 11:05:23.244] [tracker] [debug] TrackSemanticImage | flow_track right:2.55531
-[2022-05-08 11:05:23.245] [tracker] [info] instsTrack flowTrack:7.22489 ms
-[2022-05-08 11:05:23.245] [tracker] [info] instsTrack prepare detect:0.023704 ms
-[2022-05-08 11:05:23.247] [tracker] [debug] instsTrack actually detect num:26
-[2022-05-08 11:05:23.247] [tracker] [info] instsTrack detectNewFeaturesGPU:2.31467 ms
-[2022-05-08 11:05:23.247] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014961 ms
-[2022-05-08 11:05:23.248] [tracker] [info] instsTrack track right:1.17694 ms
-[2022-05-08 11:05:23.248] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.4131 ms
-[2022-05-08 11:05:23.249] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:48 r_track:21
-[2022-05-08 11:05:23.249] [tracker] [info] **************feature_track:19.6587 ms****************
-
-[2022-05-08 11:05:23.252] [tracker] [debug] optimization | prepare:1.55084 ms
-[2022-05-08 11:05:23.269] [tracker] [debug] optimization | Solve:17.3122 ms
-[2022-05-08 11:05:23.270] [tracker] [debug] optimization | postprocess:0.642334 ms
-[2022-05-08 11:05:23.736] [tracker] [warning] ----------Time : 0.500000 ----------
-[2022-05-08 11:05:23.737] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:23.739] [tracker] [debug] TrackSemanticImage | cur_pts.size:152
-[2022-05-08 11:05:23.739] [tracker] [info] TrackSemanticImage | flowTrack left:3.12235 ms
-[2022-05-08 11:05:23.744] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(793,193),max_pt:(1129,357)
-
-[2022-05-08 11:05:23.744] [tracker] [info] instsTrack AddInstances:7.28166 ms
-[2022-05-08 11:05:23.744] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:23.745] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:23.745] [tracker] [info] TrackSemanticImage | detect feature:5.78086 ms
-[2022-05-08 11:05:23.747] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:174
-[2022-05-08 11:05:23.747] [tracker] [debug] TrackSemanticImage | flow_track right:2.42336
-[2022-05-08 11:05:23.750] [tracker] [debug] inst:0 last_points:48 mask(375x1242,type:0)
-[2022-05-08 11:05:23.751] [tracker] [info] instsTrack flowTrack:7.86732 ms
-[2022-05-08 11:05:23.752] [tracker] [info] instsTrack prepare detect:0.071585 ms
-[2022-05-08 11:05:23.754] [tracker] [debug] instsTrack actually detect num:13
-[2022-05-08 11:05:23.754] [tracker] [info] instsTrack detectNewFeaturesGPU:2.2758 ms
-[2022-05-08 11:05:23.754] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.018755 ms
-[2022-05-08 11:05:23.755] [tracker] [info] instsTrack track right:1.08989 ms
-[2022-05-08 11:05:23.755] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.7543 ms
-[2022-05-08 11:05:23.755] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:48 r_track:26
-[2022-05-08 11:05:23.756] [tracker] [info] **************feature_track:20.0567 ms****************
-
-[2022-05-08 11:05:23.760] [tracker] [debug] optimization | prepare:1.85839 ms
-[2022-05-08 11:05:23.779] [tracker] [debug] optimization | Solve:19.5386 ms
-[2022-05-08 11:05:23.780] [tracker] [debug] optimization | postprocess:0.796356 ms
-[2022-05-08 11:05:24.235] [tracker] [warning] ----------Time : 0.550000 ----------
-[2022-05-08 11:05:24.236] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:24.240] [tracker] [debug] TrackSemanticImage | cur_pts.size:151
-[2022-05-08 11:05:24.240] [tracker] [info] TrackSemanticImage | flowTrack left:4.19026 ms
-[2022-05-08 11:05:24.242] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(785,193),max_pt:(1101,348)
-
-[2022-05-08 11:05:24.242] [tracker] [info] instsTrack AddInstances:6.71371 ms
-[2022-05-08 11:05:24.242] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:24.245] [tracker] [debug] inst:0 last_points:48 mask(375x1242,type:0)
-[2022-05-08 11:05:24.246] [tracker] [info] instsTrack flowTrack:3.69844 ms
-[2022-05-08 11:05:24.246] [tracker] [info] instsTrack prepare detect:0.030856 ms
-[2022-05-08 11:05:24.247] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:24.247] [tracker] [info] TrackSemanticImage | detect feature:7.2666 ms
-[2022-05-08 11:05:24.248] [tracker] [debug] instsTrack actually detect num:10
-[2022-05-08 11:05:24.248] [tracker] [info] instsTrack detectNewFeaturesGPU:1.83063 ms
-[2022-05-08 11:05:24.248] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.034218 ms
-[2022-05-08 11:05:24.250] [tracker] [info] instsTrack track right:1.66689 ms
-[2022-05-08 11:05:24.251] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:172
-[2022-05-08 11:05:24.251] [tracker] [debug] TrackSemanticImage | flow_track right:4.50042
-[2022-05-08 11:05:24.253] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.6292 ms
-[2022-05-08 11:05:24.254] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:50 r_track:33
-[2022-05-08 11:05:24.254] [tracker] [info] **************feature_track:18.648 ms****************
-
-[2022-05-08 11:05:24.259] [tracker] [debug] optimization | prepare:2.05577 ms
-[2022-05-08 11:05:24.285] [tracker] [debug] optimization | Solve:26.231 ms
-[2022-05-08 11:05:24.286] [tracker] [debug] optimization | postprocess:0.991252 ms
-[2022-05-08 11:05:24.296] [tracker] [debug] optimization | 边缘化:10.0392 ms
-[2022-05-08 11:05:24.298] [tracker] [debug] optimization | prepare:2.21883 ms
-[2022-05-08 11:05:24.314] [tracker] [debug] optimization | Solve:15.3808 ms
-[2022-05-08 11:05:24.315] [tracker] [debug] optimization | postprocess:0.964827 ms
-[2022-05-08 11:05:24.325] [tracker] [debug] optimization | 边缘化:10.0123 ms
-[2022-05-08 11:05:24.730] [tracker] [warning] ----------Time : 0.600000 ----------
-[2022-05-08 11:05:24.731] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:24.733] [tracker] [debug] TrackSemanticImage | cur_pts.size:161
-[2022-05-08 11:05:24.733] [tracker] [info] TrackSemanticImage | flowTrack left:3.82953 ms
-[2022-05-08 11:05:24.736] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(780,194),max_pt:(1075,341)
-
-[2022-05-08 11:05:24.736] [tracker] [info] instsTrack AddInstances:6.10571 ms
-[2022-05-08 11:05:24.736] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:24.739] [tracker] [debug] inst:0 last_points:50 mask(375x1242,type:0)
-[2022-05-08 11:05:24.739] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:24.739] [tracker] [info] TrackSemanticImage | detect feature:5.94445 ms
-[2022-05-08 11:05:24.740] [tracker] [info] instsTrack flowTrack:3.81766 ms
-[2022-05-08 11:05:24.740] [tracker] [info] instsTrack prepare detect:0.038892 ms
-[2022-05-08 11:05:24.742] [tracker] [debug] instsTrack actually detect num:6
-[2022-05-08 11:05:24.742] [tracker] [info] instsTrack detectNewFeaturesGPU:1.74341 ms
-[2022-05-08 11:05:24.742] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.015176 ms
-[2022-05-08 11:05:24.742] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:173
-[2022-05-08 11:05:24.742] [tracker] [debug] TrackSemanticImage | flow_track right:2.49341
-[2022-05-08 11:05:24.743] [tracker] [info] instsTrack track right:1.36035 ms
-[2022-05-08 11:05:24.744] [tracker] [info] TrackSemanticImage 动态检测线程总时间:14.4703 ms
-[2022-05-08 11:05:24.745] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:50 r_track:31
-[2022-05-08 11:05:24.745] [tracker] [info] **************feature_track:15.5112 ms****************
-
-[2022-05-08 11:05:24.749] [tracker] [debug] optimization | prepare:2.65202 ms
-[2022-05-08 11:05:24.758] [tracker] [debug] optimization | Solve:8.73908 ms
-[2022-05-08 11:05:24.759] [tracker] [debug] optimization | postprocess:1.00767 ms
-[2022-05-08 11:05:24.769] [tracker] [debug] optimization | 边缘化:9.91743 ms
-[2022-05-08 11:05:25.241] [tracker] [warning] ----------Time : 0.650000 ----------
-[2022-05-08 11:05:25.242] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:25.244] [tracker] [debug] TrackSemanticImage | cur_pts.size:158
-[2022-05-08 11:05:25.244] [tracker] [info] TrackSemanticImage | flowTrack left:3.32722 ms
-[2022-05-08 11:05:25.250] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(775,192),max_pt:(1055,332)
-
-[2022-05-08 11:05:25.250] [tracker] [info] instsTrack AddInstances:8.20505 ms
-[2022-05-08 11:05:25.250] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:25.252] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:25.252] [tracker] [info] TrackSemanticImage | detect feature:7.55173 ms
-[2022-05-08 11:05:25.254] [tracker] [debug] inst:0 last_points:50 mask(375x1242,type:0)
-[2022-05-08 11:05:25.254] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:178
-[2022-05-08 11:05:25.254] [tracker] [debug] TrackSemanticImage | flow_track right:2.27752
-[2022-05-08 11:05:25.256] [tracker] [info] instsTrack flowTrack:5.99819 ms
-[2022-05-08 11:05:25.256] [tracker] [info] instsTrack prepare detect:0.024082 ms
-[2022-05-08 11:05:25.258] [tracker] [debug] instsTrack actually detect num:22
-[2022-05-08 11:05:25.258] [tracker] [info] instsTrack detectNewFeaturesGPU:2.47626 ms
-[2022-05-08 11:05:25.258] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.011889 ms
-[2022-05-08 11:05:25.259] [tracker] [info] instsTrack track right:0.902283 ms
-[2022-05-08 11:05:25.259] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.7488 ms
-[2022-05-08 11:05:25.259] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:39 r_track:29
-[2022-05-08 11:05:25.260] [tracker] [info] **************feature_track:18.7829 ms****************
-
-[2022-05-08 11:05:25.265] [tracker] [debug] optimization | prepare:2.8333 ms
-[2022-05-08 11:05:25.274] [tracker] [debug] optimization | Solve:8.65137 ms
-[2022-05-08 11:05:25.275] [tracker] [debug] optimization | postprocess:1.01334 ms
-[2022-05-08 11:05:25.284] [tracker] [debug] optimization | 边缘化:9.39778 ms
-[2022-05-08 11:05:25.739] [tracker] [warning] ----------Time : 0.700000 ----------
-[2022-05-08 11:05:25.739] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:25.742] [tracker] [debug] TrackSemanticImage | cur_pts.size:155
-[2022-05-08 11:05:25.742] [tracker] [info] TrackSemanticImage | flowTrack left:3.17074 ms
-[2022-05-08 11:05:25.746] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(771,192),max_pt:(1035,324)
-
-[2022-05-08 11:05:25.746] [tracker] [info] instsTrack AddInstances:7.31657 ms
-[2022-05-08 11:05:25.746] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:25.748] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:25.748] [tracker] [info] TrackSemanticImage | detect feature:6.25056 ms
-[2022-05-08 11:05:25.750] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:187
-[2022-05-08 11:05:25.750] [tracker] [debug] TrackSemanticImage | flow_track right:2.22564
-[2022-05-08 11:05:25.752] [tracker] [debug] inst:0 last_points:39 mask(375x1242,type:0)
-[2022-05-08 11:05:25.753] [tracker] [info] instsTrack flowTrack:6.74252 ms
-[2022-05-08 11:05:25.753] [tracker] [info] instsTrack prepare detect:0.03928 ms
-[2022-05-08 11:05:25.755] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:25.755] [tracker] [info] instsTrack detectNewFeaturesGPU:1.98299 ms
-[2022-05-08 11:05:25.755] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.015045 ms
-[2022-05-08 11:05:25.756] [tracker] [info] instsTrack track right:0.946995 ms
-[2022-05-08 11:05:25.756] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.2129 ms
-[2022-05-08 11:05:25.756] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:46 r_track:33
-[2022-05-08 11:05:25.757] [tracker] [info] **************feature_track:18.4156 ms****************
-
-[2022-05-08 11:05:25.762] [tracker] [debug] optimization | prepare:2.63404 ms
-[2022-05-08 11:05:25.770] [tracker] [debug] optimization | Solve:8.63936 ms
-[2022-05-08 11:05:25.771] [tracker] [debug] optimization | postprocess:1.24686 ms
-[2022-05-08 11:05:25.780] [tracker] [debug] optimization | 边缘化:9.0402 ms
-[2022-05-08 11:05:26.246] [tracker] [warning] ----------Time : 0.750000 ----------
-[2022-05-08 11:05:26.248] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:26.252] [tracker] [debug] TrackSemanticImage | cur_pts.size:167
-[2022-05-08 11:05:26.252] [tracker] [info] TrackSemanticImage | flowTrack left:5.37023 ms
-[2022-05-08 11:05:26.256] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(768,193),max_pt:(1016,320)
-
-[2022-05-08 11:05:26.256] [tracker] [info] instsTrack AddInstances:9.07912 ms
-[2022-05-08 11:05:26.256] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:26.261] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:26.261] [tracker] [info] TrackSemanticImage | detect feature:9.2083 ms
-[2022-05-08 11:05:26.262] [tracker] [debug] inst:0 last_points:46 mask(375x1242,type:0)
-[2022-05-08 11:05:26.264] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:184
-[2022-05-08 11:05:26.264] [tracker] [debug] TrackSemanticImage | flow_track right:2.66743
-[2022-05-08 11:05:26.265] [tracker] [info] instsTrack flowTrack:8.77444 ms
-[2022-05-08 11:05:26.265] [tracker] [info] instsTrack prepare detect:0.046816 ms
-[2022-05-08 11:05:26.267] [tracker] [debug] instsTrack actually detect num:20
-[2022-05-08 11:05:26.267] [tracker] [info] instsTrack detectNewFeaturesGPU:2.34456 ms
-[2022-05-08 11:05:26.267] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.016874 ms
-[2022-05-08 11:05:26.268] [tracker] [info] instsTrack track right:1.0126 ms
-[2022-05-08 11:05:26.268] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.4161 ms
-[2022-05-08 11:05:26.269] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:47 r_track:32
-[2022-05-08 11:05:26.269] [tracker] [info] **************feature_track:22.6106 ms****************
-
-[2022-05-08 11:05:26.275] [tracker] [debug] optimization | prepare:2.57126 ms
-[2022-05-08 11:05:26.283] [tracker] [debug] optimization | Solve:8.43365 ms
-[2022-05-08 11:05:26.284] [tracker] [debug] optimization | postprocess:1.14846 ms
-[2022-05-08 11:05:26.293] [tracker] [debug] optimization | 边缘化:8.31979 ms
-[2022-05-08 11:05:26.739] [tracker] [warning] ----------Time : 0.800000 ----------
-[2022-05-08 11:05:26.740] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:26.742] [tracker] [debug] TrackSemanticImage | cur_pts.size:174
-[2022-05-08 11:05:26.742] [tracker] [info] TrackSemanticImage | flowTrack left:3.12091 ms
-[2022-05-08 11:05:26.748] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:26.748] [tracker] [info] TrackSemanticImage | detect feature:5.71846 ms
-[2022-05-08 11:05:26.749] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(763,192),max_pt:(1000,313)
-
-[2022-05-08 11:05:26.749] [tracker] [info] instsTrack AddInstances:10.0177 ms
-[2022-05-08 11:05:26.749] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:26.750] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:195
-[2022-05-08 11:05:26.750] [tracker] [debug] TrackSemanticImage | flow_track right:2.43136
-[2022-05-08 11:05:26.756] [tracker] [debug] inst:0 last_points:47 mask(375x1242,type:0)
-[2022-05-08 11:05:26.757] [tracker] [info] instsTrack flowTrack:8.03803 ms
-[2022-05-08 11:05:26.757] [tracker] [info] instsTrack prepare detect:0.029956 ms
-[2022-05-08 11:05:26.759] [tracker] [debug] instsTrack actually detect num:17
-[2022-05-08 11:05:26.759] [tracker] [info] instsTrack detectNewFeaturesGPU:1.66985 ms
-[2022-05-08 11:05:26.759] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.016999 ms
-[2022-05-08 11:05:26.760] [tracker] [info] instsTrack track right:1.0502 ms
-[2022-05-08 11:05:26.760] [tracker] [info] TrackSemanticImage 动态检测线程总时间:20.9578 ms
-[2022-05-08 11:05:26.760] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:41 r_track:26
-[2022-05-08 11:05:26.761] [tracker] [info] **************feature_track:22.265 ms****************
-
-[2022-05-08 11:05:26.766] [tracker] [debug] optimization | prepare:2.80328 ms
-[2022-05-08 11:05:26.774] [tracker] [debug] optimization | Solve:8.28948 ms
-[2022-05-08 11:05:26.775] [tracker] [debug] optimization | postprocess:1.12212 ms
-[2022-05-08 11:05:26.777] [tracker] [debug] optimization | 边缘化:2.36108 ms
-[2022-05-08 11:05:27.224] [tracker] [warning] ----------Time : 0.850000 ----------
-[2022-05-08 11:05:27.225] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:27.227] [tracker] [debug] TrackSemanticImage | cur_pts.size:176
-[2022-05-08 11:05:27.227] [tracker] [info] TrackSemanticImage | flowTrack left:3.18644 ms
-[2022-05-08 11:05:27.232] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(759,191),max_pt:(983,306)
-Create inst:1 cls:car min_pt:(114,182),max_pt:(197,216)
-
-[2022-05-08 11:05:27.232] [tracker] [info] instsTrack AddInstances:7.43298 ms
-[2022-05-08 11:05:27.232] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:27.232] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:27.233] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:27.233] [tracker] [info] TrackSemanticImage | detect feature:5.9011 ms
-[2022-05-08 11:05:27.235] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:197
-[2022-05-08 11:05:27.235] [tracker] [debug] TrackSemanticImage | flow_track right:2.19829
-[2022-05-08 11:05:27.238] [tracker] [debug] inst:0 last_points:41 mask(375x1242,type:0)
-[2022-05-08 11:05:27.239] [tracker] [info] instsTrack flowTrack:7.12576 ms
-[2022-05-08 11:05:27.239] [tracker] [info] instsTrack prepare detect:0.048832 ms
-[2022-05-08 11:05:27.241] [tracker] [debug] instsTrack actually detect num:20
-[2022-05-08 11:05:27.241] [tracker] [info] instsTrack detectNewFeaturesGPU:2.26762 ms
-[2022-05-08 11:05:27.241] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.012301 ms
-[2022-05-08 11:05:27.243] [tracker] [info] instsTrack track right:1.48385 ms
-[2022-05-08 11:05:27.243] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.5137 ms
-[2022-05-08 11:05:27.243] [tracker] [debug] GetOutputFeature:
-inst_id:1 class:car l_track:3 r_track:3inst_id:0 class:car l_track:46 r_track:31
-[2022-05-08 11:05:27.244] [tracker] [info] **************feature_track:19.9081 ms****************
-
-[2022-05-08 11:05:27.249] [tracker] [debug] optimization | prepare:2.63995 ms
-[2022-05-08 11:05:27.257] [tracker] [debug] optimization | Solve:8.00161 ms
-[2022-05-08 11:05:27.258] [tracker] [debug] optimization | postprocess:1.14655 ms
-[2022-05-08 11:05:27.258] [tracker] [debug] optimization | 边缘化:0.004083 ms
-[2022-05-08 11:05:27.739] [tracker] [warning] ----------Time : 0.900000 ----------
-[2022-05-08 11:05:27.740] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:27.742] [tracker] [debug] TrackSemanticImage | cur_pts.size:179
-[2022-05-08 11:05:27.742] [tracker] [info] TrackSemanticImage | flowTrack left:3.24577 ms
-[2022-05-08 11:05:27.749] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(755,189),max_pt:(968,304)
-Update inst:1 cls:car min_pt:(96,182),max_pt:(183,217)
-
-[2022-05-08 11:05:27.749] [tracker] [info] instsTrack AddInstances:9.96237 ms
-[2022-05-08 11:05:27.749] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:27.749] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:27.749] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:27.749] [tracker] [info] TrackSemanticImage | detect feature:7.19789 ms
-[2022-05-08 11:05:27.752] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:196
-[2022-05-08 11:05:27.752] [tracker] [debug] TrackSemanticImage | flow_track right:2.6485
-[2022-05-08 11:05:27.754] [tracker] [debug] inst:1 last_points:3 mask(375x1242,type:0)
-[2022-05-08 11:05:27.755] [tracker] [debug] inst:0 last_points:46 mask(375x1242,type:0)
-[2022-05-08 11:05:27.756] [tracker] [info] instsTrack flowTrack:6.71437 ms
-[2022-05-08 11:05:27.756] [tracker] [info] instsTrack prepare detect:0.041719 ms
-[2022-05-08 11:05:27.758] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:27.758] [tracker] [info] instsTrack detectNewFeaturesGPU:1.78951 ms
-[2022-05-08 11:05:27.758] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.01764 ms
-[2022-05-08 11:05:27.759] [tracker] [info] instsTrack track right:1.45279 ms
-[2022-05-08 11:05:27.759] [tracker] [info] TrackSemanticImage 动态检测线程总时间:20.1297 ms
-[2022-05-08 11:05:27.760] [tracker] [debug] GetOutputFeature:
-inst_id:1 class:car l_track:6 r_track:6inst_id:0 class:car l_track:48 r_track:37
-[2022-05-08 11:05:27.760] [tracker] [info] **************feature_track:21.5769 ms****************
-
-[2022-05-08 11:05:27.765] [tracker] [debug] optimization | prepare:2.58359 ms
-[2022-05-08 11:05:27.773] [tracker] [debug] optimization | Solve:7.71105 ms
-[2022-05-08 11:05:27.774] [tracker] [debug] optimization | postprocess:1.13063 ms
-[2022-05-08 11:05:27.782] [tracker] [debug] optimization | 边缘化:7.3225 ms
-[2022-05-08 11:05:28.219] [tracker] [warning] ----------Time : 0.950000 ----------
-[2022-05-08 11:05:28.220] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:28.226] [tracker] [debug] TrackSemanticImage | cur_pts.size:173
-[2022-05-08 11:05:28.226] [tracker] [info] TrackSemanticImage | flowTrack left:6.55016 ms
-[2022-05-08 11:05:28.227] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(750,189),max_pt:(953,299)
-Update inst:1 cls:car min_pt:(76,183),max_pt:(167,219)
-
-[2022-05-08 11:05:28.227] [tracker] [info] instsTrack AddInstances:7.70068 ms
-[2022-05-08 11:05:28.227] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:28.227] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:28.231] [tracker] [debug] inst:1 last_points:6 mask(375x1242,type:0)
-[2022-05-08 11:05:28.232] [tracker] [debug] inst:0 last_points:48 mask(375x1242,type:0)
-[2022-05-08 11:05:28.232] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:28.232] [tracker] [info] TrackSemanticImage | detect feature:6.06783 ms
-[2022-05-08 11:05:28.233] [tracker] [info] instsTrack flowTrack:5.52626 ms
-[2022-05-08 11:05:28.233] [tracker] [info] instsTrack prepare detect:0.032296 ms
-[2022-05-08 11:05:28.234] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:206
-[2022-05-08 11:05:28.234] [tracker] [debug] TrackSemanticImage | flow_track right:2.3531
-[2022-05-08 11:05:28.237] [tracker] [debug] instsTrack actually detect num:8
-[2022-05-08 11:05:28.237] [tracker] [info] instsTrack detectNewFeaturesGPU:3.87521 ms
-[2022-05-08 11:05:28.237] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014306 ms
-[2022-05-08 11:05:28.238] [tracker] [info] instsTrack track right:1.64263 ms
-[2022-05-08 11:05:28.238] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.9482 ms
-[2022-05-08 11:05:28.239] [tracker] [debug] GetOutputFeature:
-inst_id:1 class:car l_track:5 r_track:5inst_id:0 class:car l_track:51 r_track:41
-[2022-05-08 11:05:28.240] [tracker] [info] **************feature_track:20.364 ms****************
-
-[2022-05-08 11:05:28.245] [tracker] [debug] optimization | prepare:2.61067 ms
-[2022-05-08 11:05:28.253] [tracker] [debug] optimization | Solve:8.09753 ms
-[2022-05-08 11:05:28.254] [tracker] [debug] optimization | postprocess:1.12605 ms
-[2022-05-08 11:05:28.257] [tracker] [debug] optimization | 边缘化:2.32172 ms
-[2022-05-08 11:05:28.730] [tracker] [warning] ----------Time : 1.000000 ----------
-[2022-05-08 11:05:28.731] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:28.733] [tracker] [debug] TrackSemanticImage | cur_pts.size:182
-[2022-05-08 11:05:28.733] [tracker] [info] TrackSemanticImage | flowTrack left:3.15416 ms
-[2022-05-08 11:05:28.739] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:28.739] [tracker] [info] TrackSemanticImage | detect feature:6.07045 ms
-[2022-05-08 11:05:28.740] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(746,188),max_pt:(940,294)
-Update inst:1 cls:car min_pt:(54,184),max_pt:(147,221)
-
-[2022-05-08 11:05:28.740] [tracker] [info] instsTrack AddInstances:9.73598 ms
-[2022-05-08 11:05:28.740] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:28.740] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:28.741] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:209
-[2022-05-08 11:05:28.741] [tracker] [debug] TrackSemanticImage | flow_track right:2.0898
-[2022-05-08 11:05:28.747] [tracker] [debug] inst:1 last_points:5 mask(375x1242,type:0)
-[2022-05-08 11:05:28.748] [tracker] [debug] inst:0 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:28.749] [tracker] [info] instsTrack flowTrack:8.76341 ms
-[2022-05-08 11:05:28.749] [tracker] [info] instsTrack prepare detect:0.033603 ms
-[2022-05-08 11:05:28.750] [tracker] [debug] instsTrack actually detect num:17
-[2022-05-08 11:05:28.750] [tracker] [info] instsTrack detectNewFeaturesGPU:1.58153 ms
-[2022-05-08 11:05:28.750] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.012858 ms
-[2022-05-08 11:05:28.752] [tracker] [info] instsTrack track right:1.48788 ms
-[2022-05-08 11:05:28.752] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.7579 ms
-[2022-05-08 11:05:28.752] [tracker] [debug] GetOutputFeature:
-inst_id:1 class:car l_track:5 r_track:4inst_id:0 class:car l_track:51 r_track:42
-[2022-05-08 11:05:28.753] [tracker] [info] **************feature_track:23.1952 ms****************
-
-[2022-05-08 11:05:28.757] [tracker] [debug] optimization | prepare:2.40162 ms
-[2022-05-08 11:05:28.764] [tracker] [debug] optimization | Solve:7.13788 ms
-[2022-05-08 11:05:28.765] [tracker] [debug] optimization | postprocess:1.03098 ms
-[2022-05-08 11:05:28.765] [tracker] [debug] optimization | 边缘化:0.004252 ms
-[2022-05-08 11:05:29.265] [tracker] [warning] ----------Time : 1.050000 ----------
-[2022-05-08 11:05:29.266] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:29.269] [tracker] [debug] TrackSemanticImage | cur_pts.size:183
-[2022-05-08 11:05:29.269] [tracker] [info] TrackSemanticImage | flowTrack left:3.52741 ms
-[2022-05-08 11:05:29.275] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:29.275] [tracker] [info] TrackSemanticImage | detect feature:6.61037 ms
-[2022-05-08 11:05:29.277] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(742,189),max_pt:(927,291)
-Update inst:1 cls:car min_pt:(31,186),max_pt:(128,224)
-
-[2022-05-08 11:05:29.277] [tracker] [info] instsTrack AddInstances:11.3159 ms
-[2022-05-08 11:05:29.277] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:29.277] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:29.278] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:205
-[2022-05-08 11:05:29.278] [tracker] [debug] TrackSemanticImage | flow_track right:2.41116
-[2022-05-08 11:05:29.282] [tracker] [debug] inst:1 last_points:5 mask(375x1242,type:0)
-[2022-05-08 11:05:29.283] [tracker] [debug] inst:0 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:29.285] [tracker] [info] instsTrack flowTrack:8.06859 ms
-[2022-05-08 11:05:29.285] [tracker] [info] instsTrack prepare detect:0.037673 ms
-[2022-05-08 11:05:29.286] [tracker] [debug] instsTrack actually detect num:10
-[2022-05-08 11:05:29.286] [tracker] [info] instsTrack detectNewFeaturesGPU:1.78126 ms
-[2022-05-08 11:05:29.287] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.015579 ms
-[2022-05-08 11:05:29.289] [tracker] [info] instsTrack track right:2.47275 ms
-[2022-05-08 11:05:29.289] [tracker] [info] TrackSemanticImage 动态检测线程总时间:23.8547 ms
-[2022-05-08 11:05:29.290] [tracker] [debug] GetOutputFeature:
-inst_id:1 class:car l_track:6 r_track:6inst_id:0 class:car l_track:51 r_track:45
-[2022-05-08 11:05:29.290] [tracker] [info] **************feature_track:25.4373 ms****************
-
-[2022-05-08 11:05:29.296] [tracker] [debug] optimization | prepare:2.85148 ms
-[2022-05-08 11:05:29.304] [tracker] [debug] optimization | Solve:8.13896 ms
-[2022-05-08 11:05:29.305] [tracker] [debug] optimization | postprocess:1.11414 ms
-[2022-05-08 11:05:29.312] [tracker] [debug] optimization | 边缘化:6.72528 ms
-[2022-05-08 11:05:29.753] [tracker] [warning] ----------Time : 1.100000 ----------
-[2022-05-08 11:05:29.754] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:29.757] [tracker] [debug] TrackSemanticImage | cur_pts.size:175
-[2022-05-08 11:05:29.757] [tracker] [info] TrackSemanticImage | flowTrack left:3.83425 ms
-[2022-05-08 11:05:29.764] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(739,190),max_pt:(915,287)
-Update inst:1 cls:car min_pt:(7,188),max_pt:(110,228)
-
-[2022-05-08 11:05:29.764] [tracker] [info] instsTrack AddInstances:10.4503 ms
-[2022-05-08 11:05:29.764] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:29.764] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:29.764] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:29.764] [tracker] [info] TrackSemanticImage | detect feature:7.35702 ms
-[2022-05-08 11:05:29.767] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:201
-[2022-05-08 11:05:29.768] [tracker] [debug] TrackSemanticImage | flow_track right:3.53609
-[2022-05-08 11:05:29.770] [tracker] [debug] inst:1 last_points:6 mask(375x1242,type:0)
-[2022-05-08 11:05:29.771] [tracker] [debug] inst:0 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:29.772] [tracker] [info] instsTrack flowTrack:8.49568 ms
-[2022-05-08 11:05:29.772] [tracker] [info] instsTrack prepare detect:0.039996 ms
-[2022-05-08 11:05:29.774] [tracker] [debug] instsTrack actually detect num:8
-[2022-05-08 11:05:29.774] [tracker] [info] instsTrack detectNewFeaturesGPU:1.68293 ms
-[2022-05-08 11:05:29.774] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.018309 ms
-[2022-05-08 11:05:29.775] [tracker] [info] instsTrack track right:1.49418 ms
-[2022-05-08 11:05:29.775] [tracker] [info] TrackSemanticImage 动态检测线程总时间:22.3411 ms
-[2022-05-08 11:05:29.776] [tracker] [debug] GetOutputFeature:
-inst_id:1 class:car l_track:7 r_track:6inst_id:0 class:car l_track:51 r_track:44
-[2022-05-08 11:05:29.777] [tracker] [info] **************feature_track:23.7605 ms****************
-
-[2022-05-08 11:05:29.781] [tracker] [debug] optimization | prepare:2.68219 ms
-[2022-05-08 11:05:29.789] [tracker] [debug] optimization | Solve:7.66353 ms
-[2022-05-08 11:05:29.790] [tracker] [debug] optimization | postprocess:1.15055 ms
-[2022-05-08 11:05:29.792] [tracker] [debug] optimization | 边缘化:2.00316 ms
-[2022-05-08 11:05:30.241] [tracker] [warning] ----------Time : 1.150000 ----------
-[2022-05-08 11:05:30.242] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:30.245] [tracker] [debug] TrackSemanticImage | cur_pts.size:160
-[2022-05-08 11:05:30.245] [tracker] [info] TrackSemanticImage | flowTrack left:3.46511 ms
-[2022-05-08 11:05:30.250] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(734,191),max_pt:(905,285)
-
-[2022-05-08 11:05:30.250] [tracker] [info] instsTrack AddInstances:8.28716 ms
-[2022-05-08 11:05:30.250] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:30.250] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:30.252] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:30.252] [tracker] [info] TrackSemanticImage | detect feature:7.16211 ms
-[2022-05-08 11:05:30.253] [tracker] [debug] inst:0 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:30.258] [tracker] [info] instsTrack flowTrack:7.78855 ms
-[2022-05-08 11:05:30.258] [tracker] [info] instsTrack prepare detect:0.03247 ms
-[2022-05-08 11:05:30.259] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:196
-[2022-05-08 11:05:30.259] [tracker] [debug] TrackSemanticImage | flow_track right:7.48972
-[2022-05-08 11:05:30.260] [tracker] [debug] instsTrack actually detect num:3
-[2022-05-08 11:05:30.260] [tracker] [info] instsTrack detectNewFeaturesGPU:2.18248 ms
-[2022-05-08 11:05:30.260] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.021334 ms
-[2022-05-08 11:05:30.261] [tracker] [info] instsTrack track right:1.22447 ms
-[2022-05-08 11:05:30.262] [tracker] [info] TrackSemanticImage 动态检测线程总时间:20.8313 ms
-[2022-05-08 11:05:30.263] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:49 r_track:45
-[2022-05-08 11:05:30.263] [tracker] [info] **************feature_track:21.8506 ms****************
-
-[2022-05-08 11:05:30.268] [tracker] [debug] optimization | prepare:2.50697 ms
-[2022-05-08 11:05:30.275] [tracker] [debug] optimization | Solve:7.00595 ms
-[2022-05-08 11:05:30.276] [tracker] [debug] optimization | postprocess:1.13389 ms
-[2022-05-08 11:05:30.283] [tracker] [debug] optimization | 边缘化:6.61015 ms
-[2022-05-08 11:05:30.746] [tracker] [warning] ----------Time : 1.200000 ----------
-[2022-05-08 11:05:30.747] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:30.750] [tracker] [debug] TrackSemanticImage | cur_pts.size:158
-[2022-05-08 11:05:30.750] [tracker] [info] TrackSemanticImage | flowTrack left:3.76216 ms
-[2022-05-08 11:05:30.756] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:30.756] [tracker] [info] TrackSemanticImage | detect feature:6.18812 ms
-[2022-05-08 11:05:30.756] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(730,188),max_pt:(893,280)
-
-[2022-05-08 11:05:30.756] [tracker] [info] instsTrack AddInstances:10.1547 ms
-[2022-05-08 11:05:30.756] [tracker] [debug] id:1 box2d:car box3d:car
-[2022-05-08 11:05:30.756] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:30.758] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:204
-[2022-05-08 11:05:30.758] [tracker] [debug] TrackSemanticImage | flow_track right:2.25325
-[2022-05-08 11:05:30.764] [tracker] [debug] inst:0 last_points:49 mask(375x1242,type:0)
-[2022-05-08 11:05:30.765] [tracker] [info] instsTrack flowTrack:8.6737 ms
-[2022-05-08 11:05:30.765] [tracker] [info] instsTrack prepare detect:0.036652 ms
-[2022-05-08 11:05:30.766] [tracker] [debug] instsTrack actually detect num:3
-[2022-05-08 11:05:30.766] [tracker] [info] instsTrack detectNewFeaturesGPU:1.51836 ms
-[2022-05-08 11:05:30.766] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014071 ms
-[2022-05-08 11:05:30.767] [tracker] [info] instsTrack track right:0.821033 ms
-[2022-05-08 11:05:30.767] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.389 ms
-[2022-05-08 11:05:30.768] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:48 r_track:47
-[2022-05-08 11:05:30.768] [tracker] [info] **************feature_track:22.6334 ms****************
-
-[2022-05-08 11:05:30.774] [tracker] [debug] optimization | prepare:2.59673 ms
-[2022-05-08 11:05:30.782] [tracker] [debug] optimization | Solve:7.28468 ms
-[2022-05-08 11:05:30.783] [tracker] [debug] optimization | postprocess:1.22188 ms
-[2022-05-08 11:05:30.790] [tracker] [debug] optimization | 边缘化:6.72417 ms
-[2022-05-08 11:05:31.249] [tracker] [warning] ----------Time : 1.250000 ----------
-[2022-05-08 11:05:31.250] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:31.253] [tracker] [debug] TrackSemanticImage | cur_pts.size:178
-[2022-05-08 11:05:31.253] [tracker] [info] TrackSemanticImage | flowTrack left:3.79148 ms
-[2022-05-08 11:05:31.257] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(726,187),max_pt:(880,276)
-
-[2022-05-08 11:05:31.257] [tracker] [info] instsTrack AddInstances:7.84647 ms
-[2022-05-08 11:05:31.257] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:31.261] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:31.261] [tracker] [info] TrackSemanticImage | detect feature:8.81865 ms
-[2022-05-08 11:05:31.263] [tracker] [debug] inst:0 last_points:48 mask(375x1242,type:0)
-[2022-05-08 11:05:31.264] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:209
-[2022-05-08 11:05:31.264] [tracker] [debug] TrackSemanticImage | flow_track right:2.51266
-[2022-05-08 11:05:31.265] [tracker] [info] instsTrack flowTrack:8.11066 ms
-[2022-05-08 11:05:31.265] [tracker] [info] instsTrack prepare detect:0.039671 ms
-[2022-05-08 11:05:31.267] [tracker] [debug] instsTrack actually detect num:10
-[2022-05-08 11:05:31.267] [tracker] [info] instsTrack detectNewFeaturesGPU:1.79089 ms
-[2022-05-08 11:05:31.267] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014709 ms
-[2022-05-08 11:05:31.268] [tracker] [info] instsTrack track right:0.964561 ms
-[2022-05-08 11:05:31.268] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.9327 ms
-[2022-05-08 11:05:31.268] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:43 r_track:38
-[2022-05-08 11:05:31.269] [tracker] [info] **************feature_track:20.3161 ms****************
-
-[2022-05-08 11:05:31.274] [tracker] [debug] optimization | prepare:2.76499 ms
-[2022-05-08 11:05:31.281] [tracker] [debug] optimization | Solve:7.75019 ms
-[2022-05-08 11:05:31.283] [tracker] [debug] optimization | postprocess:1.20542 ms
-[2022-05-08 11:05:31.285] [tracker] [debug] optimization | 边缘化:2.25475 ms
-[2022-05-08 11:05:31.769] [tracker] [warning] ----------Time : 1.300000 ----------
-[2022-05-08 11:05:31.771] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:31.775] [tracker] [debug] TrackSemanticImage | cur_pts.size:180
-[2022-05-08 11:05:31.775] [tracker] [info] TrackSemanticImage | flowTrack left:6.23688 ms
-[2022-05-08 11:05:31.780] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(721,188),max_pt:(870,272)
-
-[2022-05-08 11:05:31.780] [tracker] [info] instsTrack AddInstances:10.2457 ms
-[2022-05-08 11:05:31.780] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:31.784] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:31.784] [tracker] [info] TrackSemanticImage | detect feature:8.29682 ms
-[2022-05-08 11:05:31.786] [tracker] [debug] inst:0 last_points:43 mask(375x1242,type:0)
-[2022-05-08 11:05:31.787] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:208
-[2022-05-08 11:05:31.787] [tracker] [debug] TrackSemanticImage | flow_track right:3.31607
-[2022-05-08 11:05:31.788] [tracker] [info] instsTrack flowTrack:8.32307 ms
-[2022-05-08 11:05:31.788] [tracker] [info] instsTrack prepare detect:0.037364 ms
-[2022-05-08 11:05:31.790] [tracker] [debug] instsTrack actually detect num:10
-[2022-05-08 11:05:31.790] [tracker] [info] instsTrack detectNewFeaturesGPU:2.38721 ms
-[2022-05-08 11:05:31.790] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.016364 ms
-[2022-05-08 11:05:31.791] [tracker] [info] instsTrack track right:1.16124 ms
-[2022-05-08 11:05:31.792] [tracker] [info] TrackSemanticImage 动态检测线程总时间:22.3464 ms
-[2022-05-08 11:05:31.792] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:41 r_track:36
-[2022-05-08 11:05:31.793] [tracker] [info] **************feature_track:23.8525 ms****************
-
-[2022-05-08 11:05:31.800] [tracker] [debug] optimization | prepare:3.45242 ms
-[2022-05-08 11:05:31.809] [tracker] [debug] optimization | Solve:8.67583 ms
-[2022-05-08 11:05:31.810] [tracker] [debug] optimization | postprocess:1.2611 ms
-[2022-05-08 11:05:31.810] [tracker] [debug] optimization | 边缘化:0.004607 ms
-[2022-05-08 11:05:32.246] [tracker] [warning] ----------Time : 1.350000 ----------
-[2022-05-08 11:05:32.247] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:32.250] [tracker] [debug] TrackSemanticImage | cur_pts.size:181
-[2022-05-08 11:05:32.250] [tracker] [info] TrackSemanticImage | flowTrack left:4.32592 ms
-[2022-05-08 11:05:32.256] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:32.256] [tracker] [info] TrackSemanticImage | detect feature:5.63166 ms
-[2022-05-08 11:05:32.256] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(716,188),max_pt:(859,269)
-
-[2022-05-08 11:05:32.256] [tracker] [info] instsTrack AddInstances:10.1043 ms
-[2022-05-08 11:05:32.256] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:32.258] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:199
-[2022-05-08 11:05:32.258] [tracker] [debug] TrackSemanticImage | flow_track right:2.25252
-[2022-05-08 11:05:32.263] [tracker] [debug] inst:0 last_points:41 mask(375x1242,type:0)
-[2022-05-08 11:05:32.264] [tracker] [info] instsTrack flowTrack:8.14229 ms
-[2022-05-08 11:05:32.264] [tracker] [info] instsTrack prepare detect:0.053423 ms
-[2022-05-08 11:05:32.266] [tracker] [debug] instsTrack actually detect num:13
-[2022-05-08 11:05:32.266] [tracker] [info] instsTrack detectNewFeaturesGPU:1.69128 ms
-[2022-05-08 11:05:32.266] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.01208 ms
-[2022-05-08 11:05:32.267] [tracker] [info] instsTrack track right:0.917586 ms
-[2022-05-08 11:05:32.267] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.062 ms
-[2022-05-08 11:05:32.268] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:39 r_track:34
-[2022-05-08 11:05:32.268] [tracker] [info] **************feature_track:22.3749 ms****************
-
-[2022-05-08 11:05:32.272] [tracker] [debug] optimization | prepare:2.55552 ms
-[2022-05-08 11:05:32.280] [tracker] [debug] optimization | Solve:7.03389 ms
-[2022-05-08 11:05:32.281] [tracker] [debug] optimization | postprocess:1.16208 ms
-[2022-05-08 11:05:32.287] [tracker] [debug] optimization | 边缘化:5.92045 ms
-[2022-05-08 11:05:32.757] [tracker] [warning] ----------Time : 1.400000 ----------
-[2022-05-08 11:05:32.758] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:32.761] [tracker] [debug] TrackSemanticImage | cur_pts.size:184
-[2022-05-08 11:05:32.761] [tracker] [info] TrackSemanticImage | flowTrack left:3.70583 ms
-[2022-05-08 11:05:32.767] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(712,188),max_pt:(849,267)
-Create inst:2 cls:car min_pt:(1019,192),max_pt:(1241,374)
-
-[2022-05-08 11:05:32.767] [tracker] [info] instsTrack AddInstances:9.7863 ms
-[2022-05-08 11:05:32.767] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:32.768] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:32.768] [tracker] [info] TrackSemanticImage | detect feature:7.32172 ms
-[2022-05-08 11:05:32.770] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:196
-[2022-05-08 11:05:32.770] [tracker] [debug] TrackSemanticImage | flow_track right:2.35139
-[2022-05-08 11:05:32.773] [tracker] [debug] inst:0 last_points:39 mask(375x1242,type:0)
-[2022-05-08 11:05:32.774] [tracker] [info] instsTrack flowTrack:7.22543 ms
-[2022-05-08 11:05:32.774] [tracker] [info] instsTrack prepare detect:0.028608 ms
-[2022-05-08 11:05:32.777] [tracker] [debug] instsTrack actually detect num:21
-[2022-05-08 11:05:32.777] [tracker] [info] instsTrack detectNewFeaturesGPU:2.52477 ms
-[2022-05-08 11:05:32.777] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.012713 ms
-[2022-05-08 11:05:32.778] [tracker] [info] instsTrack track right:1.41116 ms
-[2022-05-08 11:05:32.778] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.1269 ms
-[2022-05-08 11:05:32.779] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:12 r_track:7inst_id:0 class:car l_track:39 r_track:34
-[2022-05-08 11:05:32.779] [tracker] [info] **************feature_track:22.3113 ms****************
-
-[2022-05-08 11:05:32.784] [tracker] [debug] optimization | prepare:2.59355 ms
-[2022-05-08 11:05:32.791] [tracker] [debug] optimization | Solve:7.25389 ms
-[2022-05-08 11:05:32.792] [tracker] [debug] optimization | postprocess:1.2106 ms
-[2022-05-08 11:05:32.794] [tracker] [debug] optimization | 边缘化:2.06111 ms
-[2022-05-08 11:05:33.243] [tracker] [warning] ----------Time : 1.450000 ----------
-[2022-05-08 11:05:33.244] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:33.246] [tracker] [debug] TrackSemanticImage | cur_pts.size:175
-[2022-05-08 11:05:33.246] [tracker] [info] TrackSemanticImage | flowTrack left:3.16797 ms
-[2022-05-08 11:05:33.252] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:33.252] [tracker] [info] TrackSemanticImage | detect feature:5.76761 ms
-[2022-05-08 11:05:33.253] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(707,189),max_pt:(838,267)
-
-[2022-05-08 11:05:33.253] [tracker] [info] instsTrack AddInstances:9.83558 ms
-[2022-05-08 11:05:33.253] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:33.253] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:33.254] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:199
-[2022-05-08 11:05:33.254] [tracker] [debug] TrackSemanticImage | flow_track right:2.2882
-[2022-05-08 11:05:33.260] [tracker] [debug] inst:0 last_points:39 mask(375x1242,type:0)
-[2022-05-08 11:05:33.262] [tracker] [info] instsTrack flowTrack:8.75955 ms
-[2022-05-08 11:05:33.262] [tracker] [info] instsTrack prepare detect:0.047148 ms
-[2022-05-08 11:05:33.263] [tracker] [debug] instsTrack actually detect num:17
-[2022-05-08 11:05:33.263] [tracker] [info] instsTrack detectNewFeaturesGPU:1.55096 ms
-[2022-05-08 11:05:33.263] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.013519 ms
-[2022-05-08 11:05:33.264] [tracker] [info] instsTrack track right:0.842163 ms
-[2022-05-08 11:05:33.264] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.1922 ms
-[2022-05-08 11:05:33.265] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:38 r_track:32
-[2022-05-08 11:05:33.265] [tracker] [info] **************feature_track:22.4939 ms****************
-
-[2022-05-08 11:05:33.271] [tracker] [debug] optimization | prepare:2.60497 ms
-[2022-05-08 11:05:33.278] [tracker] [debug] optimization | Solve:7.10705 ms
-[2022-05-08 11:05:33.279] [tracker] [debug] optimization | postprocess:1.24228 ms
-[2022-05-08 11:05:33.279] [tracker] [debug] optimization | 边缘化:0.004604 ms
-[2022-05-08 11:05:33.755] [tracker] [warning] ----------Time : 1.500000 ----------
-[2022-05-08 11:05:33.756] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:33.758] [tracker] [debug] TrackSemanticImage | cur_pts.size:173
-[2022-05-08 11:05:33.758] [tracker] [info] TrackSemanticImage | flowTrack left:3.51639 ms
-[2022-05-08 11:05:33.763] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(702,188),max_pt:(828,263)
-
-[2022-05-08 11:05:33.763] [tracker] [info] instsTrack AddInstances:7.93398 ms
-[2022-05-08 11:05:33.763] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:33.765] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:33.765] [tracker] [info] TrackSemanticImage | detect feature:6.97586 ms
-[2022-05-08 11:05:33.767] [tracker] [debug] inst:0 last_points:38 mask(375x1242,type:0)
-[2022-05-08 11:05:33.768] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:196
-[2022-05-08 11:05:33.768] [tracker] [debug] TrackSemanticImage | flow_track right:2.30237
-[2022-05-08 11:05:33.768] [tracker] [info] instsTrack flowTrack:5.2281 ms
-[2022-05-08 11:05:33.768] [tracker] [info] instsTrack prepare detect:0.030293 ms
-[2022-05-08 11:05:33.772] [tracker] [debug] instsTrack actually detect num:17
-[2022-05-08 11:05:33.772] [tracker] [info] instsTrack detectNewFeaturesGPU:3.34801 ms
-[2022-05-08 11:05:33.772] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014584 ms
-[2022-05-08 11:05:33.773] [tracker] [info] instsTrack track right:0.963002 ms
-[2022-05-08 11:05:33.773] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.6834 ms
-[2022-05-08 11:05:33.773] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:38 r_track:31
-[2022-05-08 11:05:33.774] [tracker] [info] **************feature_track:19.3157 ms****************
-
-[2022-05-08 11:05:33.780] [tracker] [debug] optimization | prepare:2.6417 ms
-[2022-05-08 11:05:33.787] [tracker] [debug] optimization | Solve:7.01288 ms
-[2022-05-08 11:05:33.789] [tracker] [debug] optimization | postprocess:1.25777 ms
-[2022-05-08 11:05:33.795] [tracker] [debug] optimization | 边缘化:6.31271 ms
-[2022-05-08 11:05:34.256] [tracker] [warning] ----------Time : 1.550000 ----------
-[2022-05-08 11:05:34.257] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:34.260] [tracker] [debug] TrackSemanticImage | cur_pts.size:178
-[2022-05-08 11:05:34.260] [tracker] [info] TrackSemanticImage | flowTrack left:4.56128 ms
-[2022-05-08 11:05:34.264] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(696,188),max_pt:(818,259)
-
-[2022-05-08 11:05:34.264] [tracker] [info] instsTrack AddInstances:8.39526 ms
-[2022-05-08 11:05:34.264] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:34.268] [tracker] [debug] inst:0 last_points:38 mask(375x1242,type:0)
-[2022-05-08 11:05:34.269] [tracker] [info] instsTrack flowTrack:4.94616 ms
-[2022-05-08 11:05:34.269] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:34.269] [tracker] [info] instsTrack prepare detect:0.033099 ms
-[2022-05-08 11:05:34.269] [tracker] [info] TrackSemanticImage | detect feature:9.18572 ms
-[2022-05-08 11:05:34.272] [tracker] [debug] instsTrack actually detect num:15
-[2022-05-08 11:05:34.272] [tracker] [info] instsTrack detectNewFeaturesGPU:2.71773 ms
-[2022-05-08 11:05:34.272] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.018765 ms
-[2022-05-08 11:05:34.272] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:200
-[2022-05-08 11:05:34.272] [tracker] [debug] TrackSemanticImage | flow_track right:2.81717
-[2022-05-08 11:05:34.273] [tracker] [info] instsTrack track right:1.18535 ms
-[2022-05-08 11:05:34.275] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.9613 ms
-[2022-05-08 11:05:34.275] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:39 r_track:31
-[2022-05-08 11:05:34.276] [tracker] [info] **************feature_track:20.1038 ms****************
-
-[2022-05-08 11:05:34.282] [tracker] [debug] optimization | prepare:2.84707 ms
-[2022-05-08 11:05:34.293] [tracker] [debug] optimization | Solve:11.4889 ms
-[2022-05-08 11:05:34.295] [tracker] [debug] optimization | postprocess:1.37515 ms
-[2022-05-08 11:05:34.297] [tracker] [debug] optimization | 边缘化:2.44384 ms
-[2022-05-08 11:05:34.746] [tracker] [warning] ----------Time : 1.600000 ----------
-[2022-05-08 11:05:34.746] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:34.749] [tracker] [debug] TrackSemanticImage | cur_pts.size:174
-[2022-05-08 11:05:34.749] [tracker] [info] TrackSemanticImage | flowTrack left:3.2815 ms
-[2022-05-08 11:05:34.753] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(690,188),max_pt:(807,257)
-
-[2022-05-08 11:05:34.753] [tracker] [info] instsTrack AddInstances:7.30102 ms
-[2022-05-08 11:05:34.753] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:34.755] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:34.755] [tracker] [info] TrackSemanticImage | detect feature:6.0631 ms
-[2022-05-08 11:05:34.757] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:199
-[2022-05-08 11:05:34.757] [tracker] [debug] inst:0 last_points:39 mask(375x1242,type:0)
-[2022-05-08 11:05:34.757] [tracker] [debug] TrackSemanticImage | flow_track right:2.27323
-[2022-05-08 11:05:34.758] [tracker] [info] instsTrack flowTrack:5.28674 ms
-[2022-05-08 11:05:34.758] [tracker] [info] instsTrack prepare detect:0.038695 ms
-[2022-05-08 11:05:34.762] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:34.762] [tracker] [info] instsTrack detectNewFeaturesGPU:3.46354 ms
-[2022-05-08 11:05:34.762] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.012913 ms
-[2022-05-08 11:05:34.763] [tracker] [info] instsTrack track right:0.996884 ms
-[2022-05-08 11:05:34.763] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.2666 ms
-[2022-05-08 11:05:34.763] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:36 r_track:31
-[2022-05-08 11:05:34.764] [tracker] [info] **************feature_track:18.6051 ms****************
-
-[2022-05-08 11:05:34.769] [tracker] [debug] optimization | prepare:2.61425 ms
-[2022-05-08 11:05:34.776] [tracker] [debug] optimization | Solve:7.1515 ms
-[2022-05-08 11:05:34.778] [tracker] [debug] optimization | postprocess:1.1946 ms
-[2022-05-08 11:05:34.783] [tracker] [debug] optimization | 边缘化:5.34108 ms
-[2022-05-08 11:05:35.238] [tracker] [warning] ----------Time : 1.650000 ----------
-[2022-05-08 11:05:35.241] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:35.245] [tracker] [debug] TrackSemanticImage | cur_pts.size:165
-[2022-05-08 11:05:35.245] [tracker] [info] TrackSemanticImage | flowTrack left:6.8042 ms
-[2022-05-08 11:05:35.248] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(683,187),max_pt:(796,254)
-
-[2022-05-08 11:05:35.248] [tracker] [info] instsTrack AddInstances:9.06969 ms
-[2022-05-08 11:05:35.248] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:35.251] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:35.251] [tracker] [info] TrackSemanticImage | detect feature:6.23548 ms
-[2022-05-08 11:05:35.251] [tracker] [debug] inst:0 last_points:36 mask(375x1242,type:0)
-[2022-05-08 11:05:35.253] [tracker] [info] instsTrack flowTrack:5.16592 ms
-[2022-05-08 11:05:35.253] [tracker] [info] instsTrack prepare detect:0.022889 ms
-[2022-05-08 11:05:35.255] [tracker] [debug] instsTrack actually detect num:19
-[2022-05-08 11:05:35.255] [tracker] [info] instsTrack detectNewFeaturesGPU:1.79575 ms
-[2022-05-08 11:05:35.255] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.013311 ms
-[2022-05-08 11:05:35.255] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:192
-[2022-05-08 11:05:35.255] [tracker] [debug] TrackSemanticImage | flow_track right:4.22443
-[2022-05-08 11:05:35.256] [tracker] [info] instsTrack track right:1.4284 ms
-[2022-05-08 11:05:35.258] [tracker] [info] TrackSemanticImage 动态检测线程总时间:19.5756 ms
-[2022-05-08 11:05:35.258] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:34 r_track:31
-[2022-05-08 11:05:35.259] [tracker] [info] **************feature_track:21.03 ms****************
-
-[2022-05-08 11:05:35.264] [tracker] [debug] optimization | prepare:2.52005 ms
-[2022-05-08 11:05:35.271] [tracker] [debug] optimization | Solve:7.01924 ms
-[2022-05-08 11:05:35.273] [tracker] [debug] optimization | postprocess:1.58989 ms
-[2022-05-08 11:05:35.278] [tracker] [debug] optimization | 边缘化:5.2826 ms
-[2022-05-08 11:05:35.757] [tracker] [warning] ----------Time : 1.700000 ----------
-[2022-05-08 11:05:35.757] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:35.760] [tracker] [debug] TrackSemanticImage | cur_pts.size:174
-[2022-05-08 11:05:35.760] [tracker] [info] TrackSemanticImage | flowTrack left:3.35352 ms
-[2022-05-08 11:05:35.765] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(677,187),max_pt:(785,250)
-
-[2022-05-08 11:05:35.765] [tracker] [info] instsTrack AddInstances:8.34313 ms
-[2022-05-08 11:05:35.765] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:35.767] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:35.768] [tracker] [info] TrackSemanticImage | detect feature:7.49145 ms
-[2022-05-08 11:05:35.769] [tracker] [debug] inst:0 last_points:34 mask(375x1242,type:0)
-[2022-05-08 11:05:35.770] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:197
-[2022-05-08 11:05:35.770] [tracker] [debug] TrackSemanticImage | flow_track right:2.60704
-[2022-05-08 11:05:35.771] [tracker] [info] instsTrack flowTrack:5.6086 ms
-[2022-05-08 11:05:35.771] [tracker] [info] instsTrack prepare detect:0.044734 ms
-[2022-05-08 11:05:35.773] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:35.773] [tracker] [info] instsTrack detectNewFeaturesGPU:2.35207 ms
-[2022-05-08 11:05:35.773] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.012954 ms
-[2022-05-08 11:05:35.774] [tracker] [info] instsTrack track right:1.05302 ms
-[2022-05-08 11:05:35.774] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.5662 ms
-[2022-05-08 11:05:35.775] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:33 r_track:28
-[2022-05-08 11:05:35.776] [tracker] [info] **************feature_track:18.9141 ms****************
-
-[2022-05-08 11:05:35.783] [tracker] [debug] optimization | prepare:2.74706 ms
-[2022-05-08 11:05:35.793] [tracker] [debug] optimization | Solve:10.5842 ms
-[2022-05-08 11:05:35.794] [tracker] [debug] optimization | postprocess:1.08824 ms
-[2022-05-08 11:05:35.799] [tracker] [debug] optimization | 边缘化:4.81765 ms
-[2022-05-08 11:05:36.249] [tracker] [warning] ----------Time : 1.750000 ----------
-[2022-05-08 11:05:36.250] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:36.252] [tracker] [debug] TrackSemanticImage | cur_pts.size:172
-[2022-05-08 11:05:36.252] [tracker] [info] TrackSemanticImage | flowTrack left:3.24744 ms
-[2022-05-08 11:05:36.256] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(671,186),max_pt:(775,248)
-
-[2022-05-08 11:05:36.257] [tracker] [info] instsTrack AddInstances:7.204 ms
-[2022-05-08 11:05:36.257] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:36.260] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:36.260] [tracker] [info] TrackSemanticImage | detect feature:7.62861 ms
-[2022-05-08 11:05:36.261] [tracker] [debug] inst:0 last_points:33 mask(375x1242,type:0)
-[2022-05-08 11:05:36.263] [tracker] [info] instsTrack flowTrack:6.2297 ms
-[2022-05-08 11:05:36.263] [tracker] [info] instsTrack prepare detect:0.027528 ms
-[2022-05-08 11:05:36.265] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:200
-[2022-05-08 11:05:36.265] [tracker] [debug] TrackSemanticImage | flow_track right:4.87326
-[2022-05-08 11:05:36.266] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:36.266] [tracker] [info] instsTrack detectNewFeaturesGPU:3.63408 ms
-[2022-05-08 11:05:36.266] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.016858 ms
-[2022-05-08 11:05:36.267] [tracker] [info] instsTrack track right:1.04041 ms
-[2022-05-08 11:05:36.268] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.2825 ms
-[2022-05-08 11:05:36.268] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:33 r_track:29
-[2022-05-08 11:05:36.268] [tracker] [info] **************feature_track:19.3056 ms****************
-
-[2022-05-08 11:05:36.274] [tracker] [debug] optimization | prepare:2.10919 ms
-[2022-05-08 11:05:36.280] [tracker] [debug] optimization | Solve:6.17653 ms
-[2022-05-08 11:05:36.281] [tracker] [debug] optimization | postprocess:0.907361 ms
-[2022-05-08 11:05:36.286] [tracker] [debug] optimization | 边缘化:5.11104 ms
-[2022-05-08 11:05:36.750] [tracker] [warning] ----------Time : 1.800000 ----------
-[2022-05-08 11:05:36.751] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:36.754] [tracker] [debug] TrackSemanticImage | cur_pts.size:184
-[2022-05-08 11:05:36.754] [tracker] [info] TrackSemanticImage | flowTrack left:3.28765 ms
-[2022-05-08 11:05:36.758] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(664,184),max_pt:(763,246)
-
-[2022-05-08 11:05:36.758] [tracker] [info] instsTrack AddInstances:7.33686 ms
-[2022-05-08 11:05:36.758] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:36.761] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:36.761] [tracker] [info] TrackSemanticImage | detect feature:7.2406 ms
-[2022-05-08 11:05:36.762] [tracker] [debug] inst:0 last_points:33 mask(375x1242,type:0)
-[2022-05-08 11:05:36.764] [tracker] [info] instsTrack flowTrack:5.40574 ms
-[2022-05-08 11:05:36.764] [tracker] [info] instsTrack prepare detect:0.025538 ms
-[2022-05-08 11:05:36.765] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:201
-[2022-05-08 11:05:36.765] [tracker] [debug] TrackSemanticImage | flow_track right:4.04089
-[2022-05-08 11:05:36.766] [tracker] [debug] instsTrack actually detect num:17
-[2022-05-08 11:05:36.766] [tracker] [info] instsTrack detectNewFeaturesGPU:2.62701 ms
-[2022-05-08 11:05:36.766] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014522 ms
-[2022-05-08 11:05:36.767] [tracker] [info] instsTrack track right:0.947301 ms
-[2022-05-08 11:05:36.767] [tracker] [info] TrackSemanticImage 动态检测线程总时间:16.6738 ms
-[2022-05-08 11:05:36.768] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:34 r_track:28
-[2022-05-08 11:05:36.768] [tracker] [info] **************feature_track:17.683 ms****************
-
-[2022-05-08 11:05:36.774] [tracker] [debug] optimization | prepare:2.24111 ms
-[2022-05-08 11:05:36.781] [tracker] [debug] optimization | Solve:6.85726 ms
-[2022-05-08 11:05:36.782] [tracker] [debug] optimization | postprocess:0.945298 ms
-[2022-05-08 11:05:36.784] [tracker] [debug] optimization | 边缘化:1.81708 ms
-[2022-05-08 11:05:37.262] [tracker] [warning] ----------Time : 1.850000 ----------
-[2022-05-08 11:05:37.263] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:37.266] [tracker] [debug] TrackSemanticImage | cur_pts.size:176
-[2022-05-08 11:05:37.266] [tracker] [info] TrackSemanticImage | flowTrack left:3.19475 ms
-[2022-05-08 11:05:37.270] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(656,183),max_pt:(754,245)
-
-[2022-05-08 11:05:37.270] [tracker] [info] instsTrack AddInstances:7.40245 ms
-[2022-05-08 11:05:37.270] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:37.272] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:37.272] [tracker] [info] TrackSemanticImage | detect feature:5.88333 ms
-[2022-05-08 11:05:37.274] [tracker] [debug] inst:0 last_points:34 mask(375x1242,type:0)
-[2022-05-08 11:05:37.274] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:203
-[2022-05-08 11:05:37.274] [tracker] [debug] TrackSemanticImage | flow_track right:2.35604
-[2022-05-08 11:05:37.275] [tracker] [info] instsTrack flowTrack:4.74804 ms
-[2022-05-08 11:05:37.275] [tracker] [info] instsTrack prepare detect:0.030739 ms
-[2022-05-08 11:05:37.277] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:37.277] [tracker] [info] instsTrack detectNewFeaturesGPU:1.76733 ms
-[2022-05-08 11:05:37.277] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.011355 ms
-[2022-05-08 11:05:37.278] [tracker] [info] instsTrack track right:0.841462 ms
-[2022-05-08 11:05:37.278] [tracker] [info] TrackSemanticImage 动态检测线程总时间:14.9161 ms
-[2022-05-08 11:05:37.278] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:32 r_track:29
-[2022-05-08 11:05:37.279] [tracker] [info] **************feature_track:16.2557 ms****************
-
-[2022-05-08 11:05:37.284] [tracker] [debug] optimization | prepare:2.19724 ms
-[2022-05-08 11:05:37.290] [tracker] [debug] optimization | Solve:6.34065 ms
-[2022-05-08 11:05:37.291] [tracker] [debug] optimization | postprocess:0.911121 ms
-[2022-05-08 11:05:37.291] [tracker] [debug] optimization | 边缘化:0.007253 ms
-[2022-05-08 11:05:37.769] [tracker] [warning] ----------Time : 1.900000 ----------
-[2022-05-08 11:05:37.769] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:37.772] [tracker] [debug] TrackSemanticImage | cur_pts.size:171
-[2022-05-08 11:05:37.772] [tracker] [info] TrackSemanticImage | flowTrack left:3.18859 ms
-[2022-05-08 11:05:37.777] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(650,184),max_pt:(742,242)
-
-[2022-05-08 11:05:37.777] [tracker] [info] instsTrack AddInstances:7.93211 ms
-[2022-05-08 11:05:37.777] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:37.778] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:37.778] [tracker] [info] TrackSemanticImage | detect feature:6.04048 ms
-[2022-05-08 11:05:37.780] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:195
-[2022-05-08 11:05:37.780] [tracker] [debug] TrackSemanticImage | flow_track right:2.1811
-[2022-05-08 11:05:37.781] [tracker] [debug] inst:0 last_points:32 mask(375x1242,type:0)
-[2022-05-08 11:05:37.782] [tracker] [info] instsTrack flowTrack:5.29988 ms
-[2022-05-08 11:05:37.782] [tracker] [info] instsTrack prepare detect:0.034749 ms
-[2022-05-08 11:05:37.784] [tracker] [debug] instsTrack actually detect num:19
-[2022-05-08 11:05:37.784] [tracker] [info] instsTrack detectNewFeaturesGPU:1.6732 ms
-[2022-05-08 11:05:37.784] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.010514 ms
-[2022-05-08 11:05:37.785] [tracker] [info] instsTrack track right:0.771582 ms
-[2022-05-08 11:05:37.785] [tracker] [info] TrackSemanticImage 动态检测线程总时间:15.9315 ms
-[2022-05-08 11:05:37.785] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:31 r_track:29
-[2022-05-08 11:05:37.786] [tracker] [info] **************feature_track:17.1721 ms****************
-
-[2022-05-08 11:05:37.790] [tracker] [debug] optimization | prepare:2.0406 ms
-[2022-05-08 11:05:37.796] [tracker] [debug] optimization | Solve:5.72674 ms
-[2022-05-08 11:05:37.797] [tracker] [debug] optimization | postprocess:0.814055 ms
-[2022-05-08 11:05:37.802] [tracker] [debug] optimization | 边缘化:5.27858 ms
-[2022-05-08 11:05:38.285] [tracker] [warning] ----------Time : 1.950000 ----------
-[2022-05-08 11:05:38.286] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:38.289] [tracker] [debug] TrackSemanticImage | cur_pts.size:167
-[2022-05-08 11:05:38.289] [tracker] [info] TrackSemanticImage | flowTrack left:3.9073 ms
-[2022-05-08 11:05:38.293] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(643,184),max_pt:(733,241)
-
-[2022-05-08 11:05:38.293] [tracker] [info] instsTrack AddInstances:7.51701 ms
-[2022-05-08 11:05:38.293] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:38.296] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:38.296] [tracker] [info] TrackSemanticImage | detect feature:6.76282 ms
-[2022-05-08 11:05:38.298] [tracker] [debug] inst:0 last_points:31 mask(375x1242,type:0)
-[2022-05-08 11:05:38.299] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:188
-[2022-05-08 11:05:38.299] [tracker] [debug] TrackSemanticImage | flow_track right:2.49194
-[2022-05-08 11:05:38.299] [tracker] [info] instsTrack flowTrack:5.92715 ms
-[2022-05-08 11:05:38.299] [tracker] [info] instsTrack prepare detect:0.044045 ms
-[2022-05-08 11:05:38.301] [tracker] [debug] instsTrack actually detect num:19
-[2022-05-08 11:05:38.301] [tracker] [info] instsTrack detectNewFeaturesGPU:1.81678 ms
-[2022-05-08 11:05:38.301] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.010304 ms
-[2022-05-08 11:05:38.302] [tracker] [info] instsTrack track right:0.77252 ms
-[2022-05-08 11:05:38.302] [tracker] [info] TrackSemanticImage 动态检测线程总时间:16.2376 ms
-[2022-05-08 11:05:38.302] [tracker] [debug] GetOutputFeature:
-inst_id:0 class:car l_track:31 r_track:28
-[2022-05-08 11:05:38.303] [tracker] [info] **************feature_track:17.5487 ms****************
-
-[2022-05-08 11:05:38.308] [tracker] [debug] optimization | prepare:2.04306 ms
-[2022-05-08 11:05:38.314] [tracker] [debug] optimization | Solve:6.1585 ms
-[2022-05-08 11:05:38.315] [tracker] [debug] optimization | postprocess:0.900707 ms
-[2022-05-08 11:05:38.317] [tracker] [debug] optimization | 边缘化:1.67068 ms
-[2022-05-08 11:05:38.770] [tracker] [warning] ----------Time : 2.000000 ----------
-[2022-05-08 11:05:38.770] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:38.773] [tracker] [debug] TrackSemanticImage | cur_pts.size:174
-[2022-05-08 11:05:38.773] [tracker] [info] TrackSemanticImage | flowTrack left:3.05922 ms
-[2022-05-08 11:05:38.778] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(636,184),max_pt:(723,241)
-Create inst:2 cls:car min_pt:(775,173),max_pt:(1112,372)
-
-[2022-05-08 11:05:38.778] [tracker] [info] instsTrack AddInstances:7.91047 ms
-[2022-05-08 11:05:38.778] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:38.778] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:38.778] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:38.778] [tracker] [info] TrackSemanticImage | detect feature:5.85217 ms
-[2022-05-08 11:05:38.781] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:194
-[2022-05-08 11:05:38.781] [tracker] [debug] TrackSemanticImage | flow_track right:2.15738
-[2022-05-08 11:05:38.781] [tracker] [debug] inst:0 last_points:31 mask(375x1242,type:0)
-[2022-05-08 11:05:38.782] [tracker] [info] instsTrack flowTrack:4.51175 ms
-[2022-05-08 11:05:38.782] [tracker] [info] instsTrack prepare detect:0.033121 ms
-[2022-05-08 11:05:38.784] [tracker] [debug] instsTrack actually detect num:41
-[2022-05-08 11:05:38.784] [tracker] [info] instsTrack detectNewFeaturesGPU:1.6659 ms
-[2022-05-08 11:05:38.784] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.014104 ms
-[2022-05-08 11:05:38.786] [tracker] [info] instsTrack track right:1.68894 ms
-[2022-05-08 11:05:38.786] [tracker] [info] TrackSemanticImage 动态检测线程总时间:15.9644 ms
-[2022-05-08 11:05:38.786] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:39 r_track:10inst_id:0 class:car l_track:33 r_track:32
-[2022-05-08 11:05:38.787] [tracker] [info] **************feature_track:17.3168 ms****************
-
-[2022-05-08 11:05:38.793] [tracker] [debug] optimization | prepare:2.33596 ms
-[2022-05-08 11:05:38.798] [tracker] [debug] optimization | Solve:5.67399 ms
-[2022-05-08 11:05:38.799] [tracker] [debug] optimization | postprocess:0.746773 ms
-[2022-05-08 11:05:38.804] [tracker] [debug] optimization | 边缘化:4.47016 ms
-[2022-05-08 11:05:39.257] [tracker] [warning] ----------Time : 2.050000 ----------
-[2022-05-08 11:05:39.257] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:39.260] [tracker] [debug] TrackSemanticImage | cur_pts.size:166
-[2022-05-08 11:05:39.260] [tracker] [info] TrackSemanticImage | flowTrack left:3.26157 ms
-[2022-05-08 11:05:39.266] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(629,184),max_pt:(711,239)
-Update inst:2 cls:car min_pt:(758,179),max_pt:(1068,364)
-
-[2022-05-08 11:05:39.266] [tracker] [info] instsTrack AddInstances:9.00252 ms
-[2022-05-08 11:05:39.266] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:39.266] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:39.266] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:39.266] [tracker] [info] TrackSemanticImage | detect feature:6.21218 ms
-[2022-05-08 11:05:39.269] [tracker] [debug] inst:2 last_points:39 mask(375x1242,type:0)
-[2022-05-08 11:05:39.269] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:195
-[2022-05-08 11:05:39.269] [tracker] [debug] TrackSemanticImage | flow_track right:3.02308
-[2022-05-08 11:05:39.270] [tracker] [debug] inst:0 last_points:33 mask(375x1242,type:0)
-[2022-05-08 11:05:39.271] [tracker] [info] instsTrack flowTrack:5.31739 ms
-[2022-05-08 11:05:39.272] [tracker] [info] instsTrack prepare detect:0.316018 ms
-[2022-05-08 11:05:39.274] [tracker] [debug] instsTrack actually detect num:38
-[2022-05-08 11:05:39.274] [tracker] [info] instsTrack detectNewFeaturesGPU:2.30511 ms
-[2022-05-08 11:05:39.274] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.017204 ms
-[2022-05-08 11:05:39.276] [tracker] [info] instsTrack track right:2.17802 ms
-[2022-05-08 11:05:39.276] [tracker] [info] TrackSemanticImage 动态检测线程总时间:19.2891 ms
-[2022-05-08 11:05:39.277] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:27inst_id:0 class:car l_track:35 r_track:30
-[2022-05-08 11:05:39.278] [tracker] [info] **************feature_track:21.1773 ms****************
-
-[2022-05-08 11:05:39.282] [tracker] [debug] optimization | prepare:2.70958 ms
-[2022-05-08 11:05:39.289] [tracker] [debug] optimization | Solve:6.68851 ms
-[2022-05-08 11:05:39.290] [tracker] [debug] optimization | postprocess:0.834442 ms
-[2022-05-08 11:05:39.295] [tracker] [debug] optimization | 边缘化:5.24979 ms
-[2022-05-08 11:05:39.767] [tracker] [warning] ----------Time : 2.100000 ----------
-[2022-05-08 11:05:39.768] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:39.770] [tracker] [debug] TrackSemanticImage | cur_pts.size:192
-[2022-05-08 11:05:39.770] [tracker] [info] TrackSemanticImage | flowTrack left:3.21492 ms
-[2022-05-08 11:05:39.775] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(622,187),max_pt:(703,239)
-Update inst:2 cls:car min_pt:(742,179),max_pt:(1027,355)
-
-[2022-05-08 11:05:39.775] [tracker] [info] instsTrack AddInstances:7.41593 ms
-[2022-05-08 11:05:39.775] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:39.775] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:39.776] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:39.776] [tracker] [info] TrackSemanticImage | detect feature:5.86361 ms
-[2022-05-08 11:05:39.778] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:197
-[2022-05-08 11:05:39.778] [tracker] [debug] TrackSemanticImage | flow_track right:2.21513
-[2022-05-08 11:05:39.779] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:39.780] [tracker] [debug] inst:0 last_points:35 mask(375x1242,type:0)
-[2022-05-08 11:05:39.781] [tracker] [info] instsTrack flowTrack:6.02627 ms
-[2022-05-08 11:05:39.781] [tracker] [info] instsTrack prepare detect:0.037746 ms
-[2022-05-08 11:05:39.782] [tracker] [debug] instsTrack actually detect num:27
-[2022-05-08 11:05:39.782] [tracker] [info] instsTrack detectNewFeaturesGPU:1.70074 ms
-[2022-05-08 11:05:39.782] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.022058 ms
-[2022-05-08 11:05:39.784] [tracker] [info] instsTrack track right:1.93983 ms
-[2022-05-08 11:05:39.784] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.3146 ms
-[2022-05-08 11:05:39.785] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:34inst_id:0 class:car l_track:34 r_track:29
-[2022-05-08 11:05:39.786] [tracker] [info] **************feature_track:18.7416 ms****************
-
-[2022-05-08 11:05:39.791] [tracker] [debug] optimization | prepare:2.79552 ms
-[2022-05-08 11:05:39.798] [tracker] [debug] optimization | Solve:6.99124 ms
-[2022-05-08 11:05:39.799] [tracker] [debug] optimization | postprocess:0.998489 ms
-[2022-05-08 11:05:39.801] [tracker] [debug] optimization | 边缘化:1.9867 ms
-[2022-05-08 11:05:40.284] [tracker] [warning] ----------Time : 2.150000 ----------
-[2022-05-08 11:05:40.285] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:40.287] [tracker] [debug] TrackSemanticImage | cur_pts.size:177
-[2022-05-08 11:05:40.287] [tracker] [info] TrackSemanticImage | flowTrack left:3.39799 ms
-[2022-05-08 11:05:40.291] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(614,184),max_pt:(694,238)
-Update inst:2 cls:car min_pt:(727,179),max_pt:(991,346)
-
-[2022-05-08 11:05:40.291] [tracker] [info] instsTrack AddInstances:7.35713 ms
-[2022-05-08 11:05:40.292] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:40.292] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:40.293] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:40.293] [tracker] [info] TrackSemanticImage | detect feature:6.20934 ms
-[2022-05-08 11:05:40.296] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:40.297] [tracker] [debug] inst:0 last_points:34 mask(375x1242,type:0)
-[2022-05-08 11:05:40.298] [tracker] [info] instsTrack flowTrack:6.29425 ms
-[2022-05-08 11:05:40.298] [tracker] [info] instsTrack prepare detect:0.043248 ms
-[2022-05-08 11:05:40.299] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:186
-[2022-05-08 11:05:40.299] [tracker] [debug] TrackSemanticImage | flow_track right:5.11207
-[2022-05-08 11:05:40.300] [tracker] [debug] instsTrack actually detect num:23
-[2022-05-08 11:05:40.300] [tracker] [info] instsTrack detectNewFeaturesGPU:2.41498 ms
-[2022-05-08 11:05:40.300] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.017397 ms
-[2022-05-08 11:05:40.302] [tracker] [info] instsTrack track right:1.77111 ms
-[2022-05-08 11:05:40.302] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.0519 ms
-[2022-05-08 11:05:40.303] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:36inst_id:0 class:car l_track:34 r_track:28
-[2022-05-08 11:05:40.303] [tracker] [info] **************feature_track:19.5158 ms****************
-
-[2022-05-08 11:05:40.308] [tracker] [debug] optimization | prepare:2.70302 ms
-[2022-05-08 11:05:40.314] [tracker] [debug] optimization | Solve:6.59103 ms
-[2022-05-08 11:05:40.315] [tracker] [debug] optimization | postprocess:0.943681 ms
-[2022-05-08 11:05:40.315] [tracker] [debug] optimization | 边缘化:0.006366 ms
-[2022-05-08 11:05:40.740] [tracker] [warning] ----------Time : 2.200000 ----------
-[2022-05-08 11:05:40.741] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:40.746] [tracker] [debug] TrackSemanticImage | cur_pts.size:175
-[2022-05-08 11:05:40.746] [tracker] [info] TrackSemanticImage | flowTrack left:5.28621 ms
-[2022-05-08 11:05:40.750] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(608,184),max_pt:(685,238)
-Update inst:2 cls:car min_pt:(712,179),max_pt:(957,337)
-
-[2022-05-08 11:05:40.750] [tracker] [info] instsTrack AddInstances:9.13494 ms
-[2022-05-08 11:05:40.750] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:40.750] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:40.753] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:40.753] [tracker] [info] TrackSemanticImage | detect feature:7.65019 ms
-[2022-05-08 11:05:40.754] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:40.756] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:207
-[2022-05-08 11:05:40.756] [tracker] [debug] TrackSemanticImage | flow_track right:2.504
-[2022-05-08 11:05:40.756] [tracker] [debug] inst:0 last_points:34 mask(375x1242,type:0)
-[2022-05-08 11:05:40.757] [tracker] [info] instsTrack flowTrack:7.18772 ms
-[2022-05-08 11:05:40.757] [tracker] [info] instsTrack prepare detect:0.04175 ms
-[2022-05-08 11:05:40.759] [tracker] [debug] instsTrack actually detect num:22
-[2022-05-08 11:05:40.759] [tracker] [info] instsTrack detectNewFeaturesGPU:1.5747 ms
-[2022-05-08 11:05:40.759] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.016515 ms
-[2022-05-08 11:05:40.761] [tracker] [info] instsTrack track right:1.83785 ms
-[2022-05-08 11:05:40.761] [tracker] [info] TrackSemanticImage 动态检测线程总时间:19.9396 ms
-[2022-05-08 11:05:40.761] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:35inst_id:0 class:car l_track:33 r_track:29
-[2022-05-08 11:05:40.762] [tracker] [info] **************feature_track:21.0631 ms****************
-
-[2022-05-08 11:05:40.768] [tracker] [debug] optimization | prepare:2.66575 ms
-[2022-05-08 11:05:40.774] [tracker] [debug] optimization | Solve:6.43051 ms
-[2022-05-08 11:05:40.775] [tracker] [debug] optimization | postprocess:0.930359 ms
-[2022-05-08 11:05:40.780] [tracker] [debug] optimization | 边缘化:5.34765 ms
-[2022-05-08 11:05:41.270] [tracker] [warning] ----------Time : 2.250000 ----------
-[2022-05-08 11:05:41.270] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:41.273] [tracker] [debug] TrackSemanticImage | cur_pts.size:183
-[2022-05-08 11:05:41.273] [tracker] [info] TrackSemanticImage | flowTrack left:3.28732 ms
-[2022-05-08 11:05:41.277] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(601,184),max_pt:(677,237)
-Update inst:2 cls:car min_pt:(699,179),max_pt:(926,330)
-
-[2022-05-08 11:05:41.277] [tracker] [info] instsTrack AddInstances:7.53551 ms
-[2022-05-08 11:05:41.277] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:41.277] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:41.280] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:41.280] [tracker] [info] TrackSemanticImage | detect feature:6.7361 ms
-[2022-05-08 11:05:41.281] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:41.283] [tracker] [debug] inst:0 last_points:33 mask(375x1242,type:0)
-[2022-05-08 11:05:41.283] [tracker] [info] instsTrack flowTrack:6.00191 ms
-[2022-05-08 11:05:41.283] [tracker] [info] instsTrack prepare detect:0.043059 ms
-[2022-05-08 11:05:41.284] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:196
-[2022-05-08 11:05:41.284] [tracker] [debug] TrackSemanticImage | flow_track right:4.56424
-[2022-05-08 11:05:41.286] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:41.286] [tracker] [info] instsTrack detectNewFeaturesGPU:2.55434 ms
-[2022-05-08 11:05:41.286] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.023016 ms
-[2022-05-08 11:05:41.288] [tracker] [info] instsTrack track right:2.22491 ms
-[2022-05-08 11:05:41.288] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.5893 ms
-[2022-05-08 11:05:41.289] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:29inst_id:0 class:car l_track:33 r_track:26
-[2022-05-08 11:05:41.290] [tracker] [info] **************feature_track:20.0446 ms****************
-
-[2022-05-08 11:05:41.295] [tracker] [debug] optimization | prepare:2.71108 ms
-[2022-05-08 11:05:41.302] [tracker] [debug] optimization | Solve:6.97323 ms
-[2022-05-08 11:05:41.303] [tracker] [debug] optimization | postprocess:0.961628 ms
-[2022-05-08 11:05:41.305] [tracker] [debug] optimization | 边缘化:1.7627 ms
-[2022-05-08 11:05:41.740] [tracker] [warning] ----------Time : 2.300000 ----------
-[2022-05-08 11:05:41.741] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:41.743] [tracker] [debug] TrackSemanticImage | cur_pts.size:164
-[2022-05-08 11:05:41.743] [tracker] [info] TrackSemanticImage | flowTrack left:3.34972 ms
-[2022-05-08 11:05:41.747] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(596,186),max_pt:(668,234)
-Update inst:2 cls:car min_pt:(686,178),max_pt:(899,324)
-
-[2022-05-08 11:05:41.747] [tracker] [info] instsTrack AddInstances:7.32107 ms
-[2022-05-08 11:05:41.747] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:41.747] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:41.750] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:41.750] [tracker] [info] TrackSemanticImage | detect feature:7.25291 ms
-[2022-05-08 11:05:41.752] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:41.753] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:187
-[2022-05-08 11:05:41.753] [tracker] [debug] TrackSemanticImage | flow_track right:2.41286
-[2022-05-08 11:05:41.754] [tracker] [debug] inst:0 last_points:33 mask(375x1242,type:0)
-[2022-05-08 11:05:41.755] [tracker] [info] instsTrack flowTrack:7.39354 ms
-[2022-05-08 11:05:41.755] [tracker] [info] instsTrack prepare detect:0.037865 ms
-[2022-05-08 11:05:41.756] [tracker] [debug] instsTrack actually detect num:17
-[2022-05-08 11:05:41.756] [tracker] [info] instsTrack detectNewFeaturesGPU:1.64654 ms
-[2022-05-08 11:05:41.756] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.015269 ms
-[2022-05-08 11:05:41.758] [tracker] [info] instsTrack track right:1.62612 ms
-[2022-05-08 11:05:41.758] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.19 ms
-[2022-05-08 11:05:41.759] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:32inst_id:0 class:car l_track:32 r_track:25
-[2022-05-08 11:05:41.759] [tracker] [info] **************feature_track:19.6095 ms****************
-
-[2022-05-08 11:05:41.765] [tracker] [debug] optimization | prepare:2.59922 ms
-[2022-05-08 11:05:41.771] [tracker] [debug] optimization | Solve:6.59674 ms
-[2022-05-08 11:05:41.772] [tracker] [debug] optimization | postprocess:0.91302 ms
-[2022-05-08 11:05:41.777] [tracker] [debug] optimization | 边缘化:4.83791 ms
-[2022-05-08 11:05:42.277] [tracker] [warning] ----------Time : 2.350000 ----------
-[2022-05-08 11:05:42.278] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:42.286] [tracker] [debug] TrackSemanticImage | cur_pts.size:162
-[2022-05-08 11:05:42.286] [tracker] [info] TrackSemanticImage | flowTrack left:8.83225 ms
-[2022-05-08 11:05:42.286] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(591,187),max_pt:(663,235)
-Update inst:2 cls:car min_pt:(675,178),max_pt:(874,320)
-
-[2022-05-08 11:05:42.286] [tracker] [info] instsTrack AddInstances:8.59463 ms
-[2022-05-08 11:05:42.286] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:42.286] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:42.289] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:42.291] [tracker] [debug] inst:0 last_points:32 mask(375x1242,type:0)
-[2022-05-08 11:05:42.292] [tracker] [info] instsTrack flowTrack:6.27546 ms
-[2022-05-08 11:05:42.292] [tracker] [info] instsTrack prepare detect:0.057874 ms
-[2022-05-08 11:05:42.295] [tracker] [debug] instsTrack actually detect num:18
-[2022-05-08 11:05:42.295] [tracker] [info] instsTrack detectNewFeaturesGPU:2.45924 ms
-[2022-05-08 11:05:42.295] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.036902 ms
-[2022-05-08 11:05:42.295] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:42.295] [tracker] [info] TrackSemanticImage | detect feature:9.11387 ms
-[2022-05-08 11:05:42.298] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:184
-[2022-05-08 11:05:42.298] [tracker] [debug] TrackSemanticImage | flow_track right:2.86558
-[2022-05-08 11:05:42.300] [tracker] [info] instsTrack track right:5.27689 ms
-[2022-05-08 11:05:42.301] [tracker] [info] TrackSemanticImage 动态检测线程总时间:23.5495 ms
-[2022-05-08 11:05:42.301] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:38inst_id:0 class:car l_track:33 r_track:27
-[2022-05-08 11:05:42.302] [tracker] [info] **************feature_track:24.8729 ms****************
-
-[2022-05-08 11:05:42.309] [tracker] [debug] optimization | prepare:3.3415 ms
-[2022-05-08 11:05:42.318] [tracker] [debug] optimization | Solve:8.87541 ms
-[2022-05-08 11:05:42.319] [tracker] [debug] optimization | postprocess:1.07972 ms
-[2022-05-08 11:05:42.325] [tracker] [debug] optimization | 边缘化:5.71021 ms
-[2022-05-08 11:05:42.788] [tracker] [warning] ----------Time : 2.400000 ----------
-[2022-05-08 11:05:42.789] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:42.792] [tracker] [debug] TrackSemanticImage | cur_pts.size:165
-[2022-05-08 11:05:42.792] [tracker] [info] TrackSemanticImage | flowTrack left:4.0035 ms
-[2022-05-08 11:05:42.797] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(586,188),max_pt:(655,235)
-Update inst:2 cls:car min_pt:(664,180),max_pt:(850,316)
-
-[2022-05-08 11:05:42.797] [tracker] [info] instsTrack AddInstances:8.46061 ms
-[2022-05-08 11:05:42.797] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:42.797] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:42.801] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:42.801] [tracker] [info] TrackSemanticImage | detect feature:8.59005 ms
-[2022-05-08 11:05:42.801] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:42.805] [tracker] [debug] inst:0 last_points:33 mask(375x1242,type:0)
-[2022-05-08 11:05:42.806] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:184
-[2022-05-08 11:05:42.806] [tracker] [debug] TrackSemanticImage | flow_track right:4.92924
-[2022-05-08 11:05:42.807] [tracker] [info] instsTrack flowTrack:9.65017 ms
-[2022-05-08 11:05:42.807] [tracker] [info] instsTrack prepare detect:0.058137 ms
-[2022-05-08 11:05:42.809] [tracker] [debug] instsTrack actually detect num:14
-[2022-05-08 11:05:42.809] [tracker] [info] instsTrack detectNewFeaturesGPU:1.89286 ms
-[2022-05-08 11:05:42.809] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.019512 ms
-[2022-05-08 11:05:42.811] [tracker] [info] instsTrack track right:2.005 ms
-[2022-05-08 11:05:42.811] [tracker] [info] TrackSemanticImage 动态检测线程总时间:22.2429 ms
-[2022-05-08 11:05:42.811] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:36inst_id:0 class:car l_track:33 r_track:26
-[2022-05-08 11:05:42.812] [tracker] [info] **************feature_track:23.8149 ms****************
-
-[2022-05-08 11:05:42.819] [tracker] [debug] optimization | prepare:3.12643 ms
-[2022-05-08 11:05:42.827] [tracker] [debug] optimization | Solve:7.49306 ms
-[2022-05-08 11:05:42.828] [tracker] [debug] optimization | postprocess:1.1272 ms
-[2022-05-08 11:05:42.833] [tracker] [debug] optimization | 边缘化:5.65094 ms
-[2022-05-08 11:05:43.287] [tracker] [warning] ----------Time : 2.450000 ----------
-[2022-05-08 11:05:43.288] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:43.291] [tracker] [debug] TrackSemanticImage | cur_pts.size:154
-[2022-05-08 11:05:43.291] [tracker] [info] TrackSemanticImage | flowTrack left:4.03251 ms
-[2022-05-08 11:05:43.295] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(582,185),max_pt:(650,233)
-Update inst:2 cls:car min_pt:(592,179),max_pt:(830,309)
-
-[2022-05-08 11:05:43.295] [tracker] [info] instsTrack AddInstances:7.69959 ms
-[2022-05-08 11:05:43.295] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:43.295] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:43.297] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:43.298] [tracker] [info] TrackSemanticImage | detect feature:6.1719 ms
-[2022-05-08 11:05:43.299] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:43.300] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:200
-[2022-05-08 11:05:43.300] [tracker] [debug] TrackSemanticImage | flow_track right:2.13114
-[2022-05-08 11:05:43.301] [tracker] [debug] inst:0 last_points:33 mask(375x1242,type:0)
-[2022-05-08 11:05:43.302] [tracker] [info] instsTrack flowTrack:6.2888 ms
-[2022-05-08 11:05:43.302] [tracker] [info] instsTrack prepare detect:0.042268 ms
-[2022-05-08 11:05:43.304] [tracker] [debug] instsTrack actually detect num:13
-[2022-05-08 11:05:43.304] [tracker] [info] instsTrack detectNewFeaturesGPU:2.55227 ms
-[2022-05-08 11:05:43.304] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.022151 ms
-[2022-05-08 11:05:43.306] [tracker] [info] instsTrack track right:1.68724 ms
-[2022-05-08 11:05:43.306] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.4415 ms
-[2022-05-08 11:05:43.307] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:36inst_id:0 class:car l_track:31 r_track:27
-[2022-05-08 11:05:43.307] [tracker] [info] **************feature_track:19.9324 ms****************
-
-[2022-05-08 11:05:43.313] [tracker] [debug] optimization | prepare:2.75065 ms
-[2022-05-08 11:05:43.319] [tracker] [debug] optimization | Solve:6.67769 ms
-[2022-05-08 11:05:43.320] [tracker] [debug] optimization | postprocess:0.997368 ms
-[2022-05-08 11:05:43.325] [tracker] [debug] optimization | 边缘化:5.02825 ms
-[2022-05-08 11:05:43.771] [tracker] [warning] ----------Time : 2.500000 ----------
-[2022-05-08 11:05:43.772] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:43.775] [tracker] [debug] TrackSemanticImage | cur_pts.size:167
-[2022-05-08 11:05:43.775] [tracker] [info] TrackSemanticImage | flowTrack left:3.32738 ms
-[2022-05-08 11:05:43.779] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(578,183),max_pt:(642,229)
-Update inst:2 cls:car min_pt:(646,176),max_pt:(811,301)
-
-[2022-05-08 11:05:43.779] [tracker] [info] instsTrack AddInstances:7.22846 ms
-[2022-05-08 11:05:43.779] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:43.779] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:43.781] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:43.781] [tracker] [info] TrackSemanticImage | detect feature:6.34356 ms
-[2022-05-08 11:05:43.783] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:43.784] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:186
-[2022-05-08 11:05:43.784] [tracker] [debug] TrackSemanticImage | flow_track right:2.82357
-[2022-05-08 11:05:43.785] [tracker] [debug] inst:0 last_points:31 mask(375x1242,type:0)
-[2022-05-08 11:05:43.786] [tracker] [info] instsTrack flowTrack:7.14338 ms
-[2022-05-08 11:05:43.786] [tracker] [info] instsTrack prepare detect:0.042446 ms
-[2022-05-08 11:05:43.788] [tracker] [debug] instsTrack actually detect num:12
-[2022-05-08 11:05:43.788] [tracker] [info] instsTrack detectNewFeaturesGPU:1.92834 ms
-[2022-05-08 11:05:43.788] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.018105 ms
-[2022-05-08 11:05:43.790] [tracker] [info] instsTrack track right:1.73133 ms
-[2022-05-08 11:05:43.790] [tracker] [info] TrackSemanticImage 动态检测线程总时间:18.2449 ms
-[2022-05-08 11:05:43.790] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:35inst_id:0 class:car l_track:31 r_track:26
-[2022-05-08 11:05:43.791] [tracker] [info] **************feature_track:19.7212 ms****************
-
-[2022-05-08 11:05:43.796] [tracker] [debug] optimization | prepare:3.09022 ms
-[2022-05-08 11:05:43.804] [tracker] [debug] optimization | Solve:7.65336 ms
-[2022-05-08 11:05:43.805] [tracker] [debug] optimization | postprocess:1.0564 ms
-[2022-05-08 11:05:43.810] [tracker] [debug] optimization | 边缘化:4.95983 ms
-[2022-05-08 11:05:44.229] [tracker] [warning] ----------Time : 2.550000 ----------
-[2022-05-08 11:05:44.230] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:44.233] [tracker] [debug] TrackSemanticImage | cur_pts.size:171
-[2022-05-08 11:05:44.233] [tracker] [info] TrackSemanticImage | flowTrack left:3.84604 ms
-[2022-05-08 11:05:44.238] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(574,182),max_pt:(638,225)
-Update inst:2 cls:car min_pt:(637,174),max_pt:(794,295)
-
-[2022-05-08 11:05:44.238] [tracker] [info] instsTrack AddInstances:8.75799 ms
-[2022-05-08 11:05:44.238] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:44.238] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:44.239] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:44.239] [tracker] [info] TrackSemanticImage | detect feature:6.485 ms
-[2022-05-08 11:05:44.241] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:198
-[2022-05-08 11:05:44.241] [tracker] [debug] TrackSemanticImage | flow_track right:2.12918
-[2022-05-08 11:05:44.241] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:44.243] [tracker] [debug] inst:0 last_points:31 mask(375x1242,type:0)
-[2022-05-08 11:05:44.243] [tracker] [info] instsTrack flowTrack:5.43335 ms
-[2022-05-08 11:05:44.244] [tracker] [info] instsTrack prepare detect:0.036467 ms
-[2022-05-08 11:05:44.245] [tracker] [debug] instsTrack actually detect num:11
-[2022-05-08 11:05:44.245] [tracker] [info] instsTrack detectNewFeaturesGPU:1.52945 ms
-[2022-05-08 11:05:44.245] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.017143 ms
-[2022-05-08 11:05:44.247] [tracker] [info] instsTrack track right:1.59133 ms
-[2022-05-08 11:05:44.247] [tracker] [info] TrackSemanticImage 动态检测线程总时间:17.5126 ms
-[2022-05-08 11:05:44.247] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:38inst_id:0 class:car l_track:30 r_track:26
-[2022-05-08 11:05:44.248] [tracker] [info] **************feature_track:19.0018 ms****************
-
-[2022-05-08 11:05:44.253] [tracker] [debug] optimization | prepare:2.89545 ms
-[2022-05-08 11:05:44.260] [tracker] [debug] optimization | Solve:7.27164 ms
-[2022-05-08 11:05:44.262] [tracker] [debug] optimization | postprocess:1.07184 ms
-[2022-05-08 11:05:44.264] [tracker] [debug] optimization | 边缘化:2.04771 ms
-[2022-05-08 11:05:44.786] [tracker] [warning] ----------Time : 2.600000 ----------
-[2022-05-08 11:05:44.787] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:44.790] [tracker] [debug] TrackSemanticImage | cur_pts.size:167
-[2022-05-08 11:05:44.790] [tracker] [info] TrackSemanticImage | flowTrack left:3.57514 ms
-[2022-05-08 11:05:44.794] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(570,180),max_pt:(633,225)
-Update inst:2 cls:car min_pt:(630,175),max_pt:(779,288)
-
-[2022-05-08 11:05:44.794] [tracker] [info] instsTrack AddInstances:8.10102 ms
-[2022-05-08 11:05:44.794] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:44.794] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:44.798] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:44.798] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:44.798] [tracker] [info] TrackSemanticImage | detect feature:8.31827 ms
-[2022-05-08 11:05:44.800] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:202
-[2022-05-08 11:05:44.800] [tracker] [debug] TrackSemanticImage | flow_track right:2.5838
-[2022-05-08 11:05:44.801] [tracker] [debug] inst:0 last_points:30 mask(375x1242,type:0)
-[2022-05-08 11:05:44.802] [tracker] [info] instsTrack flowTrack:7.65818 ms
-[2022-05-08 11:05:44.802] [tracker] [info] instsTrack prepare detect:0.045333 ms
-[2022-05-08 11:05:44.804] [tracker] [debug] instsTrack actually detect num:9
-[2022-05-08 11:05:44.804] [tracker] [info] instsTrack detectNewFeaturesGPU:1.74004 ms
-[2022-05-08 11:05:44.804] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.018149 ms
-[2022-05-08 11:05:44.806] [tracker] [info] instsTrack track right:1.70386 ms
-[2022-05-08 11:05:44.806] [tracker] [info] TrackSemanticImage 动态检测线程总时间:19.3921 ms
-[2022-05-08 11:05:44.806] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:41inst_id:0 class:car l_track:29 r_track:25
-[2022-05-08 11:05:44.807] [tracker] [info] **************feature_track:20.5935 ms****************
-
-[2022-05-08 11:05:44.814] [tracker] [debug] optimization | prepare:3.47204 ms
-[2022-05-08 11:05:44.822] [tracker] [debug] optimization | Solve:8.19136 ms
-[2022-05-08 11:05:44.823] [tracker] [debug] optimization | postprocess:1.07854 ms
-[2022-05-08 11:05:44.828] [tracker] [debug] optimization | 边缘化:4.86155 ms
-[2022-05-08 11:05:45.294] [tracker] [warning] ----------Time : 2.650000 ----------
-[2022-05-08 11:05:45.295] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:45.298] [tracker] [debug] TrackSemanticImage | cur_pts.size:168
-[2022-05-08 11:05:45.298] [tracker] [info] TrackSemanticImage | flowTrack left:3.93883 ms
-[2022-05-08 11:05:45.303] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(567,181),max_pt:(626,225)
-Update inst:2 cls:car min_pt:(623,174),max_pt:(764,284)
-
-[2022-05-08 11:05:45.304] [tracker] [info] instsTrack AddInstances:9.1262 ms
-[2022-05-08 11:05:45.304] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:45.304] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:45.307] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:45.307] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:45.308] [tracker] [info] TrackSemanticImage | detect feature:9.50128 ms
-[2022-05-08 11:05:45.310] [tracker] [debug] inst:0 last_points:29 mask(375x1242,type:0)
-[2022-05-08 11:05:45.310] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:199
-[2022-05-08 11:05:45.310] [tracker] [debug] TrackSemanticImage | flow_track right:2.89436
-[2022-05-08 11:05:45.311] [tracker] [info] instsTrack flowTrack:7.76196 ms
-[2022-05-08 11:05:45.311] [tracker] [info] instsTrack prepare detect:0.05596 ms
-[2022-05-08 11:05:45.314] [tracker] [debug] instsTrack actually detect num:8
-[2022-05-08 11:05:45.314] [tracker] [info] instsTrack detectNewFeaturesGPU:2.65492 ms
-[2022-05-08 11:05:45.314] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.018668 ms
-[2022-05-08 11:05:45.316] [tracker] [info] instsTrack track right:1.79236 ms
-[2022-05-08 11:05:45.316] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.5418 ms
-[2022-05-08 11:05:45.316] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:51 r_track:40inst_id:0 class:car l_track:27 r_track:22
-[2022-05-08 11:05:45.317] [tracker] [info] **************feature_track:22.7956 ms****************
-
-[2022-05-08 11:05:45.323] [tracker] [debug] optimization | prepare:3.19644 ms
-[2022-05-08 11:05:45.331] [tracker] [debug] optimization | Solve:7.66392 ms
-[2022-05-08 11:05:45.332] [tracker] [debug] optimization | postprocess:1.1485 ms
-[2022-05-08 11:05:45.334] [tracker] [debug] optimization | 边缘化:1.96056 ms
-[2022-05-08 11:05:45.788] [tracker] [warning] ----------Time : 2.700000 ----------
-[2022-05-08 11:05:45.790] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:45.795] [tracker] [debug] TrackSemanticImage | cur_pts.size:172
-[2022-05-08 11:05:45.795] [tracker] [info] TrackSemanticImage | flowTrack left:6.93967 ms
-[2022-05-08 11:05:45.798] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(562,183),max_pt:(620,225)
-Update inst:2 cls:car min_pt:(617,175),max_pt:(750,281)
-
-[2022-05-08 11:05:45.798] [tracker] [info] instsTrack AddInstances:9.52059 ms
-[2022-05-08 11:05:45.798] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:45.798] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:45.801] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:45.801] [tracker] [info] TrackSemanticImage | detect feature:6.32704 ms
-[2022-05-08 11:05:45.804] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:189
-[2022-05-08 11:05:45.804] [tracker] [debug] TrackSemanticImage | flow_track right:2.20572
-[2022-05-08 11:05:45.805] [tracker] [debug] inst:2 last_points:51 mask(375x1242,type:0)
-[2022-05-08 11:05:45.806] [tracker] [debug] inst:0 last_points:27 mask(375x1242,type:0)
-[2022-05-08 11:05:45.807] [tracker] [info] instsTrack flowTrack:9.12179 ms
-[2022-05-08 11:05:45.807] [tracker] [info] instsTrack prepare detect:0.036611 ms
-[2022-05-08 11:05:45.809] [tracker] [debug] instsTrack actually detect num:10
-[2022-05-08 11:05:45.809] [tracker] [info] instsTrack detectNewFeaturesGPU:1.55364 ms
-[2022-05-08 11:05:45.809] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.016662 ms
-[2022-05-08 11:05:45.810] [tracker] [info] instsTrack track right:1.54671 ms
-[2022-05-08 11:05:45.810] [tracker] [info] TrackSemanticImage 动态检测线程总时间:21.95 ms
-[2022-05-08 11:05:45.811] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:50 r_track:32inst_id:0 class:car l_track:28 r_track:22
-[2022-05-08 11:05:45.811] [tracker] [info] **************feature_track:23.3082 ms****************
-
-[2022-05-08 11:05:45.817] [tracker] [debug] optimization | prepare:2.68226 ms
-[2022-05-08 11:05:45.823] [tracker] [debug] optimization | Solve:6.40057 ms
-[2022-05-08 11:05:45.824] [tracker] [debug] optimization | postprocess:0.947515 ms
-[2022-05-08 11:05:45.829] [tracker] [debug] optimization | 边缘化:5.02157 ms
-[2022-05-08 11:05:46.236] [tracker] [warning] ----------Time : 2.750000 ----------
-[2022-05-08 11:05:46.237] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:46.239] [tracker] [debug] TrackSemanticImage | cur_pts.size:172
-[2022-05-08 11:05:46.239] [tracker] [info] TrackSemanticImage | flowTrack left:3.16376 ms
-[2022-05-08 11:05:46.246] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:46.246] [tracker] [info] TrackSemanticImage | detect feature:6.59021 ms
-[2022-05-08 11:05:46.246] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(559,183),max_pt:(614,225)
-Update inst:2 cls:car min_pt:(610,178),max_pt:(740,281)
-
-[2022-05-08 11:05:46.246] [tracker] [info] instsTrack AddInstances:9.60943 ms
-[2022-05-08 11:05:46.246] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:46.246] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:46.253] [tracker] [debug] inst:2 last_points:50 mask(375x1242,type:0)
-[2022-05-08 11:05:46.253] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:198
-[2022-05-08 11:05:46.253] [tracker] [debug] TrackSemanticImage | flow_track right:7.76997
-[2022-05-08 11:05:46.255] [tracker] [debug] inst:0 last_points:28 mask(375x1242,type:0)
-[2022-05-08 11:05:46.255] [tracker] [info] instsTrack flowTrack:9.65353 ms
-[2022-05-08 11:05:46.255] [tracker] [info] instsTrack prepare detect:0.035763 ms
-[2022-05-08 11:05:46.257] [tracker] [debug] instsTrack actually detect num:9
-[2022-05-08 11:05:46.257] [tracker] [info] instsTrack detectNewFeaturesGPU:1.68395 ms
-[2022-05-08 11:05:46.257] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.021742 ms
-[2022-05-08 11:05:46.259] [tracker] [info] instsTrack track right:1.52767 ms
-[2022-05-08 11:05:46.259] [tracker] [info] TrackSemanticImage 动态检测线程总时间:22.6829 ms
-[2022-05-08 11:05:46.259] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:49 r_track:33inst_id:0 class:car l_track:27 r_track:19
-[2022-05-08 11:05:46.260] [tracker] [info] **************feature_track:24.1043 ms****************
-
-[2022-05-08 11:05:46.266] [tracker] [debug] optimization | prepare:2.82567 ms
-[2022-05-08 11:05:46.272] [tracker] [debug] optimization | Solve:6.84481 ms
-[2022-05-08 11:05:46.273] [tracker] [debug] optimization | postprocess:1.04533 ms
-[2022-05-08 11:05:46.275] [tracker] [debug] optimization | 边缘化:1.85207 ms
-[2022-05-08 11:05:46.778] [tracker] [warning] ----------Time : 2.800000 ----------
-[2022-05-08 11:05:46.780] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:46.789] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(557,184),max_pt:(609,225)
-Update inst:2 cls:car min_pt:(604,179),max_pt:(727,277)
-
-[2022-05-08 11:05:46.789] [tracker] [info] instsTrack AddInstances:10.1252 ms
-[2022-05-08 11:05:46.789] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:46.789] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:46.790] [tracker] [debug] TrackSemanticImage | cur_pts.size:184
-[2022-05-08 11:05:46.790] [tracker] [info] TrackSemanticImage | flowTrack left:11.5893 ms
-[2022-05-08 11:05:46.795] [tracker] [debug] inst:2 last_points:49 mask(375x1242,type:0)
-[2022-05-08 11:05:46.798] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:46.798] [tracker] [info] TrackSemanticImage | detect feature:7.89084 ms
-[2022-05-08 11:05:46.801] [tracker] [debug] inst:0 last_points:27 mask(375x1242,type:0)
-[2022-05-08 11:05:46.801] [tracker] [info] instsTrack flowTrack:12.4396 ms
-[2022-05-08 11:05:46.801] [tracker] [info] instsTrack prepare detect:0.040906 ms
-[2022-05-08 11:05:46.805] [tracker] [debug] instsTrack actually detect num:7
-[2022-05-08 11:05:46.805] [tracker] [info] instsTrack detectNewFeaturesGPU:3.62757 ms
-[2022-05-08 11:05:46.805] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.025035 ms
-[2022-05-08 11:05:46.808] [tracker] [info] instsTrack track right:2.38438 ms
-[2022-05-08 11:05:46.810] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:211
-[2022-05-08 11:05:46.810] [tracker] [debug] TrackSemanticImage | flow_track right:12.4894
-[2022-05-08 11:05:46.814] [tracker] [info] TrackSemanticImage 动态检测线程总时间:34.7763 ms
-[2022-05-08 11:05:46.814] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:47 r_track:32inst_id:0 class:car l_track:26 r_track:17
-[2022-05-08 11:05:46.815] [tracker] [info] **************feature_track:36.1728 ms****************
-
-[2022-05-08 11:05:46.821] [tracker] [debug] optimization | prepare:4.00003 ms
-[2022-05-08 11:05:46.834] [tracker] [debug] optimization | Solve:12.5853 ms
-[2022-05-08 11:05:46.835] [tracker] [debug] optimization | postprocess:1.18269 ms
-[2022-05-08 11:05:46.835] [tracker] [debug] optimization | 边缘化:0.009832 ms
-[2022-05-08 11:05:47.250] [tracker] [warning] ----------Time : 2.850000 ----------
-[2022-05-08 11:05:47.252] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:47.255] [tracker] [debug] TrackSemanticImage | cur_pts.size:179
-[2022-05-08 11:05:47.255] [tracker] [info] TrackSemanticImage | flowTrack left:4.82926 ms
-[2022-05-08 11:05:47.261] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(555,183),max_pt:(606,226)
-Update inst:2 cls:car min_pt:(599,179),max_pt:(716,274)
-
-[2022-05-08 11:05:47.261] [tracker] [info] instsTrack AddInstances:10.5465 ms
-[2022-05-08 11:05:47.261] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:47.261] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:47.267] [tracker] [debug] inst:2 last_points:47 mask(375x1242,type:0)
-[2022-05-08 11:05:47.270] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:47.270] [tracker] [info] TrackSemanticImage | detect feature:14.711 ms
-[2022-05-08 11:05:47.283] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:204
-[2022-05-08 11:05:47.283] [tracker] [debug] TrackSemanticImage | flow_track right:13.2568
-[2022-05-08 11:05:47.285] [tracker] [debug] inst:0 last_points:26 mask(375x1242,type:0)
-[2022-05-08 11:05:47.287] [tracker] [info] instsTrack flowTrack:25.2701 ms
-[2022-05-08 11:05:47.287] [tracker] [info] instsTrack prepare detect:0.034872 ms
-[2022-05-08 11:05:47.288] [tracker] [debug] instsTrack actually detect num:6
-[2022-05-08 11:05:47.288] [tracker] [info] instsTrack detectNewFeaturesGPU:1.74073 ms
-[2022-05-08 11:05:47.288] [tracker] [info] instsTrack UndistortedPts & PtsVelocity:0.02195 ms
-[2022-05-08 11:05:47.290] [tracker] [info] instsTrack track right:1.90042 ms
-[2022-05-08 11:05:47.290] [tracker] [info] TrackSemanticImage 动态检测线程总时间:39.6624 ms
-[2022-05-08 11:05:47.291] [tracker] [debug] GetOutputFeature:
-inst_id:2 class:car l_track:47 r_track:33inst_id:0 class:car l_track:27 r_track:19
-[2022-05-08 11:05:47.292] [tracker] [info] **************feature_track:41.6531 ms****************
-
-[2022-05-08 11:05:47.298] [tracker] [debug] optimization | prepare:2.78568 ms
-[2022-05-08 11:05:47.309] [tracker] [debug] optimization | Solve:11.6206 ms
-[2022-05-08 11:05:47.311] [tracker] [debug] optimization | postprocess:1.36653 ms
-[2022-05-08 11:05:47.318] [tracker] [debug] optimization | 边缘化:7.04754 ms
-[2022-05-08 11:05:47.739] [tracker] [warning] ----------Time : 2.900000 ----------
-[2022-05-08 11:05:47.739] [tracker] [debug] TrackSemanticImage | prev_pts.size:250
-[2022-05-08 11:05:47.742] [tracker] [debug] TrackSemanticImage | cur_pts.size:192
-[2022-05-08 11:05:47.742] [tracker] [info] TrackSemanticImage | flowTrack left:3.2304 ms
-[2022-05-08 11:05:47.750] [tracker] [debug] TrackSemanticImage | cur_pts.size:250
-[2022-05-08 11:05:47.750] [tracker] [info] TrackSemanticImage | detect feature:8.26325 ms
-[2022-05-08 11:05:47.751] [tracker] [debug] AddInstancesByTracking:
-Update inst:0 cls:car min_pt:(553,183),max_pt:(603,225)
-Update inst:2 cls:car min_pt:(595,179),max_pt:(707,270)
-
-[2022-05-08 11:05:47.751] [tracker] [info] instsTrack AddInstances:12.1341 ms
-[2022-05-08 11:05:47.751] [tracker] [debug] id:2 box2d:car box3d:car
-[2022-05-08 11:05:47.751] [tracker] [debug] id:0 box2d:car box3d:car
-[2022-05-08 11:05:47.753] [tracker] [debug] TrackSemanticImage | cur_right_pts.size:208
-[2022-05-08 11:05:47.753] [tracker] [debug] TrackSemanticImage | flow_track right:2.49692
+[2022-05-09 13:28:16.901] [tracker] [debug] init FeatureTracker
+[2022-05-09 13:28:21.649] [tracker] [warning] ----------Time : 0.050000 ----------
+[2022-05-09 13:28:21.650] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:21.897] [tracker] [info] trackImageNaive | flowTrack left:247.889 ms
+[2022-05-09 13:28:21.897] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:250
+[2022-05-09 13:28:21.903] [tracker] [info] trackImageNaive | detect feature:5.58464 ms
+[2022-05-09 13:28:21.903] [tracker] [info] trackImageNaive | vel&&un:0.038279 ms
+[2022-05-09 13:28:21.933] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:21.934] [tracker] [debug] flowTrackGpu backward success:201
+[2022-05-09 13:28:21.934] [tracker] [debug] flowTrackGpu input:250 final_success:201
+[2022-05-09 13:28:21.934] [tracker] [debug] trackImageNaive | bg.right_points.size:201
+[2022-05-09 13:28:21.934] [tracker] [info] trackImageNaive | flow_track right:31.0051 ms
+[2022-05-09 13:28:21.941] [tracker] [info] **************feature_track:292.31 ms****************
+
+[2022-05-09 13:28:21.941] [tracker] [warning] ----------Time : 0.100000 ----------
+[2022-05-09 13:28:21.942] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:21.943] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:21.944] [tracker] [debug] flowTrackGpu backward success:184
+[2022-05-09 13:28:21.944] [tracker] [debug] flowTrackGpu input:250 final_success:184
+[2022-05-09 13:28:21.944] [tracker] [info] trackImageNaive | flowTrack left:2.23794 ms
+[2022-05-09 13:28:21.944] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:67
+[2022-05-09 13:28:21.947] [tracker] [info] trackImageNaive | detect feature:3.59519 ms
+[2022-05-09 13:28:21.947] [tracker] [info] trackImageNaive | vel&&un:0.059809 ms
+[2022-05-09 13:28:21.948] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:21.948] [tracker] [debug] flowTrackGpu backward success:201
+[2022-05-09 13:28:21.948] [tracker] [debug] flowTrackGpu input:250 final_success:201
+[2022-05-09 13:28:21.948] [tracker] [debug] trackImageNaive | bg.right_points.size:201
+[2022-05-09 13:28:21.948] [tracker] [info] trackImageNaive | flow_track right:1.02422 ms
+[2022-05-09 13:28:21.951] [tracker] [info] **************feature_track:9.71673 ms****************
+
+[2022-05-09 13:28:22.025] [tracker] [warning] ----------Time : 0.150000 ----------
+[2022-05-09 13:28:22.025] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:22.028] [tracker] [debug] flowTrackGpu forward success:239
+[2022-05-09 13:28:22.028] [tracker] [debug] flowTrackGpu backward success:185
+[2022-05-09 13:28:22.028] [tracker] [debug] flowTrackGpu input:250 final_success:185
+[2022-05-09 13:28:22.028] [tracker] [info] trackImageNaive | flowTrack left:3.28308 ms
+[2022-05-09 13:28:22.028] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:66
+[2022-05-09 13:28:22.030] [tracker] [info] trackImageNaive | detect feature:1.45481 ms
+[2022-05-09 13:28:22.030] [tracker] [info] trackImageNaive | vel&&un:0.042808 ms
+[2022-05-09 13:28:22.030] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:22.031] [tracker] [debug] flowTrackGpu backward success:188
+[2022-05-09 13:28:22.031] [tracker] [debug] flowTrackGpu input:250 final_success:188
+[2022-05-09 13:28:22.031] [tracker] [debug] trackImageNaive | bg.right_points.size:188
+[2022-05-09 13:28:22.031] [tracker] [info] trackImageNaive | flow_track right:0.915263 ms
+[2022-05-09 13:28:22.033] [tracker] [info] **************feature_track:7.9446 ms****************
+
+[2022-05-09 13:28:22.321] [tracker] [warning] ----------Time : 0.200000 ----------
+[2022-05-09 13:28:22.321] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:22.322] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:22.323] [tracker] [debug] flowTrackGpu backward success:176
+[2022-05-09 13:28:22.323] [tracker] [debug] flowTrackGpu input:250 final_success:175
+[2022-05-09 13:28:22.323] [tracker] [info] trackImageNaive | flowTrack left:1.99215 ms
+[2022-05-09 13:28:22.323] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:76
+[2022-05-09 13:28:22.325] [tracker] [info] trackImageNaive | detect feature:2.16023 ms
+[2022-05-09 13:28:22.325] [tracker] [info] trackImageNaive | vel&&un:0.052523 ms
+[2022-05-09 13:28:22.326] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:22.326] [tracker] [debug] flowTrackGpu backward success:194
+[2022-05-09 13:28:22.326] [tracker] [debug] flowTrackGpu input:250 final_success:194
+[2022-05-09 13:28:22.326] [tracker] [debug] trackImageNaive | bg.right_points.size:194
+[2022-05-09 13:28:22.326] [tracker] [info] trackImageNaive | flow_track right:1.14406 ms
+[2022-05-09 13:28:22.329] [tracker] [info] **************feature_track:8.47885 ms****************
+
+[2022-05-09 13:28:22.622] [tracker] [warning] ----------Time : 0.250000 ----------
+[2022-05-09 13:28:22.623] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:22.624] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:22.624] [tracker] [debug] flowTrackGpu backward success:186
+[2022-05-09 13:28:22.624] [tracker] [debug] flowTrackGpu input:250 final_success:186
+[2022-05-09 13:28:22.624] [tracker] [info] trackImageNaive | flowTrack left:1.72111 ms
+[2022-05-09 13:28:22.624] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:64
+[2022-05-09 13:28:22.626] [tracker] [info] trackImageNaive | detect feature:2.05136 ms
+[2022-05-09 13:28:22.626] [tracker] [info] trackImageNaive | vel&&un:0.040803 ms
+[2022-05-09 13:28:22.627] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:22.627] [tracker] [debug] flowTrackGpu backward success:200
+[2022-05-09 13:28:22.627] [tracker] [debug] flowTrackGpu input:250 final_success:199
+[2022-05-09 13:28:22.627] [tracker] [debug] trackImageNaive | bg.right_points.size:199
+[2022-05-09 13:28:22.627] [tracker] [info] trackImageNaive | flow_track right:0.953161 ms
+[2022-05-09 13:28:22.631] [tracker] [info] **************feature_track:8.8268 ms****************
+
+[2022-05-09 13:28:22.921] [tracker] [warning] ----------Time : 0.300000 ----------
+[2022-05-09 13:28:22.921] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:22.922] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:22.922] [tracker] [debug] flowTrackGpu backward success:178
+[2022-05-09 13:28:22.922] [tracker] [debug] flowTrackGpu input:250 final_success:178
+[2022-05-09 13:28:22.922] [tracker] [info] trackImageNaive | flowTrack left:1.73173 ms
+[2022-05-09 13:28:22.922] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:72
+[2022-05-09 13:28:22.925] [tracker] [info] trackImageNaive | detect feature:2.69037 ms
+[2022-05-09 13:28:22.925] [tracker] [info] trackImageNaive | vel&&un:0.052136 ms
+[2022-05-09 13:28:22.925] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:22.926] [tracker] [debug] flowTrackGpu backward success:201
+[2022-05-09 13:28:22.926] [tracker] [debug] flowTrackGpu input:250 final_success:201
+[2022-05-09 13:28:22.926] [tracker] [debug] trackImageNaive | bg.right_points.size:201
+[2022-05-09 13:28:22.926] [tracker] [info] trackImageNaive | flow_track right:0.972998 ms
+[2022-05-09 13:28:22.928] [tracker] [info] **************feature_track:7.78806 ms****************
+
+[2022-05-09 13:28:23.216] [tracker] [warning] ----------Time : 0.350000 ----------
+[2022-05-09 13:28:23.217] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:23.219] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:23.219] [tracker] [debug] flowTrackGpu backward success:165
+[2022-05-09 13:28:23.219] [tracker] [debug] flowTrackGpu input:250 final_success:165
+[2022-05-09 13:28:23.219] [tracker] [info] trackImageNaive | flowTrack left:2.69391 ms
+[2022-05-09 13:28:23.219] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:86
+[2022-05-09 13:28:23.221] [tracker] [info] trackImageNaive | detect feature:1.93972 ms
+[2022-05-09 13:28:23.221] [tracker] [info] trackImageNaive | vel&&un:0.054796 ms
+[2022-05-09 13:28:23.222] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:23.222] [tracker] [debug] flowTrackGpu backward success:202
+[2022-05-09 13:28:23.222] [tracker] [debug] flowTrackGpu input:250 final_success:202
+[2022-05-09 13:28:23.222] [tracker] [debug] trackImageNaive | bg.right_points.size:202
+[2022-05-09 13:28:23.222] [tracker] [info] trackImageNaive | flow_track right:0.946445 ms
+[2022-05-09 13:28:23.225] [tracker] [info] **************feature_track:8.05361 ms****************
+
+[2022-05-09 13:28:23.530] [tracker] [warning] ----------Time : 0.400000 ----------
+[2022-05-09 13:28:23.531] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:23.534] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:23.535] [tracker] [debug] flowTrackGpu backward success:157
+[2022-05-09 13:28:23.535] [tracker] [debug] flowTrackGpu input:250 final_success:156
+[2022-05-09 13:28:23.535] [tracker] [info] trackImageNaive | flowTrack left:4.83153 ms
+[2022-05-09 13:28:23.535] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:94
+[2022-05-09 13:28:23.538] [tracker] [info] trackImageNaive | detect feature:2.52858 ms
+[2022-05-09 13:28:23.538] [tracker] [info] trackImageNaive | vel&&un:0.06212 ms
+[2022-05-09 13:28:23.538] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:23.539] [tracker] [debug] flowTrackGpu backward success:190
+[2022-05-09 13:28:23.539] [tracker] [debug] flowTrackGpu input:250 final_success:190
+[2022-05-09 13:28:23.539] [tracker] [debug] trackImageNaive | bg.right_points.size:190
+[2022-05-09 13:28:23.539] [tracker] [info] trackImageNaive | flow_track right:1.15359 ms
+[2022-05-09 13:28:23.542] [tracker] [info] **************feature_track:11.7253 ms****************
+
+[2022-05-09 13:28:23.823] [tracker] [warning] ----------Time : 0.450000 ----------
+[2022-05-09 13:28:23.823] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:23.825] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:23.825] [tracker] [debug] flowTrackGpu backward success:165
+[2022-05-09 13:28:23.825] [tracker] [debug] flowTrackGpu input:250 final_success:164
+[2022-05-09 13:28:23.825] [tracker] [info] trackImageNaive | flowTrack left:2.40876 ms
+[2022-05-09 13:28:23.825] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:87
+[2022-05-09 13:28:23.827] [tracker] [info] trackImageNaive | detect feature:2.02285 ms
+[2022-05-09 13:28:23.827] [tracker] [info] trackImageNaive | vel&&un:0.059869 ms
+[2022-05-09 13:28:23.829] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:23.829] [tracker] [debug] flowTrackGpu backward success:196
+[2022-05-09 13:28:23.829] [tracker] [debug] flowTrackGpu input:250 final_success:195
+[2022-05-09 13:28:23.829] [tracker] [debug] trackImageNaive | bg.right_points.size:195
+[2022-05-09 13:28:23.829] [tracker] [info] trackImageNaive | flow_track right:2.0156 ms
+[2022-05-09 13:28:23.832] [tracker] [info] **************feature_track:8.99784 ms****************
+
+[2022-05-09 13:28:24.127] [tracker] [warning] ----------Time : 0.500000 ----------
+[2022-05-09 13:28:24.128] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:24.129] [tracker] [debug] flowTrackGpu forward success:237
+[2022-05-09 13:28:24.129] [tracker] [debug] flowTrackGpu backward success:159
+[2022-05-09 13:28:24.129] [tracker] [debug] flowTrackGpu input:250 final_success:159
+[2022-05-09 13:28:24.129] [tracker] [info] trackImageNaive | flowTrack left:1.78443 ms
+[2022-05-09 13:28:24.129] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:94
+[2022-05-09 13:28:24.131] [tracker] [info] trackImageNaive | detect feature:1.63272 ms
+[2022-05-09 13:28:24.131] [tracker] [info] trackImageNaive | vel&&un:0.042717 ms
+[2022-05-09 13:28:24.131] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:24.132] [tracker] [debug] flowTrackGpu backward success:175
+[2022-05-09 13:28:24.132] [tracker] [debug] flowTrackGpu input:250 final_success:175
+[2022-05-09 13:28:24.132] [tracker] [debug] trackImageNaive | bg.right_points.size:175
+[2022-05-09 13:28:24.132] [tracker] [info] trackImageNaive | flow_track right:0.964652 ms
+[2022-05-09 13:28:24.135] [tracker] [info] **************feature_track:7.92942 ms****************
+
+[2022-05-09 13:28:24.424] [tracker] [warning] ----------Time : 0.550000 ----------
+[2022-05-09 13:28:24.425] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:24.427] [tracker] [debug] flowTrackGpu forward success:237
+[2022-05-09 13:28:24.427] [tracker] [debug] flowTrackGpu backward success:141
+[2022-05-09 13:28:24.427] [tracker] [debug] flowTrackGpu input:250 final_success:141
+[2022-05-09 13:28:24.427] [tracker] [info] trackImageNaive | flowTrack left:3.05943 ms
+[2022-05-09 13:28:24.427] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:110
+[2022-05-09 13:28:24.430] [tracker] [info] trackImageNaive | detect feature:2.226 ms
+[2022-05-09 13:28:24.430] [tracker] [info] trackImageNaive | vel&&un:0.049538 ms
+[2022-05-09 13:28:24.430] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:24.431] [tracker] [debug] flowTrackGpu backward success:178
+[2022-05-09 13:28:24.431] [tracker] [debug] flowTrackGpu input:250 final_success:178
+[2022-05-09 13:28:24.431] [tracker] [debug] trackImageNaive | bg.right_points.size:178
+[2022-05-09 13:28:24.431] [tracker] [info] trackImageNaive | flow_track right:0.96953 ms
+[2022-05-09 13:28:24.433] [tracker] [info] **************feature_track:8.98603 ms****************
+
+[2022-05-09 13:28:24.727] [tracker] [warning] ----------Time : 0.600000 ----------
+[2022-05-09 13:28:24.728] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:24.730] [tracker] [debug] flowTrackGpu forward success:240
+[2022-05-09 13:28:24.730] [tracker] [debug] flowTrackGpu backward success:148
+[2022-05-09 13:28:24.731] [tracker] [debug] flowTrackGpu input:250 final_success:148
+[2022-05-09 13:28:24.731] [tracker] [info] trackImageNaive | flowTrack left:3.13557 ms
+[2022-05-09 13:28:24.731] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:102
+[2022-05-09 13:28:24.733] [tracker] [info] trackImageNaive | detect feature:1.87683 ms
+[2022-05-09 13:28:24.733] [tracker] [info] trackImageNaive | vel&&un:0.052382 ms
+[2022-05-09 13:28:24.733] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:24.733] [tracker] [debug] flowTrackGpu backward success:176
+[2022-05-09 13:28:24.733] [tracker] [debug] flowTrackGpu input:250 final_success:176
+[2022-05-09 13:28:24.734] [tracker] [debug] trackImageNaive | bg.right_points.size:176
+[2022-05-09 13:28:24.734] [tracker] [info] trackImageNaive | flow_track right:0.983128 ms
+[2022-05-09 13:28:24.736] [tracker] [info] **************feature_track:8.36781 ms****************
+
+[2022-05-09 13:28:25.020] [tracker] [warning] ----------Time : 0.650000 ----------
+[2022-05-09 13:28:25.020] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:25.021] [tracker] [debug] flowTrackGpu forward success:239
+[2022-05-09 13:28:25.022] [tracker] [debug] flowTrackGpu backward success:162
+[2022-05-09 13:28:25.022] [tracker] [debug] flowTrackGpu input:250 final_success:162
+[2022-05-09 13:28:25.022] [tracker] [info] trackImageNaive | flowTrack left:1.7144 ms
+[2022-05-09 13:28:25.022] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:88
+[2022-05-09 13:28:25.023] [tracker] [info] trackImageNaive | detect feature:1.65475 ms
+[2022-05-09 13:28:25.024] [tracker] [info] trackImageNaive | vel&&un:0.08996 ms
+[2022-05-09 13:28:25.024] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:25.025] [tracker] [debug] flowTrackGpu backward success:193
+[2022-05-09 13:28:25.025] [tracker] [debug] flowTrackGpu input:250 final_success:193
+[2022-05-09 13:28:25.026] [tracker] [debug] trackImageNaive | bg.right_points.size:193
+[2022-05-09 13:28:25.026] [tracker] [info] trackImageNaive | flow_track right:1.94344 ms
+[2022-05-09 13:28:25.029] [tracker] [info] **************feature_track:9.17273 ms****************
+
+[2022-05-09 13:28:25.324] [tracker] [warning] ----------Time : 0.700000 ----------
+[2022-05-09 13:28:25.325] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:25.327] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:25.327] [tracker] [debug] flowTrackGpu backward success:165
+[2022-05-09 13:28:25.327] [tracker] [debug] flowTrackGpu input:250 final_success:165
+[2022-05-09 13:28:25.327] [tracker] [info] trackImageNaive | flowTrack left:3.04692 ms
+[2022-05-09 13:28:25.327] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:86
+[2022-05-09 13:28:25.330] [tracker] [info] trackImageNaive | detect feature:2.49125 ms
+[2022-05-09 13:28:25.330] [tracker] [info] trackImageNaive | vel&&un:0.0559 ms
+[2022-05-09 13:28:25.330] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:25.331] [tracker] [debug] flowTrackGpu backward success:191
+[2022-05-09 13:28:25.331] [tracker] [debug] flowTrackGpu input:250 final_success:191
+[2022-05-09 13:28:25.331] [tracker] [debug] trackImageNaive | bg.right_points.size:191
+[2022-05-09 13:28:25.331] [tracker] [info] trackImageNaive | flow_track right:1.07362 ms
+[2022-05-09 13:28:25.334] [tracker] [info] **************feature_track:9.38931 ms****************
+
+[2022-05-09 13:28:25.629] [tracker] [warning] ----------Time : 0.750000 ----------
+[2022-05-09 13:28:25.630] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:25.631] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:25.632] [tracker] [debug] flowTrackGpu backward success:179
+[2022-05-09 13:28:25.632] [tracker] [debug] flowTrackGpu input:250 final_success:179
+[2022-05-09 13:28:25.632] [tracker] [info] trackImageNaive | flowTrack left:2.43336 ms
+[2022-05-09 13:28:25.632] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:71
+[2022-05-09 13:28:25.634] [tracker] [info] trackImageNaive | detect feature:2.14058 ms
+[2022-05-09 13:28:25.634] [tracker] [info] trackImageNaive | vel&&un:0.05521 ms
+[2022-05-09 13:28:25.634] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:25.635] [tracker] [debug] flowTrackGpu backward success:187
+[2022-05-09 13:28:25.635] [tracker] [debug] flowTrackGpu input:250 final_success:187
+[2022-05-09 13:28:25.635] [tracker] [debug] trackImageNaive | bg.right_points.size:187
+[2022-05-09 13:28:25.635] [tracker] [info] trackImageNaive | flow_track right:0.962603 ms
+[2022-05-09 13:28:25.637] [tracker] [info] **************feature_track:7.92992 ms****************
+
+[2022-05-09 13:28:25.933] [tracker] [warning] ----------Time : 0.800000 ----------
+[2022-05-09 13:28:25.933] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:25.935] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:25.935] [tracker] [debug] flowTrackGpu backward success:178
+[2022-05-09 13:28:25.935] [tracker] [debug] flowTrackGpu input:250 final_success:178
+[2022-05-09 13:28:25.935] [tracker] [info] trackImageNaive | flowTrack left:2.25946 ms
+[2022-05-09 13:28:25.935] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:73
+[2022-05-09 13:28:25.937] [tracker] [info] trackImageNaive | detect feature:1.55366 ms
+[2022-05-09 13:28:25.937] [tracker] [info] trackImageNaive | vel&&un:0.041853 ms
+[2022-05-09 13:28:25.937] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:25.938] [tracker] [debug] flowTrackGpu backward success:203
+[2022-05-09 13:28:25.938] [tracker] [debug] flowTrackGpu input:250 final_success:203
+[2022-05-09 13:28:25.938] [tracker] [debug] trackImageNaive | bg.right_points.size:203
+[2022-05-09 13:28:25.938] [tracker] [info] trackImageNaive | flow_track right:0.900211 ms
+[2022-05-09 13:28:25.940] [tracker] [info] **************feature_track:6.99538 ms****************
+
+[2022-05-09 13:28:26.210] [tracker] [warning] ----------Time : 0.850000 ----------
+[2022-05-09 13:28:26.210] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:26.212] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:26.212] [tracker] [debug] flowTrackGpu backward success:183
+[2022-05-09 13:28:26.212] [tracker] [debug] flowTrackGpu input:250 final_success:183
+[2022-05-09 13:28:26.212] [tracker] [info] trackImageNaive | flowTrack left:2.34021 ms
+[2022-05-09 13:28:26.212] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:68
+[2022-05-09 13:28:26.214] [tracker] [info] trackImageNaive | detect feature:1.56575 ms
+[2022-05-09 13:28:26.214] [tracker] [info] trackImageNaive | vel&&un:0.044424 ms
+[2022-05-09 13:28:26.214] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:26.215] [tracker] [debug] flowTrackGpu backward success:204
+[2022-05-09 13:28:26.215] [tracker] [debug] flowTrackGpu input:250 final_success:204
+[2022-05-09 13:28:26.215] [tracker] [debug] trackImageNaive | bg.right_points.size:204
+[2022-05-09 13:28:26.215] [tracker] [info] trackImageNaive | flow_track right:0.930747 ms
+[2022-05-09 13:28:26.217] [tracker] [info] **************feature_track:7.46731 ms****************
+
+[2022-05-09 13:28:26.523] [tracker] [warning] ----------Time : 0.900000 ----------
+[2022-05-09 13:28:26.524] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:26.526] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:26.526] [tracker] [debug] flowTrackGpu backward success:192
+[2022-05-09 13:28:26.526] [tracker] [debug] flowTrackGpu input:250 final_success:192
+[2022-05-09 13:28:26.526] [tracker] [info] trackImageNaive | flowTrack left:2.91472 ms
+[2022-05-09 13:28:26.526] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:59
+[2022-05-09 13:28:26.528] [tracker] [info] trackImageNaive | detect feature:1.96837 ms
+[2022-05-09 13:28:26.528] [tracker] [info] trackImageNaive | vel&&un:0.044522 ms
+[2022-05-09 13:28:26.529] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:26.529] [tracker] [debug] flowTrackGpu backward success:207
+[2022-05-09 13:28:26.529] [tracker] [debug] flowTrackGpu input:250 final_success:207
+[2022-05-09 13:28:26.529] [tracker] [debug] trackImageNaive | bg.right_points.size:207
+[2022-05-09 13:28:26.529] [tracker] [info] trackImageNaive | flow_track right:0.937069 ms
+[2022-05-09 13:28:26.531] [tracker] [info] **************feature_track:8.16393 ms****************
+
+[2022-05-09 13:28:26.813] [tracker] [warning] ----------Time : 0.950000 ----------
+[2022-05-09 13:28:26.813] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:26.815] [tracker] [debug] flowTrackGpu forward success:240
+[2022-05-09 13:28:26.815] [tracker] [debug] flowTrackGpu backward success:187
+[2022-05-09 13:28:26.815] [tracker] [debug] flowTrackGpu input:250 final_success:187
+[2022-05-09 13:28:26.815] [tracker] [info] trackImageNaive | flowTrack left:2.25553 ms
+[2022-05-09 13:28:26.815] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:63
+[2022-05-09 13:28:26.817] [tracker] [info] trackImageNaive | detect feature:1.71654 ms
+[2022-05-09 13:28:26.817] [tracker] [info] trackImageNaive | vel&&un:0.049707 ms
+[2022-05-09 13:28:26.817] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:26.818] [tracker] [debug] flowTrackGpu backward success:215
+[2022-05-09 13:28:26.818] [tracker] [debug] flowTrackGpu input:250 final_success:215
+[2022-05-09 13:28:26.818] [tracker] [debug] trackImageNaive | bg.right_points.size:215
+[2022-05-09 13:28:26.818] [tracker] [info] trackImageNaive | flow_track right:0.948808 ms
+[2022-05-09 13:28:26.820] [tracker] [info] **************feature_track:7.44708 ms****************
+
+[2022-05-09 13:28:27.131] [tracker] [warning] ----------Time : 1.000000 ----------
+[2022-05-09 13:28:27.131] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:27.133] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:27.133] [tracker] [debug] flowTrackGpu backward success:184
+[2022-05-09 13:28:27.133] [tracker] [debug] flowTrackGpu input:250 final_success:183
+[2022-05-09 13:28:27.133] [tracker] [info] trackImageNaive | flowTrack left:2.17202 ms
+[2022-05-09 13:28:27.133] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:70
+[2022-05-09 13:28:27.135] [tracker] [info] trackImageNaive | detect feature:1.73693 ms
+[2022-05-09 13:28:27.135] [tracker] [info] trackImageNaive | vel&&un:0.04587 ms
+[2022-05-09 13:28:27.135] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:27.136] [tracker] [debug] flowTrackGpu backward success:210
+[2022-05-09 13:28:27.136] [tracker] [debug] flowTrackGpu input:250 final_success:210
+[2022-05-09 13:28:27.136] [tracker] [debug] trackImageNaive | bg.right_points.size:210
+[2022-05-09 13:28:27.136] [tracker] [info] trackImageNaive | flow_track right:0.939015 ms
+[2022-05-09 13:28:27.139] [tracker] [info] **************feature_track:8.24994 ms****************
+
+[2022-05-09 13:28:27.419] [tracker] [warning] ----------Time : 1.050000 ----------
+[2022-05-09 13:28:27.420] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:27.421] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:27.421] [tracker] [debug] flowTrackGpu backward success:181
+[2022-05-09 13:28:27.421] [tracker] [debug] flowTrackGpu input:250 final_success:181
+[2022-05-09 13:28:27.421] [tracker] [info] trackImageNaive | flowTrack left:1.70959 ms
+[2022-05-09 13:28:27.421] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:70
+[2022-05-09 13:28:27.423] [tracker] [info] trackImageNaive | detect feature:1.57708 ms
+[2022-05-09 13:28:27.423] [tracker] [info] trackImageNaive | vel&&un:0.042776 ms
+[2022-05-09 13:28:27.423] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:27.424] [tracker] [debug] flowTrackGpu backward success:206
+[2022-05-09 13:28:27.424] [tracker] [debug] flowTrackGpu input:250 final_success:206
+[2022-05-09 13:28:27.424] [tracker] [debug] trackImageNaive | bg.right_points.size:206
+[2022-05-09 13:28:27.424] [tracker] [info] trackImageNaive | flow_track right:1.03324 ms
+[2022-05-09 13:28:27.428] [tracker] [info] **************feature_track:8.6316 ms****************
+
+[2022-05-09 13:28:27.728] [tracker] [warning] ----------Time : 1.100000 ----------
+[2022-05-09 13:28:27.728] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:27.730] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:27.730] [tracker] [debug] flowTrackGpu backward success:186
+[2022-05-09 13:28:27.730] [tracker] [debug] flowTrackGpu input:250 final_success:186
+[2022-05-09 13:28:27.730] [tracker] [info] trackImageNaive | flowTrack left:2.13279 ms
+[2022-05-09 13:28:27.730] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:64
+[2022-05-09 13:28:27.732] [tracker] [info] trackImageNaive | detect feature:1.53689 ms
+[2022-05-09 13:28:27.732] [tracker] [info] trackImageNaive | vel&&un:0.051549 ms
+[2022-05-09 13:28:27.732] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:27.733] [tracker] [debug] flowTrackGpu backward success:200
+[2022-05-09 13:28:27.733] [tracker] [debug] flowTrackGpu input:250 final_success:200
+[2022-05-09 13:28:27.733] [tracker] [debug] trackImageNaive | bg.right_points.size:200
+[2022-05-09 13:28:27.733] [tracker] [info] trackImageNaive | flow_track right:0.918213 ms
+[2022-05-09 13:28:27.735] [tracker] [info] **************feature_track:6.87078 ms****************
+
+[2022-05-09 13:28:28.036] [tracker] [warning] ----------Time : 1.150000 ----------
+[2022-05-09 13:28:28.036] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:28.037] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:28.038] [tracker] [debug] flowTrackGpu backward success:163
+[2022-05-09 13:28:28.038] [tracker] [debug] flowTrackGpu input:250 final_success:163
+[2022-05-09 13:28:28.038] [tracker] [info] trackImageNaive | flowTrack left:1.98019 ms
+[2022-05-09 13:28:28.038] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:87
+[2022-05-09 13:28:28.039] [tracker] [info] trackImageNaive | detect feature:1.57131 ms
+[2022-05-09 13:28:28.039] [tracker] [info] trackImageNaive | vel&&un:0.042076 ms
+[2022-05-09 13:28:28.040] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:28.040] [tracker] [debug] flowTrackGpu backward success:197
+[2022-05-09 13:28:28.040] [tracker] [debug] flowTrackGpu input:250 final_success:197
+[2022-05-09 13:28:28.040] [tracker] [debug] trackImageNaive | bg.right_points.size:197
+[2022-05-09 13:28:28.040] [tracker] [info] trackImageNaive | flow_track right:0.907829 ms
+[2022-05-09 13:28:28.043] [tracker] [info] **************feature_track:6.8344 ms****************
+
+[2022-05-09 13:28:28.339] [tracker] [warning] ----------Time : 1.200000 ----------
+[2022-05-09 13:28:28.339] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:28.340] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:28.341] [tracker] [debug] flowTrackGpu backward success:155
+[2022-05-09 13:28:28.341] [tracker] [debug] flowTrackGpu input:250 final_success:155
+[2022-05-09 13:28:28.341] [tracker] [info] trackImageNaive | flowTrack left:1.7586 ms
+[2022-05-09 13:28:28.341] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:95
+[2022-05-09 13:28:28.343] [tracker] [info] trackImageNaive | detect feature:1.6187 ms
+[2022-05-09 13:28:28.343] [tracker] [info] trackImageNaive | vel&&un:0.042532 ms
+[2022-05-09 13:28:28.343] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:28.343] [tracker] [debug] flowTrackGpu backward success:198
+[2022-05-09 13:28:28.343] [tracker] [debug] flowTrackGpu input:250 final_success:198
+[2022-05-09 13:28:28.343] [tracker] [debug] trackImageNaive | bg.right_points.size:198
+[2022-05-09 13:28:28.343] [tracker] [info] trackImageNaive | flow_track right:0.908164 ms
+[2022-05-09 13:28:28.346] [tracker] [info] **************feature_track:6.79454 ms****************
+
+[2022-05-09 13:28:28.639] [tracker] [warning] ----------Time : 1.250000 ----------
+[2022-05-09 13:28:28.640] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:28.641] [tracker] [debug] flowTrackGpu forward success:241
+[2022-05-09 13:28:28.642] [tracker] [debug] flowTrackGpu backward success:172
+[2022-05-09 13:28:28.642] [tracker] [debug] flowTrackGpu input:250 final_success:172
+[2022-05-09 13:28:28.642] [tracker] [info] trackImageNaive | flowTrack left:2.81147 ms
+[2022-05-09 13:28:28.642] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:78
+[2022-05-09 13:28:28.644] [tracker] [info] trackImageNaive | detect feature:1.60712 ms
+[2022-05-09 13:28:28.644] [tracker] [info] trackImageNaive | vel&&un:0.04613 ms
+[2022-05-09 13:28:28.644] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:28.645] [tracker] [debug] flowTrackGpu backward success:209
+[2022-05-09 13:28:28.645] [tracker] [debug] flowTrackGpu input:250 final_success:209
+[2022-05-09 13:28:28.645] [tracker] [debug] trackImageNaive | bg.right_points.size:209
+[2022-05-09 13:28:28.645] [tracker] [info] trackImageNaive | flow_track right:1.06736 ms
+[2022-05-09 13:28:28.649] [tracker] [info] **************feature_track:9.51381 ms****************
+
+[2022-05-09 13:28:28.938] [tracker] [warning] ----------Time : 1.300000 ----------
+[2022-05-09 13:28:28.939] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:28.941] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:28.941] [tracker] [debug] flowTrackGpu backward success:177
+[2022-05-09 13:28:28.941] [tracker] [debug] flowTrackGpu input:250 final_success:177
+[2022-05-09 13:28:28.941] [tracker] [info] trackImageNaive | flowTrack left:2.97634 ms
+[2022-05-09 13:28:28.941] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:73
+[2022-05-09 13:28:28.943] [tracker] [info] trackImageNaive | detect feature:1.55091 ms
+[2022-05-09 13:28:28.943] [tracker] [info] trackImageNaive | vel&&un:0.04378 ms
+[2022-05-09 13:28:28.943] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:28.944] [tracker] [debug] flowTrackGpu backward success:210
+[2022-05-09 13:28:28.944] [tracker] [debug] flowTrackGpu input:250 final_success:210
+[2022-05-09 13:28:28.944] [tracker] [debug] trackImageNaive | bg.right_points.size:210
+[2022-05-09 13:28:28.944] [tracker] [info] trackImageNaive | flow_track right:0.934583 ms
+[2022-05-09 13:28:28.946] [tracker] [info] **************feature_track:7.92504 ms****************
+
+[2022-05-09 13:28:29.238] [tracker] [warning] ----------Time : 1.350000 ----------
+[2022-05-09 13:28:29.239] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:29.240] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:29.240] [tracker] [debug] flowTrackGpu backward success:192
+[2022-05-09 13:28:29.240] [tracker] [debug] flowTrackGpu input:250 final_success:191
+[2022-05-09 13:28:29.240] [tracker] [info] trackImageNaive | flowTrack left:2.08659 ms
+[2022-05-09 13:28:29.240] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:60
+[2022-05-09 13:28:29.242] [tracker] [info] trackImageNaive | detect feature:1.80709 ms
+[2022-05-09 13:28:29.242] [tracker] [info] trackImageNaive | vel&&un:0.050948 ms
+[2022-05-09 13:28:29.243] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:29.243] [tracker] [debug] flowTrackGpu backward success:200
+[2022-05-09 13:28:29.243] [tracker] [debug] flowTrackGpu input:250 final_success:200
+[2022-05-09 13:28:29.243] [tracker] [debug] trackImageNaive | bg.right_points.size:200
+[2022-05-09 13:28:29.243] [tracker] [info] trackImageNaive | flow_track right:0.960765 ms
+[2022-05-09 13:28:29.246] [tracker] [info] **************feature_track:7.32965 ms****************
+
+[2022-05-09 13:28:29.538] [tracker] [warning] ----------Time : 1.400000 ----------
+[2022-05-09 13:28:29.539] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:29.540] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:29.541] [tracker] [debug] flowTrackGpu backward success:180
+[2022-05-09 13:28:29.541] [tracker] [debug] flowTrackGpu input:250 final_success:180
+[2022-05-09 13:28:29.541] [tracker] [info] trackImageNaive | flowTrack left:2.46255 ms
+[2022-05-09 13:28:29.541] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:70
+[2022-05-09 13:28:29.543] [tracker] [info] trackImageNaive | detect feature:2.14976 ms
+[2022-05-09 13:28:29.543] [tracker] [info] trackImageNaive | vel&&un:0.046431 ms
+[2022-05-09 13:28:29.544] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:29.544] [tracker] [debug] flowTrackGpu backward success:196
+[2022-05-09 13:28:29.544] [tracker] [debug] flowTrackGpu input:250 final_success:196
+[2022-05-09 13:28:29.544] [tracker] [debug] trackImageNaive | bg.right_points.size:196
+[2022-05-09 13:28:29.544] [tracker] [info] trackImageNaive | flow_track right:0.928542 ms
+[2022-05-09 13:28:29.546] [tracker] [info] **************feature_track:7.83932 ms****************
+
+[2022-05-09 13:28:29.841] [tracker] [warning] ----------Time : 1.450000 ----------
+[2022-05-09 13:28:29.842] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:29.843] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:29.843] [tracker] [debug] flowTrackGpu backward success:182
+[2022-05-09 13:28:29.843] [tracker] [debug] flowTrackGpu input:250 final_success:182
+[2022-05-09 13:28:29.843] [tracker] [info] trackImageNaive | flowTrack left:1.86574 ms
+[2022-05-09 13:28:29.843] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:69
+[2022-05-09 13:28:29.846] [tracker] [info] trackImageNaive | detect feature:2.78699 ms
+[2022-05-09 13:28:29.846] [tracker] [info] trackImageNaive | vel&&un:0.051925 ms
+[2022-05-09 13:28:29.847] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:29.847] [tracker] [debug] flowTrackGpu backward success:200
+[2022-05-09 13:28:29.847] [tracker] [debug] flowTrackGpu input:250 final_success:200
+[2022-05-09 13:28:29.847] [tracker] [debug] trackImageNaive | bg.right_points.size:200
+[2022-05-09 13:28:29.847] [tracker] [info] trackImageNaive | flow_track right:0.969788 ms
+[2022-05-09 13:28:29.849] [tracker] [info] **************feature_track:7.93585 ms****************
+
+[2022-05-09 13:28:30.140] [tracker] [warning] ----------Time : 1.500000 ----------
+[2022-05-09 13:28:30.140] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:30.141] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:30.142] [tracker] [debug] flowTrackGpu backward success:178
+[2022-05-09 13:28:30.142] [tracker] [debug] flowTrackGpu input:250 final_success:178
+[2022-05-09 13:28:30.142] [tracker] [info] trackImageNaive | flowTrack left:2.26802 ms
+[2022-05-09 13:28:30.142] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:72
+[2022-05-09 13:28:30.144] [tracker] [info] trackImageNaive | detect feature:2.12668 ms
+[2022-05-09 13:28:30.144] [tracker] [info] trackImageNaive | vel&&un:0.076612 ms
+[2022-05-09 13:28:30.145] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:30.146] [tracker] [debug] flowTrackGpu backward success:201
+[2022-05-09 13:28:30.146] [tracker] [debug] flowTrackGpu input:250 final_success:201
+[2022-05-09 13:28:30.146] [tracker] [debug] trackImageNaive | bg.right_points.size:201
+[2022-05-09 13:28:30.146] [tracker] [info] trackImageNaive | flow_track right:2.16783 ms
+[2022-05-09 13:28:30.149] [tracker] [info] **************feature_track:9.70434 ms****************
+
+[2022-05-09 13:28:30.432] [tracker] [warning] ----------Time : 1.550000 ----------
+[2022-05-09 13:28:30.432] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:30.433] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:30.434] [tracker] [debug] flowTrackGpu backward success:188
+[2022-05-09 13:28:30.434] [tracker] [debug] flowTrackGpu input:250 final_success:188
+[2022-05-09 13:28:30.434] [tracker] [info] trackImageNaive | flowTrack left:1.98828 ms
+[2022-05-09 13:28:30.434] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:62
+[2022-05-09 13:28:30.436] [tracker] [info] trackImageNaive | detect feature:1.83234 ms
+[2022-05-09 13:28:30.436] [tracker] [info] trackImageNaive | vel&&un:0.050421 ms
+[2022-05-09 13:28:30.436] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:30.437] [tracker] [debug] flowTrackGpu backward success:214
+[2022-05-09 13:28:30.437] [tracker] [debug] flowTrackGpu input:250 final_success:214
+[2022-05-09 13:28:30.437] [tracker] [debug] trackImageNaive | bg.right_points.size:214
+[2022-05-09 13:28:30.437] [tracker] [info] trackImageNaive | flow_track right:0.968948 ms
+[2022-05-09 13:28:30.441] [tracker] [info] **************feature_track:8.94846 ms****************
+
+[2022-05-09 13:28:30.737] [tracker] [warning] ----------Time : 1.600000 ----------
+[2022-05-09 13:28:30.738] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:30.740] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:30.740] [tracker] [debug] flowTrackGpu backward success:170
+[2022-05-09 13:28:30.740] [tracker] [debug] flowTrackGpu input:250 final_success:170
+[2022-05-09 13:28:30.740] [tracker] [info] trackImageNaive | flowTrack left:3.25926 ms
+[2022-05-09 13:28:30.740] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:81
+[2022-05-09 13:28:30.743] [tracker] [info] trackImageNaive | detect feature:3.09976 ms
+[2022-05-09 13:28:30.743] [tracker] [info] trackImageNaive | vel&&un:0.163821 ms
+[2022-05-09 13:28:30.744] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:30.746] [tracker] [debug] flowTrackGpu backward success:203
+[2022-05-09 13:28:30.746] [tracker] [debug] flowTrackGpu input:250 final_success:203
+[2022-05-09 13:28:30.746] [tracker] [debug] trackImageNaive | bg.right_points.size:203
+[2022-05-09 13:28:30.746] [tracker] [info] trackImageNaive | flow_track right:2.57902 ms
+[2022-05-09 13:28:30.750] [tracker] [info] **************feature_track:13.3237 ms****************
+
+[2022-05-09 13:28:31.049] [tracker] [warning] ----------Time : 1.650000 ----------
+[2022-05-09 13:28:31.050] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:31.051] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:31.052] [tracker] [debug] flowTrackGpu backward success:172
+[2022-05-09 13:28:31.052] [tracker] [debug] flowTrackGpu input:250 final_success:172
+[2022-05-09 13:28:31.052] [tracker] [info] trackImageNaive | flowTrack left:2.93146 ms
+[2022-05-09 13:28:31.052] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:78
+[2022-05-09 13:28:31.054] [tracker] [info] trackImageNaive | detect feature:2.20084 ms
+[2022-05-09 13:28:31.054] [tracker] [info] trackImageNaive | vel&&un:0.093918 ms
+[2022-05-09 13:28:31.055] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:31.056] [tracker] [debug] flowTrackGpu backward success:191
+[2022-05-09 13:28:31.056] [tracker] [debug] flowTrackGpu input:250 final_success:191
+[2022-05-09 13:28:31.056] [tracker] [debug] trackImageNaive | bg.right_points.size:191
+[2022-05-09 13:28:31.056] [tracker] [info] trackImageNaive | flow_track right:1.21259 ms
+[2022-05-09 13:28:31.060] [tracker] [info] **************feature_track:10.2778 ms****************
+
+[2022-05-09 13:28:31.346] [tracker] [warning] ----------Time : 1.700000 ----------
+[2022-05-09 13:28:31.347] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:31.348] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:31.348] [tracker] [debug] flowTrackGpu backward success:166
+[2022-05-09 13:28:31.348] [tracker] [debug] flowTrackGpu input:250 final_success:166
+[2022-05-09 13:28:31.348] [tracker] [info] trackImageNaive | flowTrack left:2.02401 ms
+[2022-05-09 13:28:31.348] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:84
+[2022-05-09 13:28:31.350] [tracker] [info] trackImageNaive | detect feature:1.5706 ms
+[2022-05-09 13:28:31.350] [tracker] [info] trackImageNaive | vel&&un:0.04336 ms
+[2022-05-09 13:28:31.350] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:31.351] [tracker] [debug] flowTrackGpu backward success:199
+[2022-05-09 13:28:31.351] [tracker] [debug] flowTrackGpu input:250 final_success:199
+[2022-05-09 13:28:31.351] [tracker] [debug] trackImageNaive | bg.right_points.size:199
+[2022-05-09 13:28:31.351] [tracker] [info] trackImageNaive | flow_track right:0.920077 ms
+[2022-05-09 13:28:31.353] [tracker] [info] **************feature_track:6.80611 ms****************
+
+[2022-05-09 13:28:31.623] [tracker] [warning] ----------Time : 1.750000 ----------
+[2022-05-09 13:28:31.623] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:31.624] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:31.624] [tracker] [debug] flowTrackGpu backward success:178
+[2022-05-09 13:28:31.624] [tracker] [debug] flowTrackGpu input:250 final_success:178
+[2022-05-09 13:28:31.625] [tracker] [info] trackImageNaive | flowTrack left:1.6991 ms
+[2022-05-09 13:28:31.625] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:72
+[2022-05-09 13:28:31.626] [tracker] [info] trackImageNaive | detect feature:1.94004 ms
+[2022-05-09 13:28:31.626] [tracker] [info] trackImageNaive | vel&&un:0.04707 ms
+[2022-05-09 13:28:31.627] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:31.627] [tracker] [debug] flowTrackGpu backward success:209
+[2022-05-09 13:28:31.627] [tracker] [debug] flowTrackGpu input:250 final_success:209
+[2022-05-09 13:28:31.628] [tracker] [debug] trackImageNaive | bg.right_points.size:209
+[2022-05-09 13:28:31.628] [tracker] [info] trackImageNaive | flow_track right:1.04127 ms
+[2022-05-09 13:28:31.632] [tracker] [info] **************feature_track:8.76225 ms****************
+
+[2022-05-09 13:28:31.957] [tracker] [warning] ----------Time : 1.800000 ----------
+[2022-05-09 13:28:31.957] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:31.958] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:31.958] [tracker] [debug] flowTrackGpu backward success:185
+[2022-05-09 13:28:31.958] [tracker] [debug] flowTrackGpu input:250 final_success:185
+[2022-05-09 13:28:31.958] [tracker] [info] trackImageNaive | flowTrack left:1.8435 ms
+[2022-05-09 13:28:31.958] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:67
+[2022-05-09 13:28:31.960] [tracker] [info] trackImageNaive | detect feature:1.53573 ms
+[2022-05-09 13:28:31.960] [tracker] [info] trackImageNaive | vel&&un:0.043399 ms
+[2022-05-09 13:28:31.961] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:31.961] [tracker] [debug] flowTrackGpu backward success:203
+[2022-05-09 13:28:31.961] [tracker] [debug] flowTrackGpu input:250 final_success:203
+[2022-05-09 13:28:31.961] [tracker] [debug] trackImageNaive | bg.right_points.size:203
+[2022-05-09 13:28:31.961] [tracker] [info] trackImageNaive | flow_track right:1.32248 ms
+[2022-05-09 13:28:31.964] [tracker] [info] **************feature_track:7.22178 ms****************
+
+[2022-05-09 13:28:32.243] [tracker] [warning] ----------Time : 1.850000 ----------
+[2022-05-09 13:28:32.243] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:32.244] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:32.245] [tracker] [debug] flowTrackGpu backward success:179
+[2022-05-09 13:28:32.245] [tracker] [debug] flowTrackGpu input:250 final_success:179
+[2022-05-09 13:28:32.245] [tracker] [info] trackImageNaive | flowTrack left:2.06214 ms
+[2022-05-09 13:28:32.245] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:73
+[2022-05-09 13:28:32.247] [tracker] [info] trackImageNaive | detect feature:2.56936 ms
+[2022-05-09 13:28:32.248] [tracker] [info] trackImageNaive | vel&&un:0.057193 ms
+[2022-05-09 13:28:32.248] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:32.249] [tracker] [debug] flowTrackGpu backward success:182
+[2022-05-09 13:28:32.249] [tracker] [debug] flowTrackGpu input:250 final_success:182
+[2022-05-09 13:28:32.249] [tracker] [debug] trackImageNaive | bg.right_points.size:182
+[2022-05-09 13:28:32.249] [tracker] [info] trackImageNaive | flow_track right:1.16448 ms
+[2022-05-09 13:28:32.251] [tracker] [info] **************feature_track:8.40817 ms****************
+
+[2022-05-09 13:28:32.541] [tracker] [warning] ----------Time : 1.900000 ----------
+[2022-05-09 13:28:32.542] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:32.543] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:32.543] [tracker] [debug] flowTrackGpu backward success:178
+[2022-05-09 13:28:32.543] [tracker] [debug] flowTrackGpu input:250 final_success:178
+[2022-05-09 13:28:32.543] [tracker] [info] trackImageNaive | flowTrack left:1.8519 ms
+[2022-05-09 13:28:32.543] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:73
+[2022-05-09 13:28:32.545] [tracker] [info] trackImageNaive | detect feature:1.54405 ms
+[2022-05-09 13:28:32.545] [tracker] [info] trackImageNaive | vel&&un:0.043291 ms
+[2022-05-09 13:28:32.546] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:32.546] [tracker] [debug] flowTrackGpu backward success:193
+[2022-05-09 13:28:32.546] [tracker] [debug] flowTrackGpu input:250 final_success:193
+[2022-05-09 13:28:32.546] [tracker] [debug] trackImageNaive | bg.right_points.size:193
+[2022-05-09 13:28:32.546] [tracker] [info] trackImageNaive | flow_track right:1.2393 ms
+[2022-05-09 13:28:32.550] [tracker] [info] **************feature_track:8.05857 ms****************
+
+[2022-05-09 13:28:32.854] [tracker] [warning] ----------Time : 1.950000 ----------
+[2022-05-09 13:28:32.854] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:32.855] [tracker] [debug] flowTrackGpu forward success:240
+[2022-05-09 13:28:32.856] [tracker] [debug] flowTrackGpu backward success:163
+[2022-05-09 13:28:32.856] [tracker] [debug] flowTrackGpu input:250 final_success:163
+[2022-05-09 13:28:32.856] [tracker] [info] trackImageNaive | flowTrack left:2.21375 ms
+[2022-05-09 13:28:32.856] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:87
+[2022-05-09 13:28:32.858] [tracker] [info] trackImageNaive | detect feature:1.6984 ms
+[2022-05-09 13:28:32.858] [tracker] [info] trackImageNaive | vel&&un:0.045462 ms
+[2022-05-09 13:28:32.858] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:32.859] [tracker] [debug] flowTrackGpu backward success:186
+[2022-05-09 13:28:32.859] [tracker] [debug] flowTrackGpu input:250 final_success:185
+[2022-05-09 13:28:32.859] [tracker] [debug] trackImageNaive | bg.right_points.size:185
+[2022-05-09 13:28:32.859] [tracker] [info] trackImageNaive | flow_track right:0.958367 ms
+[2022-05-09 13:28:32.861] [tracker] [info] **************feature_track:7.2871 ms****************
+
+[2022-05-09 13:28:33.139] [tracker] [warning] ----------Time : 2.000000 ----------
+[2022-05-09 13:28:33.140] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:33.141] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:33.142] [tracker] [debug] flowTrackGpu backward success:181
+[2022-05-09 13:28:33.142] [tracker] [debug] flowTrackGpu input:250 final_success:181
+[2022-05-09 13:28:33.142] [tracker] [info] trackImageNaive | flowTrack left:2.70107 ms
+[2022-05-09 13:28:33.142] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:70
+[2022-05-09 13:28:33.144] [tracker] [info] trackImageNaive | detect feature:1.53788 ms
+[2022-05-09 13:28:33.144] [tracker] [info] trackImageNaive | vel&&un:0.043811 ms
+[2022-05-09 13:28:33.145] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:33.145] [tracker] [debug] flowTrackGpu backward success:201
+[2022-05-09 13:28:33.145] [tracker] [debug] flowTrackGpu input:250 final_success:201
+[2022-05-09 13:28:33.145] [tracker] [debug] trackImageNaive | bg.right_points.size:201
+[2022-05-09 13:28:33.145] [tracker] [info] trackImageNaive | flow_track right:1.91486 ms
+[2022-05-09 13:28:33.148] [tracker] [info] **************feature_track:8.43119 ms****************
+
+[2022-05-09 13:28:33.441] [tracker] [warning] ----------Time : 2.050000 ----------
+[2022-05-09 13:28:33.441] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:33.442] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:33.443] [tracker] [debug] flowTrackGpu backward success:176
+[2022-05-09 13:28:33.443] [tracker] [debug] flowTrackGpu input:250 final_success:176
+[2022-05-09 13:28:33.443] [tracker] [info] trackImageNaive | flowTrack left:2.19243 ms
+[2022-05-09 13:28:33.443] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:74
+[2022-05-09 13:28:33.444] [tracker] [info] trackImageNaive | detect feature:1.55573 ms
+[2022-05-09 13:28:33.444] [tracker] [info] trackImageNaive | vel&&un:0.042727 ms
+[2022-05-09 13:28:33.445] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:33.445] [tracker] [debug] flowTrackGpu backward success:201
+[2022-05-09 13:28:33.446] [tracker] [debug] flowTrackGpu input:250 final_success:201
+[2022-05-09 13:28:33.446] [tracker] [debug] trackImageNaive | bg.right_points.size:201
+[2022-05-09 13:28:33.446] [tracker] [info] trackImageNaive | flow_track right:1.09199 ms
+[2022-05-09 13:28:33.448] [tracker] [info] **************feature_track:7.06468 ms****************
+
+[2022-05-09 13:28:33.749] [tracker] [warning] ----------Time : 2.100000 ----------
+[2022-05-09 13:28:33.749] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:33.750] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:33.751] [tracker] [debug] flowTrackGpu backward success:183
+[2022-05-09 13:28:33.751] [tracker] [debug] flowTrackGpu input:250 final_success:183
+[2022-05-09 13:28:33.751] [tracker] [info] trackImageNaive | flowTrack left:1.77545 ms
+[2022-05-09 13:28:33.751] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:67
+[2022-05-09 13:28:33.752] [tracker] [info] trackImageNaive | detect feature:1.71528 ms
+[2022-05-09 13:28:33.753] [tracker] [info] trackImageNaive | vel&&un:0.076956 ms
+[2022-05-09 13:28:33.753] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:33.754] [tracker] [debug] flowTrackGpu backward success:198
+[2022-05-09 13:28:33.754] [tracker] [debug] flowTrackGpu input:250 final_success:198
+[2022-05-09 13:28:33.754] [tracker] [debug] trackImageNaive | bg.right_points.size:198
+[2022-05-09 13:28:33.754] [tracker] [info] trackImageNaive | flow_track right:1.09898 ms
+[2022-05-09 13:28:33.757] [tracker] [info] **************feature_track:7.95489 ms****************
+
+[2022-05-09 13:28:34.043] [tracker] [warning] ----------Time : 2.150000 ----------
+[2022-05-09 13:28:34.043] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:34.045] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:34.046] [tracker] [debug] flowTrackGpu backward success:177
+[2022-05-09 13:28:34.046] [tracker] [debug] flowTrackGpu input:250 final_success:177
+[2022-05-09 13:28:34.046] [tracker] [info] trackImageNaive | flowTrack left:3.3261 ms
+[2022-05-09 13:28:34.046] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:73
+[2022-05-09 13:28:34.048] [tracker] [info] trackImageNaive | detect feature:2.12328 ms
+[2022-05-09 13:28:34.048] [tracker] [info] trackImageNaive | vel&&un:0.068161 ms
+[2022-05-09 13:28:34.049] [tracker] [debug] flowTrackGpu forward success:249
+[2022-05-09 13:28:34.049] [tracker] [debug] flowTrackGpu backward success:193
+[2022-05-09 13:28:34.049] [tracker] [debug] flowTrackGpu input:250 final_success:193
+[2022-05-09 13:28:34.049] [tracker] [debug] trackImageNaive | bg.right_points.size:193
+[2022-05-09 13:28:34.049] [tracker] [info] trackImageNaive | flow_track right:0.99419 ms
+[2022-05-09 13:28:34.052] [tracker] [info] **************feature_track:8.86643 ms****************
+
+[2022-05-09 13:28:34.346] [tracker] [warning] ----------Time : 2.200000 ----------
+[2022-05-09 13:28:34.346] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:34.347] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:34.348] [tracker] [debug] flowTrackGpu backward success:180
+[2022-05-09 13:28:34.348] [tracker] [debug] flowTrackGpu input:250 final_success:180
+[2022-05-09 13:28:34.348] [tracker] [info] trackImageNaive | flowTrack left:2.4512 ms
+[2022-05-09 13:28:34.348] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:70
+[2022-05-09 13:28:34.350] [tracker] [info] trackImageNaive | detect feature:1.88938 ms
+[2022-05-09 13:28:34.350] [tracker] [info] trackImageNaive | vel&&un:0.046434 ms
+[2022-05-09 13:28:34.350] [tracker] [debug] flowTrackGpu forward success:250
+[2022-05-09 13:28:34.351] [tracker] [debug] flowTrackGpu backward success:211
+[2022-05-09 13:28:34.351] [tracker] [debug] flowTrackGpu input:250 final_success:211
+[2022-05-09 13:28:34.351] [tracker] [debug] trackImageNaive | bg.right_points.size:211
+[2022-05-09 13:28:34.351] [tracker] [info] trackImageNaive | flow_track right:0.927226 ms
+[2022-05-09 13:28:34.353] [tracker] [info] **************feature_track:7.48058 ms****************
+
+[2022-05-09 13:28:34.654] [tracker] [warning] ----------Time : 2.250000 ----------
+[2022-05-09 13:28:34.654] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:34.655] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:34.656] [tracker] [debug] flowTrackGpu backward success:179
+[2022-05-09 13:28:34.656] [tracker] [debug] flowTrackGpu input:250 final_success:179
+[2022-05-09 13:28:34.656] [tracker] [info] trackImageNaive | flowTrack left:1.80061 ms
+[2022-05-09 13:28:34.656] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:71
+[2022-05-09 13:28:34.657] [tracker] [info] trackImageNaive | detect feature:1.60107 ms
+[2022-05-09 13:28:34.657] [tracker] [info] trackImageNaive | vel&&un:0.044028 ms
+[2022-05-09 13:28:34.658] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:34.659] [tracker] [debug] flowTrackGpu backward success:205
+[2022-05-09 13:28:34.659] [tracker] [debug] flowTrackGpu input:250 final_success:205
+[2022-05-09 13:28:34.659] [tracker] [debug] trackImageNaive | bg.right_points.size:205
+[2022-05-09 13:28:34.659] [tracker] [info] trackImageNaive | flow_track right:1.34903 ms
+[2022-05-09 13:28:34.661] [tracker] [info] **************feature_track:7.18337 ms****************
+
+[2022-05-09 13:28:34.959] [tracker] [warning] ----------Time : 2.300000 ----------
+[2022-05-09 13:28:34.960] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:34.961] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:34.962] [tracker] [debug] flowTrackGpu backward success:169
+[2022-05-09 13:28:34.962] [tracker] [debug] flowTrackGpu input:250 final_success:168
+[2022-05-09 13:28:34.962] [tracker] [info] trackImageNaive | flowTrack left:2.61135 ms
+[2022-05-09 13:28:34.962] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:82
+[2022-05-09 13:28:34.964] [tracker] [info] trackImageNaive | detect feature:1.58489 ms
+[2022-05-09 13:28:34.964] [tracker] [info] trackImageNaive | vel&&un:0.043132 ms
+[2022-05-09 13:28:34.964] [tracker] [debug] flowTrackGpu forward success:246
+[2022-05-09 13:28:34.965] [tracker] [debug] flowTrackGpu backward success:199
+[2022-05-09 13:28:34.965] [tracker] [debug] flowTrackGpu input:250 final_success:199
+[2022-05-09 13:28:34.965] [tracker] [debug] trackImageNaive | bg.right_points.size:199
+[2022-05-09 13:28:34.965] [tracker] [info] trackImageNaive | flow_track right:0.916207 ms
+[2022-05-09 13:28:34.967] [tracker] [info] **************feature_track:7.27472 ms****************
+
+[2022-05-09 13:28:35.250] [tracker] [warning] ----------Time : 2.350000 ----------
+[2022-05-09 13:28:35.250] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:35.252] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:35.252] [tracker] [debug] flowTrackGpu backward success:172
+[2022-05-09 13:28:35.252] [tracker] [debug] flowTrackGpu input:250 final_success:172
+[2022-05-09 13:28:35.252] [tracker] [info] trackImageNaive | flowTrack left:2.096 ms
+[2022-05-09 13:28:35.252] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:78
+[2022-05-09 13:28:35.254] [tracker] [info] trackImageNaive | detect feature:1.88603 ms
+[2022-05-09 13:28:35.254] [tracker] [info] trackImageNaive | vel&&un:0.059923 ms
+[2022-05-09 13:28:35.255] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:35.255] [tracker] [debug] flowTrackGpu backward success:186
+[2022-05-09 13:28:35.255] [tracker] [debug] flowTrackGpu input:250 final_success:186
+[2022-05-09 13:28:35.255] [tracker] [debug] trackImageNaive | bg.right_points.size:186
+[2022-05-09 13:28:35.255] [tracker] [info] trackImageNaive | flow_track right:0.997342 ms
+[2022-05-09 13:28:35.258] [tracker] [info] **************feature_track:8.31074 ms****************
+
+[2022-05-09 13:28:35.555] [tracker] [warning] ----------Time : 2.400000 ----------
+[2022-05-09 13:28:35.556] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:35.557] [tracker] [debug] flowTrackGpu forward success:244
+[2022-05-09 13:28:35.557] [tracker] [debug] flowTrackGpu backward success:161
+[2022-05-09 13:28:35.557] [tracker] [debug] flowTrackGpu input:250 final_success:161
+[2022-05-09 13:28:35.557] [tracker] [info] trackImageNaive | flowTrack left:1.77339 ms
+[2022-05-09 13:28:35.557] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:89
+[2022-05-09 13:28:35.559] [tracker] [info] trackImageNaive | detect feature:2.22124 ms
+[2022-05-09 13:28:35.559] [tracker] [info] trackImageNaive | vel&&un:0.04502 ms
+[2022-05-09 13:28:35.560] [tracker] [debug] flowTrackGpu forward success:248
+[2022-05-09 13:28:35.560] [tracker] [debug] flowTrackGpu backward success:196
+[2022-05-09 13:28:35.560] [tracker] [debug] flowTrackGpu input:250 final_success:196
+[2022-05-09 13:28:35.560] [tracker] [debug] trackImageNaive | bg.right_points.size:196
+[2022-05-09 13:28:35.560] [tracker] [info] trackImageNaive | flow_track right:0.935683 ms
+[2022-05-09 13:28:35.563] [tracker] [info] **************feature_track:7.53706 ms****************
+
+[2022-05-09 13:28:35.860] [tracker] [warning] ----------Time : 2.450000 ----------
+[2022-05-09 13:28:35.861] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:35.862] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:35.863] [tracker] [debug] flowTrackGpu backward success:177
+[2022-05-09 13:28:35.863] [tracker] [debug] flowTrackGpu input:250 final_success:177
+[2022-05-09 13:28:35.863] [tracker] [info] trackImageNaive | flowTrack left:2.46063 ms
+[2022-05-09 13:28:35.863] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:74
+[2022-05-09 13:28:35.865] [tracker] [info] trackImageNaive | detect feature:1.67039 ms
+[2022-05-09 13:28:35.865] [tracker] [info] trackImageNaive | vel&&un:0.049979 ms
+[2022-05-09 13:28:35.865] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:35.865] [tracker] [debug] flowTrackGpu backward success:202
+[2022-05-09 13:28:35.865] [tracker] [debug] flowTrackGpu input:250 final_success:202
+[2022-05-09 13:28:35.866] [tracker] [debug] trackImageNaive | bg.right_points.size:202
+[2022-05-09 13:28:35.866] [tracker] [info] trackImageNaive | flow_track right:0.978679 ms
+[2022-05-09 13:28:35.868] [tracker] [info] **************feature_track:7.45823 ms****************
+
+[2022-05-09 13:28:36.160] [tracker] [warning] ----------Time : 2.500000 ----------
+[2022-05-09 13:28:36.160] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:36.162] [tracker] [debug] flowTrackGpu forward success:241
+[2022-05-09 13:28:36.162] [tracker] [debug] flowTrackGpu backward success:171
+[2022-05-09 13:28:36.162] [tracker] [debug] flowTrackGpu input:250 final_success:171
+[2022-05-09 13:28:36.162] [tracker] [info] trackImageNaive | flowTrack left:2.52278 ms
+[2022-05-09 13:28:36.162] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:81
+[2022-05-09 13:28:36.164] [tracker] [info] trackImageNaive | detect feature:1.58685 ms
+[2022-05-09 13:28:36.164] [tracker] [info] trackImageNaive | vel&&un:0.046124 ms
+[2022-05-09 13:28:36.164] [tracker] [debug] flowTrackGpu forward success:247
+[2022-05-09 13:28:36.165] [tracker] [debug] flowTrackGpu backward success:201
+[2022-05-09 13:28:36.165] [tracker] [debug] flowTrackGpu input:250 final_success:201
+[2022-05-09 13:28:36.165] [tracker] [debug] trackImageNaive | bg.right_points.size:201
+[2022-05-09 13:28:36.165] [tracker] [info] trackImageNaive | flow_track right:0.934477 ms
+[2022-05-09 13:28:36.168] [tracker] [info] **************feature_track:8.17936 ms****************
+
+[2022-05-09 13:28:36.455] [tracker] [warning] ----------Time : 2.550000 ----------
+[2022-05-09 13:28:36.455] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:36.457] [tracker] [debug] flowTrackGpu forward success:242
+[2022-05-09 13:28:36.457] [tracker] [debug] flowTrackGpu backward success:174
+[2022-05-09 13:28:36.457] [tracker] [debug] flowTrackGpu input:250 final_success:174
+[2022-05-09 13:28:36.457] [tracker] [info] trackImageNaive | flowTrack left:2.05892 ms
+[2022-05-09 13:28:36.457] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:76
+[2022-05-09 13:28:36.461] [tracker] [info] trackImageNaive | detect feature:3.85664 ms
+[2022-05-09 13:28:36.461] [tracker] [info] trackImageNaive | vel&&un:0.063587 ms
+[2022-05-09 13:28:36.462] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:36.462] [tracker] [debug] flowTrackGpu backward success:196
+[2022-05-09 13:28:36.462] [tracker] [debug] flowTrackGpu input:250 final_success:196
+[2022-05-09 13:28:36.462] [tracker] [debug] trackImageNaive | bg.right_points.size:196
+[2022-05-09 13:28:36.462] [tracker] [info] trackImageNaive | flow_track right:1.25808 ms
+[2022-05-09 13:28:36.465] [tracker] [info] **************feature_track:9.53854 ms****************
+
+[2022-05-09 13:28:36.758] [tracker] [warning] ----------Time : 2.600000 ----------
+[2022-05-09 13:28:36.758] [tracker] [debug] TrackImageNaive | input mask:[375, 1242]
+[2022-05-09 13:28:36.760] [tracker] [debug] flowTrackGpu forward success:243
+[2022-05-09 13:28:36.760] [tracker] [debug] flowTrackGpu backward success:171
+[2022-05-09 13:28:36.760] [tracker] [debug] flowTrackGpu input:250 final_success:171
+[2022-05-09 13:28:36.760] [tracker] [info] trackImageNaive | flowTrack left:2.23838 ms
+[2022-05-09 13:28:36.760] [tracker] [debug] DetectNewFeature | id:0 n_max_cnt:81
+[2022-05-09 13:28:36.762] [tracker] [info] trackImageNaive | detect feature:2.1168 ms
+[2022-05-09 13:28:36.762] [tracker] [info] trackImageNaive | vel&&un:0.049896 ms
+[2022-05-09 13:28:36.763] [tracker] [debug] flowTrackGpu forward success:245
+[2022-05-09 13:28:36.764] [tracker] [debug] flowTrackGpu backward success:199
+[2022-05-09 13:28:36.764] [tracker] [debug] flowTrackGpu input:250 final_success:199
+[2022-05-09 13:28:36.764] [tracker] [debug] trackImageNaive | bg.right_points.size:199
+[2022-05-09 13:28:36.764] [tracker] [info] trackImageNaive | flow_track right:1.21865 ms
+[2022-05-09 13:28:36.766] [tracker] [info] **************feature_track:7.96697 ms****************
+

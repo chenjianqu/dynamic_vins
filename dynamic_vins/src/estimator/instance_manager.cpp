@@ -14,6 +14,11 @@
  #include "utils/def.h"
 #include "vio_parameters.h"
 
+#include "factor/pose_local_parameterization.h"
+#include "factor/instance_factor.h"
+#include "factor/speed_factor.h"
+#include "factor/box_factor.h"
+
 namespace dynamic_vins{\
 
 
@@ -83,6 +88,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                         feat.p_w = point3d_w;
                         //顺便把landmark也初始化了
                         lm.depth = depth;
+                        //log_text += fmt::format("stereo feat_id:{} p_w:{}\n", feat_id, VecToStr(point3d_w));
                     }
                 }
                 lm.feats.push_back(feat);//添加第一个观测
@@ -131,6 +137,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                             it->feats.clear();
                             it->depth = depth;
                         }
+                        //log_text += fmt::format("stereo feat_id:{} p_w:{}\n", feat_id, VecToStr(point3d_w));
                     }
                 }
                 //添加观测
@@ -289,7 +296,7 @@ void InstanceManager::Triangulate(int frame_cnt)
 /**
  * 根据速度和上一帧的位姿预测动态物体在当前帧的位姿
  */
-void InstanceManager::PredictCurrentPose()
+void InstanceManager::PropagatePose()
 {
     if(tracking_number_ < 1)
         return;
@@ -300,35 +307,21 @@ void InstanceManager::PredictCurrentPose()
 
     InstExec([&](int key,Instance& inst){
         inst.state[i].time = e->headers[i];
-        Mat3d Roioj=Sophus::SO3d::exp(inst.vel.a*time_ij).matrix();
-        Vec3d Poioj=inst.vel.v*time_ij;
-        inst.state[i].R=Roioj * inst.state[j].R;
-        inst.state[i].P=Roioj* inst.state[j].P + Poioj;
-        /*      State new_pose;
-                new_pose.time=e->Headers[1];
-                double time_ij=new_pose.time - inst.state[0].time;
 
-                printf("Time: new_pose_time:%.2lf\n",new_pose.time);
-                for(int i=0;i<=kWindowSize;i++){
-                    printf("%d:%.2lf ",i,inst.state[i].time);
-                }
-                cout<<endl;
+        inst.state[i].R = inst.state[j].R;
+        inst.state[i].P = inst.state[j].P;
 
-
-                Mat3d Roioj=Sophus::SO3d::exp(inst.speed_a*time_ij).matrix();
-                Vec3d Poioj=inst.speed_v*time_ij;
-                new_pose.R=Roioj * inst.state[0].R;
-                new_pose.P=Roioj* inst.state[0].P + Poioj;
-
-                printf("Inst:%d old:(%.2lf,%.2lf,%.2lf) new:(%.2lf,%.2lf,%.2lf) \n",inst.id,inst.state[0].P.x(),
-                inst.state[0].P.y(),inst.state[0].P.z(),new_pose.P.x(),new_pose.P.y(),new_pose.P.z());
-                cout<<"time:"<<time_ij<<endl;
-                cout<<"Roioj:\n"<<Roioj.matrix()<<endl;
-                cout<<"Poioj:\n"<<Poioj.matrix()<<endl;
-
-                inst.state[0] = new_pose;
-                inst.SetWindowPose(e);*/
-    });
+        /*if(inst.is_static){
+            inst.state[i].R = inst.state[j].R;
+            inst.state[i].P = inst.state[j].P;
+        }
+        else{
+            Mat3d Roioj=Sophus::SO3d::exp(inst.vel.a*time_ij).matrix();
+            Vec3d Poioj=inst.vel.v*time_ij;
+            inst.state[i].R=Roioj * inst.state[j].R;
+            inst.state[i].P=Roioj* inst.state[j].P + Poioj;
+        }*/
+    },true);
 
 }
 
@@ -389,36 +382,34 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
         }
 
         ///寻找当前帧三角化的路标点
-        Vec3d center_point;
+        Vec3d center_point=Vec3d::Zero();
         int cnt=0;
         for(auto &lm : inst.landmarks){
             if(lm.feats.empty() || lm.depth<=0)
                 continue;
             if(lm.feats.front().frame == e->frame){
-                Vec3d p = lm.feats.front().point * lm.depth;
-                center_point += p;
+                center_point += (lm.feats.front().point * lm.depth);
                 cnt++;
             }
         }
 
-        if(cnt<para::kInstanceInitMinNum){ //路标数量太少了
+        if(cnt <= para::kInstanceInitMinNum){ //路标数量太少了
             return;
         }
 
         ///根据box初始化物体的位姿和包围框
 
         auto cam_to_world = [this](const Vec3d &p){
-            Vec3d p_imu = e->ric[0] * p + e->tic[0];
-            Vec3d p_world = e->Rs[e->frame] * p_imu + e->Ps[e->frame];
-            return p_world;
+            return e->Rs[e->frame] * (e->ric[0] * p + e->tic[0]) + e->Ps[e->frame];
         };
 
         State init_state;
 
         //首先将box中心点从相机坐标系转换到世界坐标系
-        center_point = center_point / cnt;
-        center_point = cam_to_world(center_point);
-        init_state.P = center_point;
+        Vec3d avg_center_point = center_point / double(cnt);
+        //Debugv("center_point:{} cnt:{}", VecToStr(avg_center_point),cnt);
+        init_state.P = cam_to_world(avg_center_point);
+
         //将包围框的8个顶点转换到世界坐标系下
         Mat38d corners;
         for(int i=0;i<8;++i){
@@ -579,8 +570,10 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
     if(tracking_number_ < 1)
         return;
 
-    std::unordered_map<string,int> statistics={{"BoxEncloseStereoPointFactor",0},{"BoxEncloseTrianglePointFactor",0},
-                                               {"ProjInst12Factor",0},{"ConstSpeedSimpleFactor",0},{"BoxVertexFactor",0}};
+    std::unordered_map<string,int> statistics=
+            {{"BoxEncloseStereoPointFactor",0},{"BoxEncloseTrianglePointFactor",0},
+             {"ProjInst12Factor",0},{"ConstSpeedSimpleFactor",0},{"BoxVertexFactor",0},
+             {"BoxDimsFactor",0},{"BoxOrientationFactor",0} ,{"SpeedPoseFactor",0}};
 
 
     Debugv("添加Instance残差:");
@@ -657,31 +650,6 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                      loss_function,
                                      inst.para_state[feat_j.frame],inst.para_box[0],inst.para_inv_depth[depth_index]);
             statistics["BoxEncloseTrianglePointFactor"]++;
-
-
-            ///添加包围框残差
-            /*problem.AddResidualBlock(
-                    new ProjBoxSimpleFactor(
-                            feat_j.point,feat_j.vel,feat_j.td,e->td,
-                            inst.state[feat_j.frame].R,inst.state[feat_j.frame].P),
-                            nullptr,
-                            e->para_Pose[feat_j.frame],
-                            e->para_ex_pose[0],
-                            inst.para_box[0],
-                            inst.para_inv_depth[depth_index]);*/
-            /*auto* box_simple_cost=new BoxAbsFactor(feat_j.point,feat_j.vel,e->Rs[feat_j.frame],e->Ps[feat_j.frame],
-                                                   e->ric[0],e->tic[0],feat_j.td,e->td);*/
-            /*auto* box_simple_cost=new BoxSqrtFactor(feat_j.point,feat_j.vel,e->Rs[feat_j.frame],e->Ps[feat_j.frame],
-                                                    e->ric[0],e->tic[0],feat_j.td,e->td);*/
-            /*problem.AddResidualBlock(
-                    new BoxPowFactor(
-                            feat_j.point,feat_j.vel,e->Rs[feat_j.frame],e->Ps[feat_j.frame],
-                            e->ric[0],e->tic[0],inst.state[feat_j.frame].R,
-                            inst.state[feat_j.frame].P,feat_j.td,e->td),
-                            nullptr,
-                            inst.para_box[0],
-                            inst.para_inv_depth[depth_index]);*/
-
 
             if(inst.is_static){ //对于静态物体,仅仅refine包围框
                 continue;
@@ -819,6 +787,14 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                      nullptr,
                                      inst.para_speed[0]);
             statistics["ConstSpeedSimpleFactor"]++;
+
+            ///速度-位姿误差
+            /*for(int i=1;i<=kWinSize;++i){
+                problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i-1].time,inst.state[i].time),
+                                         loss_function,inst.para_state[i-1],inst.para_state[i],inst.para_speed[0]);
+                statistics["SpeedPoseFactor"]++;
+            }*/
+
         }
 
         ///添加包围框预测误差
@@ -826,29 +802,38 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
             if(inst.boxes3d[i]){
                 ///包围框大小误差
                 problem.AddResidualBlock(new BoxDimsFactor(inst.boxes3d[i]->dims),loss_function,inst.para_box[0]);
+                statistics["BoxDimsFactor"]++;
                 ///物体的方向误差
                 Mat3d R_cioi = Box3D::GetCoordinateRotationFromCorners(inst.boxes3d[i]->corners);
                 problem.AddResidualBlock(new BoxOrientationFactor(R_cioi,e->ric[0]), nullptr,e->para_Pose[i],inst.para_state[i]);
+                statistics["BoxOrientationFactor"]++;
 
-                /*
-                 ///添加顶点误差
+                 /*///添加顶点误差
                  //效果不好
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(-1,-1,-1),e->ric[0],e->tic[0]),
-                        loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(-1,-1,1),e->ric[0],e->tic[0]),
-                                         loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(-1,1,1),e->ric[0],e->tic[0]),
-                                         loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(-1,-1,1),e->ric[0],e->tic[0]),
-                                         loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(1,-1,-1),e->ric[0],e->tic[0]),
-                                         loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(1,-1,1),e->ric[0],e->tic[0]),
-                                         loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(1,1,1),e->ric[0],e->tic[0]),
-                                         loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
-                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,Vec3d(1,-1,1),e->ric[0],e->tic[0]),
-                                         loss_function,e->para_Pose[i],inst.para_state[i],inst.para_box[0]);
+                 problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(-1,-1,-1),
+                                                              e->ric[0],e->Rs[i]),
+                                          loss_function,inst.para_state[i],inst.para_box[0]);
+                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(-1,-1,1),
+                                                             e->ric[0],e->Rs[i]),
+                                         loss_function,inst.para_state[i],inst.para_box[0]);
+                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(-1,1,1),
+                                                             e->ric[0],e->Rs[i]),
+                                         loss_function,inst.para_state[i],inst.para_box[0]);
+                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(-1,-1,1),
+                                                             e->ric[0],e->Rs[i]),
+                                         loss_function,inst.para_state[i],inst.para_box[0]);
+                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(1,-1,-1),
+                                                             e->ric[0],e->Rs[i]),
+                                         loss_function,inst.para_state[i],inst.para_box[0]);
+                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(1,-1,1),
+                                                             e->ric[0],e->Rs[i]),
+                                         loss_function,inst.para_state[i],inst.para_box[0]);
+                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(1,1,1),
+                                                             e->ric[0],e->Rs[i]),
+                                         loss_function,inst.para_state[i],inst.para_box[0]);
+                problem.AddResidualBlock(new BoxVertexFactor(inst.boxes3d[i]->corners,inst.boxes3d[i]->dims,Vec3d(1,-1,1),
+                                                             e->ric[0],e->Rs[i]),
+                                         loss_function,inst.para_state[i],inst.para_box[0]);
                 statistics["BoxVertexFactor"]++;*/
             }
         }
@@ -858,12 +843,10 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                inst.opt_vel, track_3, debug_msg);
 
     }
+
+    //log
     string log_text;
-    for(auto &pair : statistics){
-        if(pair.second>0){
-            log_text += fmt::format("{} : {}\n",pair.first,pair.second);
-        }
-    }
+    for(auto &pair : statistics)  if(pair.second>0) log_text += fmt::format("{} : {}\n",pair.first,pair.second);
     Debugv("各个残差项的数量: \n{}",log_text);
 }
 

@@ -30,24 +30,21 @@
 
 #include "utils/parameters.h"
 #include "feature_manager.h"
-#include "utils/utility.h"
-#include "initial/solve_5pts.h"
-#include "initial/initial_sfm.h"
-#include "initial/initial_alignment.h"
-#include "initial/initial_ex_rotation.h"
-#include "factor/imu_factor.h"
-#include "factor/pose_local_parameterization.h"
-#include "factor/marginalization_factor.h"
-#include "factor/projection_two_frame_one_cam_factor.h"
-#include "factor/projection_two_frame_two_cam_factor.h"
-#include "factor/projection_one_frame_two_cam_factor.h"
-#include "front_end/front_end.h"
+
+#include "front_end/background_tracker.h"
 #include "vio_util.h"
 #include "instance_manager.h"
 #include "utils/def.h"
 #include "landmark.h"
 #include "vio_parameters.h"
 #include "feature_queue.h"
+
+#include "factor/imu_factor.h"
+#include "initial/solve_5pts.h"
+#include "initial/initial_sfm.h"
+#include "initial/initial_alignment.h"
+#include "initial/initial_ex_rotation.h"
+#include "factor/marginalization_factor.h"
 
 namespace dynamic_vins{\
 

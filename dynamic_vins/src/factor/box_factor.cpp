@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "projection_box_factor.h"
+#include "box_factor.h"
 #include "utils/log_utils.h"
 #include "utils/box3d.h"
 
@@ -676,25 +676,23 @@ bool BoxEncloseTrianglePointFactor::Evaluate(double const *const *parameters, do
 
 /**
  * 包围框的顶点的欧氏距离误差,
- * 优化变量: 相机位姿7,物体位姿7,物体的dims 3
+ * 优化变量: 物体位姿7,物体的dims 3
  */
 bool BoxVertexFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
-    Vec3d P_wbi(parameters[0][0], parameters[0][1], parameters[0][2]);
-    Quatd Q_wbi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
+    Vec3d P_woi(parameters[0][0], parameters[0][1], parameters[0][2]);
+    Quatd Q_woi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
+    //Vec3d box(parameters[1][0],parameters[1][1],parameters[1][2]);
 
-    Vec3d P_woi(parameters[1][0], parameters[1][1], parameters[1][2]);
-    Quatd Q_woi(parameters[1][6], parameters[1][3], parameters[1][4], parameters[1][5]);
-
-    Vec3d box(parameters[2][0],parameters[2][1],parameters[2][2]);
+    Mat3d R_woi(Q_woi);
 
     ///计算估计值
-    Vec3d pts_oi = (box/2).cwiseProduct(indicate_symbol);
-    Vec3d pts_w = Q_woi * pts_oi + P_woi;
+    Vec3d pts_oi = (dims/2).cwiseProduct(indicate_symbol);
+    Vec3d pts_w = R_woi * pts_oi;
     ///计算观测值
     Vec3d pts_ci_obs = corners.col( Box3D::CoordinateDirection(indicate_symbol.x(),indicate_symbol.y(),indicate_symbol.z()));
 
-    Vec3d pts_w_obs = Q_wbi * (R_bc * pts_ci_obs + P_bc) + P_wbi;
+    Vec3d pts_w_obs = R_wbi * R_bc * pts_ci_obs;
 
     Vec3d err_vec = pts_w - pts_w_obs;
     residuals[0]= err_vec.x();
@@ -712,37 +710,17 @@ bool BoxVertexFactor::Evaluate(double const *const *parameters, double *residual
 
     ///雅可比计算
     if (jacobians){
-        Mat3d R_woi(Q_woi);
 
-        /// 对相机位姿求导
-        if (jacobians[0]){
-            /**
-             * 注意,这里没有直接写出对max()函数的求导,这是因为已经对误差使用max()函数,这在更新时会间接使用了max函数
-             */
-            Mat36d jaco_oj;
-            jaco_oj.leftCols<3>() =  - Mat3d::Identity(); //对position的雅可比
-            jaco_oj.rightCols<3>() = hat(pts_w_obs);//对orientation的雅可比
-
-            Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_oj(jacobians[0]);
-            jacobian_pose_oj.leftCols<6>() =   jaco_oj;
-            jacobian_pose_oj.rightCols<1>().setZero();
-        }
         ///对物体位姿求导
-        if (jacobians[1]){
-            /**
-             * 注意,这里没有直接写出对max()函数的求导,这是因为已经对误差使用max()函数,这在更新时会间接使用了max函数
-             */
-            Mat36d jaco_oj;
-            jaco_oj.leftCols<3>() =  Mat3d::Identity(); //对position的雅可比
-            jaco_oj.rightCols<3>() = -hat(R_woi * pts_oi);//对orientation的雅可比
-
-            Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_oj(jacobians[1]);
-            jacobian_pose_oj.leftCols<6>() =   jaco_oj;
+        if (jacobians[0]){
+            Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_oj(jacobians[0]);
+            jacobian_pose_oj.leftCols<3>() = Mat3d::Identity(); //对position的雅可比
+            jacobian_pose_oj.middleCols(3,3) = -hat(R_woi * pts_oi);//对orientation的雅可比
             jacobian_pose_oj.rightCols<1>().setZero();
         }
         ///对包围框求导
-        if (jacobians[2]){
-            Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> jacobian_box(jacobians[2]);
+        if (jacobians[1]){
+            Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> jacobian_box(jacobians[1]);
             //jacobian_box = - Mat3d::Identity();
             jacobian_box = Mat3d::Zero();
         }
@@ -816,20 +794,17 @@ bool BoxOrientationFactor::Evaluate(double const *const *parameters, double *res
             ///计算雅可比
             Mat3d jaco_R = - J_r.inverse() * R.transpose();
 
-            Mat36d jaco_R_t;
-            jaco_R_t.leftCols<3>() = Mat3d::Zero();///平移项的雅可比不计算
-            jaco_R_t.rightCols<3>() = Mat3d::Zero();
-
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_woi(jacobians[1]);
-            jacobian_pose_woi.leftCols<6>() =  jaco_R_t ;
+            jacobian_pose_woi.leftCols<3>() = Mat3d::Zero();///平移项的雅可比不计算
+            jacobian_pose_woi.middleCols(3,3) = jaco_R;
             jacobian_pose_woi.rightCols<1>().setZero();
 
 
-            counter++;
+            /*counter++;
             if(counter<10){
                 Debugv("BoxOrientationFactor:\n err:{} theta:{} a:{} \n jaco_R:{} ",
                        VecToStr(err), theta, VecToStr(a), EigenToStr(jaco_R));
-            }
+            }*/
         }
 
     }

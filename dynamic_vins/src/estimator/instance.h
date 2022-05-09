@@ -30,7 +30,8 @@ namespace dynamic_vins{\
 class Estimator;
 
 struct State{
-    State() = default;
+    State():R(Mat3d::Identity()),P(Vec3d::Zero()){
+    }
 
     /**
      * 拷贝构造函数
@@ -60,14 +61,17 @@ struct State{
     }
     Mat3d R;
     Vec3d P;
-    double time;
+    double time{0};
 };
 
 class Instance{
 public:
     using Ptr=std::shared_ptr<Instance>;
     Instance()=default;
-    Instance(const unsigned int frame_id,const unsigned int &id,Estimator* estimator): id(id),e(estimator){
+
+    Instance(const unsigned int frame_id,const unsigned int &id,Estimator* estimator)
+    : id(id),e(estimator){
+
     }
 
     int SlideWindowOld();
@@ -100,7 +104,7 @@ public:
     State state[(kWinSize + 1)]{}; //物体的位姿
     Vel3d vel,last_vel;//物体的速度
 
-    Eigen::Vector3d box;
+    Vec3d box{0,0,0};
     cv::Scalar color;
 
     //优化过程中的变量

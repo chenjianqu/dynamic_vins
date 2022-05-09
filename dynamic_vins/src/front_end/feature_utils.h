@@ -176,7 +176,7 @@ void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr
 
 
 
-void SortPoints(vector<cv::Point2f> &cur_pts, vector<int> &track_cnt, vector<int> &ids);
+void SortPoints(vector<cv::Point2f> &cur_pts, vector<int> &track_cnt, vector<unsigned  int> &ids);
 
 
 

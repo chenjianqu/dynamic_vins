@@ -27,7 +27,7 @@ namespace dynamic_vins{\
  * 格式：{id, [(camera_id,feature1),...,(camera_id,featureN)]}
  * feature1：Vector7d，分别表示
  */
-using FeatureBackground=std::map<int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>>;
+using FeatureBackground=std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>>;
 
 class FeatureInstance : public std::map<unsigned int,std::vector<Eigen::Matrix<double,5,1>>>{
 public:

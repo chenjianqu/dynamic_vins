@@ -33,65 +33,9 @@
 #include "feature_utils.h"
 #include "estimator/feature_queue.h"
 #include "utils/box3d.h"
+#include "instance_feature.h"
 
 namespace dynamic_vins{\
-
-
-struct InstFeat{
-    using Ptr=std::shared_ptr<InstFeat>;
-    InstFeat();
-    InstFeat(unsigned int id_, int class_id_);
-
-    unsigned int id{0};
-    int class_id{0};
-    cv::Scalar color;
-
-    vector<cv::Point2f> last_points;
-    std::map<unsigned int, cv::Point2f> prev_id_pts;
-
-    vector<cv::Point2f> curr_points;
-    vector<cv::Point2f> curr_un_points;
-    vector<int> track_cnt;//每个特征点的跟踪次数
-
-    std::map<unsigned int, cv::Point2f> curr_id_pts;
-
-    vector<unsigned int> ids;
-
-    vector<cv::Point2f> right_points;
-    vector<cv::Point2f> right_un_points;
-    std::map<unsigned int, cv::Point2f> right_prev_id_pts;
-    std::map<unsigned int, cv::Point2f> right_curr_id_pts;
-
-    vector<unsigned int> right_ids;
-
-    vector<cv::Point2f> pts_velocity, right_pts_velocity;
-
-    std::list<std::pair<cv::Point2f,cv::Point2f>> visual_points_pair;
-    std::list<std::pair<cv::Point2f,cv::Point2f>> visual_right_points_pair;
-    std::list<cv::Point2f> visual_new_points;
-
-    cv::Point2f feats_center_pt;//当前跟踪的特征点的中心坐标
-    int row{},col{};
-
-    cv::Point2f box_vel;
-    double last_time{-1.},delta_time{};
-
-    int lost_num{0};//无法被跟踪的帧数,超过一定数量该实例将被删除
-
-    cv::Mat mask_img;//物体在当前帧的mask
-    cv::cuda::GpuMat mask_img_gpu;//物体在当前帧的mask
-    torch::Tensor mask_tensor;
-    float mask_area{0.};//当前帧中属于该物体的像素数量
-
-    unsigned int last_frame_cnt{0};
-
-    Box2D::Ptr box2d;
-    Box3D::Ptr box3d;
-};
-
-
-
-
 
 
 class InstsFeatManager {
@@ -140,11 +84,9 @@ private:
     cv::Mat mask_background;
     cv::cuda::GpuMat mask_background_gpu;
 
-    std::vector<cv::Point2f> visual_new_points_;
     SemanticImage prev_img;
     bool is_exist_inst_{false};
 
-    unsigned long global_id_count{0};//全局特征序号，注意与静态物体上的特征id不共用
     unsigned int global_instance_id{0};
 
     double curr_time{},last_time{};
@@ -153,10 +95,6 @@ private:
 
     DeepSORT::Ptr mot_tracker;
     //FlowEstimator::Ptr flow_estimator_;
-
-    cv::Ptr<cv::FeatureDetector> orb_detector_;
-    cv::Ptr<cv::DescriptorExtractor> orb_descriptor_;
-    cv::Ptr<cv::DescriptorMatcher> orb_matcher_;
 };
 
 }

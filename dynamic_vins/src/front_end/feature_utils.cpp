@@ -276,7 +276,7 @@ void PtsVelocity(double dt,
  * @param track_cnt
  * @param ids
  */
-void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, std::vector<int> &ids)
+void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, std::vector<unsigned int> &ids)
 {
     vector<pair<int, pair<cv::Point2f, int>>> cnt_pts_id;
     for (size_t i = 0; i < cur_pts.size(); i++)

@@ -27,6 +27,14 @@ namespace dynamic_vins{\
 
 
 struct SemanticImage{
+    void SetMask();
+    void SetBackgroundMask();
+
+    void SetGrayImage();
+    void SetGrayImageGpu();
+    void SetColorImage();
+    void SetColorImageGpu();
+
     cv::Mat color0,seg0,color1,seg1;
     cv::cuda::GpuMat color0_gpu,color1_gpu;
     double time0,seg0_time,time1,seg1_time;
@@ -48,13 +56,7 @@ struct SemanticImage{
     unsigned int seq;
     bool exist_inst{false};//当前帧是否检测到物体
 
-    void SetMask();
-    void SetBackgroundMask();
 
-    void SetGrayImage();
-    void SetGrayImageGpu();
-    void SetColorImage();
-    void SetColorImageGpu();
 };
 
 

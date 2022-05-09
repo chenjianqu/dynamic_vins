@@ -23,16 +23,14 @@ namespace dynamic_vins{\
 
 
 struct Vel3d{
-    Vel3d(){
-        v=Vec3d::Zero();
-        a=Vec3d::Zero();
-    }
+    Vel3d()=default;
+
     void SetZero(){
         v=Vec3d::Zero();
         a=Vec3d::Zero();
     }
-    Vec3d v;
-    Vec3d a;
+    Vec3d v{0,0,0};
+    Vec3d a{0,0,0};
 };
 
 
@@ -61,7 +59,7 @@ struct FeaturePoint{
      * @param frame_
      */
     FeaturePoint(cv::Point2f &point_,cv::Point2f &point_right_,int frame_)
-    :point(point_.x,point_.y,1), is_stereo(true), point_right(point_right_.x, point_right_.y, 1), frame(frame_){
+    :point(point_.x,point_.y,1),point_right(point_right_.x, point_right_.y, 1), is_stereo(true), frame(frame_){
     }
 
     /**
@@ -92,31 +90,29 @@ struct FeaturePoint{
         if(feat_vector.size()==2){
             point=feat_vector[0].topRows(3);
             //vel=feat_vector[0].bottomRows(2);
-            vel=Vec2d::Zero();
             point_right=feat_vector[1].topRows(3);
             //vel_right=feat_vector[1].bottomRows(2);
-            vel_right=Vec2d::Zero();
             is_stereo=true;
         }
         else{
             point=feat_vector[0].topRows(3);
             //vel=feat_vector[0].bottomRows(2);
-            vel=Vec2d::Zero();
             is_stereo=false;
         }
     }
 
-    Vec3d point;//归一化坐标
+    Vec3d point{0,0,0};//归一化坐标
+    Vec3d point_right{0,0,0};
+
     bool is_stereo{false};
-    Vec3d point_right;
     int frame{0};
 
-    Vec2d vel;//左相机归一化点的速度
-    Vec2d vel_right;//右相机归一化点的速度
+    Vec2d vel{0,0};//左相机归一化点的速度
+    Vec2d vel_right{0,0};//右相机归一化点的速度
 
-    double td{};//特征点被构建时的时间偏移量
+    double td{0};//特征点被构建时的时间偏移量
 
-    Vec3d p_w;//该观测在世界坐标系下的坐标
+    Vec3d p_w{0,0,0};//该观测在世界坐标系下的坐标
     bool is_triangulated{false};//当前观测是否已经进行了三角化
 };
 

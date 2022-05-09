@@ -18,11 +18,6 @@
 #include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
 
-#include "factor/pose_local_parameterization.h"
-#include "factor/projection_instance_factor.h"
-#include "factor/projection_speed_factor.h"
-#include "factor/projection_box_factor.h"
-#include "factor/projection_factor_simple.h"
 #include "utils/parameters.h"
 #include "estimator/vio_util.h"
 #include "instance.h"
@@ -39,15 +34,13 @@ class InstanceManager{
 public:
     using Ptr=std::shared_ptr<InstanceManager>;
 
-    InstanceManager(){
-        ProjectionInstanceFactor::sqrt_info = kFocalLength / 1.5 * Eigen::Matrix2d::Identity();//初始化因子的信息矩阵
-    }
+    InstanceManager()= default;
 
     void PushBack(unsigned int  frame_id, std::map<unsigned int,FeatureInstance> &input_insts);
 
     void Triangulate(int frame_cnt);
 
-    void PredictCurrentPose();
+    void PropagatePose();
 
     void GetOptimizationParameters();
 

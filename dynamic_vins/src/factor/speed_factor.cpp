@@ -7,23 +7,12 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "projection_speed_factor.h"
+#include "speed_factor.h"
 
 #include "estimator/vio_util.h"
 
 
 namespace dynamic_vins{\
-
-
-Eigen::Matrix2d ProjectionSpeedFactor::sqrt_info;
-double ProjectionSpeedFactor::sum_t;
-
-Eigen::Matrix2d ProjectionSpeedSimpleFactor::sqrt_info;
-
-Mat3d ProjectionInstanceSpeedFactor::sqrt_info;
-double ProjectionInstanceSpeedFactor::sum_t;
-
-int debug_flag=0;
 
 
 //优化变量:Twbj 7,Tbc 7,Twoj 7,Twoi 7,speed 6 ,逆深度 1,
@@ -354,7 +343,7 @@ bool ProjectionSpeedSimpleFactor::Evaluate(double const *const *parameters, doub
 
 
 
-bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+bool ProjectionSpeedPoseFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
     TicToc tic_toc;
     Vec3d P_wbj(parameters[0][0], parameters[0][1], parameters[0][2]);
@@ -622,6 +611,88 @@ bool ConstSpeedSimpleFactor::Evaluate(double const *const *parameters, double *r
 
     return true;
 }
+
+
+
+/**
+ * 速度和物体位姿的误差
+ * 误差维度6, 优化变量:物体位姿woi(未实现), 物体位姿woj(未实现),物体速度6
+ */
+bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+{
+    Vec3d P_woi(parameters[0][0], parameters[0][1], parameters[0][2]);
+    Quatd Q_woi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
+
+    Vec3d P_woj(parameters[1][0], parameters[1][1], parameters[1][2]);
+    Quatd Q_woj(parameters[1][6], parameters[1][3], parameters[1][4], parameters[1][5]);
+
+    Vec3d speed_v(parameters[2][0], parameters[2][1], parameters[2][2]);
+    Vec3d speed_w(parameters[2][3], parameters[2][4], parameters[2][5]);
+
+    Mat3d R_woj(Q_woj);
+    Mat3d R_ojw = R_woj.transpose();
+    Mat3d R_woi(Q_woi);
+
+    ///误差计算
+    Vec3d err_v = time_ij * speed_v - (P_woj - P_woi);
+
+    Sophus::SO3d R_delta = Sophus::SO3d::exp(speed_w * time_ij);
+
+    Sophus::SO3d R_err(R_delta.matrix() * R_ojw * R_woi);
+    Vec3d err_w = R_err.log();
+
+    residuals[0]=err_v.x();
+    residuals[1]=err_v.y();
+    residuals[2]=err_v.z();
+    residuals[3]=err_w.x();
+    residuals[4]=err_w.y();
+    residuals[5]=err_w.z();
+
+    if(jacobians){
+        if (jacobians[0]){
+            ///TODO
+            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[0]);
+            jacobian_pose.leftCols<6>() = Eigen::Matrix<double,6,6>::Zero();
+            jacobian_pose.rightCols<1>().setZero();
+        }
+        if (jacobians[1]){
+            ///TODO
+            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[1]);
+            jacobian_pose.leftCols<6>() = Eigen::Matrix<double,6,6>::Zero();
+            jacobian_pose.rightCols<1>().setZero();
+        }
+        ///对速度的雅可比
+        if (jacobians[2]){
+            Mat3d R=R_ojw * R_woi;
+
+            Sophus::Vector3d phi = Sophus::SO3d(R).log();
+            double theta = - phi.norm();//右乘矩阵取负号
+            Vec3d a = phi.normalized();
+            //构造右乘矩阵
+            Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
+
+            Eigen::Matrix<double,6,3> jacobian_v = Eigen::Matrix<double,6,3>::Zero();
+            jacobian_v.topRows(3) = time_ij * Mat3d::Identity();
+            Eigen::Matrix<double,6,3> jacobian_w = Eigen::Matrix<double,6,3>::Zero();
+            jacobian_w.bottomRows(3) = - time_ij * J_r.inverse() * R.transpose();
+
+            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_speed(jacobians[2]);
+            jacobian_speed.leftCols<3>() = jacobian_v;
+            jacobian_speed.middleCols(3,3) = jacobian_w;
+            jacobian_speed.rightCols<1>().setZero();
+        }
+
+    }
+
+
+    return true;
+}
+
+
+
+
+
+
 
 
 }

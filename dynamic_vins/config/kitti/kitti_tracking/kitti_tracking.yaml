@@ -7,7 +7,7 @@ num_of_cam: 2 #相机的数量
 only_frontend: 0  #是否仅仅启动前端
 
 dataset_type: "kitti" #数据集类型,支持kitti,viode
-slam_type: "dynamic" #SLAM模式,可选:raw,naive,dynamic
+slam_type: "naive" #SLAM模式,可选:raw,naive,dynamic
 
 #是否估计相机和IMU之间的外参数,
 # 0表示已有固定的外参,不估计外参;

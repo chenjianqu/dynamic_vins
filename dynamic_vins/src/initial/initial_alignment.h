@@ -37,12 +37,12 @@ class ImageFrame
 {
     public:
         ImageFrame(){};
-        ImageFrame(const std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>& _points, double _t)
+        ImageFrame(const std::map<unsigned int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>& _points, double _t)
             :t{_t},is_key_frame{false}
         {
             points = _points;
         };
-        std::map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>> > > points;
+        std::map<unsigned int, vector<pair<int, Eigen::Matrix<double, 7, 1>> > > points;
         double t;
         Mat3d R;
         Vec3d T;

@@ -7,8 +7,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_PROJECTION_BOX_FACTOR_H
-#define DYNAMIC_VINS_PROJECTION_BOX_FACTOR_H
+#ifndef DYNAMIC_VINS_BOX_FACTOR_H
+#define DYNAMIC_VINS_BOX_FACTOR_H
 
 
 #include <ceres/ceres.h>
@@ -192,21 +192,21 @@ public:
 
 
 /**
- * (经实验,这个误差项不太行)
+ *
  * 包围框的顶点的欧氏距离误差,
- * 优化变量: 相机位姿7,物体位姿7,物体的dims 3
+ * 优化变量: 物体位姿7,包围框3
  */
-class BoxVertexFactor: public ceres::SizedCostFunction<3,7,7,3>{
+class BoxVertexFactor: public ceres::SizedCostFunction<3,7,3>{
 public:
-    BoxVertexFactor(Mat38d corners_,Vec3d indicate_symbol_,Mat3d R_bc_,Vec3d P_bc_)
-    : corners(std::move(corners_)),indicate_symbol(std::move(indicate_symbol_)),R_bc(std::move(R_bc_)),P_bc(std::move(P_bc_)){}
+    BoxVertexFactor(Mat38d corners_,Vec3d dims_,Vec3d indicate_symbol_,Mat3d R_bc_,Mat3d R_wbi_)
+    : corners(std::move(corners_)),dims(std::move(dims_)),indicate_symbol(std::move(indicate_symbol_)),R_bc(std::move(R_bc_)),R_wbi(std::move(R_wbi_)){}
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
 
     Mat38d corners;//观测的物体的长宽高
+    Vec3d dims;
     Vec3d indicate_symbol;//指示该点属于哪个顶点
-    Mat3d R_bc;
-    Vec3d P_bc;
+    Mat3d R_bc,R_wbi;
 
     inline static int counter{0};
 };
@@ -250,4 +250,4 @@ public:
 }
 
 
-#endif //DYNAMIC_VINS_PROJECTION_BOX_FACTOR_H
+#endif //DYNAMIC_VINS_BOX_FACTOR_H

@@ -28,7 +28,7 @@
 #include "det2d/detector2d.h"
 #include "estimator/estimator.h"
 #include "front_end/semantic_image.h"
-#include "front_end/front_end.h"
+#include "front_end/background_tracker.h"
 #include "front_end/front_end_parameters.h"
 
 namespace dynamic_vins{\
@@ -43,6 +43,7 @@ Detector2D::Ptr detector2d;
 Detector3D::Ptr detector3d;
 FlowEstimator::Ptr flow_estimator;
 FeatureTracker::Ptr feature_tracker;
+InstsFeatManager::Ptr insts_tracker;
 CallBack* callback;
 
 ImageQueue image_queue;
@@ -176,9 +177,21 @@ void FeatureTrack()
 
             ///前端跟踪
             if(cfg::slam == SlamType::kDynamic){
-                feature_tracker->insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
+                insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
+                TicToc t_i;
+                //开启另一个线程检测动态特征点
+                std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
+
                 frame.features  = feature_tracker->TrackSemanticImage(*img);
-                frame.instances = feature_tracker->insts_tracker->GetOutputFeature();
+
+                t_inst_track.join();
+                frame.instances = insts_tracker->GetOutputFeature();
+
+                Infot("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.TocThenTic());
+
+                if(fe_para::is_show_track){
+                    insts_tracker->DrawInsts(feature_tracker->img_track());
+                }
             }
             else if(cfg::slam == SlamType::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
@@ -281,6 +294,8 @@ int Run(int argc, char **argv){
         detector2d.reset(new Detector2D(cfg_file));
         detector3d.reset(new Detector3D(cfg_file));
         feature_tracker = std::make_unique<FeatureTracker>(cfg_file);
+        insts_tracker.reset(new InstsFeatManager(cfg_file));
+
         callback = new CallBack();
         flow_estimator = std::make_unique<FlowEstimator>(cfg_file);
     }

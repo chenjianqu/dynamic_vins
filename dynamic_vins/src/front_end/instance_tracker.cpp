@@ -23,15 +23,7 @@ using std::map;
 namespace idx = torch::indexing;
 
 
-std::default_random_engine randomEngine;
-std::uniform_int_distribution<unsigned int> color_rd(0,255);
 
-InstFeat::InstFeat():color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
-{}
-
-InstFeat::InstFeat(unsigned int id_, int class_id_): id(id_), class_id(class_id_),
-color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
-{}
 
 
 InstsFeatManager::InstsFeatManager(const string& config_path)
@@ -134,39 +126,10 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
         ///对每个目标进行光流跟踪
         ExecInst([&](unsigned int key, InstFeat& inst){
-            if(inst.last_points.empty()) return;
-            inst.curr_points.clear();
-            Debugt("inst:{} last_points:{} mask({}x{},type:{})",
-                   inst.id, inst.last_points.size(), inst.mask_img.rows, inst.mask_img.cols, inst.mask_img.type());
-            //光流跟踪
-            vector<uchar> status;
-            if(cfg::use_dense_flow){
-                 status = FeatureTrackByDenseFlow(img.flow,inst.last_points, inst.curr_points);
-            }
-            else{
-                /*static cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow= cv::cuda::SparsePyrLKOpticalFlow::create(
-                        cv::Size(21, 21), 3, 30);
-                static cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow_back= cv::cuda::SparsePyrLKOpticalFlow::create(
-                        cv::Size(21, 21),1,30,true);
-                status = FeatureTrackByLKGpu(lk_optical_flow, lk_optical_flow_back, prev_img.gray0_gpu,
-                                                 img.gray0_gpu, inst.last_points, inst.curr_points);*/
-                status = FeatureTrackByLK(prev_img.gray0,img.gray0,inst.last_points,inst.curr_points);
-            }
-            //删除跟踪失败的点
-            for(size_t i=0;i<status.size();++i){
-                if(status[i] && inst.mask_img.at<uchar>(inst.curr_points[i]) == 0)
-                    status[i]=0;
-            }
-            ReduceVector(inst.curr_points, status);
-            ReduceVector(inst.ids, status);
-            ReduceVector(inst.last_points, status);
+            inst.TrackLeft(img,prev_img);
         });
         Infot("instsTrack flowTrack:{} ms", tic_toc.TocThenTic());
 
-        ///对每个特征点增加观测次数
-        ExecInst([&](unsigned int key, InstFeat& inst){
-            for (auto &n : inst.track_cnt) n++;
-        });
 
         ///添加新的特征点前的准备
         int max_new_detect=0;
@@ -204,7 +167,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 cv::cuda::threshold(img.merge_mask_gpu,img.merge_mask_gpu,0.5,255,CV_8UC1);*/
             }
 
-            visual_new_points_.clear();
             Debugt("instsTrack actually detect num:{}", new_pts.size());
             for(auto &pt : new_pts){
                 for(auto &[key,inst] : instances_){
@@ -212,10 +174,9 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                         continue;
                     if(inst.mask_img.at<uchar>(pt) >= 1){
                         inst.curr_points.emplace_back(pt);
-                        inst.ids.emplace_back(global_id_count++);
+                        inst.ids.emplace_back(InstFeat::global_id_count++);
                         inst.visual_new_points.emplace_back(pt);
                         inst.track_cnt.push_back(1);
-                        visual_new_points_.push_back(pt);
                         break;
                     }
                 }
@@ -223,37 +184,21 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             Infot("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.TocThenTic());
         }
 
-
         for(auto& [key,inst] : instances_){
             ///去畸变和计算归一化坐标
-            inst.curr_un_points= UndistortedPts(inst.curr_points, camera_);
+            inst.UndistortedPts(camera_);
             ///计算特征点的速度
-            SetIdPointPair(inst.ids,inst.curr_un_points,inst.curr_id_pts);
-            PtsVelocity(curr_time - last_time, inst.ids, inst.curr_un_points,
-                        inst.prev_id_pts, inst.pts_velocity);
+            inst.PtsVelocity(curr_time - last_time);
         }
+
         Infot("instsTrack UndistortedPts & PtsVelocity:{} ms", tic_toc.TocThenTic());
 
         /// 右边相机图像的跟踪
         if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
             ExecInst([&](unsigned int key, InstFeat& inst){
-                if(inst.curr_points.empty())return;
-                inst.right_points.clear();
-                auto status= FeatureTrackByLK(img.gray0,img.gray1,inst.curr_points,inst.right_points);
-                if(cfg::dataset == DatasetType::kViode){
-                    for(size_t i=0;i<status.size();++i){
-                        if(status[i] && VIODE::PixelToKey(inst.right_points[i], img.seg1) != key)
-                            status[i]=0;
-                    }
-                }
-                inst.right_ids = inst.ids;
-                ReduceVector(inst.right_points, status);
-                ReduceVector(inst.right_ids, status);
-                inst.right_un_points = UndistortedPts(inst.right_points, right_camera_);
-                SetIdPointPair(inst.right_ids,inst.right_un_points,inst.right_curr_id_pts);
-                PtsVelocity(curr_time - last_time, inst.right_ids, inst.right_un_points,
-                            inst.right_prev_id_pts, inst.right_pts_velocity);
-
+                inst.TrackRight(img);
+                inst.RightUndistortedPts(right_camera_);
+                inst.RightPtsVelocity(curr_time - last_time);
             });
         }
         Infot("instsTrack track right:{} ms", tic_toc.TocThenTic());
@@ -261,9 +206,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         ManageInstances();
 
         ExecInst([&](unsigned int key, InstFeat& inst){
-            inst.last_points=inst.curr_points;
-            inst.prev_id_pts=inst.curr_id_pts;
-            inst.right_prev_id_pts=inst.right_curr_id_pts;
+            inst.PostProcess();
         });
         /*for(auto& [key,inst] : instances_){
             inst.last_points=inst.curr_points;
@@ -371,9 +314,7 @@ void InstsFeatManager::AddViodeInstances(SemanticImage &img)
         inst.mask_img = inst_info.mask_cv;
         inst.box2d = std::make_shared<Box2D>(inst_info.min_pt,inst_info.max_pt);
         inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->center_pt);
-        inst.box_vel = cv::Point2f(0,0);
         inst.last_frame_cnt = global_frame_id;
-        inst.last_time = img.time0;
         Debugt("inst:{} mask_img:({}x{}) local_mask:({}x{})", key, instances_[key].mask_img.rows,
                instances_[key].mask_img.cols,
                inst.mask_img.rows, inst.mask_img.cols);
@@ -590,9 +531,7 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
             inst_feat.mask_img = inst.mask_cv;
             inst_feat.mask_tensor = inst.mask_tensor;
             inst_feat.box2d = std::make_shared<Box2D>(inst.min_pt,inst.max_pt);
-            inst_feat.box_vel = cv::Point2f(0,0);
             inst_feat.class_id = inst.label_id;
-            inst_feat.last_time = current_time;
             inst_feat.last_frame_cnt = global_frame_id;
             instances_.insert({id, inst_feat});
             log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, inst.name,

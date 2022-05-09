@@ -7,14 +7,16 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_PROJECTION_INSTANCE_FACTOR_H
-#define DYNAMIC_VINS_PROJECTION_INSTANCE_FACTOR_H
+#ifndef DYNAMIC_VINS_INSTANCE_FACTOR_H
+#define DYNAMIC_VINS_INSTANCE_FACTOR_H
 
 #include <ceres/ceres.h>
 #include <eigen3/Eigen/Dense>
 #include <sophus/so3.hpp>
+#include <utility>
 
 #include "utils/def.h"
+#include "utils/parameters.h"
 
 namespace dynamic_vins{\
 
@@ -26,13 +28,13 @@ namespace dynamic_vins{\
  */
 class ProjectionInstanceFactor : public ceres::SizedCostFunction<2, 7,7,7,7,7,1>{
 public:
-    ProjectionInstanceFactor(const Vec3d &_pts_j, const Vec3d &_pts_i)
-    :pts_j(_pts_j), pts_i(_pts_i){}
+    ProjectionInstanceFactor(Vec3d _pts_j, Vec3d _pts_i)
+    :pts_j(std::move(_pts_j)), pts_i(std::move(_pts_i)){}
 
-    ProjectionInstanceFactor(const Vec3d &_pts_j, const Vec3d &_pts_i,
+    ProjectionInstanceFactor(Vec3d _pts_j, Vec3d _pts_i,
                              const Vec2d &_velocity_j, const Vec2d &_velocity_i,
                              const double _td_j, const double _td_i,const double cur_td_) :
-                             pts_j(_pts_j),pts_i(_pts_i),
+                             pts_j(std::move(_pts_j)),pts_i(std::move(_pts_i)),
                              td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
@@ -40,9 +42,11 @@ public:
         velocity_j.x() = _velocity_j.x();
         velocity_j.y() = _velocity_j.y();
         velocity_j.z() = 0;
+
+        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
     };
 
-    virtual bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const;
+    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
 
 
     Vec3d pts_j;//估计值（以前的观测值）
@@ -50,8 +54,8 @@ public:
 
     Vec3d velocity_i, velocity_j;
     double td_i, td_j,cur_td;
-    static Eigen::Matrix2d sqrt_info;
-    static double sum_t;
+    inline static Eigen::Matrix2d sqrt_info;
+    inline static double sum_t{0};
 };
 
 /**
@@ -59,15 +63,16 @@ public:
  */
 class ProjInst12Factor : public ceres::SizedCostFunction<2, 7, 7, 1>{
 public:
-    ProjInst12Factor(const Vec3d &_pts_j, const Vec3d &_pts_i) :
-    pts_i(_pts_i), pts_j(_pts_j){
+    ProjInst12Factor(Vec3d _pts_j, Vec3d _pts_i) :
+    pts_i(std::move(_pts_i)), pts_j(std::move(_pts_j)){
+        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
     };
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
 
     Vec3d pts_i, pts_j;
-    static Eigen::Matrix2d sqrt_info;
-    static double sum_t;
+    inline static Eigen::Matrix2d sqrt_info;
+    inline static double sum_t{0};
     static int debug_num;
 };
 
@@ -76,11 +81,13 @@ public:
  */
 class ProjInst12FactorSimple : public ceres::SizedCostFunction<2,1>{
 public:
-    ProjInst12FactorSimple(const Vec3d &_pts_j, const Vec3d &_pts_i,
-                           const Mat3d &R_bc0_, const Vec3d &P_bc0_,
-                           const Mat3d &R_bc1_, const Vec3d &P_bc1_
-                           ) :pts_i(_pts_i), pts_j(_pts_j),R_bc0(R_bc0_),R_bc1(R_bc1_),
-                           P_bc0(P_bc0_),P_bc1(P_bc1_){
+    ProjInst12FactorSimple(Vec3d _pts_j, Vec3d _pts_i,
+                           Mat3d R_bc0_, Vec3d P_bc0_,
+                           Mat3d R_bc1_, Vec3d P_bc1_
+                           ) :pts_i(std::move(_pts_i)), pts_j(std::move(_pts_j)),R_bc0(std::move(R_bc0_)),R_bc1(std::move(R_bc1_)),
+                           P_bc0(std::move(P_bc0_)),P_bc1(std::move(P_bc1_)){
+        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
+
     };
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
@@ -90,8 +97,8 @@ public:
     Mat3d R_bc0,R_bc1;
     Vec3d P_bc0,P_bc1;
 
-    static Eigen::Matrix2d sqrt_info;
-    static double sum_t;
+    inline static Eigen::Matrix2d sqrt_info;
+    inline static double sum_t{0};
     static int debug_num;
 };
 
@@ -101,10 +108,10 @@ public:
  */
 class ProjInst21Factor : public ceres::SizedCostFunction<2, 7, 7, 7,7,7, 1>{
 public:
-    ProjInst21Factor(const Vec3d &_pts_j, const Vec3d &_pts_i,
+    ProjInst21Factor(Vec3d _pts_j, Vec3d _pts_i,
                      const Vec2d &_velocity_j, const Vec2d &_velocity_i,
                      const double _td_j, const double _td_i, const double cur_td_, int landmark_id) :
-                     pts_i(_pts_i), pts_j(_pts_j),
+                     pts_i(std::move(_pts_i)), pts_j(std::move(_pts_j)),
                      td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
@@ -115,6 +122,9 @@ public:
 
         debug_num=0;
         id=landmark_id;
+
+        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
+
     };
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
@@ -122,8 +132,8 @@ public:
     Vec3d pts_i, pts_j;
     Vec3d velocity_i, velocity_j;
     double td_i, td_j,cur_td;
-    static Eigen::Matrix2d sqrt_info;
-    static double sum_t;
+    inline static Eigen::Matrix2d sqrt_info;
+    inline static double sum_t{0};
 
     static int debug_num;
 
@@ -135,13 +145,13 @@ public:
 
 class ProjInst21SimpleFactor : public ceres::SizedCostFunction<2,7,7, 1>{
 public:
-    ProjInst21SimpleFactor(const Vec3d &_pts_j, const Vec3d &_pts_i,
+    ProjInst21SimpleFactor(Vec3d _pts_j, Vec3d _pts_i,
                            const Vec2d &_velocity_j, const Vec2d &_velocity_i,
                            const Mat3d &R_wbj_, const Vec3d &P_wbj_,
                            const Mat3d &R_wbi_, const Vec3d &P_wbi_,
                            const Mat3d &R_bc_, const Vec3d &P_bc_,
                            const double _td_j, const double _td_i, const double cur_td_, int landmark_id) :
-                           pts_i(_pts_i), pts_j(_pts_j),
+                           pts_i(std::move(_pts_i)), pts_j(std::move(_pts_j)),
                            td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
@@ -158,6 +168,8 @@ public:
         P_wbi=P_wbi_;
         R_bc=R_bc_;
         P_bc=P_bc_;
+
+        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
     };
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
@@ -165,8 +177,8 @@ public:
     Vec3d pts_i, pts_j;
     Vec3d velocity_i, velocity_j;
     double td_i, td_j,cur_td;
-    static Eigen::Matrix2d sqrt_info;
-    static double sum_t;
+    inline static Eigen::Matrix2d sqrt_info;
+    inline static double sum_t{0};
 
     int id;
 
@@ -182,10 +194,10 @@ public:
  */
 class ProjInst22Factor : public ceres::SizedCostFunction<2, 7, 7,   7,7,  7,7, 1>{
 public:
-    ProjInst22Factor(const Vec3d &_pts_j, const Vec3d &_pts_i,
+    ProjInst22Factor(Vec3d _pts_j, Vec3d _pts_i,
                      const Vec2d &_velocity_j, const Vec2d &_velocity_i,
                      const double _td_j, const double _td_i, const double cur_td_) :
-                     pts_i(_pts_i), pts_j(_pts_j),
+                     pts_i(std::move(_pts_i)), pts_j(std::move(_pts_j)),
                      td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
@@ -193,6 +205,8 @@ public:
         velocity_j.x() = _velocity_j.x();
         velocity_j.y() = _velocity_j.y();
         velocity_j.z() = 0;
+
+        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
     };
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
@@ -200,21 +214,21 @@ public:
     Vec3d pts_i, pts_j;
     Vec3d velocity_i, velocity_j;
     double td_i, td_j,cur_td;
-    static Eigen::Matrix2d sqrt_info;
-    static double sum_t;
+    inline static Eigen::Matrix2d sqrt_info;
+    inline static double sum_t{0};
 };
 
 
 class ProjInst22SimpleFactor : public ceres::SizedCostFunction<2,7,7, 1>{
 public:
-    ProjInst22SimpleFactor(const Vec3d &_pts_j, const Vec3d &_pts_i,
+    ProjInst22SimpleFactor(Vec3d _pts_j, Vec3d _pts_i,
                            const Vec2d &_velocity_j, const Vec2d &_velocity_i,
                            const Mat3d &R_wbj_, const Vec3d &P_wbj_,
                            const Mat3d &R_wbi_, const Vec3d &P_wbi_,
                            const Mat3d &R_bc1_, const Vec3d &P_bc1_,
                            const Mat3d &R_bc2_, const Vec3d &P_bc2_,
                            const double _td_j, const double _td_i, const double cur_td_, int landmark_id) :
-                           pts_i(_pts_i), pts_j(_pts_j),
+                           pts_i(std::move(_pts_i)), pts_j(std::move(_pts_j)),
                            td_i(_td_i), td_j(_td_j),cur_td(cur_td_){
         velocity_i.x() = _velocity_i.x();
         velocity_i.y() = _velocity_i.y();
@@ -231,6 +245,8 @@ public:
         P_wbi=P_wbi_;
         R_bc1=R_bc1_;P_bc1=P_bc1_;
         R_bc2=R_bc2_;P_bc2=P_bc2_;
+
+        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
     };
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
@@ -238,8 +254,8 @@ public:
     Vec3d pts_i, pts_j;
     Vec3d velocity_i, velocity_j;
     double td_i, td_j,cur_td;
-    static Eigen::Matrix2d sqrt_info;
-    static double sum_t;
+    inline static Eigen::Matrix2d sqrt_info;
+    inline static double sum_t{0};
 
     int id;
 
@@ -276,11 +292,11 @@ public:
 
 class InstanceInitAbsFactor: public ceres::SizedCostFunction<3,7,1>{
 public:
-    InstanceInitAbsFactor(const Vec3d &pts_j_,const Vec2d &velocity_j_,
+    InstanceInitAbsFactor(Vec3d pts_j_,const Vec2d &velocity_j_,
                           const Mat3d &R_wbj_,const Vec3d &P_wbj_,
                           const Mat3d &R_bc_,const Vec3d &P_bc_,
                           const double td_j_,const double curr_td_):
-                          pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_){
+                          pts_j(std::move(pts_j_)),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_){
         R_wbj=R_wbj_;
         P_wbj=P_wbj_;
         R_bc=R_bc_;
@@ -295,7 +311,7 @@ public:
     Vec3d velocity_j;
     double td_j,curr_td;
 
-    static double sum_t;
+    inline static double sum_t{0};
 
     Mat3d R_wbj,R_bc;
     Vec3d P_wbj,P_bc;
@@ -307,11 +323,11 @@ public:
  */
 class InstanceInitPowFactor: public ceres::SizedCostFunction<3,7,1>{
 public:
-    InstanceInitPowFactor(const Vec3d &pts_j_,const Vec2d &velocity_j_,
+    InstanceInitPowFactor(Vec3d pts_j_,const Vec2d &velocity_j_,
                           const Mat3d &R_wbj_,const Vec3d &P_wbj_,
                           const Mat3d &R_bc_,const Vec3d &P_bc_,
                           const double td_j_,const double curr_td_,double factor_=0.01):
-                          pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_),factor(factor_){
+                          pts_j(std::move(pts_j_)),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_),factor(factor_){
         R_wbj=R_wbj_;
         P_wbj=P_wbj_;
         R_bc=R_bc_;
@@ -325,7 +341,7 @@ public:
     double td_j,curr_td;
     double factor;
 
-    static double sum_t;
+    inline static double sum_t{0};
 
     Mat3d R_wbj,R_bc;
     Vec3d P_wbj,P_bc;
@@ -337,12 +353,12 @@ public:
  */
 class InstanceInitPowFactorSpeed: public ceres::SizedCostFunction<3,7,6,1>{
 public:
-    InstanceInitPowFactorSpeed(const Vec3d &pts_j_,const Vec2d &velocity_j_,
+    InstanceInitPowFactorSpeed(Vec3d pts_j_,const Vec2d &velocity_j_,
                                const Mat3d &R_wbj_,const Vec3d &P_wbj_,
                                const Mat3d &R_bc_,const Vec3d &P_bc_,
                                const double td_j_,const double curr_td_,
                                const double time_j,const double time_s,double factor_=0.01):
-                               pts_j(pts_j_),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_),
+                               pts_j(std::move(pts_j_)),velocity_j(velocity_j_.x(),velocity_j_.y(),0),td_j(td_j_),curr_td(curr_td_),
                                time_js(time_j- time_s),factor(factor_){
         R_wbj=R_wbj_;
         P_wbj=P_wbj_;
@@ -360,7 +376,7 @@ public:
 
     double factor;
 
-    static double sum_t;
+    inline static double sum_t{0};
 
     Mat3d R_wbj,R_bc;
     Vec3d P_wbj,P_bc;
@@ -369,4 +385,4 @@ public:
 
 }
 
-#endif //DYNAMIC_VINS_PROJECTION_INSTANCE_FACTOR_H
+#endif //DYNAMIC_VINS_INSTANCE_FACTOR_H
