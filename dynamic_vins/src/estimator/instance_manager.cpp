@@ -2,10 +2,12 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
  *******************************************************/
+
 #include "instance_manager.h"
 
 #include <algorithm>
@@ -331,13 +333,11 @@ void InstanceManager::SlideWindow()
 {
     if(e->frame != kWinSize)
         return;
-    Debugv("动态特征边缘化:");
-    //printf("动态特征边缘化:");
-    if(e->margin_flag == MarginFlag::kMarginOld)
-        Debugv("最老帧 | ");
-    else
-        Debugv("次新帧 | ");
 
+    if(e->margin_flag == MarginFlag::kMarginOld)
+        Debugv("InstanceManager::SlideWindow margin_flag = kMarginOld");
+    else
+        Debugv("InstanceManager::SlideWindow margin_flag = kMarginSecondNew | ");
 
     for(auto &[key,inst] : instances){
         if(!inst.is_tracking)
@@ -349,24 +349,56 @@ void InstanceManager::SlideWindow()
         else/// 去掉次新帧
             debug_num= inst.SlideWindowNew();
 
+        if(debug_num>0){
+            Debugv("InstanceManager::SlideWindow Inst:{},del:{} ", inst.id, debug_num);
+        }
+
         ///当物体没有正在跟踪的特征点时，将其设置为不在跟踪状态
         if(inst.landmarks.empty()){
-            inst.is_tracking=false;
-            inst.is_initial=false;
+            inst.ClearState();
             tracking_number_--;
         }
-        if(inst.is_tracking && inst.triangle_num==0){
+        else if(inst.is_tracking && inst.triangle_num==0){
             inst.is_initial=false;
         }
 
-        if(debug_num>0){
-            Debugv("<Inst:{},del:{}> ", inst.id, debug_num);
-        }
     }
 }
 
 
+void InstanceManager::InitialInstanceVelocity(){
+    for(auto &[inst_id,inst] : instances){
+        if(!inst.is_initial || inst.is_init_velocity){
+            continue;
+        }
 
+        Vec3d avg_t = Vec3d::Zero();
+        int cnt_t = 0;
+        for(auto &lm: inst.landmarks){
+            std::list<FeaturePoint>::iterator first_point;
+            bool found_first=false;
+            for(auto it=lm.feats.begin();it!=lm.feats.end();++it){
+                if(it->is_triangulated){
+                    if(!found_first){
+                        first_point=it;
+                        found_first=true;
+                    }
+                    else{
+                        double time_ij = e->headers[it->frame] - e->headers[first_point->frame];
+                        avg_t += (it->p_w - first_point->p_w) / time_ij;
+                        cnt_t ++;
+                        break;
+                    }
+                }
+            }
+        }
+        if(cnt_t>10){
+            inst.vel.v = avg_t/cnt_t;
+            inst.is_init_velocity = false;
+        }
+
+    }
+}
 
 
 /**
@@ -376,7 +408,7 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
 
     for(auto &[inst_id,inst] : instances){
         if(inst.is_initial || !inst.is_tracking)
-            return;
+            continue;
         if(!inst.boxes3d[frame]){ //未检测到box3d
             continue;
         }
@@ -501,7 +533,7 @@ string InstanceManager::PrintInstanceInfo(bool output_lm,bool output_stereo){
 string InstanceManager::PrintInstancePoseInfo(bool output_lm){
     string log_text ;
     InstExec([&log_text,&output_lm](int key,Instance& inst){
-        log_text += fmt::format("id:{} box:{} v:{} a:{}\n",inst.id,VecToStr(inst.box),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
+        log_text += fmt::format("id:{} info:\n box:{} v:{} a:{}\n",inst.id,VecToStr(inst.box),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
         for(int i=0; i <= kWinSize; ++i){
             log_text+=fmt::format("{},P:({}),R:({})\n", i, VecToStr(inst.state[i].P),VecToStr(inst.state[i].R.eulerAngles(2,1,0)));
         }
@@ -573,7 +605,9 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
     std::unordered_map<string,int> statistics=
             {{"BoxEncloseStereoPointFactor",0},{"BoxEncloseTrianglePointFactor",0},
              {"ProjInst12Factor",0},{"ConstSpeedSimpleFactor",0},{"BoxVertexFactor",0},
-             {"BoxDimsFactor",0},{"BoxOrientationFactor",0} ,{"SpeedPoseFactor",0}};
+             {"BoxDimsFactor",0},{"BoxOrientationFactor",0} ,{"SpeedPoseFactor",0},
+             {"SpeedStereoPointFactor",0},{"ConstSpeedStereoPointFactor",0}};
+
 
 
     Debugv("添加Instance残差:");
@@ -593,19 +627,6 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                 return lp1.feats.size() > lp2.feats.size();});
         }
 
-        int number_speed=0;//速度约束的数量
-        int track_3=0,track_2;
-
-        ///根据当前约束的情况判断是否优化速度
-        for(auto& ldm : inst.landmarks){
-            if(ldm.depth > 0){
-                if(ldm.feats.size() >= 3) track_3++;
-            }
-        }
-        /*if(track_3>=2)
-            inst.opt_vel=true;
-        else
-            inst.opt_vel=false;*/
         inst.opt_vel=true;
 
         int depth_index=-1;//注意,这里的depth_index的赋值过程要与 Instance::SetOptimizeParameters()中depth_index的赋值过程一致
@@ -636,7 +657,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
 
                         
            ///根据3D应该要落在包围框内产生的误差
-            for(auto &feat : lm.feats){
+            /*for(auto &feat : lm.feats){
                 if(feat.is_triangulated){
                     //Debugv("lm:{} frame:{} p_w:{}",lm.id,feat.frame, VecToStr(feat.p_w));
                     problem.AddResidualBlock(new BoxEncloseStereoPointFactor(feat.p_w),
@@ -649,7 +670,7 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                     feat_j.point,feat_j.vel,e->Rs[feat_j.frame],e->Ps[feat_j.frame], e->ric[0],e->tic[0],feat_j.td,e->td),
                                      loss_function,
                                      inst.para_state[feat_j.frame],inst.para_box[0],inst.para_inv_depth[depth_index]);
-            statistics["BoxEncloseTrianglePointFactor"]++;
+            statistics["BoxEncloseTrianglePointFactor"]++;*/
 
             if(inst.is_static){ //对于静态物体,仅仅refine包围框
                 continue;
@@ -670,12 +691,11 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                      inst.para_state[0],
                                      inst.para_speed[0],
                                      inst.para_inv_depth[depth_index]);*/
-            number_speed++;
 
             if(lm.feats.size() < 2)
                 continue;
 
-            ///有多个特征点,添加重投影残差
+
             for(auto feat_it = (++lm.feats.begin()); feat_it !=lm.feats.end();++feat_it ){
                 int fi = feat_it->frame;
 
@@ -778,35 +798,71 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                 }
             }
 
+            if(inst.is_init_velocity){
+                ///优化物体速度
+                std::list<FeaturePoint>::iterator first_point,end_point;
+                bool found_first=false,found_end=false;
+                for(auto it=lm.feats.begin();it!=lm.feats.end();++it){
+                    if(it->is_triangulated){
+                        if(!found_first){
+                            first_point=it;
+                            found_first=true;
+                        }
+                        else{
+                            end_point=it;
+                            found_end=true;
+                        }
+                    }
+                }
+                if(found_first && found_end){
+                    double time_ij = e->headers[end_point->frame] - e->headers[first_point->frame];
+                    problem.AddResidualBlock(
+                            new SpeedStereoPointFactor(first_point->p_w,end_point->p_w,time_ij),
+                            loss_function,inst.para_speed[0]);
+                    statistics["SpeedStereoPointFactor"]++;
+
+                    problem.AddResidualBlock(
+                            new ConstSpeedStereoPointFactor(first_point->p_w,end_point->p_w,time_ij,
+                                                            inst.last_vel.v,inst.last_vel.a),
+                            loss_function,inst.para_speed[0]);
+                    statistics["ConstSpeedStereoPointFactor"]++;
+
+                }
+
+            }
+
+
         }
 
-        if(!inst.is_static){
+        if(inst.is_init_velocity){
+        //if(!inst.is_static){
             ///添加恒定速度误差
-            problem.AddResidualBlock(new ConstSpeedSimpleFactor(
+            /*problem.AddResidualBlock(new ConstSpeedSimpleFactor(
                     inst.last_vel.v,inst.last_vel.a,number_speed*10),
                                      nullptr,
                                      inst.para_speed[0]);
-            statistics["ConstSpeedSimpleFactor"]++;
+            statistics["ConstSpeedSimpleFactor"]++;*/
 
             ///速度-位姿误差
-            /*for(int i=1;i<=kWinSize;++i){
-                problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i-1].time,inst.state[i].time),
-                                         loss_function,inst.para_state[i-1],inst.para_state[i],inst.para_speed[0]);
-                statistics["SpeedPoseFactor"]++;
-            }*/
+            for(int i=1;i<=kWinSize;++i){
+                //problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i-1].time,inst.state[i].time),
+                //                         loss_function,inst.para_state[i-1],inst.para_state[i],inst.para_speed[0]);
+                //statistics["SpeedPoseFactor"]++;
+            }
 
+        //}
         }
 
         ///添加包围框预测误差
         for(int i=0;i<=kWinSize;++i){
             if(inst.boxes3d[i]){
                 ///包围框大小误差
-                problem.AddResidualBlock(new BoxDimsFactor(inst.boxes3d[i]->dims),loss_function,inst.para_box[0]);
+/*                problem.AddResidualBlock(new BoxDimsFactor(inst.boxes3d[i]->dims),loss_function,inst.para_box[0]);
                 statistics["BoxDimsFactor"]++;
                 ///物体的方向误差
                 Mat3d R_cioi = Box3D::GetCoordinateRotationFromCorners(inst.boxes3d[i]->corners);
                 problem.AddResidualBlock(new BoxOrientationFactor(R_cioi,e->ric[0]), nullptr,e->para_Pose[i],inst.para_state[i]);
-                statistics["BoxOrientationFactor"]++;
+                statistics["BoxOrientationFactor"]++;*/
 
                  /*///添加顶点误差
                  //效果不好
@@ -838,9 +894,6 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
             }
         }
 
-
-        Debugv("inst:{} landmarks.size:{} isOptimizeVel:{} track_3:{} \n {}", inst.id, inst.landmarks.size(),
-               inst.opt_vel, track_3, debug_msg);
 
     }
 

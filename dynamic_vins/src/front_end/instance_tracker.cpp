@@ -2,6 +2,7 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -10,7 +11,6 @@
 #include "instance_tracker.h"
 #include "semantic_image.h"
 #include "utils/def.h"
-#include "utils/dataset/viode_utils.h"
 #include "front_end_parameters.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/dataset/nuscenes_utils.h"
@@ -21,9 +21,6 @@ using std::unordered_map;
 using std::make_pair;
 using std::map;
 namespace idx = torch::indexing;
-
-
-
 
 
 InstsFeatManager::InstsFeatManager(const string& config_path)
@@ -79,7 +76,8 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
         if(max_iou > 0.1){
             match_vec[max_idx]=true;
             inst.box3d = boxes[max_idx];
-            Debugt("id:{} box2d:{} box3d:{}",inst_id,coco::CocoLabel[inst.class_id],NuScenes::GetClassName(boxes[max_idx]->class_id));
+            Debugt("id:{} box2d:{} box3d:{}",inst_id,coco::CocoLabel[inst.class_id],
+                   NuScenes::GetClassName(boxes[max_idx]->class_id));
         }
     }
 }
@@ -277,7 +275,8 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::GetOutputFeature()
                 if(features_map.count(r_id) ==0)
                     continue;
                 Eigen::Matrix<double,5,1> feat;
-                feat<<inst.right_un_points[i].x,inst.right_un_points[i].y, 1 ,inst.right_pts_velocity[i].x,inst.right_pts_velocity[i].y;
+                feat<<inst.right_un_points[i].x,inst.right_un_points[i].y, 1 ,inst.right_pts_velocity[i].x,
+                inst.right_pts_velocity[i].y;
                 features_map[r_id].push_back(feat);
                 right_cnt++;
             }
@@ -535,7 +534,8 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
             inst_feat.last_frame_cnt = global_frame_id;
             instances_.insert({id, inst_feat});
             log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, inst.name,
-                                    inst_feat.box2d->min_pt.x,inst_feat.box2d->min_pt.y,inst_feat.box2d->max_pt.x,inst_feat.box2d->max_pt.y);
+                                    inst_feat.box2d->min_pt.x,inst_feat.box2d->min_pt.y,inst_feat.box2d->max_pt.x,
+                                    inst_feat.box2d->max_pt.y);
         }
         else{
             it->second.mask_img_gpu = inst.mask_gpu;
@@ -545,8 +545,9 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
             it->second.box2d->max_pt = inst.max_pt;
             it->second.box2d->center_pt = inst.mask_center;
             it->second.last_frame_cnt = global_frame_id;
-            log_text += fmt::format("Update inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, inst.name,
-                                    it->second.box2d->min_pt.x,it->second.box2d->min_pt.y,it->second.box2d->max_pt.x,it->second.box2d->max_pt.y);
+            log_text += fmt::format("Update inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",
+                                    id, inst.name, it->second.box2d->min_pt.x,it->second.box2d->min_pt.y,
+                                    it->second.box2d->max_pt.x,it->second.box2d->max_pt.y);
         }
     }
 

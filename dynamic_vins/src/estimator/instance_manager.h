@@ -2,6 +2,7 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -56,6 +57,9 @@ public:
     string PrintInstancePoseInfo(bool output_lm);
 
     void InitialInstance(std::map<unsigned int,FeatureInstance> &input_insts);
+
+    void InitialInstanceVelocity();
+
 
     /**
     * 获得优化完成的参数，并重新设置窗口内物体的位姿

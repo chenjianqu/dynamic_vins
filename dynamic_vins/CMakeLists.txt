@@ -11,6 +11,8 @@ set(CMAKE_CXX_FLAGS "-O3 -Wall -g -no-pie -fno-pie -fPIC")
 
 message("PROJECT_SOURCE_DIR : ${PROJECT_SOURCE_DIR}")
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
@@ -144,10 +146,11 @@ add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sourc
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
-add_executable(build_raft src/system/build_raft.cpp ${utils_sources} ${tensorrt_sources} src/flow/flow_parameter.cpp)
-target_link_libraries(build_raft  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
-        TorchVision::TorchVision ${TensorRT_LIBS})
+add_executable(build_raft src/system/build_raft.cpp src/flow/flow_parameter.cpp ${tensorrt_sources} src/utils/log_utils.cpp)
+target_link_libraries(build_raft ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
+        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
-add_executable(build_solo src/system/build_solo.cpp ${utils_sources} ${tensorrt_sources} src/det2d/det2d_parameter.cpp)
-target_link_libraries(build_solo  ${CUDA_LIBRARIES} ${OpenCV_LIBRARIES}  ${TORCH_LIBRARIES}
-        TorchVision::TorchVision ${TensorRT_LIBS})
+
+add_executable(build_solo src/system/build_solo.cpp ${tensorrt_sources} src/utils/log_utils.cpp src/det2d/det2d_parameter.cpp)
+target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
+        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})

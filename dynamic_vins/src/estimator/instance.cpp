@@ -2,6 +2,7 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -606,6 +607,11 @@ void Instance::DetermineStatic()
         }
         Debugv("SetDynamicOrStatic id:{} triangle_num:{} avg_err:{} is_static:{}",id,triangle_num,avg_err,is_static);
     }*/
+
+    if(is_init_velocity && vel.v.norm() > 3){
+        is_static = false;
+        return;
+    }
 
     ///下面根据场景流判断物体是否运动
     int cnt=0;

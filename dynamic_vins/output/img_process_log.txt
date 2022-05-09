@@ -1,734 +1,650 @@
-[2022-05-09 13:28:17.021] [segmentor] [debug] Start sync
-[2022-05-09 13:28:21.400] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:21.402] [segmentor] [warning] ----------Time : 0.050000 ----------
-[2022-05-09 13:28:21.445] [segmentor] [info] ImageProcess prepare: 42.4327
-[2022-05-09 13:28:21.445] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:21.449] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:21.528] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
-[2022-05-09 13:28:21.528] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
-[2022-05-09 13:28:21.534] [segmentor] [debug] id:0,cls:car,prob:1.201
-[2022-05-09 13:28:21.534] [segmentor] [debug] id:1,cls:car,prob:0.329073
-[2022-05-09 13:28:21.534] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:21.638] [segmentor] [info] ImageProcess SetMask: 193.63
-[2022-05-09 13:28:21.649] [segmentor] [warning] ImageProcess, all:246.789 ms 
+[2022-05-10 00:31:06.724] [segmentor] [debug] Start sync
+[2022-05-10 00:31:13.931] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:13.933] [segmentor] [warning] ----------Time : 0.050000 ----------
+[2022-05-10 00:31:13.976] [segmentor] [info] ImageProcess prepare: 42.5237
+[2022-05-10 00:31:13.976] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:13.980] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:14.055] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
+[2022-05-10 00:31:14.055] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
+[2022-05-10 00:31:14.061] [segmentor] [debug] id:0,cls:car,prob:1.201
+[2022-05-10 00:31:14.061] [segmentor] [debug] id:1,cls:car,prob:0.329073
+[2022-05-10 00:31:14.061] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:14.172] [segmentor] [info] ImageProcess SetMask: 195.992
+[2022-05-10 00:31:14.185] [segmentor] [warning] ImageProcess, all:251.693 ms 
 
-[2022-05-09 13:28:21.649] [segmentor] [debug] Start sync
-[2022-05-09 13:28:21.705] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:21.706] [segmentor] [warning] ----------Time : 0.100000 ----------
-[2022-05-09 13:28:21.735] [segmentor] [info] ImageProcess prepare: 28.7655
-[2022-05-09 13:28:21.735] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:21.745] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:21.853] [segmentor] [debug] GetSegTensor | seg_masks.dims:[6, 96, 288]
-[2022-05-09 13:28:21.853] [segmentor] [debug] GetSegTensor | cate_labels.dims:[6]
-[2022-05-09 13:28:21.896] [segmentor] [debug] id:0,cls:car,prob:1.24789
-[2022-05-09 13:28:21.896] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
-[2022-05-09 13:28:21.897] [segmentor] [info] ImageProcess SetMask: 162.495
-[2022-05-09 13:28:21.907] [segmentor] [warning] ImageProcess, all:201.04 ms 
+[2022-05-10 00:31:14.185] [segmentor] [debug] Start sync
+[2022-05-10 00:31:14.232] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:14.233] [segmentor] [warning] ----------Time : 0.100000 ----------
+[2022-05-10 00:31:14.246] [segmentor] [info] ImageProcess prepare: 12.5131
+[2022-05-10 00:31:14.246] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:14.256] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:14.379] [segmentor] [debug] GetSegTensor | seg_masks.dims:[6, 96, 288]
+[2022-05-10 00:31:14.379] [segmentor] [debug] GetSegTensor | cate_labels.dims:[6]
+[2022-05-10 00:31:14.435] [segmentor] [debug] id:0,cls:car,prob:1.24789
+[2022-05-10 00:31:14.436] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
+[2022-05-10 00:31:14.437] [segmentor] [info] ImageProcess SetMask: 190.866
+[2022-05-10 00:31:14.437] [segmentor] [warning] ImageProcess, all:203.7 ms 
 
-[2022-05-09 13:28:21.907] [segmentor] [debug] Start sync
-[2022-05-09 13:28:21.992] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:21.992] [segmentor] [warning] ----------Time : 0.150000 ----------
-[2022-05-09 13:28:21.997] [segmentor] [info] ImageProcess prepare: 4.30481
-[2022-05-09 13:28:21.997] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:21.997] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:22.010] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
-[2022-05-09 13:28:22.010] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
-[2022-05-09 13:28:22.011] [segmentor] [debug] id:0,cls:car,prob:1.26836
-[2022-05-09 13:28:22.011] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
-[2022-05-09 13:28:22.012] [segmentor] [info] ImageProcess SetMask: 15.4641
-[2022-05-09 13:28:22.025] [segmentor] [warning] ImageProcess, all:32.6955 ms 
+[2022-05-10 00:31:14.437] [segmentor] [debug] Start sync
+[2022-05-10 00:31:14.532] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:14.533] [segmentor] [warning] ----------Time : 0.150000 ----------
+[2022-05-10 00:31:14.536] [segmentor] [info] ImageProcess prepare: 3.03835
+[2022-05-10 00:31:14.536] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:14.536] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:14.548] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
+[2022-05-10 00:31:14.548] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
+[2022-05-10 00:31:14.548] [segmentor] [debug] id:0,cls:car,prob:1.26836
+[2022-05-10 00:31:14.548] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
+[2022-05-10 00:31:14.550] [segmentor] [info] ImageProcess SetMask: 13.9655
+[2022-05-10 00:31:14.550] [segmentor] [warning] ImageProcess, all:17.4391 ms 
 
-[2022-05-09 13:28:22.025] [segmentor] [debug] Start sync
-[2022-05-09 13:28:22.301] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:22.302] [segmentor] [warning] ----------Time : 0.200000 ----------
-[2022-05-09 13:28:22.306] [segmentor] [info] ImageProcess prepare: 3.88905
-[2022-05-09 13:28:22.306] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:22.306] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:22.319] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
-[2022-05-09 13:28:22.319] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
-[2022-05-09 13:28:22.320] [segmentor] [debug] id:0,cls:car,prob:1.31646
-[2022-05-09 13:28:22.320] [segmentor] [debug] id:1,cls:car,prob:0.376856
-[2022-05-09 13:28:22.320] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:22.321] [segmentor] [info] ImageProcess SetMask: 14.7928
-[2022-05-09 13:28:22.321] [segmentor] [warning] ImageProcess, all:19.0304 ms 
+[2022-05-10 00:31:14.550] [segmentor] [debug] Start sync
+[2022-05-10 00:31:14.833] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:14.833] [segmentor] [warning] ----------Time : 0.200000 ----------
+[2022-05-10 00:31:14.836] [segmentor] [info] ImageProcess prepare: 3.15092
+[2022-05-10 00:31:14.836] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:14.836] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:14.850] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
+[2022-05-10 00:31:14.850] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
+[2022-05-10 00:31:14.850] [segmentor] [debug] id:0,cls:car,prob:1.31646
+[2022-05-10 00:31:14.851] [segmentor] [debug] id:1,cls:car,prob:0.376856
+[2022-05-10 00:31:14.851] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:14.852] [segmentor] [info] ImageProcess SetMask: 16.1408
+[2022-05-10 00:31:14.853] [segmentor] [warning] ImageProcess, all:19.5981 ms 
 
-[2022-05-09 13:28:22.321] [segmentor] [debug] Start sync
-[2022-05-09 13:28:22.603] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:22.604] [segmentor] [warning] ----------Time : 0.250000 ----------
-[2022-05-09 13:28:22.607] [segmentor] [info] ImageProcess prepare: 2.80658
-[2022-05-09 13:28:22.607] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:22.607] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:22.620] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
-[2022-05-09 13:28:22.620] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
-[2022-05-09 13:28:22.621] [segmentor] [debug] id:0,cls:car,prob:1.45793
-[2022-05-09 13:28:22.621] [segmentor] [debug] id:1,cls:car,prob:0.229506
-[2022-05-09 13:28:22.621] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:22.622] [segmentor] [info] ImageProcess SetMask: 15.2291
-[2022-05-09 13:28:22.622] [segmentor] [warning] ImageProcess, all:18.3599 ms 
+[2022-05-10 00:31:14.853] [segmentor] [debug] Start sync
+[2022-05-10 00:31:15.138] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:15.138] [segmentor] [warning] ----------Time : 0.250000 ----------
+[2022-05-10 00:31:15.141] [segmentor] [info] ImageProcess prepare: 2.79125
+[2022-05-10 00:31:15.141] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:15.141] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:15.153] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
+[2022-05-10 00:31:15.153] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
+[2022-05-10 00:31:15.154] [segmentor] [debug] id:0,cls:car,prob:1.45793
+[2022-05-10 00:31:15.154] [segmentor] [debug] id:1,cls:car,prob:0.229506
+[2022-05-10 00:31:15.154] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:15.155] [segmentor] [info] ImageProcess SetMask: 14.7632
+[2022-05-10 00:31:15.156] [segmentor] [warning] ImageProcess, all:17.9705 ms 
 
-[2022-05-09 13:28:22.622] [segmentor] [debug] Start sync
-[2022-05-09 13:28:22.903] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:22.904] [segmentor] [warning] ----------Time : 0.300000 ----------
-[2022-05-09 13:28:22.907] [segmentor] [info] ImageProcess prepare: 3.15582
-[2022-05-09 13:28:22.907] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:22.907] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:22.919] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
-[2022-05-09 13:28:22.919] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
-[2022-05-09 13:28:22.919] [segmentor] [debug] id:0,cls:car,prob:1.53703
-[2022-05-09 13:28:22.919] [segmentor] [debug] id:1,cls:car,prob:0.428697
-[2022-05-09 13:28:22.919] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:22.920] [segmentor] [info] ImageProcess SetMask: 13.311
-[2022-05-09 13:28:22.920] [segmentor] [warning] ImageProcess, all:16.797 ms 
+[2022-05-10 00:31:15.156] [segmentor] [debug] Start sync
+[2022-05-10 00:31:15.438] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:15.438] [segmentor] [warning] ----------Time : 0.300000 ----------
+[2022-05-10 00:31:15.441] [segmentor] [info] ImageProcess prepare: 3.35171
+[2022-05-10 00:31:15.441] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:15.441] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:15.454] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
+[2022-05-10 00:31:15.454] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
+[2022-05-10 00:31:15.455] [segmentor] [debug] id:0,cls:car,prob:1.53703
+[2022-05-10 00:31:15.455] [segmentor] [debug] id:1,cls:car,prob:0.428697
+[2022-05-10 00:31:15.455] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:15.457] [segmentor] [info] ImageProcess SetMask: 15.5481
+[2022-05-10 00:31:15.457] [segmentor] [warning] ImageProcess, all:19.3626 ms 
 
-[2022-05-09 13:28:22.920] [segmentor] [debug] Start sync
-[2022-05-09 13:28:23.196] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:23.197] [segmentor] [warning] ----------Time : 0.350000 ----------
-[2022-05-09 13:28:23.200] [segmentor] [info] ImageProcess prepare: 3.34564
-[2022-05-09 13:28:23.200] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:23.200] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:23.213] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
-[2022-05-09 13:28:23.213] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
-[2022-05-09 13:28:23.214] [segmentor] [debug] id:0,cls:car,prob:1.56106
-[2022-05-09 13:28:23.214] [segmentor] [debug] id:1,cls:car,prob:0.208069
-[2022-05-09 13:28:23.214] [segmentor] [debug] id:2,cls:car,prob:0.496612
-[2022-05-09 13:28:23.214] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:23.216] [segmentor] [info] ImageProcess SetMask: 16.0407
-[2022-05-09 13:28:23.216] [segmentor] [warning] ImageProcess, all:19.8126 ms 
+[2022-05-10 00:31:15.457] [segmentor] [debug] Start sync
+[2022-05-10 00:31:15.732] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:15.732] [segmentor] [warning] ----------Time : 0.350000 ----------
+[2022-05-10 00:31:15.738] [segmentor] [info] ImageProcess prepare: 6.43376
+[2022-05-10 00:31:15.738] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:15.739] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:15.753] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
+[2022-05-10 00:31:15.753] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
+[2022-05-10 00:31:15.753] [segmentor] [debug] id:0,cls:car,prob:1.56106
+[2022-05-10 00:31:15.754] [segmentor] [debug] id:1,cls:car,prob:0.208069
+[2022-05-10 00:31:15.754] [segmentor] [debug] id:2,cls:car,prob:0.496612
+[2022-05-10 00:31:15.754] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:15.757] [segmentor] [info] ImageProcess SetMask: 18.2537
+[2022-05-10 00:31:15.757] [segmentor] [warning] ImageProcess, all:25.2068 ms 
 
-[2022-05-09 13:28:23.216] [segmentor] [debug] Start sync
-[2022-05-09 13:28:23.499] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:23.500] [segmentor] [warning] ----------Time : 0.400000 ----------
-[2022-05-09 13:28:23.506] [segmentor] [info] ImageProcess prepare: 6.21094
-[2022-05-09 13:28:23.506] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:23.506] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:23.518] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
-[2022-05-09 13:28:23.518] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
-[2022-05-09 13:28:23.519] [segmentor] [debug] id:0,cls:car,prob:1.492
-[2022-05-09 13:28:23.519] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
-[2022-05-09 13:28:23.520] [segmentor] [info] ImageProcess SetMask: 14.45
-[2022-05-09 13:28:23.530] [segmentor] [warning] ImageProcess, all:30.7408 ms 
+[2022-05-10 00:31:15.757] [segmentor] [debug] Start sync
+[2022-05-10 00:31:16.035] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:16.036] [segmentor] [warning] ----------Time : 0.400000 ----------
+[2022-05-10 00:31:16.041] [segmentor] [info] ImageProcess prepare: 4.99474
+[2022-05-10 00:31:16.041] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:16.041] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:16.053] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
+[2022-05-10 00:31:16.053] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
+[2022-05-10 00:31:16.053] [segmentor] [debug] id:0,cls:car,prob:1.492
+[2022-05-10 00:31:16.054] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
+[2022-05-10 00:31:16.055] [segmentor] [info] ImageProcess SetMask: 13.2173
+[2022-05-10 00:31:16.055] [segmentor] [warning] ImageProcess, all:18.6298 ms 
 
-[2022-05-09 13:28:23.530] [segmentor] [debug] Start sync
-[2022-05-09 13:28:23.802] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:23.802] [segmentor] [warning] ----------Time : 0.450000 ----------
-[2022-05-09 13:28:23.807] [segmentor] [info] ImageProcess prepare: 5.40594
-[2022-05-09 13:28:23.808] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:23.808] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:23.819] [segmentor] [debug] GetSegTensor | seg_masks.dims:[5, 96, 288]
-[2022-05-09 13:28:23.819] [segmentor] [debug] GetSegTensor | cate_labels.dims:[5]
-[2022-05-09 13:28:23.820] [segmentor] [debug] id:0,cls:car,prob:1.23715
-[2022-05-09 13:28:23.820] [segmentor] [debug] id:1,cls:car,prob:0.28037
-[2022-05-09 13:28:23.820] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:23.822] [segmentor] [info] ImageProcess SetMask: 14.8503
-[2022-05-09 13:28:23.823] [segmentor] [warning] ImageProcess, all:20.6104 ms 
+[2022-05-10 00:31:16.055] [segmentor] [debug] Start sync
+[2022-05-10 00:31:16.336] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:16.337] [segmentor] [warning] ----------Time : 0.450000 ----------
+[2022-05-10 00:31:16.341] [segmentor] [info] ImageProcess prepare: 4.19055
+[2022-05-10 00:31:16.341] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:16.341] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:16.355] [segmentor] [debug] GetSegTensor | seg_masks.dims:[5, 96, 288]
+[2022-05-10 00:31:16.355] [segmentor] [debug] GetSegTensor | cate_labels.dims:[5]
+[2022-05-10 00:31:16.355] [segmentor] [debug] id:0,cls:car,prob:1.23715
+[2022-05-10 00:31:16.355] [segmentor] [debug] id:1,cls:car,prob:0.28037
+[2022-05-10 00:31:16.355] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:16.357] [segmentor] [info] ImageProcess SetMask: 15.8921
+[2022-05-10 00:31:16.357] [segmentor] [warning] ImageProcess, all:20.523 ms 
 
-[2022-05-09 13:28:23.823] [segmentor] [debug] Start sync
-[2022-05-09 13:28:24.105] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:24.105] [segmentor] [warning] ----------Time : 0.500000 ----------
-[2022-05-09 13:28:24.112] [segmentor] [info] ImageProcess prepare: 6.48694
-[2022-05-09 13:28:24.112] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:24.112] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:24.125] [segmentor] [debug] GetSegTensor | seg_masks.dims:[5, 96, 288]
-[2022-05-09 13:28:24.125] [segmentor] [debug] GetSegTensor | cate_labels.dims:[5]
-[2022-05-09 13:28:24.126] [segmentor] [debug] id:0,cls:car,prob:1.21596
-[2022-05-09 13:28:24.126] [segmentor] [debug] id:1,cls:car,prob:0.21012
-[2022-05-09 13:28:24.126] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:24.127] [segmentor] [info] ImageProcess SetMask: 14.7561
-[2022-05-09 13:28:24.127] [segmentor] [warning] ImageProcess, all:21.6901 ms 
+[2022-05-10 00:31:16.357] [segmentor] [debug] Start sync
+[2022-05-10 00:31:16.642] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:16.642] [segmentor] [warning] ----------Time : 0.500000 ----------
+[2022-05-10 00:31:16.646] [segmentor] [info] ImageProcess prepare: 4.06223
+[2022-05-10 00:31:16.646] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:16.646] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:16.659] [segmentor] [debug] GetSegTensor | seg_masks.dims:[5, 96, 288]
+[2022-05-10 00:31:16.659] [segmentor] [debug] GetSegTensor | cate_labels.dims:[5]
+[2022-05-10 00:31:16.659] [segmentor] [debug] id:0,cls:car,prob:1.21596
+[2022-05-10 00:31:16.659] [segmentor] [debug] id:1,cls:car,prob:0.21012
+[2022-05-10 00:31:16.659] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:16.661] [segmentor] [info] ImageProcess SetMask: 14.4233
+[2022-05-10 00:31:16.661] [segmentor] [warning] ImageProcess, all:18.778 ms 
 
-[2022-05-09 13:28:24.127] [segmentor] [debug] Start sync
-[2022-05-09 13:28:24.404] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:24.404] [segmentor] [warning] ----------Time : 0.550000 ----------
-[2022-05-09 13:28:24.408] [segmentor] [info] ImageProcess prepare: 4.47886
-[2022-05-09 13:28:24.408] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:24.409] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:24.421] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
-[2022-05-09 13:28:24.421] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
-[2022-05-09 13:28:24.422] [segmentor] [debug] id:0,cls:car,prob:1.4597
-[2022-05-09 13:28:24.422] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
-[2022-05-09 13:28:24.424] [segmentor] [info] ImageProcess SetMask: 15.2008
-[2022-05-09 13:28:24.424] [segmentor] [warning] ImageProcess, all:20.219 ms 
+[2022-05-10 00:31:16.661] [segmentor] [debug] Start sync
+[2022-05-10 00:31:16.943] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:16.944] [segmentor] [warning] ----------Time : 0.550000 ----------
+[2022-05-10 00:31:16.946] [segmentor] [info] ImageProcess prepare: 2.8804
+[2022-05-10 00:31:16.946] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:16.947] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:16.959] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
+[2022-05-10 00:31:16.959] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
+[2022-05-10 00:31:16.960] [segmentor] [debug] id:0,cls:car,prob:1.4597
+[2022-05-10 00:31:16.960] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
+[2022-05-10 00:31:16.961] [segmentor] [info] ImageProcess SetMask: 14.2547
+[2022-05-10 00:31:16.961] [segmentor] [warning] ImageProcess, all:17.5241 ms 
 
-[2022-05-09 13:28:24.424] [segmentor] [debug] Start sync
-[2022-05-09 13:28:24.710] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:24.710] [segmentor] [warning] ----------Time : 0.600000 ----------
-[2022-05-09 13:28:24.713] [segmentor] [info] ImageProcess prepare: 2.8605
-[2022-05-09 13:28:24.713] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:24.713] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:24.726] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
-[2022-05-09 13:28:24.726] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
-[2022-05-09 13:28:24.726] [segmentor] [debug] id:0,cls:car,prob:1.28542
-[2022-05-09 13:28:24.726] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
-[2022-05-09 13:28:24.727] [segmentor] [info] ImageProcess SetMask: 13.7543
-[2022-05-09 13:28:24.727] [segmentor] [warning] ImageProcess, all:16.9721 ms 
+[2022-05-10 00:31:16.961] [segmentor] [debug] Start sync
+[2022-05-10 00:31:17.247] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:17.247] [segmentor] [warning] ----------Time : 0.600000 ----------
+[2022-05-10 00:31:17.250] [segmentor] [info] ImageProcess prepare: 3.34339
+[2022-05-10 00:31:17.250] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:17.250] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:17.261] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
+[2022-05-10 00:31:17.261] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
+[2022-05-10 00:31:17.262] [segmentor] [debug] id:0,cls:car,prob:1.28542
+[2022-05-10 00:31:17.262] [segmentor] [debug] GetSegTensor | seg_preds.dims:[1, 96, 288]
+[2022-05-10 00:31:17.263] [segmentor] [info] ImageProcess SetMask: 13.2916
+[2022-05-10 00:31:17.264] [segmentor] [warning] ImageProcess, all:16.9681 ms 
 
-[2022-05-09 13:28:24.727] [segmentor] [debug] Start sync
-[2022-05-09 13:28:25.003] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:25.004] [segmentor] [warning] ----------Time : 0.650000 ----------
-[2022-05-09 13:28:25.006] [segmentor] [info] ImageProcess prepare: 2.73321
-[2022-05-09 13:28:25.006] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:25.006] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:25.018] [segmentor] [debug] GetSegTensor | seg_masks.dims:[13, 96, 288]
-[2022-05-09 13:28:25.018] [segmentor] [debug] GetSegTensor | cate_labels.dims:[13]
-[2022-05-09 13:28:25.019] [segmentor] [debug] id:0,cls:car,prob:1.20604
-[2022-05-09 13:28:25.019] [segmentor] [debug] id:1,cls:car,prob:0.610377
-[2022-05-09 13:28:25.019] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:25.020] [segmentor] [info] ImageProcess SetMask: 13.3017
-[2022-05-09 13:28:25.020] [segmentor] [warning] ImageProcess, all:16.4295 ms 
+[2022-05-10 00:31:17.264] [segmentor] [debug] Start sync
+[2022-05-10 00:31:17.539] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:17.540] [segmentor] [warning] ----------Time : 0.650000 ----------
+[2022-05-10 00:31:17.545] [segmentor] [info] ImageProcess prepare: 4.81784
+[2022-05-10 00:31:17.545] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:17.545] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:17.557] [segmentor] [debug] GetSegTensor | seg_masks.dims:[13, 96, 288]
+[2022-05-10 00:31:17.557] [segmentor] [debug] GetSegTensor | cate_labels.dims:[13]
+[2022-05-10 00:31:17.558] [segmentor] [debug] id:0,cls:car,prob:1.20604
+[2022-05-10 00:31:17.558] [segmentor] [debug] id:1,cls:car,prob:0.610377
+[2022-05-10 00:31:17.558] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:17.560] [segmentor] [info] ImageProcess SetMask: 14.9365
+[2022-05-10 00:31:17.560] [segmentor] [warning] ImageProcess, all:20.2134 ms 
 
-[2022-05-09 13:28:25.020] [segmentor] [debug] Start sync
-[2022-05-09 13:28:25.307] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:25.308] [segmentor] [warning] ----------Time : 0.700000 ----------
-[2022-05-09 13:28:25.311] [segmentor] [info] ImageProcess prepare: 3.21928
-[2022-05-09 13:28:25.311] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:25.311] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:25.322] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
-[2022-05-09 13:28:25.322] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
-[2022-05-09 13:28:25.322] [segmentor] [debug] id:0,cls:car,prob:1.08865
-[2022-05-09 13:28:25.322] [segmentor] [debug] id:1,cls:car,prob:0.530563
-[2022-05-09 13:28:25.322] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:25.324] [segmentor] [info] ImageProcess SetMask: 12.638
-[2022-05-09 13:28:25.324] [segmentor] [warning] ImageProcess, all:16.4064 ms 
+[2022-05-10 00:31:17.560] [segmentor] [debug] Start sync
+[2022-05-10 00:31:17.836] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:17.836] [segmentor] [warning] ----------Time : 0.700000 ----------
+[2022-05-10 00:31:17.840] [segmentor] [info] ImageProcess prepare: 4.35138
+[2022-05-10 00:31:17.840] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:17.841] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:17.853] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
+[2022-05-10 00:31:17.853] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
+[2022-05-10 00:31:17.854] [segmentor] [debug] id:0,cls:car,prob:1.08865
+[2022-05-10 00:31:17.854] [segmentor] [debug] id:1,cls:car,prob:0.530563
+[2022-05-10 00:31:17.854] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:17.857] [segmentor] [info] ImageProcess SetMask: 16.9403
+[2022-05-10 00:31:17.858] [segmentor] [warning] ImageProcess, all:21.8532 ms 
 
-[2022-05-09 13:28:25.324] [segmentor] [debug] Start sync
-[2022-05-09 13:28:25.607] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:25.608] [segmentor] [warning] ----------Time : 0.750000 ----------
-[2022-05-09 13:28:25.612] [segmentor] [info] ImageProcess prepare: 3.84564
-[2022-05-09 13:28:25.612] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:25.612] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:25.626] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
-[2022-05-09 13:28:25.626] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
-[2022-05-09 13:28:25.627] [segmentor] [debug] id:0,cls:car,prob:1.17169
-[2022-05-09 13:28:25.627] [segmentor] [debug] id:1,cls:car,prob:0.454385
-[2022-05-09 13:28:25.627] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:25.629] [segmentor] [info] ImageProcess SetMask: 17.1551
-[2022-05-09 13:28:25.629] [segmentor] [warning] ImageProcess, all:21.5595 ms 
+[2022-05-10 00:31:17.858] [segmentor] [debug] Start sync
+[2022-05-10 00:31:18.145] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:18.146] [segmentor] [warning] ----------Time : 0.750000 ----------
+[2022-05-10 00:31:18.150] [segmentor] [info] ImageProcess prepare: 4.0245
+[2022-05-10 00:31:18.150] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:18.150] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:18.162] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
+[2022-05-10 00:31:18.162] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
+[2022-05-10 00:31:18.162] [segmentor] [debug] id:0,cls:car,prob:1.17169
+[2022-05-10 00:31:18.162] [segmentor] [debug] id:1,cls:car,prob:0.454385
+[2022-05-10 00:31:18.162] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:18.164] [segmentor] [info] ImageProcess SetMask: 14.6124
+[2022-05-10 00:31:18.165] [segmentor] [warning] ImageProcess, all:19.074 ms 
 
-[2022-05-09 13:28:25.629] [segmentor] [debug] Start sync
-[2022-05-09 13:28:25.906] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:25.907] [segmentor] [warning] ----------Time : 0.800000 ----------
-[2022-05-09 13:28:25.910] [segmentor] [info] ImageProcess prepare: 3.28389
-[2022-05-09 13:28:25.910] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:25.910] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:25.922] [segmentor] [debug] GetSegTensor | seg_masks.dims:[12, 96, 288]
-[2022-05-09 13:28:25.922] [segmentor] [debug] GetSegTensor | cate_labels.dims:[12]
-[2022-05-09 13:28:25.923] [segmentor] [debug] id:0,cls:car,prob:1.35755
-[2022-05-09 13:28:25.923] [segmentor] [debug] id:1,cls:car,prob:0.538342
-[2022-05-09 13:28:25.923] [segmentor] [debug] id:2,cls:car,prob:0.378707
-[2022-05-09 13:28:25.923] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:25.924] [segmentor] [info] ImageProcess SetMask: 14.2568
-[2022-05-09 13:28:25.933] [segmentor] [warning] ImageProcess, all:26.4627 ms 
+[2022-05-10 00:31:18.165] [segmentor] [debug] Start sync
+[2022-05-10 00:31:18.444] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:18.444] [segmentor] [warning] ----------Time : 0.800000 ----------
+[2022-05-10 00:31:18.449] [segmentor] [info] ImageProcess prepare: 4.67721
+[2022-05-10 00:31:18.449] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:18.449] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:18.460] [segmentor] [debug] GetSegTensor | seg_masks.dims:[12, 96, 288]
+[2022-05-10 00:31:18.460] [segmentor] [debug] GetSegTensor | cate_labels.dims:[12]
+[2022-05-10 00:31:18.461] [segmentor] [debug] id:0,cls:car,prob:1.35755
+[2022-05-10 00:31:18.461] [segmentor] [debug] id:1,cls:car,prob:0.538342
+[2022-05-10 00:31:18.461] [segmentor] [debug] id:2,cls:car,prob:0.378707
+[2022-05-10 00:31:18.461] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:18.464] [segmentor] [info] ImageProcess SetMask: 15.6124
+[2022-05-10 00:31:18.465] [segmentor] [warning] ImageProcess, all:20.8122 ms 
 
-[2022-05-09 13:28:25.933] [segmentor] [debug] Start sync
-[2022-05-09 13:28:26.190] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:26.191] [segmentor] [warning] ----------Time : 0.850000 ----------
-[2022-05-09 13:28:26.196] [segmentor] [info] ImageProcess prepare: 5.40224
-[2022-05-09 13:28:26.196] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:26.196] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:26.208] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
-[2022-05-09 13:28:26.208] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
-[2022-05-09 13:28:26.209] [segmentor] [debug] id:0,cls:car,prob:1.35321
-[2022-05-09 13:28:26.209] [segmentor] [debug] id:1,cls:car,prob:0.368802
-[2022-05-09 13:28:26.209] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:26.210] [segmentor] [info] ImageProcess SetMask: 13.42
-[2022-05-09 13:28:26.210] [segmentor] [warning] ImageProcess, all:19.3207 ms 
+[2022-05-10 00:31:18.465] [segmentor] [debug] Start sync
+[2022-05-10 00:31:18.726] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:18.726] [segmentor] [warning] ----------Time : 0.850000 ----------
+[2022-05-10 00:31:18.730] [segmentor] [info] ImageProcess prepare: 3.19683
+[2022-05-10 00:31:18.730] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:18.730] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:18.744] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
+[2022-05-10 00:31:18.744] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
+[2022-05-10 00:31:18.744] [segmentor] [debug] id:0,cls:car,prob:1.35321
+[2022-05-10 00:31:18.744] [segmentor] [debug] id:1,cls:car,prob:0.368802
+[2022-05-10 00:31:18.744] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:18.747] [segmentor] [info] ImageProcess SetMask: 17.5852
+[2022-05-10 00:31:18.748] [segmentor] [warning] ImageProcess, all:21.5791 ms 
 
-[2022-05-09 13:28:26.210] [segmentor] [debug] Start sync
-[2022-05-09 13:28:26.503] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:26.503] [segmentor] [warning] ----------Time : 0.900000 ----------
-[2022-05-09 13:28:26.509] [segmentor] [info] ImageProcess prepare: 5.69272
-[2022-05-09 13:28:26.509] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:26.509] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:26.521] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
-[2022-05-09 13:28:26.521] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
-[2022-05-09 13:28:26.522] [segmentor] [debug] id:0,cls:car,prob:1.14379
-[2022-05-09 13:28:26.522] [segmentor] [debug] id:1,cls:car,prob:0.321012
-[2022-05-09 13:28:26.522] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:26.523] [segmentor] [info] ImageProcess SetMask: 13.8859
-[2022-05-09 13:28:26.523] [segmentor] [warning] ImageProcess, all:19.9585 ms 
+[2022-05-10 00:31:18.748] [segmentor] [debug] Start sync
+[2022-05-10 00:31:19.039] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:19.039] [segmentor] [warning] ----------Time : 0.900000 ----------
+[2022-05-10 00:31:19.042] [segmentor] [info] ImageProcess prepare: 3.01369
+[2022-05-10 00:31:19.042] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:19.042] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:19.054] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
+[2022-05-10 00:31:19.054] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
+[2022-05-10 00:31:19.055] [segmentor] [debug] id:0,cls:car,prob:1.14379
+[2022-05-10 00:31:19.055] [segmentor] [debug] id:1,cls:car,prob:0.321012
+[2022-05-10 00:31:19.055] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:19.056] [segmentor] [info] ImageProcess SetMask: 14.1812
+[2022-05-10 00:31:19.057] [segmentor] [warning] ImageProcess, all:17.5223 ms 
 
-[2022-05-09 13:28:26.523] [segmentor] [debug] Start sync
-[2022-05-09 13:28:26.792] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:26.792] [segmentor] [warning] ----------Time : 0.950000 ----------
-[2022-05-09 13:28:26.796] [segmentor] [info] ImageProcess prepare: 3.74712
-[2022-05-09 13:28:26.796] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:26.796] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:26.810] [segmentor] [debug] GetSegTensor | seg_masks.dims:[6, 96, 288]
-[2022-05-09 13:28:26.810] [segmentor] [debug] GetSegTensor | cate_labels.dims:[6]
-[2022-05-09 13:28:26.810] [segmentor] [debug] id:0,cls:car,prob:0.960719
-[2022-05-09 13:28:26.810] [segmentor] [debug] id:1,cls:car,prob:0.40115
-[2022-05-09 13:28:26.811] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:26.812] [segmentor] [info] ImageProcess SetMask: 16.1837
-[2022-05-09 13:28:26.813] [segmentor] [warning] ImageProcess, all:20.4031 ms 
+[2022-05-10 00:31:19.057] [segmentor] [debug] Start sync
+[2022-05-10 00:31:19.327] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:19.327] [segmentor] [warning] ----------Time : 0.950000 ----------
+[2022-05-10 00:31:19.334] [segmentor] [info] ImageProcess prepare: 6.20425
+[2022-05-10 00:31:19.334] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:19.334] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:19.345] [segmentor] [debug] GetSegTensor | seg_masks.dims:[6, 96, 288]
+[2022-05-10 00:31:19.346] [segmentor] [debug] GetSegTensor | cate_labels.dims:[6]
+[2022-05-10 00:31:19.347] [segmentor] [debug] id:0,cls:car,prob:0.960719
+[2022-05-10 00:31:19.347] [segmentor] [debug] id:1,cls:car,prob:0.40115
+[2022-05-10 00:31:19.347] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:19.349] [segmentor] [info] ImageProcess SetMask: 15.084
+[2022-05-10 00:31:19.349] [segmentor] [warning] ImageProcess, all:21.6444 ms 
 
-[2022-05-09 13:28:26.813] [segmentor] [debug] Start sync
-[2022-05-09 13:28:27.112] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:27.112] [segmentor] [warning] ----------Time : 1.000000 ----------
-[2022-05-09 13:28:27.115] [segmentor] [info] ImageProcess prepare: 2.93263
-[2022-05-09 13:28:27.115] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:27.115] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:27.128] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
-[2022-05-09 13:28:27.129] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
-[2022-05-09 13:28:27.129] [segmentor] [debug] id:0,cls:car,prob:1.06849
-[2022-05-09 13:28:27.129] [segmentor] [debug] id:1,cls:car,prob:0.566612
-[2022-05-09 13:28:27.129] [segmentor] [debug] id:2,cls:car,prob:0.236338
-[2022-05-09 13:28:27.129] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:27.131] [segmentor] [info] ImageProcess SetMask: 15.5078
-[2022-05-09 13:28:27.131] [segmentor] [warning] ImageProcess, all:18.7897 ms 
+[2022-05-10 00:31:19.349] [segmentor] [debug] Start sync
+[2022-05-10 00:31:19.639] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:19.639] [segmentor] [warning] ----------Time : 1.000000 ----------
+[2022-05-10 00:31:19.643] [segmentor] [info] ImageProcess prepare: 3.55268
+[2022-05-10 00:31:19.643] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:19.643] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:19.656] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
+[2022-05-10 00:31:19.656] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
+[2022-05-10 00:31:19.657] [segmentor] [debug] id:0,cls:car,prob:1.06849
+[2022-05-10 00:31:19.657] [segmentor] [debug] id:1,cls:car,prob:0.566612
+[2022-05-10 00:31:19.657] [segmentor] [debug] id:2,cls:car,prob:0.236338
+[2022-05-10 00:31:19.657] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:19.660] [segmentor] [info] ImageProcess SetMask: 16.966
+[2022-05-10 00:31:19.660] [segmentor] [warning] ImageProcess, all:20.8962 ms 
 
-[2022-05-09 13:28:27.131] [segmentor] [debug] Start sync
-[2022-05-09 13:28:27.401] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:27.401] [segmentor] [warning] ----------Time : 1.050000 ----------
-[2022-05-09 13:28:27.405] [segmentor] [info] ImageProcess prepare: 3.15778
-[2022-05-09 13:28:27.405] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:27.405] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:27.417] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
-[2022-05-09 13:28:27.417] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
-[2022-05-09 13:28:27.418] [segmentor] [debug] id:0,cls:car,prob:1.18997
-[2022-05-09 13:28:27.418] [segmentor] [debug] id:1,cls:car,prob:0.816744
-[2022-05-09 13:28:27.418] [segmentor] [debug] id:2,cls:car,prob:0.574436
-[2022-05-09 13:28:27.418] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:27.419] [segmentor] [info] ImageProcess SetMask: 14.3517
-[2022-05-09 13:28:27.419] [segmentor] [warning] ImageProcess, all:17.9299 ms 
+[2022-05-10 00:31:19.660] [segmentor] [debug] Start sync
+[2022-05-10 00:31:19.936] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:19.936] [segmentor] [warning] ----------Time : 1.050000 ----------
+[2022-05-10 00:31:19.940] [segmentor] [info] ImageProcess prepare: 3.5253
+[2022-05-10 00:31:19.940] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:19.940] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:19.953] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
+[2022-05-10 00:31:19.953] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
+[2022-05-10 00:31:19.953] [segmentor] [debug] id:0,cls:car,prob:1.18997
+[2022-05-10 00:31:19.953] [segmentor] [debug] id:1,cls:car,prob:0.816744
+[2022-05-10 00:31:19.953] [segmentor] [debug] id:2,cls:car,prob:0.574436
+[2022-05-10 00:31:19.953] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:19.955] [segmentor] [info] ImageProcess SetMask: 15.4786
+[2022-05-10 00:31:19.956] [segmentor] [warning] ImageProcess, all:19.4446 ms 
 
-[2022-05-09 13:28:27.419] [segmentor] [debug] Start sync
-[2022-05-09 13:28:27.708] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:27.708] [segmentor] [warning] ----------Time : 1.100000 ----------
-[2022-05-09 13:28:27.713] [segmentor] [info] ImageProcess prepare: 4.96003
-[2022-05-09 13:28:27.713] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:27.713] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:27.726] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
-[2022-05-09 13:28:27.726] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
-[2022-05-09 13:28:27.727] [segmentor] [debug] id:0,cls:car,prob:1.20638
-[2022-05-09 13:28:27.727] [segmentor] [debug] id:1,cls:car,prob:0.585509
-[2022-05-09 13:28:27.727] [segmentor] [debug] id:2,cls:car,prob:0.201886
-[2022-05-09 13:28:27.727] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:27.728] [segmentor] [info] ImageProcess SetMask: 15.0374
-[2022-05-09 13:28:27.728] [segmentor] [warning] ImageProcess, all:20.3385 ms 
+[2022-05-10 00:31:19.956] [segmentor] [debug] Start sync
+[2022-05-10 00:31:20.243] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:20.243] [segmentor] [warning] ----------Time : 1.100000 ----------
+[2022-05-10 00:31:20.247] [segmentor] [info] ImageProcess prepare: 3.16401
+[2022-05-10 00:31:20.247] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:20.247] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:20.260] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
+[2022-05-10 00:31:20.260] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
+[2022-05-10 00:31:20.261] [segmentor] [debug] id:0,cls:car,prob:1.20638
+[2022-05-10 00:31:20.261] [segmentor] [debug] id:1,cls:car,prob:0.585509
+[2022-05-10 00:31:20.261] [segmentor] [debug] id:2,cls:car,prob:0.201886
+[2022-05-10 00:31:20.261] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:20.263] [segmentor] [info] ImageProcess SetMask: 16.7812
+[2022-05-10 00:31:20.264] [segmentor] [warning] ImageProcess, all:20.2633 ms 
 
-[2022-05-09 13:28:27.728] [segmentor] [debug] Start sync
-[2022-05-09 13:28:28.016] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:28.017] [segmentor] [warning] ----------Time : 1.150000 ----------
-[2022-05-09 13:28:28.020] [segmentor] [info] ImageProcess prepare: 3.68997
-[2022-05-09 13:28:28.020] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:28.020] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:28.033] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
-[2022-05-09 13:28:28.033] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
-[2022-05-09 13:28:28.034] [segmentor] [debug] id:0,cls:car,prob:1.20797
-[2022-05-09 13:28:28.034] [segmentor] [debug] id:1,cls:car,prob:0.548439
-[2022-05-09 13:28:28.034] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:28.035] [segmentor] [info] ImageProcess SetMask: 15.0111
-[2022-05-09 13:28:28.036] [segmentor] [warning] ImageProcess, all:19.0821 ms 
+[2022-05-10 00:31:20.264] [segmentor] [debug] Start sync
+[2022-05-10 00:31:20.552] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:20.552] [segmentor] [warning] ----------Time : 1.150000 ----------
+[2022-05-10 00:31:20.555] [segmentor] [info] ImageProcess prepare: 2.81309
+[2022-05-10 00:31:20.555] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:20.555] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:20.567] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
+[2022-05-10 00:31:20.567] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
+[2022-05-10 00:31:20.567] [segmentor] [debug] id:0,cls:car,prob:1.20797
+[2022-05-10 00:31:20.567] [segmentor] [debug] id:1,cls:car,prob:0.548439
+[2022-05-10 00:31:20.567] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:20.569] [segmentor] [info] ImageProcess SetMask: 14.7167
+[2022-05-10 00:31:20.570] [segmentor] [warning] ImageProcess, all:17.8138 ms 
 
-[2022-05-09 13:28:28.036] [segmentor] [debug] Start sync
-[2022-05-09 13:28:28.319] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:28.320] [segmentor] [warning] ----------Time : 1.200000 ----------
-[2022-05-09 13:28:28.324] [segmentor] [info] ImageProcess prepare: 4.07892
-[2022-05-09 13:28:28.324] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:28.324] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:28.337] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
-[2022-05-09 13:28:28.337] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
-[2022-05-09 13:28:28.338] [segmentor] [debug] id:0,cls:car,prob:1.07599
-[2022-05-09 13:28:28.338] [segmentor] [debug] id:1,cls:car,prob:0.568917
-[2022-05-09 13:28:28.338] [segmentor] [debug] id:2,cls:car,prob:0.553204
-[2022-05-09 13:28:28.338] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:28.339] [segmentor] [info] ImageProcess SetMask: 15.0067
-[2022-05-09 13:28:28.339] [segmentor] [warning] ImageProcess, all:19.42 ms 
+[2022-05-10 00:31:20.570] [segmentor] [debug] Start sync
+[2022-05-10 00:31:20.842] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:20.843] [segmentor] [warning] ----------Time : 1.200000 ----------
+[2022-05-10 00:31:20.846] [segmentor] [info] ImageProcess prepare: 3.07788
+[2022-05-10 00:31:20.846] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:20.846] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:20.858] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
+[2022-05-10 00:31:20.858] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
+[2022-05-10 00:31:20.859] [segmentor] [debug] id:0,cls:car,prob:1.07599
+[2022-05-10 00:31:20.859] [segmentor] [debug] id:1,cls:car,prob:0.568917
+[2022-05-10 00:31:20.859] [segmentor] [debug] id:2,cls:car,prob:0.553204
+[2022-05-10 00:31:20.859] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:20.861] [segmentor] [info] ImageProcess SetMask: 15.622
+[2022-05-10 00:31:20.862] [segmentor] [warning] ImageProcess, all:18.9556 ms 
 
-[2022-05-09 13:28:28.339] [segmentor] [debug] Start sync
-[2022-05-09 13:28:28.619] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:28.620] [segmentor] [warning] ----------Time : 1.250000 ----------
-[2022-05-09 13:28:28.624] [segmentor] [info] ImageProcess prepare: 4.30117
-[2022-05-09 13:28:28.624] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:28.624] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:28.637] [segmentor] [debug] GetSegTensor | seg_masks.dims:[3, 96, 288]
-[2022-05-09 13:28:28.637] [segmentor] [debug] GetSegTensor | cate_labels.dims:[3]
-[2022-05-09 13:28:28.637] [segmentor] [debug] id:0,cls:car,prob:1.15921
-[2022-05-09 13:28:28.637] [segmentor] [debug] id:1,cls:car,prob:0.6522
-[2022-05-09 13:28:28.638] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:28.639] [segmentor] [info] ImageProcess SetMask: 14.8357
-[2022-05-09 13:28:28.639] [segmentor] [warning] ImageProcess, all:19.4472 ms 
+[2022-05-10 00:31:20.862] [segmentor] [debug] Start sync
+[2022-05-10 00:31:21.149] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:21.150] [segmentor] [warning] ----------Time : 1.250000 ----------
+[2022-05-10 00:31:21.153] [segmentor] [info] ImageProcess prepare: 3.30235
+[2022-05-10 00:31:21.153] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:21.153] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:21.165] [segmentor] [debug] GetSegTensor | seg_masks.dims:[3, 96, 288]
+[2022-05-10 00:31:21.165] [segmentor] [debug] GetSegTensor | cate_labels.dims:[3]
+[2022-05-10 00:31:21.165] [segmentor] [debug] id:0,cls:car,prob:1.15921
+[2022-05-10 00:31:21.165] [segmentor] [debug] id:1,cls:car,prob:0.6522
+[2022-05-10 00:31:21.165] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:21.168] [segmentor] [info] ImageProcess SetMask: 14.6714
+[2022-05-10 00:31:21.168] [segmentor] [warning] ImageProcess, all:18.2467 ms 
 
-[2022-05-09 13:28:28.639] [segmentor] [debug] Start sync
-[2022-05-09 13:28:28.913] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:28.913] [segmentor] [warning] ----------Time : 1.300000 ----------
-[2022-05-09 13:28:28.916] [segmentor] [info] ImageProcess prepare: 3.28512
-[2022-05-09 13:28:28.916] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:28.916] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:28.928] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
-[2022-05-09 13:28:28.928] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
-[2022-05-09 13:28:28.928] [segmentor] [debug] id:0,cls:car,prob:1.14425
-[2022-05-09 13:28:28.928] [segmentor] [debug] id:1,cls:car,prob:0.86314
-[2022-05-09 13:28:28.928] [segmentor] [debug] id:2,cls:car,prob:0.666488
-[2022-05-09 13:28:28.928] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:28.929] [segmentor] [info] ImageProcess SetMask: 13.3208
-[2022-05-09 13:28:28.938] [segmentor] [warning] ImageProcess, all:25.5141 ms 
+[2022-05-10 00:31:21.168] [segmentor] [debug] Start sync
+[2022-05-10 00:31:21.458] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:21.459] [segmentor] [warning] ----------Time : 1.300000 ----------
+[2022-05-10 00:31:21.464] [segmentor] [info] ImageProcess prepare: 5.30352
+[2022-05-10 00:31:21.464] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:21.464] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:21.476] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
+[2022-05-10 00:31:21.476] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
+[2022-05-10 00:31:21.477] [segmentor] [debug] id:0,cls:car,prob:1.14425
+[2022-05-10 00:31:21.477] [segmentor] [debug] id:1,cls:car,prob:0.86314
+[2022-05-10 00:31:21.477] [segmentor] [debug] id:2,cls:car,prob:0.666488
+[2022-05-10 00:31:21.477] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:21.479] [segmentor] [info] ImageProcess SetMask: 15.0331
+[2022-05-10 00:31:21.491] [segmentor] [warning] ImageProcess, all:32.6419 ms 
 
-[2022-05-09 13:28:28.938] [segmentor] [debug] Start sync
-[2022-05-09 13:28:29.218] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:29.218] [segmentor] [warning] ----------Time : 1.350000 ----------
-[2022-05-09 13:28:29.223] [segmentor] [info] ImageProcess prepare: 4.63831
-[2022-05-09 13:28:29.223] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:29.223] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:29.236] [segmentor] [debug] GetSegTensor | seg_masks.dims:[15, 96, 288]
-[2022-05-09 13:28:29.236] [segmentor] [debug] GetSegTensor | cate_labels.dims:[15]
-[2022-05-09 13:28:29.237] [segmentor] [debug] id:0,cls:car,prob:1.22092
-[2022-05-09 13:28:29.237] [segmentor] [debug] id:1,cls:car,prob:0.75574
-[2022-05-09 13:28:29.237] [segmentor] [debug] id:2,cls:car,prob:0.321605
-[2022-05-09 13:28:29.237] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:29.238] [segmentor] [info] ImageProcess SetMask: 14.8406
-[2022-05-09 13:28:29.238] [segmentor] [warning] ImageProcess, all:19.833 ms 
+[2022-05-10 00:31:21.491] [segmentor] [debug] Start sync
+[2022-05-10 00:31:21.752] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:21.752] [segmentor] [warning] ----------Time : 1.350000 ----------
+[2022-05-10 00:31:21.755] [segmentor] [info] ImageProcess prepare: 3.16864
+[2022-05-10 00:31:21.755] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:21.756] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:21.769] [segmentor] [debug] GetSegTensor | seg_masks.dims:[15, 96, 288]
+[2022-05-10 00:31:21.769] [segmentor] [debug] GetSegTensor | cate_labels.dims:[15]
+[2022-05-10 00:31:21.770] [segmentor] [debug] id:0,cls:car,prob:1.22092
+[2022-05-10 00:31:21.770] [segmentor] [debug] id:1,cls:car,prob:0.75574
+[2022-05-10 00:31:21.770] [segmentor] [debug] id:2,cls:car,prob:0.321605
+[2022-05-10 00:31:21.770] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:21.772] [segmentor] [info] ImageProcess SetMask: 16.7781
+[2022-05-10 00:31:21.772] [segmentor] [warning] ImageProcess, all:20.1626 ms 
 
-[2022-05-09 13:28:29.238] [segmentor] [debug] Start sync
-[2022-05-09 13:28:29.517] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:29.518] [segmentor] [warning] ----------Time : 1.400000 ----------
-[2022-05-09 13:28:29.523] [segmentor] [info] ImageProcess prepare: 5.82906
-[2022-05-09 13:28:29.523] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:29.524] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:29.536] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
-[2022-05-09 13:28:29.536] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
-[2022-05-09 13:28:29.537] [segmentor] [debug] id:0,cls:car,prob:1.22495
-[2022-05-09 13:28:29.537] [segmentor] [debug] id:1,cls:car,prob:0.674225
-[2022-05-09 13:28:29.537] [segmentor] [debug] id:2,cls:car,prob:0.223607
-[2022-05-09 13:28:29.537] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:29.538] [segmentor] [info] ImageProcess SetMask: 14.6767
-[2022-05-09 13:28:29.538] [segmentor] [warning] ImageProcess, all:20.7823 ms 
+[2022-05-10 00:31:21.772] [segmentor] [debug] Start sync
+[2022-05-10 00:31:22.053] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:22.054] [segmentor] [warning] ----------Time : 1.400000 ----------
+[2022-05-10 00:31:22.058] [segmentor] [info] ImageProcess prepare: 4.32808
+[2022-05-10 00:31:22.058] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:22.058] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:22.070] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
+[2022-05-10 00:31:22.070] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
+[2022-05-10 00:31:22.070] [segmentor] [debug] id:0,cls:car,prob:1.22495
+[2022-05-10 00:31:22.070] [segmentor] [debug] id:1,cls:car,prob:0.674225
+[2022-05-10 00:31:22.070] [segmentor] [debug] id:2,cls:car,prob:0.223607
+[2022-05-10 00:31:22.071] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:22.073] [segmentor] [info] ImageProcess SetMask: 14.7033
+[2022-05-10 00:31:22.073] [segmentor] [warning] ImageProcess, all:19.328 ms 
 
-[2022-05-09 13:28:29.538] [segmentor] [debug] Start sync
-[2022-05-09 13:28:29.820] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:29.821] [segmentor] [warning] ----------Time : 1.450000 ----------
-[2022-05-09 13:28:29.826] [segmentor] [info] ImageProcess prepare: 4.96728
-[2022-05-09 13:28:29.826] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:29.826] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:29.837] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
-[2022-05-09 13:28:29.837] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
-[2022-05-09 13:28:29.838] [segmentor] [debug] id:0,cls:car,prob:1.12687
-[2022-05-09 13:28:29.838] [segmentor] [debug] id:1,cls:car,prob:0.800091
-[2022-05-09 13:28:29.838] [segmentor] [debug] id:2,cls:car,prob:0.439584
-[2022-05-09 13:28:29.838] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
-[2022-05-09 13:28:29.841] [segmentor] [info] ImageProcess SetMask: 14.8885
-[2022-05-09 13:28:29.841] [segmentor] [warning] ImageProcess, all:20.2415 ms 
+[2022-05-10 00:31:22.073] [segmentor] [debug] Start sync
+[2022-05-10 00:31:22.358] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:22.359] [segmentor] [warning] ----------Time : 1.450000 ----------
+[2022-05-10 00:31:22.361] [segmentor] [info] ImageProcess prepare: 2.78631
+[2022-05-10 00:31:22.361] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:22.361] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:22.375] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
+[2022-05-10 00:31:22.375] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
+[2022-05-10 00:31:22.376] [segmentor] [debug] id:0,cls:car,prob:1.12687
+[2022-05-10 00:31:22.376] [segmentor] [debug] id:1,cls:car,prob:0.800091
+[2022-05-10 00:31:22.376] [segmentor] [debug] id:2,cls:car,prob:0.439584
+[2022-05-10 00:31:22.376] [segmentor] [debug] GetSegTensor | seg_preds.dims:[3, 96, 288]
+[2022-05-10 00:31:22.378] [segmentor] [info] ImageProcess SetMask: 16.3824
+[2022-05-10 00:31:22.378] [segmentor] [warning] ImageProcess, all:19.4107 ms 
 
-[2022-05-09 13:28:29.841] [segmentor] [debug] Start sync
-[2022-05-09 13:28:30.119] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:30.119] [segmentor] [warning] ----------Time : 1.500000 ----------
-[2022-05-09 13:28:30.124] [segmentor] [info] ImageProcess prepare: 4.54953
-[2022-05-09 13:28:30.124] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:30.124] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:30.137] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
-[2022-05-09 13:28:30.137] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
-[2022-05-09 13:28:30.137] [segmentor] [debug] id:0,cls:car,prob:1.1892
-[2022-05-09 13:28:30.137] [segmentor] [debug] id:1,cls:car,prob:0.839295
-[2022-05-09 13:28:30.138] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:30.139] [segmentor] [info] ImageProcess SetMask: 15.5056
-[2022-05-09 13:28:30.140] [segmentor] [warning] ImageProcess, all:20.3886 ms 
+[2022-05-10 00:31:22.378] [segmentor] [debug] Start sync
+[2022-05-10 00:31:22.656] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:22.656] [segmentor] [warning] ----------Time : 1.500000 ----------
+[2022-05-10 00:31:22.660] [segmentor] [info] ImageProcess prepare: 4.05448
+[2022-05-10 00:31:22.660] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:22.660] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:22.673] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
+[2022-05-10 00:31:22.673] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
+[2022-05-10 00:31:22.673] [segmentor] [debug] id:0,cls:car,prob:1.1892
+[2022-05-10 00:31:22.674] [segmentor] [debug] id:1,cls:car,prob:0.839295
+[2022-05-10 00:31:22.674] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:22.676] [segmentor] [info] ImageProcess SetMask: 15.2552
+[2022-05-10 00:31:22.676] [segmentor] [warning] ImageProcess, all:19.5385 ms 
 
-[2022-05-09 13:28:30.140] [segmentor] [debug] Start sync
-[2022-05-09 13:28:30.413] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:30.414] [segmentor] [warning] ----------Time : 1.550000 ----------
-[2022-05-09 13:28:30.417] [segmentor] [info] ImageProcess prepare: 3.03582
-[2022-05-09 13:28:30.417] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:30.417] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:30.430] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
-[2022-05-09 13:28:30.430] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
-[2022-05-09 13:28:30.430] [segmentor] [debug] id:0,cls:car,prob:1.02545
-[2022-05-09 13:28:30.430] [segmentor] [debug] id:1,cls:car,prob:1.00584
-[2022-05-09 13:28:30.430] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:30.432] [segmentor] [info] ImageProcess SetMask: 14.9059
-[2022-05-09 13:28:30.432] [segmentor] [warning] ImageProcess, all:18.2206 ms 
+[2022-05-10 00:31:22.676] [segmentor] [debug] Start sync
+[2022-05-10 00:31:22.948] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:22.948] [segmentor] [warning] ----------Time : 1.550000 ----------
+[2022-05-10 00:31:22.951] [segmentor] [info] ImageProcess prepare: 3.22573
+[2022-05-10 00:31:22.951] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:22.951] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:22.963] [segmentor] [debug] GetSegTensor | seg_masks.dims:[10, 96, 288]
+[2022-05-10 00:31:22.963] [segmentor] [debug] GetSegTensor | cate_labels.dims:[10]
+[2022-05-10 00:31:22.963] [segmentor] [debug] id:0,cls:car,prob:1.02545
+[2022-05-10 00:31:22.964] [segmentor] [debug] id:1,cls:car,prob:1.00584
+[2022-05-10 00:31:22.964] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:22.965] [segmentor] [info] ImageProcess SetMask: 13.7093
+[2022-05-10 00:31:22.965] [segmentor] [warning] ImageProcess, all:17.1779 ms 
 
-[2022-05-09 13:28:30.432] [segmentor] [debug] Start sync
-[2022-05-09 13:28:30.718] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:30.718] [segmentor] [warning] ----------Time : 1.600000 ----------
-[2022-05-09 13:28:30.721] [segmentor] [info] ImageProcess prepare: 3.25035
-[2022-05-09 13:28:30.721] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:30.721] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:30.735] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
-[2022-05-09 13:28:30.735] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
-[2022-05-09 13:28:30.735] [segmentor] [debug] id:0,cls:car,prob:1.21916
-[2022-05-09 13:28:30.736] [segmentor] [debug] id:1,cls:car,prob:1.07918
-[2022-05-09 13:28:30.736] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:30.737] [segmentor] [info] ImageProcess SetMask: 15.4099
-[2022-05-09 13:28:30.737] [segmentor] [warning] ImageProcess, all:18.9192 ms 
+[2022-05-10 00:31:22.965] [segmentor] [debug] Start sync
+[2022-05-10 00:31:23.253] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:23.254] [segmentor] [warning] ----------Time : 1.600000 ----------
+[2022-05-10 00:31:23.257] [segmentor] [info] ImageProcess prepare: 3.11938
+[2022-05-10 00:31:23.257] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:23.257] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:23.270] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
+[2022-05-10 00:31:23.270] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
+[2022-05-10 00:31:23.270] [segmentor] [debug] id:0,cls:car,prob:1.21916
+[2022-05-10 00:31:23.270] [segmentor] [debug] id:1,cls:car,prob:1.07918
+[2022-05-10 00:31:23.270] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:23.272] [segmentor] [info] ImageProcess SetMask: 14.9904
+[2022-05-10 00:31:23.272] [segmentor] [warning] ImageProcess, all:18.6558 ms 
 
-[2022-05-09 13:28:30.737] [segmentor] [debug] Start sync
-[2022-05-09 13:28:31.028] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:31.029] [segmentor] [warning] ----------Time : 1.650000 ----------
-[2022-05-09 13:28:31.034] [segmentor] [info] ImageProcess prepare: 5.24432
-[2022-05-09 13:28:31.034] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:31.034] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:31.047] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
-[2022-05-09 13:28:31.047] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
-[2022-05-09 13:28:31.048] [segmentor] [debug] id:0,cls:car,prob:1.21158
-[2022-05-09 13:28:31.048] [segmentor] [debug] id:1,cls:car,prob:1.09639
-[2022-05-09 13:28:31.048] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:31.049] [segmentor] [info] ImageProcess SetMask: 14.62
-[2022-05-09 13:28:31.049] [segmentor] [warning] ImageProcess, all:20.2162 ms 
+[2022-05-10 00:31:23.272] [segmentor] [debug] Start sync
+[2022-05-10 00:31:23.561] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:23.561] [segmentor] [warning] ----------Time : 1.650000 ----------
+[2022-05-10 00:31:23.564] [segmentor] [info] ImageProcess prepare: 2.97652
+[2022-05-10 00:31:23.564] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:23.564] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:23.576] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
+[2022-05-10 00:31:23.576] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
+[2022-05-10 00:31:23.576] [segmentor] [debug] id:0,cls:car,prob:1.21158
+[2022-05-10 00:31:23.576] [segmentor] [debug] id:1,cls:car,prob:1.09639
+[2022-05-10 00:31:23.576] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:23.579] [segmentor] [info] ImageProcess SetMask: 14.7652
+[2022-05-10 00:31:23.579] [segmentor] [warning] ImageProcess, all:18.0569 ms 
 
-[2022-05-09 13:28:31.049] [segmentor] [debug] Start sync
-[2022-05-09 13:28:31.328] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:31.328] [segmentor] [warning] ----------Time : 1.700000 ----------
-[2022-05-09 13:28:31.331] [segmentor] [info] ImageProcess prepare: 2.77476
-[2022-05-09 13:28:31.331] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:31.331] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:31.343] [segmentor] [debug] GetSegTensor | seg_masks.dims:[15, 96, 288]
-[2022-05-09 13:28:31.343] [segmentor] [debug] GetSegTensor | cate_labels.dims:[15]
-[2022-05-09 13:28:31.344] [segmentor] [debug] id:0,cls:car,prob:1.26645
-[2022-05-09 13:28:31.344] [segmentor] [debug] id:1,cls:car,prob:1.09671
-[2022-05-09 13:28:31.344] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:31.346] [segmentor] [info] ImageProcess SetMask: 14.935
-[2022-05-09 13:28:31.346] [segmentor] [warning] ImageProcess, all:18.0196 ms 
+[2022-05-10 00:31:23.579] [segmentor] [debug] Start sync
+[2022-05-10 00:31:23.865] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:23.866] [segmentor] [warning] ----------Time : 1.700000 ----------
+[2022-05-10 00:31:23.872] [segmentor] [info] ImageProcess prepare: 5.68862
+[2022-05-10 00:31:23.872] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:23.872] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:23.883] [segmentor] [debug] GetSegTensor | seg_masks.dims:[15, 96, 288]
+[2022-05-10 00:31:23.883] [segmentor] [debug] GetSegTensor | cate_labels.dims:[15]
+[2022-05-10 00:31:23.884] [segmentor] [debug] id:0,cls:car,prob:1.26645
+[2022-05-10 00:31:23.884] [segmentor] [debug] id:1,cls:car,prob:1.09671
+[2022-05-10 00:31:23.884] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:23.885] [segmentor] [info] ImageProcess SetMask: 13.5151
+[2022-05-10 00:31:23.886] [segmentor] [warning] ImageProcess, all:19.4695 ms 
 
-[2022-05-09 13:28:31.346] [segmentor] [debug] Start sync
-[2022-05-09 13:28:31.606] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:31.606] [segmentor] [warning] ----------Time : 1.750000 ----------
-[2022-05-09 13:28:31.609] [segmentor] [info] ImageProcess prepare: 2.63446
-[2022-05-09 13:28:31.609] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:31.609] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:31.621] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
-[2022-05-09 13:28:31.621] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
-[2022-05-09 13:28:31.622] [segmentor] [debug] id:0,cls:car,prob:1.02692
-[2022-05-09 13:28:31.622] [segmentor] [debug] id:1,cls:car,prob:0.935915
-[2022-05-09 13:28:31.622] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:31.623] [segmentor] [info] ImageProcess SetMask: 13.4891
-[2022-05-09 13:28:31.623] [segmentor] [warning] ImageProcess, all:16.3661 ms 
+[2022-05-10 00:31:23.886] [segmentor] [debug] Start sync
+[2022-05-10 00:31:24.153] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:24.154] [segmentor] [warning] ----------Time : 1.750000 ----------
+[2022-05-10 00:31:24.159] [segmentor] [info] ImageProcess prepare: 5.71736
+[2022-05-10 00:31:24.159] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:24.159] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:24.173] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
+[2022-05-10 00:31:24.173] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
+[2022-05-10 00:31:24.173] [segmentor] [debug] id:0,cls:car,prob:1.02692
+[2022-05-10 00:31:24.174] [segmentor] [debug] id:1,cls:car,prob:0.935915
+[2022-05-10 00:31:24.174] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:24.175] [segmentor] [info] ImageProcess SetMask: 15.974
+[2022-05-10 00:31:24.176] [segmentor] [warning] ImageProcess, all:22.0024 ms 
 
-[2022-05-09 13:28:31.623] [segmentor] [debug] Start sync
-[2022-05-09 13:28:31.938] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:31.939] [segmentor] [warning] ----------Time : 1.800000 ----------
-[2022-05-09 13:28:31.942] [segmentor] [info] ImageProcess prepare: 2.86854
-[2022-05-09 13:28:31.942] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:31.942] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:31.955] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
-[2022-05-09 13:28:31.955] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
-[2022-05-09 13:28:31.955] [segmentor] [debug] id:0,cls:car,prob:1.32134
-[2022-05-09 13:28:31.955] [segmentor] [debug] id:1,cls:car,prob:0.968697
-[2022-05-09 13:28:31.955] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:31.956] [segmentor] [info] ImageProcess SetMask: 14.7183
-[2022-05-09 13:28:31.957] [segmentor] [warning] ImageProcess, all:17.8998 ms 
+[2022-05-10 00:31:24.176] [segmentor] [debug] Start sync
+[2022-05-10 00:31:24.461] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:24.463] [segmentor] [warning] ----------Time : 1.800000 ----------
+[2022-05-10 00:31:24.469] [segmentor] [info] ImageProcess prepare: 5.98528
+[2022-05-10 00:31:24.469] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:24.469] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:24.482] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
+[2022-05-10 00:31:24.482] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
+[2022-05-10 00:31:24.483] [segmentor] [debug] id:0,cls:car,prob:1.32134
+[2022-05-10 00:31:24.483] [segmentor] [debug] id:1,cls:car,prob:0.968697
+[2022-05-10 00:31:24.483] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:24.486] [segmentor] [info] ImageProcess SetMask: 16.919
+[2022-05-10 00:31:24.487] [segmentor] [warning] ImageProcess, all:24.4295 ms 
 
-[2022-05-09 13:28:31.957] [segmentor] [debug] Start sync
-[2022-05-09 13:28:32.224] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:32.224] [segmentor] [warning] ----------Time : 1.850000 ----------
-[2022-05-09 13:28:32.228] [segmentor] [info] ImageProcess prepare: 3.18726
-[2022-05-09 13:28:32.228] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:32.228] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:32.241] [segmentor] [debug] GetSegTensor | seg_masks.dims:[13, 96, 288]
-[2022-05-09 13:28:32.241] [segmentor] [debug] GetSegTensor | cate_labels.dims:[13]
-[2022-05-09 13:28:32.241] [segmentor] [debug] id:0,cls:car,prob:1.38282
-[2022-05-09 13:28:32.241] [segmentor] [debug] id:1,cls:car,prob:1.02169
-[2022-05-09 13:28:32.241] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:32.242] [segmentor] [info] ImageProcess SetMask: 14.9056
-[2022-05-09 13:28:32.243] [segmentor] [warning] ImageProcess, all:18.4275 ms 
+[2022-05-10 00:31:24.487] [segmentor] [debug] Start sync
+[2022-05-10 00:31:24.763] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:24.764] [segmentor] [warning] ----------Time : 1.850000 ----------
+[2022-05-10 00:31:24.770] [segmentor] [info] ImageProcess prepare: 5.73432
+[2022-05-10 00:31:24.770] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:24.770] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:24.782] [segmentor] [debug] GetSegTensor | seg_masks.dims:[13, 96, 288]
+[2022-05-10 00:31:24.782] [segmentor] [debug] GetSegTensor | cate_labels.dims:[13]
+[2022-05-10 00:31:24.782] [segmentor] [debug] id:0,cls:car,prob:1.38282
+[2022-05-10 00:31:24.782] [segmentor] [debug] id:1,cls:car,prob:1.02169
+[2022-05-10 00:31:24.782] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:24.784] [segmentor] [info] ImageProcess SetMask: 14.3971
+[2022-05-10 00:31:24.785] [segmentor] [warning] ImageProcess, all:20.6434 ms 
 
-[2022-05-09 13:28:32.243] [segmentor] [debug] Start sync
-[2022-05-09 13:28:32.525] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:32.525] [segmentor] [warning] ----------Time : 1.900000 ----------
-[2022-05-09 13:28:32.528] [segmentor] [info] ImageProcess prepare: 2.8476
-[2022-05-09 13:28:32.528] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:32.528] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:32.540] [segmentor] [debug] GetSegTensor | seg_masks.dims:[12, 96, 288]
-[2022-05-09 13:28:32.540] [segmentor] [debug] GetSegTensor | cate_labels.dims:[12]
-[2022-05-09 13:28:32.540] [segmentor] [debug] id:0,cls:car,prob:1.49866
-[2022-05-09 13:28:32.540] [segmentor] [debug] id:1,cls:car,prob:1.0265
-[2022-05-09 13:28:32.540] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:32.541] [segmentor] [info] ImageProcess SetMask: 13.2916
-[2022-05-09 13:28:32.541] [segmentor] [warning] ImageProcess, all:16.4366 ms 
+[2022-05-10 00:31:24.785] [segmentor] [debug] Start sync
+[2022-05-10 00:31:25.064] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:25.065] [segmentor] [warning] ----------Time : 1.900000 ----------
+[2022-05-10 00:31:25.070] [segmentor] [info] ImageProcess prepare: 5.43194
+[2022-05-10 00:31:25.070] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:25.070] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:25.083] [segmentor] [debug] GetSegTensor | seg_masks.dims:[12, 96, 288]
+[2022-05-10 00:31:25.083] [segmentor] [debug] GetSegTensor | cate_labels.dims:[12]
+[2022-05-10 00:31:25.083] [segmentor] [debug] id:0,cls:car,prob:1.49866
+[2022-05-10 00:31:25.083] [segmentor] [debug] id:1,cls:car,prob:1.0265
+[2022-05-10 00:31:25.084] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:25.085] [segmentor] [info] ImageProcess SetMask: 14.8021
+[2022-05-10 00:31:25.085] [segmentor] [warning] ImageProcess, all:20.5515 ms 
 
-[2022-05-09 13:28:32.541] [segmentor] [debug] Start sync
-[2022-05-09 13:28:32.836] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:32.836] [segmentor] [warning] ----------Time : 1.950000 ----------
-[2022-05-09 13:28:32.838] [segmentor] [info] ImageProcess prepare: 2.58421
-[2022-05-09 13:28:32.838] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:32.838] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:32.851] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
-[2022-05-09 13:28:32.851] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
-[2022-05-09 13:28:32.852] [segmentor] [debug] id:0,cls:car,prob:1.16482
-[2022-05-09 13:28:32.852] [segmentor] [debug] id:1,cls:car,prob:1.0578
-[2022-05-09 13:28:32.852] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:32.853] [segmentor] [info] ImageProcess SetMask: 14.8165
-[2022-05-09 13:28:32.854] [segmentor] [warning] ImageProcess, all:17.9212 ms 
+[2022-05-10 00:31:25.085] [segmentor] [debug] Start sync
+[2022-05-10 00:31:25.375] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:25.375] [segmentor] [warning] ----------Time : 1.950000 ----------
+[2022-05-10 00:31:25.381] [segmentor] [info] ImageProcess prepare: 5.46115
+[2022-05-10 00:31:25.381] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:25.381] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:25.392] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
+[2022-05-10 00:31:25.392] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
+[2022-05-10 00:31:25.392] [segmentor] [debug] id:0,cls:car,prob:1.16482
+[2022-05-10 00:31:25.393] [segmentor] [debug] id:1,cls:car,prob:1.0578
+[2022-05-10 00:31:25.393] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:25.394] [segmentor] [info] ImageProcess SetMask: 13.3863
+[2022-05-10 00:31:25.394] [segmentor] [warning] ImageProcess, all:19.166 ms 
 
-[2022-05-09 13:28:32.854] [segmentor] [debug] Start sync
-[2022-05-09 13:28:33.120] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:33.121] [segmentor] [warning] ----------Time : 2.000000 ----------
-[2022-05-09 13:28:33.124] [segmentor] [info] ImageProcess prepare: 3.17433
-[2022-05-09 13:28:33.124] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:33.124] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:33.137] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
-[2022-05-09 13:28:33.137] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
-[2022-05-09 13:28:33.138] [segmentor] [debug] id:0,cls:car,prob:1.48914
-[2022-05-09 13:28:33.138] [segmentor] [debug] id:1,cls:car,prob:1.05009
-[2022-05-09 13:28:33.138] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:33.139] [segmentor] [info] ImageProcess SetMask: 15.1858
-[2022-05-09 13:28:33.139] [segmentor] [warning] ImageProcess, all:18.6711 ms 
+[2022-05-10 00:31:25.394] [segmentor] [debug] Start sync
+[2022-05-10 00:31:25.656] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:25.657] [segmentor] [warning] ----------Time : 2.000000 ----------
+[2022-05-10 00:31:25.663] [segmentor] [info] ImageProcess prepare: 6.00219
+[2022-05-10 00:31:25.663] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:25.663] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:25.676] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
+[2022-05-10 00:31:25.676] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
+[2022-05-10 00:31:25.676] [segmentor] [debug] id:0,cls:car,prob:1.48914
+[2022-05-10 00:31:25.676] [segmentor] [debug] id:1,cls:car,prob:1.05009
+[2022-05-10 00:31:25.676] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:25.678] [segmentor] [info] ImageProcess SetMask: 15.4559
+[2022-05-10 00:31:25.678] [segmentor] [warning] ImageProcess, all:21.77 ms 
 
-[2022-05-09 13:28:33.139] [segmentor] [debug] Start sync
-[2022-05-09 13:28:33.423] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:33.423] [segmentor] [warning] ----------Time : 2.050000 ----------
-[2022-05-09 13:28:33.428] [segmentor] [info] ImageProcess prepare: 4.10302
-[2022-05-09 13:28:33.428] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:33.428] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:33.439] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
-[2022-05-09 13:28:33.439] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
-[2022-05-09 13:28:33.439] [segmentor] [debug] id:0,cls:car,prob:1.40144
-[2022-05-09 13:28:33.439] [segmentor] [debug] id:1,cls:car,prob:1.02391
-[2022-05-09 13:28:33.439] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:33.440] [segmentor] [info] ImageProcess SetMask: 12.7949
-[2022-05-09 13:28:33.441] [segmentor] [warning] ImageProcess, all:17.2228 ms 
+[2022-05-10 00:31:25.678] [segmentor] [debug] Start sync
+[2022-05-10 00:31:25.960] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:25.961] [segmentor] [warning] ----------Time : 2.050000 ----------
+[2022-05-10 00:31:25.965] [segmentor] [info] ImageProcess prepare: 4.4514
+[2022-05-10 00:31:25.965] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:25.965] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:25.978] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
+[2022-05-10 00:31:25.978] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
+[2022-05-10 00:31:25.979] [segmentor] [debug] id:0,cls:car,prob:1.40144
+[2022-05-10 00:31:25.979] [segmentor] [debug] id:1,cls:car,prob:1.02391
+[2022-05-10 00:31:25.979] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:25.983] [segmentor] [info] ImageProcess SetMask: 17.7269
+[2022-05-10 00:31:25.983] [segmentor] [warning] ImageProcess, all:22.7117 ms 
 
-[2022-05-09 13:28:33.441] [segmentor] [debug] Start sync
-[2022-05-09 13:28:33.729] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:33.730] [segmentor] [warning] ----------Time : 2.100000 ----------
-[2022-05-09 13:28:33.732] [segmentor] [info] ImageProcess prepare: 2.76844
-[2022-05-09 13:28:33.733] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:33.733] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:33.747] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
-[2022-05-09 13:28:33.747] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
-[2022-05-09 13:28:33.747] [segmentor] [debug] id:0,cls:car,prob:1.06559
-[2022-05-09 13:28:33.747] [segmentor] [debug] id:1,cls:car,prob:1.00259
-[2022-05-09 13:28:33.747] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:33.749] [segmentor] [info] ImageProcess SetMask: 16.0436
-[2022-05-09 13:28:33.749] [segmentor] [warning] ImageProcess, all:19.1754 ms 
+[2022-05-10 00:31:25.983] [segmentor] [debug] Start sync
+[2022-05-10 00:31:26.266] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:26.267] [segmentor] [warning] ----------Time : 2.100000 ----------
+[2022-05-10 00:31:26.273] [segmentor] [info] ImageProcess prepare: 5.82021
+[2022-05-10 00:31:26.273] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:26.273] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:26.286] [segmentor] [debug] GetSegTensor | seg_masks.dims:[9, 96, 288]
+[2022-05-10 00:31:26.286] [segmentor] [debug] GetSegTensor | cate_labels.dims:[9]
+[2022-05-10 00:31:26.286] [segmentor] [debug] id:0,cls:car,prob:1.06559
+[2022-05-10 00:31:26.286] [segmentor] [debug] id:1,cls:car,prob:1.00259
+[2022-05-10 00:31:26.287] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:26.288] [segmentor] [info] ImageProcess SetMask: 15.1779
+[2022-05-10 00:31:26.289] [segmentor] [warning] ImageProcess, all:21.4127 ms 
 
-[2022-05-09 13:28:33.749] [segmentor] [debug] Start sync
-[2022-05-09 13:28:34.025] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:34.025] [segmentor] [warning] ----------Time : 2.150000 ----------
-[2022-05-09 13:28:34.029] [segmentor] [info] ImageProcess prepare: 3.47114
-[2022-05-09 13:28:34.029] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:34.029] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:34.040] [segmentor] [debug] GetSegTensor | seg_masks.dims:[13, 96, 288]
-[2022-05-09 13:28:34.040] [segmentor] [debug] GetSegTensor | cate_labels.dims:[13]
-[2022-05-09 13:28:34.041] [segmentor] [debug] id:0,cls:car,prob:1.2218
-[2022-05-09 13:28:34.041] [segmentor] [debug] id:1,cls:car,prob:0.885599
-[2022-05-09 13:28:34.041] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:34.042] [segmentor] [info] ImageProcess SetMask: 13.5113
-[2022-05-09 13:28:34.043] [segmentor] [warning] ImageProcess, all:17.2869 ms 
+[2022-05-10 00:31:26.289] [segmentor] [debug] Start sync
+[2022-05-10 00:31:26.563] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:26.563] [segmentor] [warning] ----------Time : 2.150000 ----------
+[2022-05-10 00:31:26.567] [segmentor] [info] ImageProcess prepare: 3.21596
+[2022-05-10 00:31:26.567] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:26.567] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:26.578] [segmentor] [debug] GetSegTensor | seg_masks.dims:[13, 96, 288]
+[2022-05-10 00:31:26.578] [segmentor] [debug] GetSegTensor | cate_labels.dims:[13]
+[2022-05-10 00:31:26.578] [segmentor] [debug] id:0,cls:car,prob:1.2218
+[2022-05-10 00:31:26.578] [segmentor] [debug] id:1,cls:car,prob:0.885599
+[2022-05-10 00:31:26.579] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:26.580] [segmentor] [info] ImageProcess SetMask: 13.8006
+[2022-05-10 00:31:26.581] [segmentor] [warning] ImageProcess, all:17.2806 ms 
 
-[2022-05-09 13:28:34.043] [segmentor] [debug] Start sync
-[2022-05-09 13:28:34.326] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:34.327] [segmentor] [warning] ----------Time : 2.200000 ----------
-[2022-05-09 13:28:34.332] [segmentor] [info] ImageProcess prepare: 5.29249
-[2022-05-09 13:28:34.332] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:34.333] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:34.344] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
-[2022-05-09 13:28:34.344] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
-[2022-05-09 13:28:34.344] [segmentor] [debug] id:0,cls:car,prob:1.01966
-[2022-05-09 13:28:34.344] [segmentor] [debug] id:1,cls:car,prob:0.889156
-[2022-05-09 13:28:34.344] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:34.345] [segmentor] [info] ImageProcess SetMask: 12.8087
-[2022-05-09 13:28:34.346] [segmentor] [warning] ImageProcess, all:18.3578 ms 
+[2022-05-10 00:31:26.581] [segmentor] [debug] Start sync
+[2022-05-10 00:31:26.867] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:26.868] [segmentor] [warning] ----------Time : 2.200000 ----------
+[2022-05-10 00:31:26.872] [segmentor] [info] ImageProcess prepare: 3.9974
+[2022-05-10 00:31:26.873] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:26.873] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:26.885] [segmentor] [debug] GetSegTensor | seg_masks.dims:[11, 96, 288]
+[2022-05-10 00:31:26.885] [segmentor] [debug] GetSegTensor | cate_labels.dims:[11]
+[2022-05-10 00:31:26.886] [segmentor] [debug] id:0,cls:car,prob:1.01966
+[2022-05-10 00:31:26.886] [segmentor] [debug] id:1,cls:car,prob:0.889156
+[2022-05-10 00:31:26.886] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:26.889] [segmentor] [info] ImageProcess SetMask: 16.3941
+[2022-05-10 00:31:26.889] [segmentor] [warning] ImageProcess, all:20.9049 ms 
 
-[2022-05-09 13:28:34.346] [segmentor] [debug] Start sync
-[2022-05-09 13:28:34.636] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:34.636] [segmentor] [warning] ----------Time : 2.250000 ----------
-[2022-05-09 13:28:34.639] [segmentor] [info] ImageProcess prepare: 2.96893
-[2022-05-09 13:28:34.639] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:34.639] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:34.652] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
-[2022-05-09 13:28:34.652] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
-[2022-05-09 13:28:34.653] [segmentor] [debug] id:0,cls:car,prob:1.0453
-[2022-05-09 13:28:34.653] [segmentor] [debug] id:1,cls:car,prob:0.754123
-[2022-05-09 13:28:34.653] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:34.654] [segmentor] [info] ImageProcess SetMask: 14.4737
-[2022-05-09 13:28:34.654] [segmentor] [warning] ImageProcess, all:17.7041 ms 
+[2022-05-10 00:31:26.889] [segmentor] [debug] Start sync
+[2022-05-10 00:31:27.163] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:27.163] [segmentor] [warning] ----------Time : 2.250000 ----------
+[2022-05-10 00:31:27.166] [segmentor] [info] ImageProcess prepare: 2.87661
+[2022-05-10 00:31:27.166] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:27.166] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:27.179] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
+[2022-05-10 00:31:27.179] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
+[2022-05-10 00:31:27.179] [segmentor] [debug] id:0,cls:car,prob:1.0453
+[2022-05-10 00:31:27.179] [segmentor] [debug] id:1,cls:car,prob:0.754123
+[2022-05-10 00:31:27.179] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:27.183] [segmentor] [info] ImageProcess SetMask: 17.0669
+[2022-05-10 00:31:27.184] [segmentor] [warning] ImageProcess, all:20.4709 ms 
 
-[2022-05-09 13:28:34.654] [segmentor] [debug] Start sync
-[2022-05-09 13:28:34.941] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:34.942] [segmentor] [warning] ----------Time : 2.300000 ----------
-[2022-05-09 13:28:34.945] [segmentor] [info] ImageProcess prepare: 3.02925
-[2022-05-09 13:28:34.945] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:34.945] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:34.958] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
-[2022-05-09 13:28:34.958] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
-[2022-05-09 13:28:34.958] [segmentor] [debug] id:0,cls:car,prob:0.984558
-[2022-05-09 13:28:34.958] [segmentor] [debug] id:1,cls:car,prob:0.919584
-[2022-05-09 13:28:34.958] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:34.959] [segmentor] [info] ImageProcess SetMask: 14.2578
-[2022-05-09 13:28:34.959] [segmentor] [warning] ImageProcess, all:17.6485 ms 
+[2022-05-10 00:31:27.184] [segmentor] [debug] Start sync
+[2022-05-10 00:31:27.470] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
+[2022-05-10 00:31:27.471] [segmentor] [warning] ----------Time : 2.300000 ----------
+[2022-05-10 00:31:27.476] [segmentor] [info] ImageProcess prepare: 4.95821
+[2022-05-10 00:31:27.476] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
+[2022-05-10 00:31:27.476] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
+[2022-05-10 00:31:27.488] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
+[2022-05-10 00:31:27.488] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
+[2022-05-10 00:31:27.488] [segmentor] [debug] id:0,cls:car,prob:0.984558
+[2022-05-10 00:31:27.488] [segmentor] [debug] id:1,cls:car,prob:0.919584
+[2022-05-10 00:31:27.489] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
+[2022-05-10 00:31:27.491] [segmentor] [info] ImageProcess SetMask: 15.193
+[2022-05-10 00:31:27.491] [segmentor] [warning] ImageProcess, all:20.5201 ms 
 
-[2022-05-09 13:28:34.959] [segmentor] [debug] Start sync
-[2022-05-09 13:28:35.230] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:35.231] [segmentor] [warning] ----------Time : 2.350000 ----------
-[2022-05-09 13:28:35.233] [segmentor] [info] ImageProcess prepare: 2.69324
-[2022-05-09 13:28:35.233] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:35.233] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:35.247] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
-[2022-05-09 13:28:35.247] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
-[2022-05-09 13:28:35.248] [segmentor] [debug] id:0,cls:car,prob:1.20716
-[2022-05-09 13:28:35.248] [segmentor] [debug] id:1,cls:car,prob:0.826035
-[2022-05-09 13:28:35.248] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:35.250] [segmentor] [info] ImageProcess SetMask: 16.2753
-[2022-05-09 13:28:35.250] [segmentor] [warning] ImageProcess, all:19.3911 ms 
-
-[2022-05-09 13:28:35.250] [segmentor] [debug] Start sync
-[2022-05-09 13:28:35.534] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:35.535] [segmentor] [warning] ----------Time : 2.400000 ----------
-[2022-05-09 13:28:35.540] [segmentor] [info] ImageProcess prepare: 4.80754
-[2022-05-09 13:28:35.540] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:35.540] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:35.553] [segmentor] [debug] GetSegTensor | seg_masks.dims:[14, 96, 288]
-[2022-05-09 13:28:35.553] [segmentor] [debug] GetSegTensor | cate_labels.dims:[14]
-[2022-05-09 13:28:35.554] [segmentor] [debug] id:0,cls:car,prob:1.04428
-[2022-05-09 13:28:35.554] [segmentor] [debug] id:1,cls:car,prob:0.699844
-[2022-05-09 13:28:35.554] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:35.555] [segmentor] [info] ImageProcess SetMask: 15.064
-[2022-05-09 13:28:35.555] [segmentor] [warning] ImageProcess, all:20.2499 ms 
-
-[2022-05-09 13:28:35.555] [segmentor] [debug] Start sync
-[2022-05-09 13:28:35.842] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:35.842] [segmentor] [warning] ----------Time : 2.450000 ----------
-[2022-05-09 13:28:35.846] [segmentor] [info] ImageProcess prepare: 3.41949
-[2022-05-09 13:28:35.846] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:35.846] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:35.858] [segmentor] [debug] GetSegTensor | seg_masks.dims:[8, 96, 288]
-[2022-05-09 13:28:35.858] [segmentor] [debug] GetSegTensor | cate_labels.dims:[8]
-[2022-05-09 13:28:35.859] [segmentor] [debug] id:0,cls:car,prob:0.7509
-[2022-05-09 13:28:35.859] [segmentor] [debug] id:1,cls:car,prob:0.684558
-[2022-05-09 13:28:35.859] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:35.860] [segmentor] [info] ImageProcess SetMask: 14.3595
-[2022-05-09 13:28:35.860] [segmentor] [warning] ImageProcess, all:18.1203 ms 
-
-[2022-05-09 13:28:35.860] [segmentor] [debug] Start sync
-[2022-05-09 13:28:36.140] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:36.141] [segmentor] [warning] ----------Time : 2.500000 ----------
-[2022-05-09 13:28:36.145] [segmentor] [info] ImageProcess prepare: 4.08767
-[2022-05-09 13:28:36.145] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:36.146] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:36.157] [segmentor] [debug] GetSegTensor | seg_masks.dims:[7, 96, 288]
-[2022-05-09 13:28:36.157] [segmentor] [debug] GetSegTensor | cate_labels.dims:[7]
-[2022-05-09 13:28:36.158] [segmentor] [debug] id:0,cls:car,prob:0.927841
-[2022-05-09 13:28:36.158] [segmentor] [debug] id:1,cls:car,prob:0.88203
-[2022-05-09 13:28:36.158] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:36.159] [segmentor] [info] ImageProcess SetMask: 14.0263
-[2022-05-09 13:28:36.160] [segmentor] [warning] ImageProcess, all:18.4431 ms 
-
-[2022-05-09 13:28:36.160] [segmentor] [debug] Start sync
-[2022-05-09 13:28:36.435] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:36.435] [segmentor] [warning] ----------Time : 2.550000 ----------
-[2022-05-09 13:28:36.440] [segmentor] [info] ImageProcess prepare: 5.0022
-[2022-05-09 13:28:36.440] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:36.441] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:36.453] [segmentor] [debug] GetSegTensor | seg_masks.dims:[6, 96, 288]
-[2022-05-09 13:28:36.453] [segmentor] [debug] GetSegTensor | cate_labels.dims:[6]
-[2022-05-09 13:28:36.453] [segmentor] [debug] id:0,cls:car,prob:0.883804
-[2022-05-09 13:28:36.453] [segmentor] [debug] id:1,cls:car,prob:0.811656
-[2022-05-09 13:28:36.453] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:36.455] [segmentor] [info] ImageProcess SetMask: 14.0228
-[2022-05-09 13:28:36.455] [segmentor] [warning] ImageProcess, all:19.5079 ms 
-
-[2022-05-09 13:28:36.455] [segmentor] [debug] Start sync
-[2022-05-09 13:28:36.739] [segmentor] [debug] SyncProcess | msg size:1 1 0 0
-[2022-05-09 13:28:36.739] [segmentor] [warning] ----------Time : 2.600000 ----------
-[2022-05-09 13:28:36.743] [segmentor] [info] ImageProcess prepare: 3.04027
-[2022-05-09 13:28:36.743] [segmentor] [debug] ForwardTensor | img_tensor.shape:[3, 375, 1242]
-[2022-05-09 13:28:36.743] [segmentor] [debug] ForwardTensor | input_tensor.shape:[3, 384, 1152]
-[2022-05-09 13:28:36.755] [segmentor] [debug] GetSegTensor | seg_masks.dims:[5, 96, 288]
-[2022-05-09 13:28:36.755] [segmentor] [debug] GetSegTensor | cate_labels.dims:[5]
-[2022-05-09 13:28:36.756] [segmentor] [debug] id:0,cls:car,prob:0.938924
-[2022-05-09 13:28:36.756] [segmentor] [debug] id:1,cls:car,prob:0.885946
-[2022-05-09 13:28:36.756] [segmentor] [debug] GetSegTensor | seg_preds.dims:[2, 96, 288]
-[2022-05-09 13:28:36.758] [segmentor] [info] ImageProcess SetMask: 15.0051
-[2022-05-09 13:28:36.758] [segmentor] [warning] ImageProcess, all:18.4369 ms 
-
-[2022-05-09 13:28:36.758] [segmentor] [debug] Start sync
+[2022-05-10 00:31:27.491] [segmentor] [debug] Start sync

@@ -2,10 +2,12 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
  *******************************************************/
+
 /*******************************************************
  * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
  *
@@ -1492,6 +1494,8 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             insts_manager.Triangulate(frame);
             ///若动态物体未初始化, 则进行初始化
             insts_manager.InitialInstance(image.instances);
+            ///初始化速度
+            insts_manager.InitialInstanceVelocity();
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());

@@ -34,19 +34,30 @@
 
 
 ## Demo
-### Compile
+### Prepare
 
-* use catkin
 ```shell
-cd dynamic_ws
-catkin_make -j10
+mkdir dynamic_ws/src
+cd dynamic_ws/src
+
+git clone https://github.com/chenjianqu/dynamic_vins.git
+
+cd ..
+
+catkin_make -j4
 ```
 
 * use clion
 ```shell
+source devel/setup.bash
+
+#launch clion
+sh {CLion Path}/bin/clion.sh
+
 #after catkin_make
-/home/chen/app/clion-2021.2/bin/cmake/linux/bin/cmake --build /home/chen/ws/dynamic_ws/src/dynamic_vins/cmake-build-debug --target dynamic_vins -- -j10
+/home/chen/app/clion-2021.2/bin/cmake/linux/bin/cmake --build /home/chen/ws/dynamic_ws/src/dynamic_vins/cmake-build-debug --target dynamic_vins -- -j4
 ```
+
 
 ### Run
 
@@ -57,7 +68,7 @@ roscore
 
 * launch rviz
 ```shell
-rosrun rviz rviz -d (dynamic_vins_dir)/config/rviz/rviz.rviz
+rosrun rviz rviz -d {dynamic_vins_dir}/config/rviz/rviz.rviz
 # such as:
 rosrun rviz rviz -d /home/chen/ws/dynamic_ws/src/dynamic_vins/config/rviz/rviz.rviz
 ```

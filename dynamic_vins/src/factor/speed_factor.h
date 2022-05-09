@@ -2,6 +2,7 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -108,96 +109,12 @@ public:
 
 
 
-/**
- * 维度:<误差项、物体的运动速度、逆深度>
- */
-class ProjectionSpeedSimpleFactor: public ceres::SizedCostFunction<2,6,1>{
+
+class ProjectionConstSpeedFactor: public ceres::SizedCostFunction<3,6>{
 public:
-    ProjectionSpeedSimpleFactor(Vec3d _pts_j, Vec3d _pts_i,
-                                const Vec2d &_velocity_j, const Vec2d &_velocity_i,
-                                const double _td_j, const double _td_i, const double cur_td_, double time_j_, double time_i_,
-                                Mat3d R_wbj_, Vec3d P_wbj_,
-                                Mat3d R_wbi_, Vec3d P_wbi_,
-                                Mat3d R_bc1_, Vec3d P_bc1_,
-                                Mat3d R_bc2_, Vec3d P_bc2_,
-                                const double factor_)
-                                :pts_j(std::move(_pts_j)),pts_i(std::move(_pts_i)),time_ij(time_i_-time_j_),
-                                td_i(_td_i), td_j(_td_j),cur_td(cur_td_),
-                                R_wbj(std::move(R_wbj_)),R_wbi(std::move(R_wbi_)),R_bc1(std::move(R_bc1_)),R_bc2(std::move(R_bc2_)),
-                                P_wbj(std::move(P_wbj_)),P_wbi(std::move(P_wbi_)), P_bc1(std::move(P_bc1_)),P_bc2(std::move(P_bc2_)),factor(factor_){
-        velocity_i.x() = _velocity_i.x();
-        velocity_i.y() = _velocity_i.y();
-        velocity_i.z() = 0;
-        velocity_j.x() = _velocity_j.x();
-        velocity_j.y() = _velocity_j.y();
-        velocity_j.z() = 0;
-
-        sqrt_info = kFocalLength / 1.5 * Mat2d::Identity();
-    }
-
-
-    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
-
-    Vec3d pts_j,pts_i;//估计值（以前的观测值）
-    double time_ij;
-
-    Vec3d velocity_i, velocity_j;
-    double td_i, td_j,cur_td;
-
-    inline static Mat2d sqrt_info;
-    inline static double sum_t{0};
-
-    Mat3d R_wbj,R_wbi,R_bc1,R_bc2;
-    Vec3d P_wbj,P_wbi,P_bc1,P_bc2;
-
-    double factor;
-
-};
-
-
-
-
-
-
-
-class SpeedPoseSimpleFactor: public ceres::SizedCostFunction<3, 7,7,6,1>{
-public:
-    SpeedPoseSimpleFactor(Vec3d pts_j_, double time_j_, double time_i_, Mat3d &R_wbj_, Vec3d &P_wbj_, Mat3d &R_bc_,
-                          Vec3d &P_bc_,const Vec2d &vel_j_,const double td_j_, const double cur_td_):
-                          pts_j(std::move(pts_j_)),time_ij(time_i_-time_j_),td(cur_td_),td_j(td_j_){
-        R_wbj=R_wbj_;
-        R_bc=R_bc_;
-        P_wbj=P_wbj_;
-        P_bc=P_bc_;
-        vel_j.x()=vel_j_.x();
-        vel_j.y()=vel_j_.y();
-        vel_j.z()=1;
-        sqrt_info = kFocalLength / 1.5 * Mat3d::Identity();
-
-    }
-
-    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
-
-    Vec3d pts_j;//估计值（以前的观测值）
-    double time_ij;
-
-    inline static Mat3d sqrt_info;
-    inline static double sum_t{0};
-
-    Mat3d R_wbj,R_bc;
-    Vec3d P_wbj, P_bc;
-
-    Vec3d vel_j;
-    double td,td_j;
-};
-
-
-
-class ConstSpeedFactor: public ceres::SizedCostFunction<3,6>{
-public:
-    ConstSpeedFactor(Vec3d pts_j_, double time_j_, double time_i_, Mat3d &R_wbj_,
-                     Vec3d &P_wbj_, Mat3d &R_bc_, Vec3d &P_bc_, double inv_depth_,
-                     Vec3d &last_v_, Vec3d &last_a_)
+    ProjectionConstSpeedFactor(Vec3d pts_j_, double time_j_, double time_i_, Mat3d &R_wbj_,
+                               Vec3d &P_wbj_, Mat3d &R_bc_, Vec3d &P_bc_, double inv_depth_,
+                               Vec3d &last_v_, Vec3d &last_a_)
                      :
                      pts_j(std::move(pts_j_)),time_ij(time_i_-time_j_){
         R_wbj=R_wbj_;
@@ -242,6 +159,12 @@ public:
 };
 
 
+
+/**
+ * 简单的速度恒定的二范数误差
+ * 误差维度:1,
+ * 优化变量: 速度 6
+ */
 class ConstSpeedSimpleFactor: public ceres::SizedCostFunction<1,6>{
 public:
     ConstSpeedSimpleFactor(const Vec3d &last_v_, const Vec3d &last_a_, double factor_){
@@ -254,6 +177,34 @@ public:
 
     Vec3d last_v,last_a;
     double factor;
+};
+
+
+
+/**
+ * 与3D点耦合的速度恒定误差
+ * 误差维度:1,
+ * 优化变量: 速度 6
+ */
+class ConstSpeedStereoPointFactor: public ceres::SizedCostFunction<1,6>{
+public:
+    /**
+     * 构造函数
+     * @param pts_i_ i时刻的3D点, i<j
+     * @param pts_j_ j时刻的3D点
+     * @param last_v_
+     * @param last_a_
+     */
+    ConstSpeedStereoPointFactor(const Vec3d &pts_i_, const Vec3d &pts_j_,double time_ij_,
+                                const Vec3d &last_v_, const Vec3d &last_a_)
+                                : pts_i(pts_i_),pts_j(pts_j_),time_ij(time_ij_),last_v(last_v_),last_a(last_a_)
+                                {}
+
+    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
+
+    Vec3d pts_i,pts_j;
+    double time_ij;
+    Vec3d last_v,last_a;
 };
 
 
@@ -274,6 +225,40 @@ public:
 
     double time_ij;//时间差
 };
+
+
+
+
+
+/**
+ * 双目3D点在不同时刻的误差,用来优化速度
+ * 误差维度:1, 优化变量:速度 6,
+ */
+class SpeedStereoPointFactor: public ceres::SizedCostFunction<1,6>{
+public:
+    /**
+     * 构造函数
+     * @param _pts_j 第一个3D点(世界坐标系)
+     * @param _pts_i 第二个3D点(世界坐标系)
+     * @param time 两个点的时间差
+     */
+    SpeedStereoPointFactor(Vec3d _pts_j, Vec3d _pts_i,double time)
+    :time_ij(time),pts_j(std::move(_pts_j) ),pts_i(std::move(_pts_i))
+    {}
+
+
+    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
+
+    double time_ij{0};
+
+    Vec3d pts_j,pts_i;//估计值（以前的观测值）
+
+    inline static int counter=0;
+};
+
+
+
+
 
 
 

@@ -2,6 +2,7 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -11,8 +12,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 
-#include "InstanceSegment/instance_segmentor.h"
-#include "InstanceTracking/deep_sort.h"
+#include "det2d/detector2d.h"
+#include "mot/deep_sort.h"
 #include "utils/def.h"
 
 

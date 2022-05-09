@@ -1,8 +1,8 @@
 /*******************************************************
- *
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
- * This file is part of RAFT_CPP. Created by chen on 2021/12/24.
+ * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -10,10 +10,6 @@
 
 #include <iostream>
 #include <memory>
-
-#include <torch/torch.h>
-#include <NvInfer.h>
-#include <NvOnnxParser.h>
 
 #include "utils/tensorrt/tensorrt_utils.h"
 #include "utils/def.h"

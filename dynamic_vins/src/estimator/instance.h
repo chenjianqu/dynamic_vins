@@ -2,6 +2,7 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -92,6 +93,12 @@ public:
 
     [[nodiscard]] double AverageDepth() const;
 
+    void ClearState(){
+        is_init_velocity=false;
+        is_initial = false;
+        is_tracking = false;
+    }
+
     vector<Eigen::Vector3d> point3d_curr;
     std::list<LandmarkPoint> landmarks;
 
@@ -103,6 +110,7 @@ public:
 
     State state[(kWinSize + 1)]{}; //物体的位姿
     Vel3d vel,last_vel;//物体的速度
+    bool is_init_velocity{false};
 
     Vec3d box{0,0,0};
     cv::Scalar color;

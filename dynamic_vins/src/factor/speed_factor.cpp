@@ -2,6 +2,7 @@
  * Copyright (C) 2022, Chen Jianqu, Shanghai University
  *
  * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
@@ -251,6 +252,7 @@ bool ProjectionSpeedFactor::Evaluate(double const *const *parameters, double *re
 
 
 
+/*
 
 bool ProjectionSpeedSimpleFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
@@ -305,7 +307,8 @@ bool ProjectionSpeedSimpleFactor::Evaluate(double const *const *parameters, doub
             Eigen::Map<Eigen::Matrix<double, 2, 6, Eigen::RowMajor>> jacobian_v(jacobians[0]);
             jacobian_v = reduce * jaco_velocity;
 
-            /*debug_flag++;
+            */
+/*debug_flag++;
             if(debug_flag%50==0){
                 printf("******\n");
                 printf("speed:v(%.2lf,%.2lf,%.2lf) a(%.2lf,%.2lf,%.2lf)\n",speed_v.x(),speed_v.y(),speed_v.z(),speed_a.x(),speed_a.y(),speed_a.z());
@@ -322,7 +325,8 @@ bool ProjectionSpeedSimpleFactor::Evaluate(double const *const *parameters, doub
                 cout<<reduce.matrix()<<endl;
                 printf("jacobian_v\n");
                 cout<<jacobian_v<<endl;
-            }*/
+            }*//*
+
 
         }
 
@@ -337,6 +341,7 @@ bool ProjectionSpeedSimpleFactor::Evaluate(double const *const *parameters, doub
     return true;
 }
 
+*/
 
 
 
@@ -458,6 +463,7 @@ bool ProjectionSpeedPoseFactor::Evaluate(double const *const *parameters, double
 }
 
 
+/*
 
 
 bool SpeedPoseSimpleFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
@@ -544,10 +550,11 @@ bool SpeedPoseSimpleFactor::Evaluate(double const *const *parameters, double *re
 
 }
 
+*/
 
 
 
-bool ConstSpeedFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+bool ProjectionConstSpeedFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
     TicToc tic_toc;
     Vec3d speed_v(parameters[0][0], parameters[0][1], parameters[0][2]);
@@ -591,17 +598,40 @@ bool ConstSpeedFactor::Evaluate(double const *const *parameters, double *residua
 
 bool ConstSpeedSimpleFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
-    TicToc tic_toc;
     Vec3d speed_v(parameters[0][0], parameters[0][1], parameters[0][2]);
     Vec3d speed_a(parameters[0][3], parameters[0][4], parameters[0][5]);
 
-
     residuals[0]= ((speed_a - last_a).norm() + (speed_v - last_v).norm()) * factor;
 
-    if (jacobians)
-    {
-        if (jacobians[0])
-        {
+    if (jacobians){
+        if (jacobians[0]){
+            Eigen::Map<Eigen::Matrix<double, 1, 6, Eigen::RowMajor>> jacobian_v(jacobians[0]);
+
+            jacobian_v.leftCols<3>() = 2 * speed_v.transpose() * factor;
+            jacobian_v.rightCols<3>() = 2 * speed_a.transpose() * factor;
+        }
+    }
+
+    return true;
+}
+
+
+bool ConstSpeedStereoPointFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+{
+    Vec3d speed_v(parameters[0][0], parameters[0][1], parameters[0][2]);
+    Vec3d speed_a(parameters[0][3], parameters[0][4], parameters[0][5]);
+
+    double factor = ((pts_j - pts_i)/time_ij).norm();
+    factor = factor*factor;
+    double v_norm_2 = (speed_v - last_v).norm();
+    v_norm_2 = v_norm_2*v_norm_2;
+    double a_norm_2 = (speed_a - last_a).norm();
+    a_norm_2 = a_norm_2*a_norm_2;
+
+    residuals[0]= factor * (v_norm_2 + a_norm_2);
+
+    if (jacobians){
+        if (jacobians[0]){
             Eigen::Map<Eigen::Matrix<double, 1, 6, Eigen::RowMajor>> jacobian_v(jacobians[0]);
 
             jacobian_v.leftCols<3>() = 2 * speed_v.transpose() * factor;
@@ -687,6 +717,52 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
 
     return true;
 }
+
+
+
+/**
+ * 双目3D点在不同时刻的误差,用来优化速度
+ * 误差维度:1, 优化变量:速度 6,
+ */
+bool SpeedStereoPointFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+{
+    Vec3d speed_v(parameters[0][0], parameters[0][1], parameters[0][2]);
+    Vec3d speed_a(parameters[0][3], parameters[0][4], parameters[0][5]);
+
+    Mat3d R_oioj = Sophus::SO3d::exp( speed_a * time_ij ).matrix();
+    Vec3d P_oioj = speed_v * time_ij;
+
+    ///误差计算
+    Vec3d err = pts_i - R_oioj * pts_j + P_oioj;
+    residuals[0] = err.x()*err.x() + err.y()*err.y() + err.z()*err.z();
+
+    if(jacobians){
+        if(jacobians[0]){
+            Eigen::Map<Eigen::Matrix<double, 1, 6, Eigen::RowMajor>> jacobian_v(jacobians[0]);
+            jacobian_v.leftCols<3>() = (-2*pts_i.transpose() + pts_j.transpose() * R_oioj.transpose() + (R_oioj * pts_j).transpose() + 2*P_oioj.transpose() )
+                    * (- time_ij * Mat3d::Identity());
+            //jacobian_v.leftCols<3>() = Mat3d::Zero();
+            jacobian_v.rightCols<3>() = Eigen::Matrix<double,1,3>::Zero();
+           // jacobian_v.rightCols<3>() = time_ij * hat(pts_j);
+
+            counter++;
+            if(counter<10){
+                Debugv("SpeedStereoPointFactor err:{} time_ij:{} pts_i:{} pts_j:{} jacobian:\n{}",
+                       VecToStr(err),time_ij,VecToStr(pts_i),VecToStr(pts_j), EigenToStr(jacobian_v));
+            }
+        }
+
+
+
+    }
+
+    return true;
+}
+
+
+
+
+
 
 
 

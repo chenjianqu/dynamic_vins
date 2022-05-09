@@ -1,4 +1,6 @@
 /cmake-build-debug/
 /*/cmake-build-debug/
 /dynamic_vins/weights/
-
+/dynamic_vins/output/
+/dynamic_vins/lib/
+/dynamic_vins/bin/
