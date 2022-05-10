@@ -97,6 +97,7 @@ public:
         is_init_velocity=false;
         is_initial = false;
         is_tracking = false;
+        age=0;
     }
 
     vector<Eigen::Vector3d> point3d_curr;
@@ -126,7 +127,9 @@ public:
     int triangle_num{0};//已经三角化的路标点的数量
 
     bool is_static{false};//物体是运动的还是静态的
-    int static_cnt{0};//辅助判断物体是否运动,
+
+    int age{0};//初始化后走过了多少帧
+    int lost_number{0};//已经连续多少帧未检测到特征了
 
     Box3D::Ptr boxes3d[(kWinSize + 1)]{};//实例关联的3d box
 };

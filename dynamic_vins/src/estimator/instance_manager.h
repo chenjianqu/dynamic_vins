@@ -60,6 +60,10 @@ public:
 
     void InitialInstanceVelocity();
 
+    void AddResidualBlockForInstOpt(ceres::Problem &problem, ceres::LossFunction *loss_function);
+
+    void Optimization();
+
 
     /**
     * 获得优化完成的参数，并重新设置窗口内物体的位姿

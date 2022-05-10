@@ -506,14 +506,12 @@ void Instance::GetOptimizationParameters()
 {
     last_vel=vel;
 
-    if(opt_vel){
-        vel.v.x()=para_speed[0][0];
-        vel.v.y()=para_speed[0][1];
-        vel.v.z()=para_speed[0][2];
-        vel.a.x()=para_speed[0][3];
-        vel.a.y()=para_speed[0][4];
-        vel.a.z()=para_speed[0][5];
-    }
+    vel.v.x()=para_speed[0][0];
+    vel.v.y()=para_speed[0][1];
+    vel.v.z()=para_speed[0][2];
+    vel.a.x()=para_speed[0][3];
+    vel.a.y()=para_speed[0][4];
+    vel.a.z()=para_speed[0][5];
     box.x()=para_box[0][0];
     box.y()=para_box[0][1];
     box.z()=para_box[0][2];

@@ -739,7 +739,7 @@ bool BoxDimsFactor::Evaluate(double const *const *parameters, double *residuals,
     Vec3d box(parameters[0][0],parameters[0][1],parameters[0][2]);
 
     double err = (box- dims).norm();//返回二范数
-    residuals[0] = err * err; //不开方
+    residuals[0] = err * err /100.; //不开方
 
     if(jacobians){
         if (jacobians[0]){
@@ -818,6 +818,64 @@ bool BoxOrientationFactor::Evaluate(double const *const *parameters, double *res
 
 
 
+bool BoxPoseFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+{
+    Vec3d P_wbi(parameters[0][0], parameters[0][1], parameters[0][2]);
+    Quatd Q_wbi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
+
+    Vec3d P_woi(parameters[1][0], parameters[1][1], parameters[1][2]);
+    Quatd Q_woi(parameters[1][6], parameters[1][3], parameters[1][4], parameters[1][5]);
+
+    Mat3d R_wbi(Q_wbi);
+    Mat3d R_woi(Q_woi);
+    Mat3d R_oiw = R_woi.transpose();
+
+    Mat3d R = R_oiw * R_wbi * R_bc * R_cioi;//中间矩阵
+
+    Vec3d err_t = P_woi - (R_wbi*(R_bc * P_cioi + P_bc)+P_wbi);
+    Sophus::Vector3d err_w = SO3d(R).log();
+
+    residuals[0] = err_t.x();
+    residuals[1] = err_t.y();
+    residuals[2] = err_t.z();
+    residuals[3] = err_w.x();
+    residuals[4] = err_w.y();
+    residuals[5] = err_w.z();
+
+    if(jacobians){
+        ///相机位姿, TODO
+        if(jacobians[0]){
+            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose_wbi(jacobians[0]);
+            jacobian_pose_wbi.leftCols<6>() =   Eigen::Matrix<double,6,6>::Zero();///未定义
+            jacobian_pose_wbi.rightCols<1>().setZero();
+        }
+        ///物体位姿
+        if(jacobians[1]){
+            Sophus::Vector3d phi = SO3d(R).log();
+            ///构造右乘矩阵
+            double theta = - phi.norm();//右乘矩阵取负号
+            Vec3d a = phi.normalized();
+            Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
+            ///计算雅可比
+            Mat3d jaco_R = - J_r.inverse() * R.transpose();
+
+            Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> jacobian_pose_woi(jacobians[1]);
+            jacobian_pose_woi.block<3,3>(0,0) = Mat3d::Identity();///左上角
+            jacobian_pose_woi.block<3,3>(3,3) = jaco_R;//右下角
+
+            /*counter++;
+            if(counter<10){
+                Debugv("BoxOrientationFactor:\n err:{} theta:{} a:{} \n jaco_R:{} ",
+                       VecToStr(err), theta, VecToStr(a), EigenToStr(jaco_R));
+            }*/
+        }
+
+    }
+
+
+
+    return true;
+}
 
 
 

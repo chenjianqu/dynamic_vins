@@ -227,6 +227,29 @@ public:
 };
 
 
+/**
+ * 速度和物体位姿的误差
+ * 误差维度6, 优化变量:物体速度6
+ */
+class SpeedPoseSimpleFactor: public ceres::SizedCostFunction<6,6>{
+public:
+    /**
+     * 位姿所处的两个时刻,其中i<j
+     * @param time_j_
+     * @param time_i_
+     */
+    SpeedPoseSimpleFactor(double time_i_, double time_j_,Mat3d R_woi_,Vec3d P_woi_,Mat3d R_woj_,Vec3d P_woj_)
+        :time_ij(time_j_-time_i_),R_woi(R_woi_),R_woj(R_woj_),P_woi(P_woi_),P_woj(P_woj_){}
+
+    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
+
+    double time_ij;//时间差
+
+    Mat3d R_woi,R_woj;
+    Vec3d P_woi,P_woj;
+};
+
+
 
 
 

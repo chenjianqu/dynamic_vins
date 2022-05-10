@@ -179,7 +179,7 @@ void Estimator::Optimization()
     AddInstanceParameterBlock(problem);
     ///添加动态物体的相关顶点
     if(cfg::slam == SlamType::kDynamic){
-        Debugv(insts_manager.PrintInstancePoseInfo(false));
+        //Debugv(insts_manager.PrintInstancePoseInfo(false));
         insts_manager.AddInstanceParameterBlock(problem);
     }
 
@@ -221,7 +221,7 @@ void Estimator::Optimization()
     if(cfg::slam == SlamType::kDynamic){
         insts_manager.GetOptimizationParameters();
 
-        Debugv(insts_manager.PrintInstancePoseInfo(false));
+       // Debugv(insts_manager.PrintInstancePoseInfo(false));
     }
 
 
@@ -1500,6 +1500,11 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
             Debugv(insts_manager.PrintInstanceInfo(false,false));
+
+            ///单独优化动态物体
+            insts_manager.Optimization();
+
+
         }
         Debugv("--完成处理动态物体--");
 

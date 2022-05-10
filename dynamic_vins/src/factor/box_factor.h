@@ -245,6 +245,26 @@ public:
     inline static int counter{0};
 };
 
+/**
+ * 定义的orientation误差,
+ * 优化变量 相机位姿7, 物体位姿7.
+ * note:虽然公式里只关于旋转的误差,但由于参数块与position放在一起,故这里定义变量的global维度为7
+ */
+class BoxPoseFactor:public ceres::SizedCostFunction<6,7,7>{
+public:
+    BoxPoseFactor(Mat3d R_cioi_,Vec3d P_cioi_,Mat3d R_bc_,Vec3d P_bc_)
+    :R_cioi(std::move(R_cioi_)),P_cioi(std::move(P_cioi_)),R_bc(std::move(R_bc_)),P_bc(std::move(P_bc_)){}
+
+    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
+
+    Mat3d R_cioi;
+    Vec3d P_cioi;
+    Mat3d R_bc;
+    Vec3d P_bc;
+
+    inline static int counter{0};
+};
+
 
 
 
