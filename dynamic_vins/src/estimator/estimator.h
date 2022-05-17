@@ -100,6 +100,9 @@ class Estimator
     FeatureManager f_manager;
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;
+
+    SemanticFeature feature_frame;
+
 private:
 
     void SetMarginalizationInfo();
@@ -206,6 +209,7 @@ private:
 
     bool is_init_first_pose{};
     bool initThreadFlag;
+
 };
 
 

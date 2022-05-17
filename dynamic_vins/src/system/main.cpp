@@ -175,6 +175,7 @@ void FeatureTrack()
             Warnt("----------Time : {} ----------", std::to_string(img->time0));
             SemanticFeature frame;
             frame.time = img->time0;
+            frame.seq_id = img->seq;
 
             ///前端跟踪
             if(cfg::slam == SlamType::kDynamic){

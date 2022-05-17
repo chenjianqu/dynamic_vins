@@ -596,6 +596,40 @@ void InstanceManager::SetVelMap(){
     Debugv(log_text);
 }
 
+/**
+ * 保存所有物体在当前帧的位姿
+ */
+void InstanceManager::SaveTrajectory(){
+
+
+    for(auto &[inst_id,inst] : instances){
+        if(!inst.is_tracking || !inst.is_initial)
+            continue;
+
+        ///将物体位姿变换为kitti的位姿，即物体中心位于底部中心
+
+
+        ///变换到相机坐标系下
+
+
+        /// 计算观测角度 alpha
+
+
+        ///计算yaw角 ： rotation_y
+
+
+
+        kitti::SaveInstanceTrajectory(e->feature_frame.seq_id,inst_id,std::string &type,
+                int truncated,int occluded,double alpha,Vec4d &box,
+                Vec3d &dims,Vec3d &location,double rotation_y,double score);
+
+    }
+
+
+
+}
+
+
 
 
 void InstanceManager::GetOptimizationParameters()

@@ -55,6 +55,8 @@ Config::Config(const std::string &file_name)
     }
     cout << "is_input_seg:" << is_input_seg << endl;
 
+    fs["dataset_sequence"]>>kDatasetSequence;
+
     kInputHeight = fs["image_height"];
     kInputWidth = fs["image_width"];
 
@@ -134,6 +136,9 @@ Config::Config(const std::string &file_name)
     if(dataset == DatasetType::kViode){
         VIODE::SetParameters(file_name);
     }
+
+    ///清除之前的轨迹
+    kitti::ClearTrajectoryFile();
 
 }
 

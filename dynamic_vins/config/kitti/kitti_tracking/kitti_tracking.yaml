@@ -7,6 +7,9 @@ num_of_cam: 2 #相机的数量
 only_frontend: 0  #是否仅仅启动前端
 
 dataset_type: "kitti" #数据集类型,支持kitti,viode
+
+dataset_sequence: "0003"
+
 slam_type: "dynamic" #SLAM模式,可选:raw,naive,dynamic
 
 #是否估计相机和IMU之间的外参数,
@@ -25,6 +28,7 @@ basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 image_width: 1242
 image_height: 375
 kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0003.txt"
+
 ######################### 预处理的3D包围框 ########################
 det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0003/"
 det3d_score_threshold: 0.15

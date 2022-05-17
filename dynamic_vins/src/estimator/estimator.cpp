@@ -1597,7 +1597,7 @@ void Estimator::ProcessMeasurements(){
             GetIMUInterval(prev_time, cur_time, acc_vec, gyr_vec);
         }
         //获取前端得到的特征
-        SemanticFeature feature_frame = *(feature_queue.request_frame());
+        feature_frame = *(feature_queue.request_frame());
 
         ///IMU预积分 和 状态递推
         if(cfg::is_use_imu){
@@ -1649,6 +1649,9 @@ void Estimator::ProcessMeasurements(){
         //PubPredictBox3D(*this,feature_frame.boxes);
 
         process_mutex.unlock();
+
+        ///保存所有物体在当前帧的位姿
+        insts_manager.SaveTrajectory();
 
         static unsigned int estimator_cnt=0;
         estimator_cnt++;

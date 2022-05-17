@@ -45,6 +45,8 @@ struct SemanticFeature{
     FeatureBackground features;
     double time{0.0};
 
+    unsigned int seq_id;//帧号
+
     ///根据物体的实例信息,格式：{instnce_id,{feature_id,}}
     std::map<unsigned int,FeatureInstance> instances;
 

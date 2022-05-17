@@ -16,8 +16,13 @@
 namespace dynamic_vins::kitti{\
 
 
-std::map<std::string,Eigen::MatrixXd> ReadCalibFile(const std::string &path);
+    std::map<std::string,Eigen::MatrixXd> ReadCalibFile(const std::string &path);
 
+    void SaveInstanceTrajectory(unsigned int frame_id,unsigned int track_id,std::string &type,
+                                int truncated,int occluded,double alpha,Vec4d &box,
+                                Vec3d &dims,Vec3d &location,double rotation_y,double score);
+
+    void ClearTrajectoryFile();
 
 
 }

@@ -91,6 +91,7 @@ public:
     inline static int kVisualInstDuration;
 
     inline static std::string kBasicDir;
+    inline static std::string kDatasetSequence;
 
     inline static bool use_dense_flow{false};
     inline static bool use_background_flow{false};

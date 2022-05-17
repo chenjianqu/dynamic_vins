@@ -64,6 +64,8 @@ public:
 
     void Optimization();
 
+    void SaveTrajectory();
+
 
     /**
     * 获得优化完成的参数，并重新设置窗口内物体的位姿
