@@ -113,7 +113,7 @@ public:
     Vel3d vel,last_vel;//物体的速度
     bool is_init_velocity{false};
 
-    Vec3d box{0,0,0};
+    Box3D box3d;
     cv::Scalar color;
 
     //优化过程中的变量

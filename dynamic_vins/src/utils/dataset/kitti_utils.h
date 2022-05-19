@@ -15,14 +15,13 @@
 
 namespace dynamic_vins::kitti{\
 
+    inline static std::vector<std::string> KittiLabel = {
+        "Car", "Van", "Truck","Pedestrian", "Person_sitting", "Cyclist","Tram", "Misc"};
+
 
     std::map<std::string,Eigen::MatrixXd> ReadCalibFile(const std::string &path);
 
-    void SaveInstanceTrajectory(unsigned int frame_id,unsigned int track_id,std::string &type,
-                                int truncated,int occluded,double alpha,Vec4d &box,
-                                Vec3d &dims,Vec3d &location,double rotation_y,double score);
 
-    void ClearTrajectoryFile();
 
 
 }

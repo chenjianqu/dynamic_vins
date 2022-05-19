@@ -28,6 +28,8 @@ namespace dynamic_vins{\
 
 
 struct SemanticImage{
+    SemanticImage()= default;
+
     void SetMask();
     void SetBackgroundMask();
 

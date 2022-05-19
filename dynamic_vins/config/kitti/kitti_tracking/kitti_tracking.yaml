@@ -22,6 +22,7 @@ visual_inst_duration: 120  #物体可视化的持续时间
 
 basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
+
 ####################### 相机参数 ########################
 
 #kitti tracking
@@ -50,10 +51,18 @@ update_onnx_path: "weights/raft/kitti_update.onnx"
 update_tensorrt_path: "weights/raft/kitti_update.bin"
 
 ####################### 订阅和发布的ROS话题名 ########################
-##### 订阅的话题
+
+#直接读取图像
+use_dataloader: 1 #是否直接读取图像
+image_dataset_period: 300 #读取的时间周期,毫秒
+image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0003/"
+image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0003/"
+
+##### 订阅的话题, 若use_dataloader==1,则忽略
 #kitti
 image0_topic: "/kitti_pub/left"
 image1_topic: "/kitti_pub/right"
+
 
 ##### 发布的话题
 vins_vio_topic: "/dynamic_vins/odometry"

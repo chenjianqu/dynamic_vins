@@ -859,7 +859,8 @@ bool BoxPoseFactor::Evaluate(double const *const *parameters, double *residuals,
             ///计算雅可比
             Mat3d jaco_R = - J_r.inverse() * R.transpose();
 
-            Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> jacobian_pose_woi(jacobians[1]);
+            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose_woi(jacobians[1]);
+            jacobian_pose_woi = Eigen::Matrix<double,6,7>::Zero();
             jacobian_pose_woi.block<3,3>(0,0) = Mat3d::Identity();///左上角
             jacobian_pose_woi.block<3,3>(3,3) = jaco_R;//右下角
 

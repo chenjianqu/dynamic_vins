@@ -15,9 +15,8 @@ namespace dynamic_vins{\
 
 
 void Instance::GetBoxVertex(EigenContainer<Vec3d> &vertex) {
-    Vec3d minPt,maxPt;
-    minPt = - box;
-    maxPt = box;
+    Vec3d minPt =- box3d.dims/2;
+    Vec3d maxPt = box3d.dims/2;
     vertex.resize(8);
     vertex[0]=minPt;
     vertex[1].x()=maxPt.x();vertex[1].y()=minPt.y();vertex[1].z()=minPt.z();
@@ -27,6 +26,7 @@ void Instance::GetBoxVertex(EigenContainer<Vec3d> &vertex) {
     vertex[5] = maxPt;
     vertex[6].x()=maxPt.x();vertex[6].y()=maxPt.y();vertex[6].z()=minPt.z();
     vertex[7].x()=minPt.x();vertex[7].y()=maxPt.y();vertex[7].z()=minPt.z();
+
     for(int i=0;i<8;++i){
         vertex[i] = state[kWinSize].R * vertex[i] + state[kWinSize].P;
     }
@@ -105,11 +105,11 @@ void Instance::InitialPose()
     /*box.x()=(box_max_pt.x()-box_min_pt.x())/2.0;
     box.y()=(box_max_pt.y()-box_min_pt.y())/2.0;
     box.z()=(box_max_pt.z()-box_min_pt.z())/2.0;*/
-    box = Vec3d::Ones();
+    box3d.dims=Vec3d::Ones();
     is_initial=true;
 
     Debugv("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
-           id, cnt_max, frame_index, VecToStr(center), VecToStr(box));
+           id, cnt_max, frame_index, VecToStr(center), VecToStr(box3d.dims));
 
     ///删去初始化之前的观测
     for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
@@ -386,7 +386,8 @@ void Instance::OutlierRejection()
     if(!is_initial || !is_tracking)
         return;
     int num_delete=0,index=0;
-    string log_text = fmt::format("OutlierRejection Inst:{} landmark_num:{} box:{}\n", id, landmarks.size(), VecToStr(box));
+    string log_text = fmt::format("OutlierRejection Inst:{} landmark_num:{} box:{}\n", id, landmarks.size(),
+                                  VecToStr(box3d.dims));
 
     for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
         it_next++;
@@ -475,9 +476,9 @@ void Instance::SetOptimizeParameters()
     para_speed[0][3] = vel.a.x();
     para_speed[0][4] = vel.a.y();
     para_speed[0][5] = vel.a.z();
-    para_box[0][0]=box.x();
-    para_box[0][1]=box.y();
-    para_box[0][2]=box.z();
+    para_box[0][0]=box3d.dims.x();
+    para_box[0][1]=box3d.dims.y();
+    para_box[0][2]=box3d.dims.z();
 
     for(int i=0; i <= kWinSize; ++i){
         para_state[i][0]=state[i].P.x();
@@ -512,9 +513,9 @@ void Instance::GetOptimizationParameters()
     vel.a.x()=para_speed[0][3];
     vel.a.y()=para_speed[0][4];
     vel.a.z()=para_speed[0][5];
-    box.x()=para_box[0][0];
-    box.y()=para_box[0][1];
-    box.z()=para_box[0][2];
+    box3d.dims.x()=para_box[0][0];
+    box3d.dims.y()=para_box[0][1];
+    box3d.dims.z()=para_box[0][2];
 
     for(int i=0;i<=kWinSize;++i){
         state[i].P.x()=para_state[i][0];

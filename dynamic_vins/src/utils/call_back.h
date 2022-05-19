@@ -13,11 +13,19 @@
 
 #include <memory>
 #include <queue>
+#include <filesystem>
+
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 
 #include "parameters.h"
 #include "front_end/semantic_image.h"
+#include "def.h"
+
+
+namespace fs=std::filesystem;
+
+
 
 namespace dynamic_vins{\
 
@@ -80,6 +88,31 @@ private:
 
     std::mutex m_buf;
     std::mutex img0_mutex,img1_mutex,seg0_mutex,seg1_mutex;
+};
+
+
+class Dataloader{
+public:
+    using Ptr = std::shared_ptr<Dataloader>;
+    Dataloader();
+
+    // 检查一个路径是否是目录
+    bool checkIsDir(const string &dir);
+
+    // 搜索一个目录下所有的图像文件，以 jpg,jpeg,png 结尾的文件
+    void getAllImageFiles(const string& dir, vector<string> &files);
+
+    //获取一帧图像
+    SemanticImage LoadStereo(int delta_time);
+
+private:
+    vector<string> left_names;
+    vector<string> right_names;
+
+    int index{0};
+    double time{0};
+
+    TicToc tt;
 };
 
 

@@ -78,6 +78,12 @@ public:
     inline static std::string kImage0Topic, kImage1Topic,kImage0SegTopic,kImage1SegTopic;
     inline static std::string FISHEYE_MASK;
 
+    inline static std::string kImageDatasetLeft;
+    inline static std::string kImageDatasetRight;
+    inline static bool use_dataloader;
+    inline static int kImageDatasetPeriod;
+
+
     inline static int kInputHeight,kInputWidth,kInputChannel=3;
 
     inline static SlamType slam;

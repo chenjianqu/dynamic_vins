@@ -14,6 +14,7 @@
 
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
+#include "utils/visualization.h"
 
 namespace dynamic_vins{\
 
@@ -115,13 +116,23 @@ Config::Config(const std::string &file_name)
     std::ofstream fout(kVinsResultPath, std::ios::out);
     fout.close();
 
-    fs["image0_topic"] >> kImage0Topic;
-    fs["image1_topic"] >> kImage1Topic;
-
-    if(is_input_seg){
-        fs["image0_segmentation_topic"] >> kImage0SegTopic;
-        fs["image1_segmentation_topic"] >> kImage1SegTopic;
+    fs["use_dataloader"]>>use_dataloader;
+    if(use_dataloader){
+        fs["image_dataset_left"]>>kImageDatasetLeft;
+        fs["image_dataset_right"]>>kImageDatasetRight;
+        fs["image_dataset_period"] >> kImageDatasetPeriod;
     }
+    else{
+        fs["image0_topic"] >> kImage0Topic;
+        fs["image1_topic"] >> kImage1Topic;
+
+        if(is_input_seg){
+            fs["image0_segmentation_topic"] >> kImage0SegTopic;
+            fs["image1_segmentation_topic"] >> kImage1SegTopic;
+        }
+    }
+
+
 
     fs.release();
 
@@ -138,7 +149,7 @@ Config::Config(const std::string &file_name)
     }
 
     ///清除之前的轨迹
-    kitti::ClearTrajectoryFile();
+    ClearTrajectoryFile();
 
 }
 

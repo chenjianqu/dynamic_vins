@@ -46,6 +46,7 @@ FlowEstimator::Ptr flow_estimator;
 FeatureTracker::Ptr feature_tracker;
 InstsFeatManager::Ptr insts_tracker;
 CallBack* callback;
+Dataloader::Ptr dataloader;
 
 ImageQueue image_queue;
 
@@ -66,7 +67,21 @@ void ImageProcess()
         }
         ///同步获取图像
         Debugs("Start sync");
-        SemanticImage img = callback->SyncProcess();
+
+        SemanticImage img;
+        if(cfg::use_dataloader){
+            img = dataloader->LoadStereo(cfg::kImageDatasetPeriod);
+        }
+        else{
+            img = callback->SyncProcess();
+        }
+
+        ///结束程序
+        if(img.color0.empty()){
+            cfg::ok = false;
+            break;
+        }
+
         Warns("----------Time : {} ----------", std::to_string(img.time0));
         t_all.Tic();
 
@@ -297,8 +312,6 @@ int Run(int argc, char **argv){
         detector3d.reset(new Detector3D(cfg_file));
         feature_tracker = std::make_unique<FeatureTracker>(cfg_file);
         insts_tracker.reset(new InstsFeatManager(cfg_file));
-
-        callback = new CallBack();
         flow_estimator = std::make_unique<FlowEstimator>(cfg_file);
     }
     catch(std::runtime_error &e){
@@ -308,23 +321,33 @@ int Run(int argc, char **argv){
 
     estimator->SetParameter();
 
+    if(cfg::use_dataloader){
+        dataloader = std::make_shared<Dataloader>();
+    }
+    else{
+        callback = new CallBack();
+
+        ros::Subscriber sub_imu = n.subscribe(cfg::kImuTopic, 2000, ImuCallback, ros::TransportHints().tcpNoDelay());
+        ros::Subscriber sub_img0 = n.subscribe(cfg::kImage0Topic, 100, &CallBack::Img0Callback,callback);
+        ros::Subscriber sub_img1 = n.subscribe(cfg::kImage1Topic, 100, &CallBack::Img1Callback,callback);
+
+        ros::Subscriber sub_seg0,sub_seg1;
+        if(cfg::is_input_seg){
+            sub_seg0 = n.subscribe(cfg::kImage0SegTopic, 100, &CallBack::Seg0Callback,callback);
+            sub_seg1 = n.subscribe(cfg::kImage1SegTopic, 100, &CallBack::Seg1Callback,callback);
+        }
+
+        ros::Subscriber sub_restart = n.subscribe("/vins_restart", 100, RestartCallback);
+        ros::Subscriber sub_terminal = n.subscribe("/vins_terminal", 100, TerminalCallback);
+        ros::Subscriber sub_imu_switch = n.subscribe("/vins_imu_switch", 100, ImuSwitchCallback);
+        ros::Subscriber sub_cam_switch = n.subscribe("/vins_cam_switch", 100, CamSwitchCallback);
+
+    }
+
+
     cout<<"waiting for image and imu..."<<endl;
     Publisher:: registerPub(n);
 
-    ros::Subscriber sub_imu = n.subscribe(cfg::kImuTopic, 2000, ImuCallback, ros::TransportHints().tcpNoDelay());
-    ros::Subscriber sub_img0 = n.subscribe(cfg::kImage0Topic, 100, &CallBack::Img0Callback,callback);
-    ros::Subscriber sub_img1 = n.subscribe(cfg::kImage1Topic, 100, &CallBack::Img1Callback,callback);
-
-    ros::Subscriber sub_seg0,sub_seg1;
-    if(cfg::is_input_seg){
-        sub_seg0 = n.subscribe(cfg::kImage0SegTopic, 100, &CallBack::Seg0Callback,callback);
-        sub_seg1 = n.subscribe(cfg::kImage1SegTopic, 100, &CallBack::Seg1Callback,callback);
-    }
-
-    ros::Subscriber sub_restart = n.subscribe("/vins_restart", 100, RestartCallback);
-    ros::Subscriber sub_terminal = n.subscribe("/vins_terminal", 100, TerminalCallback);
-    ros::Subscriber sub_imu_switch = n.subscribe("/vins_imu_switch", 100, ImuSwitchCallback);
-    ros::Subscriber sub_cam_switch = n.subscribe("/vins_cam_switch", 100, CamSwitchCallback);
 
     MyLogger::vio_logger->flush();
 

@@ -40,6 +40,8 @@ class Box3D{
 public:
     using Ptr = std::shared_ptr<Box3D>;
 
+    Box3D()=default;
+
     Box3D(int class_id_,int attribution_id_,double score_)
     :class_id(class_id_),attribution_id(attribution_id_),score(score_){}
 

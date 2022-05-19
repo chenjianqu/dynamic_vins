@@ -102,10 +102,16 @@ public:
 
     static  visualization_msgs::Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,int id,const cv::Scalar &color);
 
+
+
 };
 
 
+ void SaveInstanceTrajectory(unsigned int frame_id,unsigned int track_id,std::string &type,
+                                   int truncated,int occluded,double alpha,Vec4d &box,
+                                   Vec3d &dims,Vec3d &location,double rotation_y,double score);
 
+ void ClearTrajectoryFile();
 
 }
 

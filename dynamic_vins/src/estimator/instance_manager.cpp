@@ -20,6 +20,7 @@
 #include "factor/instance_factor.h"
 #include "factor/speed_factor.h"
 #include "factor/box_factor.h"
+#include "utils/dataset/kitti_utils.h"
 
 namespace dynamic_vins{\
 
@@ -71,7 +72,10 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
             auto [it,is_insert] = instances.insert({instance_id, new_inst});
             it->second.is_initial=false;
             it->second.color = inst_feat.color;
+            if(inst_feat.box3d){
             it->second.boxes3d[frame] = inst_feat.box3d;
+            it->second.box3d.class_id = inst_feat.box3d->class_id;
+            }
             tracking_number_++;
 
             for(auto &[feat_id,feat_vector] : inst_feat){
@@ -105,6 +109,8 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
         else{ ///将特征添加到物体中
             auto &landmarks = inst_iter->second.landmarks;
             inst_iter->second.boxes3d[frame] = inst_feat.box3d;
+            inst_iter->second.box3d.class_id = inst_feat.box3d->class_id;
+
             inst_iter->second.lost_number=0;
 
             if(!inst_iter->second.is_tracking){
@@ -237,7 +243,7 @@ void InstanceManager::Triangulate(int frame_cnt)
                 }
                 else{ //判断是否在包围框附近
                     Eigen::Vector3d pts_obj_j=inst.state[imu_i].R.transpose() * (point3d_w - inst.state[imu_i].P);
-                    if(pts_obj_j.norm() < inst.box.norm()*4){
+                    if(pts_obj_j.norm() < inst.box3d.dims.norm()*4){
                         lm.depth = depth;
                         inst_add_num++;
                         log_inst_text+=fmt::format("lid:{} d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
@@ -488,11 +494,12 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
             inst.state[i].time = e->headers[i];
         }
 
-        inst.box = inst.boxes3d[frame]->dims;
+        inst.box3d.dims = inst.boxes3d[frame]->dims;
         inst.is_initial=true;
 
         Debugv("Initialized id:{},cnt_max:{},初始位姿:P:{},R:{} 初始box:{}",
-               inst.id, cnt, VecToStr(init_state.P), VecToStr(init_state.R.eulerAngles(2,1,0)),VecToStr(inst.box));
+               inst.id, cnt, VecToStr(init_state.P), VecToStr(init_state.R.eulerAngles(2,1,0)),
+               VecToStr(inst.box3d.dims));
 
         ///删去初始化之前的观测
         for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next){
@@ -563,7 +570,7 @@ string InstanceManager::PrintInstanceInfo(bool output_lm,bool output_stereo){
 string InstanceManager::PrintInstancePoseInfo(bool output_lm){
     string log_text ;
     InstExec([&log_text,&output_lm](int key,Instance& inst){
-        log_text += fmt::format("id:{} info:\n box:{} v:{} a:{}\n",inst.id,VecToStr(inst.box),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
+        log_text += fmt::format("id:{} info:\n box:{} v:{} a:{}\n",inst.id,VecToStr(inst.box3d.dims),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
         for(int i=0; i <= kWinSize; ++i){
             log_text+=fmt::format("{},P:({}),R:({})\n", i, VecToStr(inst.state[i].P),VecToStr(inst.state[i].R.eulerAngles(2,1,0)));
         }
@@ -606,22 +613,22 @@ void InstanceManager::SaveTrajectory(){
         if(!inst.is_tracking || !inst.is_initial)
             continue;
 
-        ///将物体位姿变换为kitti的位姿，即物体中心位于底部中心
+        if(cfg::dataset==DatasetType::kKitti){
+
+            ///将物体位姿变换为kitti的位姿，即物体中心位于底部中心
 
 
-        ///变换到相机坐标系下
+            ///变换到相机坐标系下
 
 
-        /// 计算观测角度 alpha
+            /// 计算观测角度 alpha
 
 
-        ///计算yaw角 ： rotation_y
-
-
-
-        kitti::SaveInstanceTrajectory(e->feature_frame.seq_id,inst_id,std::string &type,
-                int truncated,int occluded,double alpha,Vec4d &box,
-                Vec3d &dims,Vec3d &location,double rotation_y,double score);
+            ///计算yaw角 ： rotation_y
+            //SaveInstanceTrajectory(e->feature_frame.seq_id, inst.id,kitti::KittiLabel[inst.class_label],
+                //                   1,1,double alpha,Vec4d &box,
+                  //                 inst.box,Vec3d &location,double rotation_y,double score);
+        }
 
     }
 
