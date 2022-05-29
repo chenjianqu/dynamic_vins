@@ -67,22 +67,12 @@ public:
     explicit Config(const std::string &file_name);
 
     inline static std::string kExCalibResultPath;
-    inline static std::string kVinsResultPath;
-    inline static std::string kOutputFolder;
-    inline static std::string kImuTopic;
 
     inline static int kCamNum;
     inline static bool is_stereo;
     inline static int is_use_imu;
     inline static std::map<int, Eigen::Vector3d> pts_gt;
-    inline static std::string kImage0Topic, kImage1Topic,kImage0SegTopic,kImage1SegTopic;
     inline static std::string FISHEYE_MASK;
-
-    inline static std::string kImageDatasetLeft;
-    inline static std::string kImageDatasetRight;
-    inline static bool use_dataloader;
-    inline static int kImageDatasetPeriod;
-
 
     inline static int kInputHeight,kInputWidth,kInputChannel=3;
 
@@ -93,8 +83,6 @@ public:
 
     inline static int is_estimate_ex;
     inline static int is_estimate_td;
-
-    inline static int kVisualInstDuration;
 
     inline static std::string kBasicDir;
     inline static std::string kDatasetSequence;

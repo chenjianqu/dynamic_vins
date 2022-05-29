@@ -39,7 +39,9 @@ public:
 
     void PushBack(unsigned int  frame_id, std::map<unsigned int,FeatureInstance> &input_insts);
 
-    void Triangulate(int frame_cnt);
+    void Triangulate();
+
+    void ManageTriangulatePoint();
 
     void PropagatePose();
 
@@ -51,7 +53,7 @@ public:
 
     void AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
-    void SetVelMap();
+    void OutputInstsInfo();
 
     string PrintInstanceInfo(bool output_lm,bool output_stereo=false);
     string PrintInstancePoseInfo(bool output_lm);
@@ -94,7 +96,7 @@ public:
         },true);
     }
 
-    std::unordered_map<unsigned int,Vel3d> vel_map(){
+    std::unordered_map<unsigned int,InstEstimatedInfo> vel_map(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
         return vel_map_;
     }
@@ -122,7 +124,7 @@ private:
     }
 
     std::mutex vel_mutex_;
-    std::unordered_map<unsigned int,Vel3d> vel_map_;
+    std::unordered_map<unsigned int,InstEstimatedInfo> vel_map_;
 
     Estimator* e{nullptr};
     int opt_inst_num_{0};//优化位姿的数量

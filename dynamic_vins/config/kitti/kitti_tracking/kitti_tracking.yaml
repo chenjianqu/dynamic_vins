@@ -8,8 +8,6 @@ only_frontend: 0  #是否仅仅启动前端
 
 dataset_type: "kitti" #数据集类型,支持kitti,viode
 
-dataset_sequence: "0003"
-
 slam_type: "dynamic" #SLAM模式,可选:raw,naive,dynamic
 
 #是否估计相机和IMU之间的外参数,
@@ -23,15 +21,26 @@ visual_inst_duration: 120  #物体可视化的持续时间
 basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 
+
+#直接读取图像
+dataset_sequence: "0003"
+use_dataloader: 0 #是否直接读取图像
+image_dataset_period: 500 #读取的时间周期,毫秒
+image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0003/"
+image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0003/"
+
+kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0003.txt" #相机内参
+det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0003/" #预处理的3D框
+flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0003/" #预计算的光流
+
+
 ####################### 相机参数 ########################
 
 #kitti tracking
 image_width: 1242
 image_height: 375
-kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0003.txt"
 
 ######################### 预处理的3D包围框 ########################
-det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0003/"
 det3d_score_threshold: 0.15
 use_offline_det3d: 1
 
@@ -40,8 +49,6 @@ use_offline_det3d: 1
 use_dense_flow: 0 #是否使用稠密光流
 use_background_flow: 1 #背景特征点是否使用稠密光流
 use_offline_flow: 1 #是否使用预计算的光流
-#flow_offline_path: "/home/chen/datasets/kitti/tracking/flow_02/training/image_02/0002/"
-flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0003/"
 
 fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
 fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
@@ -51,12 +58,6 @@ update_onnx_path: "weights/raft/kitti_update.onnx"
 update_tensorrt_path: "weights/raft/kitti_update.bin"
 
 ####################### 订阅和发布的ROS话题名 ########################
-
-#直接读取图像
-use_dataloader: 1 #是否直接读取图像
-image_dataset_period: 300 #读取的时间周期,毫秒
-image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0003/"
-image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0003/"
 
 ##### 订阅的话题, 若use_dataloader==1,则忽略
 #kitti
@@ -133,13 +134,13 @@ extractor_model_path: "weights/deepsort/ckpt.bin"
 
 
 ####################### log的参数 ########################
-estimator_log_path: "output/vio_log.txt"
+estimator_log_path: "data/output/vio_log.txt"
 estimator_log_level: "debug"
 estimator_log_flush: "debug"
-feature_tracker_log_path: "output/frontend_log.txt"
+feature_tracker_log_path: "data/output/frontend_log.txt"
 feature_tracker_log_level: "debug"
 feature_tracker_log_flush: "debug"
-segmentor_log_path: "output/img_process_log.txt"
+segmentor_log_path: "data/output/img_process_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
 

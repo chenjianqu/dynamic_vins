@@ -31,6 +31,8 @@ namespace dynamic_vins{\
 
 class CameraPoseVisualization {
 public:
+    using Ptr=std::shared_ptr<CameraPoseVisualization>;
+
     std::string m_marker_ns;
 
     CameraPoseVisualization(float r, float g, float b, float a);

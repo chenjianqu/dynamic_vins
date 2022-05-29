@@ -60,24 +60,72 @@ void InstsFeatManager::ClearState(){
 
 void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
 {
+    std::optional<Vec3d> center=std::nullopt;
+
     vector<bool> match_vec(boxes.size(),false);
     for(auto &[inst_id,inst] : instances_){
+
+        /*auto it=estimated_info.find(inst_id);
+        if(it!=estimated_info.end()){
+            auto& estimated_inst = it->second;
+            if(estimated_inst.is_init && estimated_inst.is_init_velocity){
+                ///将物体的位姿递推到当前时刻
+                double time_ij = curr_time - estimated_inst.time;
+                Mat3d Roioj=Sophus::SO3d::exp(estimated_inst.a*time_ij).matrix();
+                Vec3d Poioj=estimated_inst.v*time_ij;
+                Mat3d R_woi = Roioj * estimated_inst.R;
+                Vec3d P_woi = Roioj * estimated_inst.P + Poioj;
+                center = P_woi;
+                ///生成物体的各个3D顶点
+                //Mat38d corners =  Box3D::GetCornersFromPose(R_woi,P_woi,estimated_inst.dims);
+            }
+        }*/
+
+        vector<Box3D::Ptr> candidate_match;
+        vector<int> candidate_idx;
+
         double max_iou=0;
         int max_idx=-1;
         for(size_t i=0;i<boxes.size();++i){
             if(match_vec[i])
                 continue;
+            ///判断3D box和估计的3D box的距离
+            if(center && (*center - boxes[i]->center).norm() > 10){
+                continue;
+            }
+
             double iou = BoxIoU(inst.box2d->min_pt,inst.box2d->max_pt,boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
-            if(iou > max_iou){
+            if(iou>0.1){
+                candidate_match.push_back(boxes[i]);
+                candidate_idx.push_back(i);
+            }
+            /*if(iou > max_iou){
                 max_idx = i;
                 max_iou = iou;
+            }*/
+        }
+
+        double min_dist= std::numeric_limits<double>::max();
+        int min_idx=-1;
+        for(int i=0;i<candidate_match.size();++i){
+            if(candidate_match[i]->center.norm() < min_dist){
+                min_dist=candidate_match[i]->center.norm();
+                min_idx = candidate_idx[i];
             }
         }
-        if(max_iou > 0.1){
-            match_vec[max_idx]=true;
-            inst.box3d = boxes[max_idx];
-            Debugt("id:{} box2d:{} box3d:{}",inst_id,coco::CocoLabel[inst.class_id],
-                   NuScenes::GetClassName(boxes[max_idx]->class_id));
+
+        //if(max_iou > 0.1){
+        //    match_vec[max_idx]=true;
+        //    inst.box3d = boxes[max_idx];
+        //    Debugt("id:{} box2d:{} box3d:{}",inst_id,coco::CocoLabel[inst.class_id],
+        //           NuScenes::GetClassName(boxes[max_idx]->class_id));
+        //}
+
+        if(!candidate_match.empty()){
+            match_vec[min_idx]=true;
+            inst.box3d = boxes[min_idx];
+                Debugt("id:{} box2d:{} box3d:{}",inst_id,coco::CocoLabel[inst.class_id],
+                       NuScenes::GetClassName(boxes[min_idx]->class_id));
         }
     }
 }

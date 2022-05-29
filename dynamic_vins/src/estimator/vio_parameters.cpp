@@ -105,9 +105,13 @@ void ReadCameraToIMU(const std::string& config_path){
 
     }
 
+    std::string kBasicDir;
+    fs["basic_dir"] >> kBasicDir;
+    string kOutputFolder = kBasicDir+"data/output/";
+    cfg::kExCalibResultPath = kOutputFolder + "extrinsic_parameter.txt";
+
     fs.release();
 
-    cfg::kExCalibResultPath = cfg::kOutputFolder + "/extrinsic_parameter.csv";
 }
 
 

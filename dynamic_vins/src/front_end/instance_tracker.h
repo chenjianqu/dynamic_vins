@@ -54,7 +54,9 @@ public:
     void AddInstancesByTracking(SemanticImage &img);
     void DrawInsts(cv::Mat& img);
 
-    void set_vel_map(const std::unordered_map<unsigned int,Vel3d>& vel_map){vel_map_ = vel_map;}
+    void SetEstimatedInstancesInfo(const std::unordered_map<unsigned int,InstEstimatedInfo>& estimated_info_){
+        estimated_info = estimated_info_;
+    }
 
 private:
     void ManageInstances();
@@ -77,7 +79,7 @@ private:
     }
 
     std::unordered_map<unsigned int,InstFeat> instances_;
-    std::unordered_map<unsigned int,Vel3d> vel_map_;
+    std::unordered_map<unsigned int,InstEstimatedInfo> estimated_info;
 
     PinHoleCamera::Ptr camera_,right_camera_;
 

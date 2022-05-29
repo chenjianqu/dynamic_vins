@@ -21,9 +21,11 @@
 
 #include "utils/def.h"
 #include "utils/parameters.h"
-#include "utils/visualization.h"
+#include "utils/io/visualization.h"
+#include "utils/io/io_parameters.h"
 #include "utils/dataset/viode_utils.h"
-#include "utils/call_back.h"
+#include "utils/dataset/coco_utils.h"
+#include "utils/io/call_back.h"
 #include "flow/flow_estimator.h"
 #include "det3d/detector3d.h"
 #include "det2d/detector2d.h"
@@ -61,6 +63,7 @@ void ImageProcess()
 
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
+
         if(image_queue.size() >= kImageQueueSize){
             std::this_thread::sleep_for(50ms);
             continue;
@@ -69,8 +72,8 @@ void ImageProcess()
         Debugs("Start sync");
 
         SemanticImage img;
-        if(cfg::use_dataloader){
-            img = dataloader->LoadStereo(cfg::kImageDatasetPeriod);
+        if(io_para::use_dataloader){
+            img = dataloader->LoadStereo(io_para::kImageDatasetPeriod);
         }
         else{
             img = callback->SyncProcess();
@@ -143,7 +146,8 @@ void ImageProcess()
 
         //log
         //for(auto &inst : img.insts_info)
-        //    Debugs("img.insts_info id:{} min_pt:({},{}),max_pt:({},{})",inst.id,inst.min_pt.x,inst.min_pt.y,inst.max_pt.x,inst.max_pt.y);
+        //    Debugs("img.insts_info id:{} min_pt:({},{}),max_pt:({},{})",
+        //    inst.id,inst.min_pt.x,inst.min_pt.y,inst.max_pt.x,inst.max_pt.y);
 
         ///获得光流估计
         if(cfg::use_dense_flow){
@@ -194,7 +198,7 @@ void FeatureTrack()
 
             ///前端跟踪
             if(cfg::slam == SlamType::kDynamic){
-                insts_tracker->set_vel_map(estimator->insts_manager.vel_map());
+                insts_tracker->SetEstimatedInstancesInfo(estimator->insts_manager.vel_map());
                 TicToc t_i;
                 //开启另一个线程检测动态特征点
                 std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
@@ -302,17 +306,29 @@ int Run(int argc, char **argv){
     ros::NodeHandle n("~");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
-    string cfg_file = argv[1];
+    string file_name = argv[1];
     cout<<fmt::format("cfg_file:{}",argv[1])<<endl;
 
     try{
-        cfg cfg(cfg_file);
-        estimator.reset(new Estimator(cfg_file));
-        detector2d.reset(new Detector2D(cfg_file));
-        detector3d.reset(new Detector3D(cfg_file));
-        feature_tracker = std::make_unique<FeatureTracker>(cfg_file);
-        insts_tracker.reset(new InstsFeatManager(cfg_file));
-        flow_estimator = std::make_unique<FlowEstimator>(cfg_file);
+        cfg cfg(file_name);
+        ///初始化logger
+        MyLogger::InitLogger(file_name);
+        ///初始化相机模型
+        InitCamera(file_name);
+        ///初始化局部参数
+        coco::SetParameters(file_name);
+        if(cfg::dataset == DatasetType::kViode){
+            VIODE::SetParameters(file_name);
+        }
+        io_para::SetParameters(file_name);
+
+
+        estimator.reset(new Estimator(file_name));
+        detector2d.reset(new Detector2D(file_name));
+        detector3d.reset(new Detector3D(file_name));
+        feature_tracker = std::make_unique<FeatureTracker>(file_name);
+        insts_tracker.reset(new InstsFeatManager(file_name));
+        flow_estimator = std::make_unique<FlowEstimator>(file_name);
     }
     catch(std::runtime_error &e){
         cerr<<e.what()<<endl;
@@ -321,35 +337,38 @@ int Run(int argc, char **argv){
 
     estimator->SetParameter();
 
-    if(cfg::use_dataloader){
+    ros::Subscriber sub_imu,sub_img0,sub_img1;
+    ros::Subscriber sub_seg0,sub_seg1;
+    ros::Subscriber sub_restart,sub_terminal,sub_imu_switch,sub_cam_switch;
+
+    if(io_para::use_dataloader){
         dataloader = std::make_shared<Dataloader>();
     }
     else{
         callback = new CallBack();
 
-        ros::Subscriber sub_imu = n.subscribe(cfg::kImuTopic, 2000, ImuCallback, ros::TransportHints().tcpNoDelay());
-        ros::Subscriber sub_img0 = n.subscribe(cfg::kImage0Topic, 100, &CallBack::Img0Callback,callback);
-        ros::Subscriber sub_img1 = n.subscribe(cfg::kImage1Topic, 100, &CallBack::Img1Callback,callback);
+        sub_imu = n.subscribe(io_para::kImuTopic, 2000, ImuCallback,
+                                              ros::TransportHints().tcpNoDelay());
+        sub_img0 = n.subscribe(io_para::kImage0Topic, 100, &CallBack::Img0Callback,callback);
+        sub_img1 = n.subscribe(io_para::kImage1Topic, 100, &CallBack::Img1Callback,callback);
 
-        ros::Subscriber sub_seg0,sub_seg1;
         if(cfg::is_input_seg){
-            sub_seg0 = n.subscribe(cfg::kImage0SegTopic, 100, &CallBack::Seg0Callback,callback);
-            sub_seg1 = n.subscribe(cfg::kImage1SegTopic, 100, &CallBack::Seg1Callback,callback);
+            sub_seg0 = n.subscribe(io_para::kImage0SegTopic, 100, &CallBack::Seg0Callback,callback);
+            sub_seg1 = n.subscribe(io_para::kImage1SegTopic, 100, &CallBack::Seg1Callback,callback);
         }
 
-        ros::Subscriber sub_restart = n.subscribe("/vins_restart", 100, RestartCallback);
-        ros::Subscriber sub_terminal = n.subscribe("/vins_terminal", 100, TerminalCallback);
-        ros::Subscriber sub_imu_switch = n.subscribe("/vins_imu_switch", 100, ImuSwitchCallback);
-        ros::Subscriber sub_cam_switch = n.subscribe("/vins_cam_switch", 100, CamSwitchCallback);
-
+        sub_restart = n.subscribe("/vins_restart", 100, RestartCallback);
+        sub_terminal = n.subscribe("/vins_terminal", 100, TerminalCallback);
+        sub_imu_switch = n.subscribe("/vins_imu_switch", 100, ImuSwitchCallback);
+        sub_cam_switch = n.subscribe("/vins_cam_switch", 100, CamSwitchCallback);
     }
 
-
-    cout<<"waiting for image and imu..."<<endl;
-    Publisher:: registerPub(n);
-
+    Publisher::e = estimator;
+    Publisher::RegisterPub(n);
 
     MyLogger::vio_logger->flush();
+
+    cout<<"waiting for image and imu..."<<endl;
 
     std::thread sync_thread{ImageProcess};
     std::thread fk_thread{FeatureTrack};

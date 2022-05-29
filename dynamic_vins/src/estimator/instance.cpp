@@ -229,6 +229,14 @@ int Instance::SlideWindowOld()
         }
     }
 
+    ///将最老帧的轨迹保存到历史轨迹中
+    if(is_initial && is_init_velocity){
+        history_pose.push_back(state[0]);
+        if(history_pose.size()>100){
+            history_pose.erase(history_pose.begin());
+        }
+    }
+
     ///将最老帧的相关变量去掉
     for (int i = 0; i < kWinSize; i++){
         state[i].swap(state[i+1]);

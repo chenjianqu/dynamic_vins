@@ -107,7 +107,7 @@ public:
 
     bool is_initial{false};//是否已经初始化位姿了
     bool is_tracking{true};//是否在滑动窗口中
-    bool opt_vel{false};
+    bool is_curr_visible{false};//当前帧是否可见
 
     State state[(kWinSize + 1)]{}; //物体的位姿
     Vel3d vel,last_vel;//物体的速度
@@ -132,6 +132,8 @@ public:
     int lost_number{0};//已经连续多少帧未检测到特征了
 
     Box3D::Ptr boxes3d[(kWinSize + 1)]{};//实例关联的3d box
+
+    std::list<State> history_pose;
 };
 
 }

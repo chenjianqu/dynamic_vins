@@ -23,7 +23,7 @@
 #include <cstdio>
 
 #include "estimator.h"
-#include "utils/visualization.h"
+#include "utils/io/visualization.h"
 #include "utils/def.h"
 #include "vio_parameters.h"
 
@@ -324,7 +324,8 @@ void Estimator::SetMarginalizationInfo()
                                 it_per_id.feature_per_frame[0].cur_td, it_per_frame.cur_td);
                         auto *residual_block_info = new ResidualBlockInfo(
                                 f, loss_function,
-                                vector<double *>{para_ex_pose[0], para_ex_pose[1], para_Feature[feature_index], para_Td[0]},
+                                vector<double *>{para_ex_pose[0], para_ex_pose[1], para_Feature[feature_index],
+                                                 para_Td[0]},
                                 vector<int>{2});
                         marg_info->addResidualBlockInfo(residual_block_info);
                     }
@@ -761,8 +762,8 @@ bool Estimator::InitialStructure()
             Debugv("Not enough points for solve pnp !");
             return false;
         }
-        if (! cv::solvePnP(pts_3_vector, pts_2_vector, K, D, rvec, t, 1))
-        {
+        if (! cv::solvePnP(pts_3_vector, pts_2_vector, K, D, rvec,
+                           t, 1)){
             Debugv("solve pnp fail!");
             return false;
         }
@@ -992,7 +993,8 @@ void Estimator::Double2vector()
     {
         for (int i = 0; i <= kWinSize; i++)
         {
-            Rs[i] = Quaterniond(para_Pose[i][6], para_Pose[i][3], para_Pose[i][4], para_Pose[i][5]).normalized().toRotationMatrix();
+            Rs[i] = Quaterniond(para_Pose[i][6], para_Pose[i][3], para_Pose[i][4], para_Pose[i][5])
+                    .normalized().toRotationMatrix();
 
             Ps[i] = Vec3d(para_Pose[i][0], para_Pose[i][1], para_Pose[i][2]);
         }
@@ -1226,7 +1228,8 @@ void Estimator::PredictPtsInNextFrame()
                 double depth = it_per_id.estimated_depth;
                 Vec3d pts_j = ric[0] * (depth * it_per_id.feature_per_frame[0].point) + tic[0];
                 Vec3d pts_w = Rs[firstIndex] * pts_j + Ps[firstIndex];
-                Vec3d pts_local = nextT.block<3, 3>(0, 0).transpose() * (pts_w - nextT.block<3, 1>(0, 3));
+                Vec3d pts_local = nextT.block<3, 3>(0, 0).transpose() *
+                    (pts_w - nextT.block<3, 1>(0, 3));
                 Vec3d pts_cam = ric[0].transpose() * (pts_local - tic[0]);
                 int ptsIndex = it_per_id.feature_id;
                 predictPts[ptsIndex] = pts_cam;
@@ -1487,11 +1490,12 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
         Debugv("--开始处理动态物体--");
 
         if(cfg::slam == SlamType::kDynamic){
-            insts_manager.SetVelMap();//将输出实例的速度信息
+            insts_manager.OutputInstsInfo();//将输出实例的速度信息
             ///动态物体的位姿递推
             insts_manager.PropagatePose();
             ///动态特征点的三角化
-            insts_manager.Triangulate(frame);
+            insts_manager.Triangulate();
+            insts_manager.ManageTriangulatePoint();
             ///若动态物体未初始化, 则进行初始化
             insts_manager.InitialInstance(image.instances);
             ///初始化速度
@@ -1499,12 +1503,10 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
-            Debugv(insts_manager.PrintInstanceInfo(false,false));
+            Debugv(insts_manager.PrintInstanceInfo(true,false));
 
             ///单独优化动态物体
             insts_manager.Optimization();
-
-
         }
         Debugv("--完成处理动态物体--");
 
@@ -1627,8 +1629,9 @@ void Estimator::ProcessMeasurements(){
         prev_time = cur_time;
 
         ///输出
+        SetOutputPose(Rs[kWinSize],Ps[kWinSize],ric[0],tic[0]);
 
-        Publisher::printStatistics(*this, 0);
+        Publisher::printStatistics( 0);
 
         std_msgs::Header header;
         header.frame_id = "world";
@@ -1636,15 +1639,15 @@ void Estimator::ProcessMeasurements(){
 
         if(cfg::slam == SlamType::kDynamic){
             //printInstanceData(*this);
-            Publisher::pubInstancePointCloud(*this,header);
+            Publisher::pubInstancePointCloud(header);
         }
 
-        Publisher::pubOdometry(*this, header);
-        Publisher:: pubKeyPoses(*this, header);
-        Publisher::pubCameraPose(*this, header);
-        Publisher::pubPointCloud(*this, header);
-        Publisher::pubKeyframe(*this);
-        Publisher::pubTF(*this, header);
+        Publisher::pubOdometry(header);
+        Publisher:: pubKeyPoses(header);
+        Publisher::pubCameraPose(header);
+        Publisher::pubPointCloud(header);
+        Publisher::pubKeyframe();
+        Publisher::pubTF(header);
 
         //PubPredictBox3D(*this,feature_frame.boxes);
 

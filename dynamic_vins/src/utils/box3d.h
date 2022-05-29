@@ -45,6 +45,8 @@ public:
     Box3D(int class_id_,int attribution_id_,double score_)
     :class_id(class_id_),attribution_id(attribution_id_),score(score_){}
 
+    Box3D(vector<string> &tokens);
+
     bool InsideBox(Eigen::Vector3d &point);
 
     Mat28d CornersProjectTo2D(PinHoleCamera &cam);
@@ -60,6 +62,8 @@ public:
     static Mat3d GetCoordinateRotationFromCorners(Mat38d &corners);
 
     static int CoordinateDirection(int x_d,int y_d,int z_d);
+
+    static Mat38d GetCornersFromPose(Mat3d &R_woi,Vec3d &P_woi,Vec3d &dims);
 
 
     ///每行的前3个数字是类别,属性,分数

@@ -53,6 +53,22 @@ struct SemanticFeature{
 };
 
 
+class InstEstimatedInfo{
+public:
+    double time;
+    Mat3d R;
+    Vec3d P{0,0,0};
+    Vec3d v{0,0,0};
+    Vec3d a{0,0,0};
+
+    Vec3d dims{0,0,0};
+    Vec3d avg_point{0,0,0};
+
+    bool is_init{false};
+    bool is_init_velocity{false};
+};
+
+
 
 class FeatureQueue{
 public:

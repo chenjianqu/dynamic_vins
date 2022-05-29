@@ -2,35 +2,31 @@
 
 ## 依赖
 
-**CMake >=3.12**  
+* CMake >=3.12  这是为了兼容torch-vision的编译
 
-这是为了兼容torch-vision的编译
+* gcc >= 9, 为了使用C++17的新特性。注意在安装cuda、tensorrt的时候，需要低版本(比如gcc7)来编译安装。
 
-**gcc >= 9**
+* CUDA10.2
 
-为了使用C++17的新特性。注意在安装cuda、tensorrt的时候，需要低版本(比如gcc7)来编译安装。
+* cudnn>=8
 
-**Cuda10.2**
+* TensorRT = 8.0.1.6
 
-**cudnn>=8**
+* Eigen>=3.3
 
-**TensorRT = 8.0.1.6.Linux.x86_64-gnu.cuda-10.2.cudnn8.2**
+* opencv3.4.16 with cuda
 
-**Eigen>=3.3**
+* spdlog
 
-**opencv3.4.16 cuda**
+* ceres1.14.0
 
-需要启用cuda编译opencv
+* pcl-1.8.1
 
-**spdlog**
+* Sophus
 
-**ceres1.14.0**
+* Libtorch1.8 + TorchVision0.9.1
 
-**pcl-1.8.1**
-
-**Sophus**
-
-**Libtorch1.8 + TorchVision0.9.1**
+	
 
 
 ## Demo
@@ -73,7 +69,7 @@ rosrun rviz rviz -d {dynamic_vins_dir}/config/rviz/rviz.rviz
 rosrun rviz rviz -d /home/chen/ws/dynamic_ws/src/dynamic_vins/config/rviz/rviz.rviz
 ```
 
-* launch  
+* launch 
 loop_fusion
 ```shell
 #loop_fusion
@@ -111,11 +107,18 @@ rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
 ```
 
 
+
 直接读取数据集
+
+```
+rosrun kitti_pub kitti_pub left_image_path right_image_path [time_delta [is_show]] 
+```
+
+such as:
+
 ```shell
-
-/home/chen/ws/dynamic_ws/src/kitti_pub/cmake-build-debug/devel/lib/kitti_pub/kitti_pub  /home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0003  /home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0003
-
+seq="0003"
+rosrun kitti_pub kitti_pub /home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/${seq}  /home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/${seq} 100 1
 ```
 
 
@@ -126,8 +129,63 @@ rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
 
 
 
+## Evaluate
+
+### Prepare KITTI
+
+* Convert KITTI's oxts data to 'TUM' pose
+
+```shell
+source ~/ws/dynamic_ws/devel/setup.bash
+
+oxts_path="/home/chen/datasets/kitti/tracking/data_tracking_oxts/training/oxts/"
+save_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
+sequence="0001" && rosrun dynamic_vins_eval save_oxts ${oxts_path}/${sequence}.txt ${save_path}/${sequence}.txt
+```
 
 
+
+* To visualize the ground-truth trajectory, you run:
+
+```shell
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+save_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
+sequence="0003"
+
+evo_traj tum ${save_path}/${sequence}.txt -p
+```
+
+
+
+* To visualize the estimate ego-motion,run:
+
+```shell
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/"
+sequence="0003"
+
+evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt -p
+```
+
+or
+```shell
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/"
+sequence="0002"
+evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt --ref=${gt_path}/${sequence}.txt --align -p
+```
+
+
+
+* To evaluate the estimate trajectory,run
+
+```shell
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/"
+sequence="0003"
+evo_ape tum --align -p ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt 
+```
 
 
 

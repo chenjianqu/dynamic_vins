@@ -267,7 +267,10 @@ public:
      */
     SpeedStereoPointFactor(Vec3d _pts_j, Vec3d _pts_i,double time)
     :time_ij(time),pts_j(std::move(_pts_j) ),pts_i(std::move(_pts_i))
-    {}
+    {
+        //Debugv("SpeedStereoPointFactor construct time_ij:{} pts_i:{} pts_j:{}",
+        //       time_ij,VecToStr(pts_i),VecToStr(pts_j));
+    }
 
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;

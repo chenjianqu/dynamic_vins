@@ -73,6 +73,18 @@ class Estimator
 
     void ClearState();
 
+    void SetOutputPose(const Mat3d &R,const Vec3d &P,const Mat3d &R_bc,const Vec3d &P_bc){
+        std::unique_lock<std::mutex> lk(out_pose_mutex);
+        R_out=R;
+        P_out=P;
+        R_bc_out=R_bc;
+        P_bc_out=P_bc;
+    }
+    std::tuple<Mat3d,Vec3d,Mat3d,Vec3d> GetOutputPose(){
+        std::unique_lock<std::mutex> lk(out_pose_mutex);
+        return {R_out,P_out,R_bc_out,P_bc_out};
+    }
+
     Mat3d ric[2];
     Vec3d tic[2];
     Vec3d Ps[(kWinSize + 1)];
@@ -209,6 +221,10 @@ private:
 
     bool is_init_first_pose{};
     bool initThreadFlag;
+
+    std::mutex out_pose_mutex;
+    Mat3d R_out,R_bc_out;
+    Vec3d P_out,P_bc_out;
 
 };
 

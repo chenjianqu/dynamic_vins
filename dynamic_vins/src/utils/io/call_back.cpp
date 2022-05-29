@@ -13,6 +13,8 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 
+#include "io_parameters.h"
+
 namespace dynamic_vins{\
 
 using namespace std::chrono_literals;
@@ -99,8 +101,8 @@ SemanticImage CallBack::SyncProcess()
 
 Dataloader::Dataloader(){
 
-    getAllImageFiles(cfg::kImageDatasetLeft,left_names);
-    getAllImageFiles(cfg::kImageDatasetRight,right_names);
+    getAllImageFiles(io_para::kImageDatasetLeft,left_names);
+    getAllImageFiles(io_para::kImageDatasetRight,right_names);
 
     cout<<"left:"<<left_names.size()<<endl;
     cout<<"right:"<<right_names.size()<<endl;

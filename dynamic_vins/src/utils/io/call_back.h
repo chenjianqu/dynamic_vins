@@ -18,9 +18,9 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 
-#include "parameters.h"
+#include "utils/parameters.h"
 #include "front_end/semantic_image.h"
-#include "def.h"
+#include "utils/def.h"
 
 
 namespace fs=std::filesystem;
