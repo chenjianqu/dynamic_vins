@@ -224,6 +224,8 @@ public:
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
 
     double time_ij;//时间差
+
+    inline static int counter{0};
 };
 
 

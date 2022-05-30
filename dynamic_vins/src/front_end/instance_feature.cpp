@@ -20,8 +20,6 @@ namespace dynamic_vins{\
 
 
 
-
-
 /**
  * 计算特征点的像素速度
  */
@@ -132,9 +130,9 @@ void InstFeat::TrackLeft(SemanticImage &img,SemanticImage &prev_img,bool dense_f
     else{
         status = FeatureTrackByLK(prev_img.gray0,img.gray0,last_points,curr_points);
     }
-    if(!mask_img.empty()){
+    if(!box2d->mask_cv.empty()){
         for(size_t i=0;i<status.size();++i){
-            if(status[i] && mask_img.at<uchar>(curr_points[i]) == 0)
+            if(status[i] && box2d->mask_cv.at<uchar>(curr_points[i]) == 0)
                 status[i]=0;
         }
     }
@@ -167,9 +165,9 @@ void InstFeat::TrackLeftGPU(SemanticImage &img,SemanticImage &prev_img,
                                                prev_img.gray0_gpu,
                                                img.gray0_gpu,last_points, curr_points);
 
-    if(!mask_img.empty()){
+    if(!box2d->mask_cv.empty()){
         for(size_t i=0;i<status.size();++i){
-            if(status[i] && mask_img.at<uchar>(curr_points[i]) == 0)
+            if(status[i] && box2d->mask_cv.at<uchar>(curr_points[i]) == 0)
                 status[i]=0;
         }
     }
@@ -287,18 +285,18 @@ void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,const cv::Mat &m
 
     cv::Mat mask_detect;
     if(mask.empty()){
-        if(mask_img.empty()){
+        if(box2d->mask_cv.empty()){
             if(img.exist_inst)
-                mask_img = img.inv_merge_mask.clone();
+                box2d->mask_cv = img.inv_merge_mask.clone();
             else
-                mask_img = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC1,cv::Scalar(255));
+                box2d->mask_cv = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC1,cv::Scalar(255));
         }
 
         for(const auto& pt : curr_points){
-            cv::circle(mask_img, pt, fe_para::kMinDist, 0, -1);
+            cv::circle(box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
         }
 
-        mask_detect = mask_img;
+        mask_detect =box2d-> mask_cv;
     }
     else{
         mask_detect = mask;

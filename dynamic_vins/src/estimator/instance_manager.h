@@ -53,7 +53,7 @@ public:
 
     void AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
-    void OutputInstsInfo();
+    void SetOutputInstInfo();
 
     string PrintInstanceInfo(bool output_lm,bool output_stereo=false);
     string PrintInstancePoseInfo(bool output_lm);
@@ -96,9 +96,9 @@ public:
         },true);
     }
 
-    std::unordered_map<unsigned int,InstEstimatedInfo> vel_map(){
+    std::unordered_map<unsigned int,InstEstimatedInfo> GetOutputInstInfo(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
-        return vel_map_;
+        return insts_output;
     }
 
     void set_estimator(Estimator* estimator);
@@ -124,7 +124,7 @@ private:
     }
 
     std::mutex vel_mutex_;
-    std::unordered_map<unsigned int,InstEstimatedInfo> vel_map_;
+    std::unordered_map<unsigned int,InstEstimatedInfo> insts_output;
 
     Estimator* e{nullptr};
     int opt_inst_num_{0};//优化位姿的数量

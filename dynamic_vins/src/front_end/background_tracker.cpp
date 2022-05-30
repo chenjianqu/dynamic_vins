@@ -35,7 +35,10 @@ FeatureTracker::FeatureTracker(const string& config_path)
     Debugt("init FeatureTracker");
 
     lk_optical_flow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30);
-    lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30, true);
+    lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(
+            cv::Size(21, 21), 3, 30, true);
+
+    bg.box2d = std::make_shared<Box2D>();
 }
 
 
@@ -51,7 +54,7 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
     cur_time = img.time0;
     cur_img = img;
 
-    bg.mask_img = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
+    bg.box2d->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
 
     bg.curr_points.clear();
     if (!bg.last_points.empty()){
@@ -69,13 +72,13 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
     //RejectWithF();
     TicToc t_m;
     SortPoints(bg.curr_points, bg.track_cnt, bg.ids);
-    for(const auto& pt : bg.curr_points) cv::circle(bg.mask_img, pt, fe_para::kMinDist, 0, -1);
+    for(const auto& pt : bg.curr_points) cv::circle(bg.box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
     TicToc t_t;
     int n_max_cnt = fe_para::kMaxCnt - static_cast<int>(bg.curr_points.size());
     vector<cv::Point2f> n_pts;
     if (n_max_cnt > 0)
         cv::goodFeaturesToTrack(cur_img.gray0, n_pts, fe_para::kMaxCnt - bg.curr_points.size(),
-                                0.01, fe_para::kMinDist, bg.mask_img);
+                                0.01, fe_para::kMinDist, bg.box2d->mask_cv);
     else
         n_pts.clear();
 
@@ -190,13 +193,14 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     Debugt("TrackImageNaive | input mask:{}", DimsToStr(img.inv_merge_mask_gpu.size()));
 
     if(cur_img.exist_inst)
-        bg.mask_img = cur_img.inv_merge_mask.clone();
+        bg.box2d->mask_cv = cur_img.inv_merge_mask.clone();
     else
-        bg.mask_img = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
+        bg.box2d->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
 
     ///形态学运算
     if(cur_img.exist_inst){
-        static auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
+        static auto erode_kernel = cv::getStructuringElement(
+                cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
         static auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
         erode_filter->apply(img.inv_merge_mask_gpu,img.inv_merge_mask_gpu);
         img.inv_merge_mask_gpu.download(img.inv_merge_mask);
@@ -407,9 +411,9 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
     }
 
     if(cur_img.exist_inst)
-        bg.mask_img = cur_img.inv_merge_mask.clone();
+        bg.box2d->mask_cv = cur_img.inv_merge_mask.clone();
     else
-        bg.mask_img = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
+        bg.box2d->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
 
     ///特征点跟踪
     bg.TrackLeft(img,prev_img,cfg::use_background_flow);

@@ -68,7 +68,7 @@ private:
 
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
 
-    std::tuple<int,float,float> GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor);
+    std::tuple<int,float,float> GetMatchInst(Box2D &instInfo, torch::Tensor &inst_mask_tensor);
 
     void ExecInst(std::function<void(unsigned int, InstFeat&)> func){
         for(auto & [ key,inst] : instances_){

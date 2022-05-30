@@ -14,6 +14,7 @@
 #include "front_end_parameters.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/dataset/nuscenes_utils.h"
+#include "utils/dataset/kitti_utils.h"
 
 namespace dynamic_vins{\
 
@@ -65,6 +66,8 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
     vector<bool> match_vec(boxes.size(),false);
     for(auto &[inst_id,inst] : instances_){
 
+        inst.box3d.reset();
+
         /*auto it=estimated_info.find(inst_id);
         if(it!=estimated_info.end()){
             auto& estimated_inst = it->second;
@@ -89,12 +92,15 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
         for(size_t i=0;i<boxes.size();++i){
             if(match_vec[i])
                 continue;
-            ///判断3D box和估计的3D box的距离
-            if(center && (*center - boxes[i]->center).norm() > 10){
+            ///类别要一致
+            if(inst.box2d->class_name != boxes[i]->class_name)
                 continue;
-            }
 
-            double iou = BoxIoU(inst.box2d->min_pt,inst.box2d->max_pt,boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
+            ///判断3D目标检测得到的box 和 估计的3D box的距离
+            if(center && (*center - boxes[i]->center).norm() > 10)
+                continue;
+
+            float iou = BoxIoU(inst.box2d->min_pt,inst.box2d->max_pt,boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
             if(iou>0.1){
                 candidate_match.push_back(boxes[i]);
                 candidate_idx.push_back(i);
@@ -124,8 +130,8 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
         if(!candidate_match.empty()){
             match_vec[min_idx]=true;
             inst.box3d = boxes[min_idx];
-                Debugt("id:{} box2d:{} box3d:{}",inst_id,coco::CocoLabel[inst.class_id],
-                       NuScenes::GetClassName(boxes[min_idx]->class_id));
+            Debugt("id:{} box2d:{} box3d:{}",inst_id,inst.box2d->class_name,
+                   NuScenes::GetClassName(boxes[min_idx]->class_id));
         }
     }
 }
@@ -154,9 +160,9 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     Infot("instsTrack AddInstances:{} ms", tic_toc.TocThenTic());
 
     ///2d box和3d box关联
-    BoxAssociate2Dto3D(img.boxes);
+    BoxAssociate2Dto3D(img.boxes3d);
 
-    is_exist_inst_ = !img.insts_info.empty();
+    is_exist_inst_ = !img.boxes2d.empty();
 
     for(auto& [key,inst] : instances_){
         if(inst.last_frame_cnt < global_frame_id)
@@ -218,7 +224,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 for(auto &[key,inst] : instances_){
                     if(inst.lost_num>0 || inst.curr_points.size()>fe_para::kMaxDynamicCnt)
                         continue;
-                    if(inst.mask_img.at<uchar>(pt) >= 1){
+                    if(inst.box2d->mask_cv.at<uchar>(pt) >= 1){
                         inst.curr_points.emplace_back(pt);
                         inst.ids.emplace_back(InstFeat::global_id_count++);
                         inst.visual_new_points.emplace_back(pt);
@@ -308,7 +314,9 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::GetOutputFeature()
     ExecInst([&](unsigned int key, InstFeat& inst){
         FeatureInstance  features_map;
         features_map.color = inst.color;
+        features_map.box2d = inst.box2d;
         features_map.box3d = inst.box3d;
+
         for(int i=0;i<(int)inst.curr_un_points.size();++i){
             Eigen::Matrix<double,5,1> feat;
             feat<<inst.curr_un_points[i].x,inst.curr_un_points[i].y, 1 ,inst.pts_velocity[i].x,inst.pts_velocity[i].y;
@@ -330,7 +338,7 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::GetOutputFeature()
             }
         }
         result.insert({key,features_map});
-        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{}", key,coco::CocoLabel[inst.class_id],
+        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{}", key,inst.box2d->class_name,
                                 features_map.size(), right_cnt);
     });
     Debugt(log_text);
@@ -347,24 +355,22 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::GetOutputFeature()
 void InstsFeatManager::AddViodeInstances(SemanticImage &img)
 {
     cv::Mat seg = img.seg0;
-    for(auto &[key,inst] : instances_){
-        inst.mask_area=0;
-    }
+
     Debugt("addViodeInstancesBySegImg merge insts");
-    for(auto &inst_info : img.insts_info){
-        auto key = inst_info.track_id;
+    for(auto &inst_info : img.boxes2d){
+        auto key = inst_info->track_id;
         if(instances_.count(key) == 0){
-            InstFeat instanceFeature(key, 0);
+            InstFeat instanceFeature(key);
             instances_.insert({key, instanceFeature});
         }
         auto &inst = instances_[key];
-        inst.mask_img = inst_info.mask_cv;
-        inst.box2d = std::make_shared<Box2D>(inst_info.min_pt,inst_info.max_pt);
-        inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->center_pt);
+        inst.box2d = inst_info;
+
+        inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->mask_center);
         inst.last_frame_cnt = global_frame_id;
-        Debugt("inst:{} mask_img:({}x{}) local_mask:({}x{})", key, instances_[key].mask_img.rows,
-               instances_[key].mask_img.cols,
-               inst.mask_img.rows, inst.mask_img.cols);
+        Debugt("inst:{} mask_img:({}x{}) local_mask:({}x{})", key,
+               inst.box2d->mask_cv.rows,inst.box2d->mask_cv.cols,
+               inst.box2d->mask_cv.rows, inst.box2d->mask_cv.cols);
     }
 
 }
@@ -378,7 +384,7 @@ void InstsFeatManager::AddViodeInstances(SemanticImage &img)
  * @param inst_mask_area
  * @return
  */
-std::tuple<int,float,float> InstsFeatManager::GetMatchInst(InstInfo &instInfo, torch::Tensor &inst_mask_tensor)
+std::tuple<int,float,float> InstsFeatManager::GetMatchInst(Box2D &instInfo, torch::Tensor &inst_mask_tensor)
 {
     /*int h=(int)inst_mask_tensor.sizes()[0];
     int w=(int)inst_mask_tensor.sizes()[1];
@@ -558,44 +564,37 @@ void InstsFeatManager:: AddInstancesByIouWithGPU(const SemanticImage &img)
 void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
 {
     double current_time = img.time0;
-    int n_inst = (int)img.insts_info.size();
-    if(img.insts_info.empty())
+    int n_inst = (int)img.boxes2d.size();
+    if(img.boxes2d.empty())
         return;
-    assert(img.mask_tensor.sizes()[0] == img.insts_info.size());
+    assert(img.mask_tensor.sizes()[0] == img.boxes2d.size());
     //cv::Size mask_size((int)img.mask_tensor.sizes()[2],(int)img.mask_tensor.sizes()[1]);
     //mask_background = img.merge_mask;
-    auto trks = mot_tracker->update(img.insts_info,img.color0);
+    auto trks = mot_tracker->update(img.boxes2d, img.color0);
 
 
     string log_text="AddInstancesByTracking:\n";
 
-    for(auto &inst : trks){
-        unsigned int id=inst.track_id;
+    for(auto &det_box : trks){
+        unsigned int id=det_box->track_id;
         auto it=instances_.find(id);
         if(it == instances_.end()){
-            InstFeat inst_feat(id, inst.label_id);
-            inst_feat.mask_img_gpu = inst.mask_gpu;
-            inst_feat.mask_img = inst.mask_cv;
-            inst_feat.mask_tensor = inst.mask_tensor;
-            inst_feat.box2d = std::make_shared<Box2D>(inst.min_pt,inst.max_pt);
-            inst_feat.class_id = inst.label_id;
+            InstFeat inst_feat(id);
+            inst_feat.box2d = det_box;
+
             inst_feat.last_frame_cnt = global_frame_id;
             instances_.insert({id, inst_feat});
-            log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, inst.name,
+            log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, det_box->class_name,
                                     inst_feat.box2d->min_pt.x,inst_feat.box2d->min_pt.y,inst_feat.box2d->max_pt.x,
                                     inst_feat.box2d->max_pt.y);
         }
         else{
-            it->second.mask_img_gpu = inst.mask_gpu;
-            it->second.mask_img = inst.mask_cv;
-            it->second.mask_tensor = inst.mask_tensor;
-            it->second.box2d->min_pt = inst.min_pt;
-            it->second.box2d->max_pt = inst.max_pt;
-            it->second.box2d->center_pt = inst.mask_center;
+            it->second.box2d = det_box;
+
             it->second.last_frame_cnt = global_frame_id;
             log_text += fmt::format("Update inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",
-                                    id, inst.name, it->second.box2d->min_pt.x,it->second.box2d->min_pt.y,
-                                    it->second.box2d->max_pt.x,it->second.box2d->max_pt.y);
+                                    id, det_box->class_name, it->second.box2d->min_pt.x, it->second.box2d->min_pt.y,
+                                    it->second.box2d->max_pt.x, it->second.box2d->max_pt.y);
         }
     }
 
@@ -657,7 +656,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         }
         std::string label=fmt::format("id:{},tck:{}",id,inst.curr_points.size() - inst.visual_new_points.size());
         //cv::putText(img, label, inst.box_center_pt, cv::FONT_HERSHEY_SIMPLEX, 1.0, inst.color, 2);
-        DrawText(img, label, inst.color, inst.box2d->center_pt, 1.0, 2, false);
+        DrawText(img, label, inst.color, inst.box2d->mask_center, 1.0, 2, false);
 
         /*if(vel_map_.count(inst.id)!=0){
             auto anchor=inst.feats_center_pt;

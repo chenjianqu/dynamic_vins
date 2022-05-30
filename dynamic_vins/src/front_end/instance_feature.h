@@ -31,6 +31,7 @@
 #include "utils/parameters.h"
 #include "feature_utils.h"
 #include "utils/box3d.h"
+#include "utils/box2d.h"
 
 namespace dynamic_vins{\
 
@@ -39,8 +40,7 @@ struct InstFeat{
     InstFeat():color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
     {}
 
-    InstFeat(unsigned int id_, int class_id_): id(id_), class_id(class_id_),
-    color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
+    InstFeat(unsigned int id_): id(id_),color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
     {}
 
     void SortPoints();
@@ -77,13 +77,9 @@ struct InstFeat{
         right_prev_id_pts=right_curr_id_pts;
 
         visual_new_points.clear();
-
-        mask_img.release();
-        mask_img_gpu.release();
     }
 
     unsigned int id{0};
-    int class_id{0};
     cv::Scalar color;
 
     vector<unsigned int> ids, right_ids;
@@ -105,11 +101,6 @@ struct InstFeat{
     cv::Point2f feats_center_pt;//当前跟踪的特征点的中心坐标
 
     int lost_num{0};//无法被跟踪的帧数,超过一定数量该实例将被删除
-
-    cv::Mat mask_img;//物体在当前帧的mask
-    cv::cuda::GpuMat mask_img_gpu;//物体在当前帧的mask
-    torch::Tensor mask_tensor;
-    float mask_area{0.};//当前帧中属于该物体的像素数量
 
     unsigned int last_frame_cnt{0};
 

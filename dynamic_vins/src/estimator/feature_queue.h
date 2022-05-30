@@ -17,6 +17,7 @@
 #include <condition_variable>
 
 #include "utils/def.h"
+#include "utils/box2d.h"
 #include "utils/box3d.h"
 #include "utils/parameters.h"
 
@@ -32,6 +33,7 @@ using FeatureBackground=std::map<unsigned int, std::vector<std::pair<int, Eigen:
 class FeatureInstance : public std::map<unsigned int,std::vector<Eigen::Matrix<double,5,1>>>{
 public:
     cv::Scalar color;
+    Box2D::Ptr box2d;
     Box3D::Ptr box3d;
 };
 

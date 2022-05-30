@@ -182,20 +182,20 @@ void VIODE::SetViodeMask(SemanticImage &img)
 
     ///构建InstanceInfo
     for(auto &[key,inst] : insts){
-        InstInfo info;
-        info.id = key;
-        info.track_id=key;
+        Box2D::Ptr info=std::make_shared<Box2D>();
+        info->id = key;
+        info->track_id=key;
         Debugs("SetViodeMask id:{}", key);
-        info.mask_gpu.upload(inst.mask);
-        ErodeMaskGpu(info.mask_gpu, info.mask_gpu);
-        info.mask_gpu.download(info.mask_cv);
-        info.min_pt = cv::Point2f(inst.col_min,inst.row_min);
-        info.max_pt = cv::Point2f(inst.col_max,inst.row_max);
-        img.insts_info.push_back(info);
+        info->mask_gpu.upload(inst.mask);
+        ErodeMaskGpu(info->mask_gpu, info->mask_gpu);
+        info->mask_gpu.download(info->mask_cv);
+        info->min_pt = cv::Point2f(inst.col_min,inst.row_min);
+        info->max_pt = cv::Point2f(inst.col_max,inst.row_max);
+        img.boxes2d.push_back(info);
         Debugs("SetViodeMask max_pt:(c{},r{}), min_pt:(c{},r{})", inst.col_min,inst.row_min, inst.col_max,inst.row_max);
     }
 
-    img.exist_inst = !img.insts_info.empty();
+    img.exist_inst = !img.boxes2d.empty();
 
     Debugs("SetViodeMask erode time:{} ms", tt.TocThenTic());
     img.merge_mask = merge_mask;

@@ -20,6 +20,7 @@
 #include "extractor.h"
 #include "tracker_manager.h"
 #include "utils/def.h"
+#include "utils/box2d.h"
 
 namespace dynamic_vins{\
 
@@ -101,13 +102,13 @@ public:
     using Ptr=std::unique_ptr<DeepSORT>;
     explicit DeepSORT(const std::string& config_path,const std::array<int64_t, 2> &dim);
 
-    std::vector<InstInfo> update(const std::vector<InstInfo> &detections, cv::Mat ori_img);
+    std::vector<Box2D::Ptr> update(const std::vector<Box2D::Ptr> &detections, cv::Mat ori_img);
 
 private:
     struct TrackData {
         KalmanTracker kalman;
         FeatureBundle feats;
-        InstInfo info;
+        Box2D::Ptr info;
     };
 
     std::vector<TrackData> data;

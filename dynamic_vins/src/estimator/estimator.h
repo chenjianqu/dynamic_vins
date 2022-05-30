@@ -73,14 +73,14 @@ class Estimator
 
     void ClearState();
 
-    void SetOutputPose(const Mat3d &R,const Vec3d &P,const Mat3d &R_bc,const Vec3d &P_bc){
+    void SetOutputEgoInfo(const Mat3d &R, const Vec3d &P, const Mat3d &R_bc, const Vec3d &P_bc){
         std::unique_lock<std::mutex> lk(out_pose_mutex);
         R_out=R;
         P_out=P;
         R_bc_out=R_bc;
         P_bc_out=P_bc;
     }
-    std::tuple<Mat3d,Vec3d,Mat3d,Vec3d> GetOutputPose(){
+    std::tuple<Mat3d,Vec3d,Mat3d,Vec3d> GetOutputEgoInfo(){
         std::unique_lock<std::mutex> lk(out_pose_mutex);
         return {R_out,P_out,R_bc_out,P_bc_out};
     }

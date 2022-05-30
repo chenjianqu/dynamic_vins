@@ -80,6 +80,7 @@ public:
     inline static DatasetType dataset;
     inline static bool is_input_seg; //输入是否有语义分割结果
     inline static bool is_only_frontend;
+    inline static bool is_only_imgprocess;
 
     inline static int is_estimate_ex;
     inline static int is_estimate_td;

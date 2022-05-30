@@ -23,6 +23,7 @@
 
 #include "det2d_parameter.h"
 #include "utils/parameters.h"
+#include "utils/torch_utils.h"
 
 namespace dynamic_vins{\
 
@@ -68,7 +69,8 @@ Detector2D::Detector2D(const std::string& config_path)
         ifs.close();
     }
     else{
-        throw std::runtime_error(fmt::format("Can not open the kDetectorSerializePath:{}", det2d_para::kDetectorSerializePath));
+        throw std::runtime_error(fmt::format("Can not open the kDetectorSerializePath:{}",
+                                             det2d_para::kDetectorSerializePath));
     }
     Infov("createInferRuntime");
     ///创建runtime
@@ -117,7 +119,7 @@ Detector2D::Detector2D(const std::string& config_path)
     Infov("infer init finished");
 }
 
-std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>>
+std::tuple<std::vector<cv::Mat>,std::vector<Box2D::Ptr>>
 Detector2D::Forward(cv::Mat &img)
 {
 /*    TicToc ticToc,tt;
@@ -184,7 +186,8 @@ Detector2D::Forward(cv::Mat &img)
  * @param mask_tensor
  * @param insts
  */
-void Detector2D::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts){
+void Detector2D::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor,
+                               std::vector<Box2D::Ptr> &insts){
 
     Debugs("ForwardTensor | img_tensor.shape:{}", DimsToStr(img.sizes()));
     buffer->gpu_buffer[0] = pipeline_->ProcessInput(img);
@@ -215,7 +218,7 @@ void Detector2D::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, s
 }
 
 
-void Detector2D::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
+void Detector2D::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<Box2D::Ptr> &insts)
 {
     ///将图片数据复制到输入buffer,同时实现了图像的归一化
     /*
@@ -250,7 +253,7 @@ void Detector2D::ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::ve
 
 
 
-void Detector2D::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
+void Detector2D::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<Box2D::Ptr> &insts)
 {
 /*    TicToc tic_toc,tt;
 
@@ -295,7 +298,7 @@ void Detector2D::ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor
 
 
 
-void Detector2D::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<InstInfo> &insts)
+void Detector2D::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<Box2D::Ptr> &insts)
 {
 /*    if(mask.empty()){
         cv::imshow("test",input);

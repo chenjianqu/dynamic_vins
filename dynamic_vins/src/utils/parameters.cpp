@@ -96,6 +96,9 @@ Config::Config(const std::string &file_name)
         fs["use_background_flow"]>>use_background_flow;
     }
 
+    fs["only_imgprocess"]>>is_only_imgprocess;
+    cout<<"is_only_imgprocess: "<<is_only_imgprocess<<endl;
+
     fs["only_frontend"]>>is_only_frontend;
     cout<<"is_only_frontend: "<<is_only_frontend<<endl;
 

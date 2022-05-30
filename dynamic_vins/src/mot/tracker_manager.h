@@ -17,8 +17,8 @@
 
 #include "kalman_tracker.h"
 #include "utils/def.h"
+#include "utils/box2d.h"
 #include "mot_def.h"
-#include "det2d/det2d_def.h"
 
 
 namespace dynamic_vins{\
@@ -64,7 +64,8 @@ public:
     }
 
     std::vector<std::tuple<int, int>>
-    update(const std::vector<InstInfo> &dets,const DistanceMetricFunc &confirmed_metric, const DistanceMetricFunc &unconfirmed_metric) {
+    update(const std::vector<Box2D::Ptr> &dets, const DistanceMetricFunc &confirmed_metric,
+           const DistanceMetricFunc &unconfirmed_metric) {
         std::vector<int> unmatched_trks;
         for (size_t i = 0; i < data.size(); ++i) {
             if (data[i].kalman.state() == TrackState::Confirmed) {
@@ -94,7 +95,7 @@ public:
         // update matched trackers with assigned detections.
         // each prediction is corresponding to a manager
         for (auto[x, y] : matched) {
-            data[x].kalman.update(dets[y].rect);
+            data[x].kalman.update(dets[y]->rect);
             data[x].info = dets[y];
         }
 
@@ -102,15 +103,13 @@ public:
         for (auto umd : unmatched_dets) {
             matched.emplace_back(data.size(), umd);
             auto t = TrackData{};
-            t.kalman.init(dets[umd].rect);
+            t.kalman.init(dets[umd]->rect);
             t.info = dets[umd];
             data.emplace_back(t);
         }
 
         return matched;
     }
-
-
 
 
     std::vector<Track> visible_tracks() {
@@ -127,13 +126,13 @@ public:
     }
 
 
-    std::vector<InstInfo> visible_tracks_info() {
-        std::vector<InstInfo> ret;
+    std::vector<Box2D::Ptr> visible_tracks_info() {
+        std::vector<Box2D::Ptr> ret;
         for (auto &t : data) {
             auto bbox = t.kalman.rect();
             if (t.kalman.state() == TrackState::Confirmed &&
             img_box.contains(bbox.tl()) && img_box.contains(bbox.br())) {
-                t.info.track_id = t.kalman.id();
+                t.info->track_id = t.kalman.id();
                 ret.push_back(t.info);
             }
         }

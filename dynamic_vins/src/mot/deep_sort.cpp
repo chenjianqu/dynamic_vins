@@ -62,7 +62,7 @@ DeepSORT::DeepSORT(const string& config_path,const array<int64_t, 2> &dim)
 
 
 
-vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::Mat ori_img) {
+vector<Box2D::Ptr> DeepSORT::update(const std::vector<Box2D::Ptr> &detections, cv::Mat ori_img) {
     manager->predict();
     manager->remove_nan();
 
@@ -76,8 +76,8 @@ vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::M
                 vector<cv::Mat> boxes;
                 vector<cv::Rect2f> dets;
                 for (auto d:det_ids) {
-                    dets.push_back(detections[d].rect);
-                    boxes.push_back(ori_img(detections[d].rect));
+                    dets.push_back(detections[d]->rect);
+                    boxes.push_back(ori_img(detections[d]->rect));
                 }
 
                 auto iou_mat = CalIouDist(dets, trks);
@@ -92,7 +92,7 @@ vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::M
                 }
                 vector<cv::Rect2f> dets;
                 for (auto &d:det_ids) {
-                    dets.push_back(detections[d].rect);
+                    dets.push_back(detections[d]->rect);
                 }
                 auto iou_mat = CalIouDist(dets, trks);
                 iou_mat.masked_fill_(iou_mat > 0.7f, INVALID_DIST);
@@ -103,7 +103,7 @@ vector<InstInfo> DeepSORT::update(const std::vector<InstInfo> &detections, cv::M
     vector<int> targets;
     for (auto[x, y]:matched) {
         targets.emplace_back(x);
-        boxes.emplace_back(ori_img(detections[y].rect));
+        boxes.emplace_back(ori_img(detections[y]->rect));
     }
     feat_metric->update(extractor->extract(boxes), targets);
 

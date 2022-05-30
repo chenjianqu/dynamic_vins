@@ -55,13 +55,13 @@ private:
     double m_scale;
     double m_line_width;
 
-    static const Eigen::Vector3d imlt;
-    static const Eigen::Vector3d imlb;
-    static const Eigen::Vector3d imrt;
-    static const Eigen::Vector3d imrb;
-    static const Eigen::Vector3d oc  ;
-    static const Eigen::Vector3d lt0 ;
-    static const Eigen::Vector3d lt1 ;
-    static const Eigen::Vector3d lt2 ;
+    inline static const Eigen::Vector3d imlt = Eigen::Vector3d(-1.0, -0.5, 1.0);
+    inline static const Eigen::Vector3d imrt = Eigen::Vector3d( 1.0, -0.5, 1.0);
+    inline static const Eigen::Vector3d imlb = Eigen::Vector3d(-1.0,  0.5, 1.0);
+    inline static const Eigen::Vector3d imrb = Eigen::Vector3d( 1.0,  0.5, 1.0);
+    inline static const Eigen::Vector3d lt0 = Eigen::Vector3d(-0.7, -0.5, 1.0);
+    inline static const Eigen::Vector3d lt1 = Eigen::Vector3d(-0.7, -0.2, 1.0);
+    inline static const Eigen::Vector3d lt2 = Eigen::Vector3d(-1.0, -0.2, 1.0);
+    inline static const Eigen::Vector3d oc = Eigen::Vector3d(0.0, 0.0, 0.0);
 };
 }

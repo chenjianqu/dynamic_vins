@@ -18,12 +18,17 @@ namespace dynamic_vins::kitti{\
     inline static std::vector<std::string> KittiLabel = {
         "Car", "Van", "Truck","Pedestrian", "Person_sitting", "Cyclist","Tram", "Misc"};
 
+    static int GetKittiLabelIndex(const string &name){
+        for(int i=0;i<KittiLabel.size();++i){
+            if(KittiLabel[i]==name){
+                return i;
+            }
+        }
+        return -1;
+    }
+
 
     std::map<std::string,Eigen::MatrixXd> ReadCalibFile(const std::string &path);
-
-
-
-
 }
 
 #endif //DYNAMIC_VINS_KITTI_UTILS_H

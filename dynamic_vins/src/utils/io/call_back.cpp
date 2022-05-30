@@ -183,11 +183,34 @@ SemanticImage Dataloader::LoadStereo(int delta_time)
     img.seq = std::stoi(name_stem);
 
     int delta_t =(int) tt.TocThenTic();
-    if(int wait_time = delta_time - delta_t; wait_time>0)
+    int wait_time = delta_time - delta_t;
+    if(wait_time>0)
         std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
 
     time+=0.05; // 时间戳
     index++;
+
+
+    ///可视化
+    bool pause=false;
+    wait_time = std::max(wait_time,1);
+    do{
+        cv::imshow("Dataloader",img.color0);
+        int key = cv::waitKey(wait_time);
+        if(key ==' '){
+            pause = !pause;
+        }
+        else if(key== 27){ //ESC
+            cfg::ok=false;
+            ros::shutdown();
+            pause=false;
+        }
+        else if(key == 'r' || key == 'R'){
+            index=0;
+            time=0;
+            pause=false;
+        }
+    } while (pause);
 
     return img;
 }

@@ -15,9 +15,16 @@
 #include <torch/torch.h>
 
 #include "utils/def.h"
-#include "det2d_def.h"
+#include "utils/box2d.h"
 
 namespace dynamic_vins{\
+
+
+struct ImageInfo{
+    int origin_h,origin_w;
+    ///图像的裁切信息
+    int rect_x, rect_y, rect_w, rect_h;
+};
 
 
 class Pipeline {
@@ -41,7 +48,7 @@ public:
         return ProcessInput(t);
     }
 
-    cv::Mat ProcessMask(cv::Mat &mask, std::vector<InstInfo> &insts);
+    cv::Mat ProcessMask(cv::Mat &mask, std::vector<Box2D> &insts);
 
     static void SetBufferWithNorm(const cv::Mat &img, float *buffer);
 

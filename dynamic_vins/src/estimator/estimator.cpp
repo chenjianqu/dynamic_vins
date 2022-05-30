@@ -256,7 +256,7 @@ void Estimator::SetMarginalizationInfo()
         ///之前的边缘化信息
         if (last_marg_info && last_marg_info->valid){
             vector<int> drop_set;
-            for (int i = 0; i < last_marg_para_blocks.size(); i++){
+            for (size_t i = 0; i < last_marg_para_blocks.size(); i++){
                 if (last_marg_para_blocks[i] == para_Pose[0] ||  last_marg_para_blocks[i] == para_SpeedBias[0])
                     drop_set.push_back(i);
             }
@@ -545,7 +545,7 @@ void Estimator::InputIMU(double t, const Vec3d &linear_acc, const Vec3d &angular
     if (solver_flag == SolverFlag::kNonLinear){
         propogate_mutex.lock();
         FastPredictIMU(t, linear_acc, angular_val);
-        Publisher::pubLatestOdometry(latest_P, latest_Q, latest_V, t);
+        Publisher::PubLatestOdometry(latest_P, latest_Q, latest_V, t);
         propogate_mutex.unlock();
     }
 }
@@ -1490,7 +1490,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
         Debugv("--开始处理动态物体--");
 
         if(cfg::slam == SlamType::kDynamic){
-            insts_manager.OutputInstsInfo();//将输出实例的速度信息
+            insts_manager.SetOutputInstInfo();//将输出实例的速度信息
             ///动态物体的位姿递推
             insts_manager.PropagatePose();
             ///动态特征点的三角化
@@ -1629,9 +1629,9 @@ void Estimator::ProcessMeasurements(){
         prev_time = cur_time;
 
         ///输出
-        SetOutputPose(Rs[kWinSize],Ps[kWinSize],ric[0],tic[0]);
+        SetOutputEgoInfo(Rs[kWinSize], Ps[kWinSize], ric[0], tic[0]);
 
-        Publisher::printStatistics( 0);
+        Publisher::PrintStatistics(0);
 
         std_msgs::Header header;
         header.frame_id = "world";
@@ -1639,15 +1639,15 @@ void Estimator::ProcessMeasurements(){
 
         if(cfg::slam == SlamType::kDynamic){
             //printInstanceData(*this);
-            Publisher::pubInstancePointCloud(header);
+            Publisher::PubInstancePointCloud(header);
         }
 
-        Publisher::pubOdometry(header);
-        Publisher:: pubKeyPoses(header);
-        Publisher::pubCameraPose(header);
-        Publisher::pubPointCloud(header);
-        Publisher::pubKeyframe();
-        Publisher::pubTF(header);
+        Publisher::PubOdometry(header);
+        Publisher::PubKeyPoses(header);
+        Publisher::PubCameraPose(header);
+        Publisher::PubPointCloud(header);
+        Publisher::PubKeyframe();
+        Publisher::PubTF(header);
 
         //PubPredictBox3D(*this,feature_frame.boxes);
 

@@ -151,8 +151,8 @@ std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &ins
  * @param mask2_area Mask2的大小
  * @return IoU
  */
-inline float GetMaskIoU(const torch::Tensor &mask1, const InstInfo &instInfo1, const float mask1_area,
-                 const torch::Tensor &mask2, const InstInfo &instInfo2, const float mask2_area){
+inline float GetMaskIoU(const torch::Tensor &mask1, const Box2D &instInfo1, const float mask1_area,
+                        const torch::Tensor &mask2, const Box2D &instInfo2, const float mask2_area){
     auto intersection_mask=(mask1 * mask2);
     float intersection_area = intersection_mask.sum(torch::IntArrayRef({0,1})).item().toFloat();
     return intersection_area/(mask1_area + mask2_area - intersection_area);

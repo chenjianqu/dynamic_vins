@@ -4,6 +4,7 @@
 imu: 0 #是否使用IMU
 num_of_cam: 2 #相机的数量
 
+only_imgprocess: 0  #是否仅仅图像处理部分
 only_frontend: 0  #是否仅仅启动前端
 
 dataset_type: "kitti" #数据集类型,支持kitti,viode
@@ -23,16 +24,18 @@ basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 
 #直接读取图像
-dataset_sequence: "0003"
-use_dataloader: 0 #是否直接读取图像
-image_dataset_period: 500 #读取的时间周期,毫秒
-image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0003/"
-image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0003/"
+dataset_sequence: "0002"
 
-kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0003.txt" #相机内参
-det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0003/" #预处理的3D框
-flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0003/" #预计算的光流
 
+kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0002.txt" #相机内参
+
+det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0002/" #预处理的3D框
+
+use_dataloader: 1 #是否直接读取图像
+#以下选项当use_dataloader=1时有效
+image_dataset_period: 200 #读取的时间周期,毫秒
+image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0002/"
+image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0002/"
 
 ####################### 相机参数 ########################
 
@@ -49,6 +52,9 @@ use_offline_det3d: 1
 use_dense_flow: 0 #是否使用稠密光流
 use_background_flow: 1 #背景特征点是否使用稠密光流
 use_offline_flow: 1 #是否使用预计算的光流
+
+flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0002/" #预计算的光流
+
 
 fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
 fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"

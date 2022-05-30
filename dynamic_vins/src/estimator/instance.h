@@ -23,6 +23,7 @@
 #include "landmark.h"
 #include "vio_parameters.h"
 #include "utils/parameters.h"
+#include "utils/box2d.h"
 #include "utils/box3d.h"
 
 namespace dynamic_vins{\
@@ -72,7 +73,6 @@ public:
 
     Instance(const unsigned int frame_id,const unsigned int &id,Estimator* estimator)
     : id(id),e(estimator){
-
     }
 
     int SlideWindowOld();
@@ -105,6 +105,10 @@ public:
 
     unsigned int id{0};
 
+    cv::Scalar color;
+    Box3D::Ptr box3d;
+    Box2D::Ptr box2d;
+
     bool is_initial{false};//是否已经初始化位姿了
     bool is_tracking{true};//是否在滑动窗口中
     bool is_curr_visible{false};//当前帧是否可见
@@ -112,9 +116,6 @@ public:
     State state[(kWinSize + 1)]{}; //物体的位姿
     Vel3d vel,last_vel;//物体的速度
     bool is_init_velocity{false};
-
-    Box3D box3d;
-    cv::Scalar color;
 
     //优化过程中的变量
     double para_state[kWinSize + 1][kSizePose]{};

@@ -58,62 +58,53 @@ public:
 
     static void RegisterPub(ros::NodeHandle &n);
 
-    static  void pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t);
+    static  void PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t);
 
     static   void PubTrackImage(const cv::Mat &imgTrack, double t);
 
-    static   void printStatistics(double t);
+    static   void PrintStatistics(double t);
 
-    static   void pubOdometry(const std_msgs::Header &header);
+    static   void PubOdometry(const std_msgs::Header &header);
 
     static   void pubInitialGuess(const std_msgs::Header &header);
 
-    static   void pubKeyPoses(const std_msgs::Header &header);
+    static   void PubKeyPoses(const std_msgs::Header &header);
 
-    static   void pubCameraPose( const std_msgs::Header &header);
+    static   void PubCameraPose(const std_msgs::Header &header);
 
-    static   void pubPointCloud( const std_msgs::Header &header);
+    static   void PubPointCloud(const std_msgs::Header &header);
 
-    static   void pubTF( const std_msgs::Header &header);
+    static   void PubTF(const std_msgs::Header &header);
 
-    static     void pubKeyframe();
+    static     void PubKeyframe();
 
-    static    void pubRelocalization();
-
-    static   void pubCar(const std_msgs::Header &header);
-
-    static void pubInstancePointCloud( const std_msgs::Header &header);
-
-    static   void printInstanceData();
-
-    static  void printInstancePose(Instance &inst);
-
-    static void printInstanceDepth(Instance &inst);
+    static void PubInstancePointCloud(const std_msgs::Header &header);
 
     static void PubPredictBox3D(std::vector<Box3D> &boxes);
 
-    static  Marker BuildTextMarker(const PointT &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                                   double scale,Marker::_action_type action=Marker::ADD);
-
-    static  Marker BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                                   double scale=1.,Marker::_action_type action=Marker::ADD);
-
     static Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,unsigned int id,const cv::Scalar &color,
-                                       Marker::_action_type action=Marker::ADD);
+                                       Marker::_action_type action=Marker::ADD,int offset=0);
 
     static  Marker BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::Scalar &color,
-                                                            Marker::_action_type action=Marker::ADD);
+                                        Marker::_action_type action=Marker::ADD,int offset=0);
 
     static   Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,unsigned int id,const cv::Scalar &color,
-                                         Marker::_action_type action=Marker::ADD);
+                                         Marker::_action_type action=Marker::ADD,int offset=0);
 
-    static Marker BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned int id,Marker::_action_type action=Marker::ADD);
+    static  Marker BuildTextMarker(const PointT &point,unsigned int id,const std::string &text,const cv::Scalar &color,
+                                   double scale,Marker::_action_type action=Marker::ADD,int offset=1);
+
+    static  Marker BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::string &text,const cv::Scalar &color,
+                                   double scale=1.,Marker::_action_type action=Marker::ADD,int offset=1);
 
     static  Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,unsigned int id,
-                                    const cv::Scalar &color,Marker::_action_type action=Marker::ADD);
+                                    const cv::Scalar &color,Marker::_action_type action=Marker::ADD,int offset=2);
+
+    static Marker BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned int id,const cv::Scalar &color,
+                                  Marker::_action_type action=Marker::ADD,int offset=3);
 
     static Marker BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,const cv::Scalar &color,
-                                        bool clear=false,Marker::_action_type action=Marker::ADD);
+                                        Marker::_action_type action=Marker::ADD,int offset=4);
 
     static void PubTransform(const Mat3d &R,const Vec3d &P,tf::TransformBroadcaster &br,ros::Time time,
                       const string &frame_id,const string &child_frame_id);

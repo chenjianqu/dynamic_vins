@@ -738,7 +738,7 @@ bool BoxDimsFactor::Evaluate(double const *const *parameters, double *residuals,
 {
     Vec3d box(parameters[0][0],parameters[0][1],parameters[0][2]);
 
-    double err = (box- dims).norm();//返回二范数
+    double err = (box- dims).squaredNorm();//返回二范数
     residuals[0] = err * err /100.; //不开方
 
     if(jacobians){
@@ -862,18 +862,56 @@ bool BoxPoseFactor::Evaluate(double const *const *parameters, double *residuals,
             Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose_woi(jacobians[1]);
             jacobian_pose_woi = Eigen::Matrix<double,6,7>::Zero();
             jacobian_pose_woi.block<3,3>(0,0) = Mat3d::Identity();///左上角
+            //jacobian_pose_woi.block<3,3>(0,0) = Mat3d::Zero();
             jacobian_pose_woi.block<3,3>(3,3) = jaco_R;//右下角
 
             /*counter++;
-            if(counter<10){
-                Debugv("BoxOrientationFactor:\n err:{} theta:{} a:{} \n jaco_R:{} ",
-                       VecToStr(err), theta, VecToStr(a), EigenToStr(jaco_R));
+            if(counter%10==0){
+                Debugv("BoxPoseFactor:\n err_t:{} err_w:{}\n theta:{} a:{} \n J_r:{} \n jaco_R:{} ",
+                       VecToStr(err_t), VecToStr(err_w), theta, VecToStr(a), EigenToStr(J_r),
+                       EigenToStr(jaco_R));
             }*/
         }
-
     }
 
 
+
+    return true;
+}
+
+
+
+
+bool BoxPoseNormFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+{
+    Vec3d P_woi(parameters[0][0], parameters[0][1], parameters[0][2]);
+    Quatd Q_woi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
+
+    Mat3d R_woi(Q_woi);
+    Mat3d R_oiw = R_woi.transpose();
+
+    Vec3d P_woi_observe = (R_wbi*(R_bc * P_cioi + P_bc)+P_wbi);
+    Vec3d err_t = P_woi - P_woi_observe;
+
+    residuals[0] = err_t.squaredNorm();
+
+    if(jacobians){
+        ///物体位姿
+        if(jacobians[0]){
+
+            Eigen::Map<Eigen::Matrix<double, 1, 7, Eigen::RowMajor>> jacobian_pose_woi(jacobians[0]);
+            jacobian_pose_woi = Eigen::Matrix<double,1,7>::Zero();
+            jacobian_pose_woi.leftCols(3) =  2* (P_woi - P_woi_observe).transpose();
+
+            counter++;
+            if(counter%10==0){
+                Debugv("BoxPoseNormFactor:\n P_woi:{} P_woi_observe:{} err_t:{}  \n jaco_R:{} ",
+                       VecToStr(P_woi), VecToStr(P_woi_observe),err_t.squaredNorm(),
+                       EigenToStr(jacobian_pose_woi));
+            }
+        }
+
+    }
 
     return true;
 }

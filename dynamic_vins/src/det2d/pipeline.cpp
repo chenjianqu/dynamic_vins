@@ -234,7 +234,7 @@ void* Pipeline::ProcessInput(torch::Tensor &img){
 
 
 
-cv::Mat Pipeline::ProcessMask(cv::Mat &mask, std::vector<InstInfo> &insts)
+cv::Mat Pipeline::ProcessMask(cv::Mat &mask, std::vector<Box2D> &insts)
 {
 /*    cv::Mat rect_img = mask(cv::Rect(image_info.rect_x, image_info.rect_y, image_info.rect_w, image_info.rect_h));
     cv::Mat out;

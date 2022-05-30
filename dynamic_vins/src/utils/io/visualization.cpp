@@ -32,6 +32,10 @@ using namespace std;
 using namespace ros;
 using namespace Eigen;
 
+constexpr int32_t kMarkerTypeNumber=10;
+
+std::set<int> last_marker_ids;//保存上一时刻发布的marker的id,用于将上一时刻的id清除
+
 
 static double sum_of_path = 0;
 static Vector3d last_path(0.0, 0.0, 0.0);
@@ -58,8 +62,10 @@ std::shared_ptr<tf::TransformBroadcaster> transform_broadcaster;
 
 nav_msgs::Path path;
 
-unsigned int MarkerTypeNumber=5;
-
+/**
+ * 构造ROS发布器
+ * @param n
+ */
 void Publisher::RegisterPub(ros::NodeHandle &n)
 {
     transform_broadcaster = std::make_shared<tf::TransformBroadcaster>();
@@ -110,11 +116,11 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
     *pub_stereo_pointcloud=n.advertise<sensor_msgs::PointCloud2>("instance_stereo_point_cloud", 1000);
 
     camera_pose_visual=std::make_shared<CameraPoseVisualization>(1, 0, 0, 1);
-    camera_pose_visual->setScale(0.1);
-    camera_pose_visual->setLineWidth(0.01);
+    camera_pose_visual->setScale(0.5);
+    camera_pose_visual->setLineWidth(0.05);
 }
 
-void Publisher::pubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t)
+void Publisher::PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t)
 {
     nav_msgs::Odometry odometry;
     odometry.header.stamp = ros::Time(t);
@@ -144,7 +150,7 @@ void Publisher::PubTrackImage(const cv::Mat &imgTrack, const double t)
 }
 
 
-void Publisher::printStatistics(double t)
+void Publisher::PrintStatistics(double t)
 {
     if (e->solver_flag != SolverFlag::kNonLinear)
         return;
@@ -174,7 +180,7 @@ void Publisher::printStatistics(double t)
  * @param estimator
  * @param header
  */
-void Publisher::pubOdometry(const std_msgs::Header &header)
+void Publisher::PubOdometry(const std_msgs::Header &header)
 {
     if(e->solver_flag != SolverFlag::kNonLinear)
         return;
@@ -240,7 +246,7 @@ void Publisher::pubOdometry(const std_msgs::Header &header)
            tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
 }
 
-void Publisher::pubKeyPoses( const std_msgs::Header &header)
+void Publisher::PubKeyPoses(const std_msgs::Header &header)
 {
     if (e->key_poses.empty())
         return;
@@ -274,42 +280,43 @@ void Publisher::pubKeyPoses( const std_msgs::Header &header)
     pub_key_poses->publish(key_poses);
 }
 
-void Publisher::pubCameraPose(const std_msgs::Header &header)
+
+void Publisher::PubCameraPose(const std_msgs::Header &header)
 {
+    if(e->solver_flag != SolverFlag::kNonLinear)
+        return;
+
     int idx2 = kWinSize - 1;
+    int i = idx2;
+    Vector3d P = e->Ps[i] + e->Rs[i] * e->tic[0];
+    Quaterniond R = Quaterniond(e->Rs[i] * e->ric[0]);
 
-    if (e->solver_flag == SolverFlag::kNonLinear)
-    {
-        int i = idx2;
-        Vector3d P = e->Ps[i] + e->Rs[i] * e->tic[0];
-        Quaterniond R = Quaterniond(e->Rs[i] * e->ric[0]);
+    nav_msgs::Odometry odometry;
+    odometry.header = header;
+    odometry.header.frame_id = "world";
+    odometry.pose.pose.position.x = P.x();
+    odometry.pose.pose.position.y = P.y();
+    odometry.pose.pose.position.z = P.z();
+    odometry.pose.pose.orientation.x = R.x();
+    odometry.pose.pose.orientation.y = R.y();
+    odometry.pose.pose.orientation.z = R.z();
+    odometry.pose.pose.orientation.w = R.w();
 
-        nav_msgs::Odometry odometry;
-        odometry.header = header;
-        odometry.header.frame_id = "world";
-        odometry.pose.pose.position.x = P.x();
-        odometry.pose.pose.position.y = P.y();
-        odometry.pose.pose.position.z = P.z();
-        odometry.pose.pose.orientation.x = R.x();
-        odometry.pose.pose.orientation.y = R.y();
-        odometry.pose.pose.orientation.z = R.z();
-        odometry.pose.pose.orientation.w = R.w();
+    pub_camera_pose->publish(odometry);
 
-        pub_camera_pose->publish(odometry);
-
-        camera_pose_visual->reset();
+    camera_pose_visual->reset();
+    camera_pose_visual->add_pose(P, R);
+    if(cfg::is_stereo){
+        Vector3d P = e->Ps[i] + e->Rs[i] * e->tic[1];
+        Quaterniond R = Quaterniond(e->Rs[i] * e->ric[1]);
         camera_pose_visual->add_pose(P, R);
-        if(cfg::is_stereo){
-            Vector3d P = e->Ps[i] + e->Rs[i] * e->tic[1];
-            Quaterniond R = Quaterniond(e->Rs[i] * e->ric[1]);
-            camera_pose_visual->add_pose(P, R);
-        }
-        camera_pose_visual->publish_by(*pub_camera_pose_visual, odometry.header);
     }
+    camera_pose_visual->publish_by(*pub_camera_pose_visual, odometry.header);
+
 }
 
 
-void Publisher::pubPointCloud(const std_msgs::Header &header)
+void Publisher::PubPointCloud(const std_msgs::Header &header)
 {
     sensor_msgs::PointCloud point_cloud, loop_point_cloud;
     point_cloud.header = header;
@@ -384,12 +391,12 @@ void Publisher::PubTransform(const Mat3d &R,const Vec3d &P,tf::TransformBroadcas
 
 
 
-void Publisher::pubTF(const std_msgs::Header &header)
+void Publisher::PubTF(const std_msgs::Header &header)
 {
     if( e->solver_flag != SolverFlag::kNonLinear)
         return;
 
-    auto [R,P,R_bc,P_bc] = e->GetOutputPose();
+    auto [R,P,R_bc,P_bc] = e->GetOutputEgoInfo();
 
     PubTransform(R,P,*transform_broadcaster,ros::Time::now(),"world","body");
     PubTransform(R_bc,P_bc,*transform_broadcaster,ros::Time::now(),"body","camera");
@@ -408,7 +415,7 @@ void Publisher::pubTF(const std_msgs::Header &header)
     pub_extrinsic->publish(odometry);
 }
 
-void Publisher::pubKeyframe()
+void Publisher::PubKeyframe()
 {
     // pub camera pose, 2D-3D points of keyframe
     if (e->solver_flag == SolverFlag::kNonLinear && e->margin_flag == MarginFlag::kMarginOld)
@@ -466,7 +473,7 @@ void Publisher::pubKeyframe()
 
 
 Marker Publisher::BuildLineStripMarker(PointT &maxPt,PointT &minPt,unsigned int id,const cv::Scalar &color,
-                                       Marker::_action_type action)
+                                       Marker::_action_type action,int offset)
 {
     //设置立方体的八个顶点
     geometry_msgs::Point p[8];
@@ -479,24 +486,24 @@ Marker Publisher::BuildLineStripMarker(PointT &maxPt,PointT &minPt,unsigned int 
     p[6].x=maxPt.x;p[6].y=maxPt.y;p[6].z=minPt.z;
     p[7].x=minPt.x;p[7].y=maxPt.y;p[7].z=minPt.z;
 
-    return BuildLineStripMarker(p,id,color,action);
+    return BuildLineStripMarker(p,id,color,action,offset);
 }
 
 
 Marker Publisher::BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,unsigned int id,const cv::Scalar &color,
-                                       Marker::_action_type action){
+                                       Marker::_action_type action,int offset){
     geometry_msgs::Point points[8];
     for(int i=0;i<8;++i){
         points[i].x = p[i].x();
         points[i].y = p[i].y();
         points[i].z = p[i].z();
     }
-    return BuildLineStripMarker(points,id,color,action);
+    return BuildLineStripMarker(points,id,color,action,offset);
 }
 
 
 Marker Publisher::BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::Scalar &color,
-                                                           Marker::_action_type action)
+                                       Marker::_action_type action,int offset)
 {
     Marker msg;
     msg.header.stamp=ros::Time::now();
@@ -505,7 +512,7 @@ Marker Publisher::BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id
     msg.action=action;
     msg.pose.orientation.w=1.0;
 
-    msg.id=id * MarkerTypeNumber + 0;//当存在多个marker时用于标志出来
+    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
     msg.type=Marker::LINE_STRIP;//marker的类型
 
     if(action==Marker::DELETE){
@@ -537,14 +544,14 @@ Marker Publisher::BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id
 
 
 Marker Publisher::BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                                  const double scale,Marker::_action_type action){
+                                  const double scale,Marker::_action_type action,int offset){
     Marker msg;
     msg.header.stamp=ros::Time::now();
     msg.header.frame_id="world";
     msg.ns="box_text";
     msg.action=action;
 
-    msg.id=id * MarkerTypeNumber + 1;//当存在多个marker时用于标志出来
+    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
     msg.type=Marker::TEXT_VIEW_FACING;//marker的类型
     if(action==Marker::DELETE){
         return msg;
@@ -568,15 +575,15 @@ Marker Publisher::BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,c
 
 
 Marker  Publisher::BuildTextMarker(const PointT &point,unsigned int id,const std::string &text,
-                                   const cv::Scalar &color,const double scale,Marker::_action_type action)
+                                   const cv::Scalar &color,const double scale,Marker::_action_type action,int offset)
 {
     Eigen::Vector3d eigen_pt;
     eigen_pt<<point.x,point.y,point.z;
-    return BuildTextMarker(eigen_pt,id,text,color,scale,action);
+    return BuildTextMarker(eigen_pt,id,text,color,scale,action,offset);
 }
 
 Marker Publisher::BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,unsigned int id,
-                                   const cv::Scalar &color,Marker::_action_type action)
+                                   const cv::Scalar &color,Marker::_action_type action,int offset)
 {
     Marker msg;
     msg.header.frame_id="world";
@@ -584,7 +591,7 @@ Marker Publisher::BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::
     msg.ns="arrow_strip";
     msg.action=action;
 
-    msg.id=id * MarkerTypeNumber + 2;//当存在多个marker时用于标志出来
+    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
     msg.type=Marker::LINE_STRIP;//marker的类型
 
     if(action==Marker::DELETE){
@@ -638,8 +645,8 @@ Marker Publisher::BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::
 }
 
 
-Marker Publisher::BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned int id,
-                                  Marker::_action_type action){
+Marker Publisher::BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned int id,const cv::Scalar &color,
+                                  Marker::_action_type action,int offset){
     Marker msg;
 
     msg.header.frame_id="world";
@@ -647,7 +654,7 @@ Marker Publisher::BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned in
     msg.ns="box_strip";
     msg.action=action;
 
-    msg.id=id * MarkerTypeNumber + 3;//当存在多个marker时用于标志出来
+    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
     msg.type=Marker::LINE_STRIP;//marker的类型
     if(action==Marker::DELETE){
         return msg;
@@ -658,8 +665,8 @@ Marker Publisher::BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned in
     msg.pose.orientation.w=1.0;
 
     msg.scale.x=0.01;//线宽
-    msg.color.r=1.0;msg.color.g=1.0;msg.color.b=1.0;
-    msg.color.a=1.0;//不透明度
+    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
+    msg.color.a=1.0;
 
     //设置立方体的八个顶点
     geometry_msgs::Point p[8];
@@ -713,14 +720,14 @@ Marker Publisher::BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned in
 
 
 Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,
-                                        const cv::Scalar &color,bool clear,Marker::_action_type action){
+                                        const cv::Scalar &color,Marker::_action_type action,int offset){
     Marker msg;
 
     msg.header.frame_id="world";
     msg.header.stamp=ros::Time::now();
     msg.ns="box_strip";
     msg.action=action;
-    msg.id=id * MarkerTypeNumber + 4;//当存在多个marker时用于标志出来
+    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
     msg.type=Marker::LINE_STRIP;//marker的类型
     if(action==Marker::DELETE){
         return msg;
@@ -734,22 +741,20 @@ Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &histor
     msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
     msg.color.a=1.0;//不透明度
 
-    if(!clear){
-        for(auto &pose : history){
-            geometry_msgs::Point point;
-            point.x = pose.P.x();
-            point.y = pose.P.y();
-            point.z = pose.P.z();
-            msg.points.push_back(point);
-        }
+    for(auto &pose : history){
+        geometry_msgs::Point point;
+        point.x = pose.P.x();
+        point.y = pose.P.y();
+        point.z = pose.P.z();
+        msg.points.push_back(point);
+    }
 
-        for(int i=0;i<=kWinSize;++i){
-            geometry_msgs::Point point;
-            point.x = sliding_window[i].P.x();
-            point.y = sliding_window[i].P.y();
-            point.z = sliding_window[i].P.z();
-            msg.points.push_back(point);
-        }
+    for(int i=0;i<=kWinSize;++i){
+        geometry_msgs::Point point;
+        point.x = sliding_window[i].P.x();
+        point.y = sliding_window[i].P.y();
+        point.z = sliding_window[i].P.z();
+        msg.points.push_back(point);
     }
 
     return msg;
@@ -773,6 +778,8 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
         return p_world;
     };
 
+    cv::Scalar color_norm(0.5,0.5,0.5);
+
     int index=0;
     for(auto &box : boxes){
         //将包围框的8个顶点转换到世界坐标系下
@@ -784,7 +791,7 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
         string log_text = fmt::format("id:{} class:{} score:{}\n",index,box.class_id,box.score);
         log_text += EigenToStr(box.corners);
         Debugv(log_text);
-        auto cube_marker = BuildCubeMarker(corners8x3,index+4000);
+        auto cube_marker = BuildCubeMarker(corners8x3,index+4000,color_norm);
 
         markers.markers.push_back(cube_marker);
 
@@ -798,7 +805,7 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
 
 
 
-void Publisher::pubInstancePointCloud( const std_msgs::Header &header)
+void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
 {
     if(e->insts_manager.tracking_number() < 1)
         return;
@@ -838,7 +845,7 @@ void Publisher::pubInstancePointCloud( const std_msgs::Header &header)
         ///可视化估计的包围框
         EigenContainer<Eigen::Vector3d> vertex;
         inst.GetBoxVertex(vertex);
-        auto lineStripMarker = BuildLineStripMarker(vertex,key,color_norm,action);
+        auto lineStripMarker = BuildLineStripMarker(vertex,key,color_norm,action,0);
         markers.markers.push_back(lineStripMarker);
 
         ///可视化检测得到的包围框
@@ -856,31 +863,31 @@ void Publisher::pubInstancePointCloud( const std_msgs::Header &header)
                     e->Rs[e->frame-1], e->Ps[e->frame-1],
                     e->ric[0],e->tic[0]);
             Eigen::Matrix<double,8,3> corners_w_t = corners_w.transpose();
-            auto detect_cube_marker = BuildCubeMarker(corners_w_t,key,action);
+            auto detect_cube_marker = BuildCubeMarker(corners_w_t,key,cv::Scalar(0.5,0.5,0.5),action,3);
             markers.markers.push_back(detect_cube_marker);
         }
 
         ///可视化历史轨迹
-        if(inst.is_initial ){
-            auto history_marker = BuildTrajectoryMarker(key,inst.history_pose,inst.state,color_norm,
-                                                        inst.is_static,action);
+        if(inst.is_initial && inst.is_init_velocity ){
+            auto history_marker = BuildTrajectoryMarker(key,inst.history_pose,inst.state,color_norm,action,4);
             markers.markers.push_back(history_marker);
         }
 
 
         ///计算可视化的速度
-        if(!inst.is_static){
+        if(!inst.is_static && inst.is_init_velocity){
             Eigen::Vector3d vel = hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
             string text=fmt::format("{}\n({})", inst.id, VecToStr(vel));
-            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action);
-            Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 4;
-            auto arrowMarker = BuildArrowMarker(inst.state[kWinSize].P, end, key, color_norm,action);
+            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
             markers.markers.push_back(textMarker);
+
+            Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 4;
+            auto arrowMarker = BuildArrowMarker(inst.state[kWinSize].P, end, key, color_norm,action,2);
             markers.markers.push_back(arrowMarker);
         }
-        else{
+        else if(inst.is_static){
             string text=fmt::format("{} static", inst.id);
-            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action);
+            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
             markers.markers.push_back(textMarker);
         }
 
@@ -943,7 +950,31 @@ void Publisher::pubInstancePointCloud( const std_msgs::Header &header)
         instance_point_cloud+=cloud;
     }
 
+    ///设置删除当前帧不显示的marker
+    std::set<int> curr_marker_ids;
+    for(auto &m:markers.markers){
+        curr_marker_ids.insert(m.id);
+    }
+    //求差集
+    vector<int> ids_not_curr;
+    std::set_difference(last_marker_ids.begin(),last_marker_ids.end(),curr_marker_ids.begin(),curr_marker_ids.end(),
+                        std::back_inserter(ids_not_curr));
+    //设置要删除的marker
+    for(auto m_id:ids_not_curr){
+        Marker msg;
+        msg.header.frame_id="world";
+        msg.header.stamp=ros::Time::now();
+        msg.ns="box_strip";
+        msg.action=Marker::DELETE;
+        msg.id=m_id;
+        msg.type=Marker::LINE_STRIP;
+        markers.markers.push_back(msg);
+    }
+    last_marker_ids=curr_marker_ids;
+
     pub_instance_marker->publish(markers);
+
+
     printf("实例点云的数量: %ld\n",instance_point_cloud.size());
 
     sensor_msgs::PointCloud2 point_cloud_msg;

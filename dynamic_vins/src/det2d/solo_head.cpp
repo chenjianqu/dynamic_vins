@@ -11,7 +11,9 @@
 #include "solo_head.h"
 #include "det2d_parameter.h"
 #include "utils/dataset/coco_utils.h"
+#include "utils/dataset/kitti_utils.h"
 #include "utils/log_utils.h"
+#include "utils/torch_utils.h"
 
 namespace dynamic_vins{\
 
@@ -22,12 +24,14 @@ namespace idx=torch::indexing;
 
 
 Solov2::Solov2(){
-    size_trans_=torch::from_blob(det2d_para::kSoloNumGrids.data(), {int(det2d_para::kSoloNumGrids.size())}, torch::kFloat).clone();
+    size_trans_=torch::from_blob(det2d_para::kSoloNumGrids.data(), {int(det2d_para::kSoloNumGrids.size())},
+                                 torch::kFloat).clone();
     size_trans_=size_trans_.pow(2).cumsum(0);
 }
 
 
-torch::Tensor Solov2::MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_labels,torch::Tensor &cate_scores,torch::Tensor &sum_mask)
+torch::Tensor Solov2::MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_labels,torch::Tensor &cate_scores,
+                                torch::Tensor &sum_mask)
 {
     int n_samples=cate_labels.sizes()[0];
 
@@ -75,7 +79,7 @@ torch::Tensor Solov2::MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_lab
  * 处理solo的输出
  * @param outputs
  */
-cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device device, std::vector<InstInfo> &insts)
+cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device device, std::vector<Box2D::Ptr> &insts)
 {
     /*TicToc ticToc;
     const int batch=0;
@@ -243,8 +247,8 @@ cv::Mat Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device 
 }
 
 
-std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs, ImageInfo& img_info)
-{
+std::tuple<std::vector<cv::Mat>,std::vector<Box2D::Ptr>> Solov2::GetSingleSeg(std::vector<torch::Tensor> &outputs,
+                                                                              ImageInfo& img_info){
     /*torch::Device device = outputs[0].device();
     constexpr int batch=0;
     constexpr int level_num=5;//FPN共输出5个层级
@@ -405,8 +409,8 @@ std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> Solov2::GetSingleSeg(std:
 }
 
 
-void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts)
-{
+void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &mask_tensor,
+                          std::vector<Box2D::Ptr> &insts){
     torch::Device device = outputs[0].device();
 
     constexpr int kBatchIndex=0;
@@ -563,16 +567,28 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
         auto max_xy =std::get<0>( torch::max(nz,0) );
         auto min_xy =std::get<0>( torch::min(nz,0) );
 
-        InstInfo inst;
-        inst.id = i;
-        inst.label_id =cate_labels[i].item().toInt();
-        inst.name = coco::CocoLabel[inst.label_id];
-        inst.max_pt.x = max_xy[1].item().toInt();
-        inst.max_pt.y = max_xy[0].item().toInt();
-        inst.min_pt.x = min_xy[1].item().toInt();
-        inst.min_pt.y = min_xy[0].item().toInt();
-        inst.rect = cv::Rect2f(inst.min_pt,inst.max_pt);
-        inst.prob = cate_scores[i].item().toFloat();
+        Box2D::Ptr inst = std::make_shared<Box2D>();
+        inst->id = i;
+
+        int coco_id = cate_labels[i].item().toInt();
+        string coco_name = coco::CocoLabel[coco_id];
+        if(auto it=coco::CocoToKitti.find(coco_name);it!=coco::CocoToKitti.end()){
+            string kitti_name = *(it->second.begin());
+            int kitti_id = kitti::GetKittiLabelIndex(kitti_name);
+            inst->class_id =kitti_id;
+            inst->class_name = kitti_name;
+        }
+        else{
+            inst->class_id =coco_id;
+            inst->class_name = coco_name;
+        }
+
+        inst->max_pt.x = max_xy[1].item().toInt();
+        inst->max_pt.y = max_xy[0].item().toInt();
+        inst->min_pt.x = min_xy[1].item().toInt();
+        inst->min_pt.y = min_xy[0].item().toInt();
+        inst->rect = cv::Rect2f(inst->min_pt,inst->max_pt);
+        inst->score = cate_scores[i].item().toFloat();
         insts.push_back(inst);
     }
 }

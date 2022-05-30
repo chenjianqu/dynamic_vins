@@ -601,7 +601,7 @@ bool ConstSpeedSimpleFactor::Evaluate(double const *const *parameters, double *r
     Vec3d speed_v(parameters[0][0], parameters[0][1], parameters[0][2]);
     Vec3d speed_a(parameters[0][3], parameters[0][4], parameters[0][5]);
 
-    residuals[0]= ((speed_a - last_a).norm() + (speed_v - last_v).norm()) * factor;
+    residuals[0]= ((speed_a - last_a).squaredNorm() + (speed_v - last_v).squaredNorm()) * factor;
 
     if (jacobians){
         if (jacobians[0]){
@@ -621,11 +621,11 @@ bool ConstSpeedStereoPointFactor::Evaluate(double const *const *parameters, doub
     Vec3d speed_v(parameters[0][0], parameters[0][1], parameters[0][2]);
     Vec3d speed_a(parameters[0][3], parameters[0][4], parameters[0][5]);
 
-    double factor = ((pts_j - pts_i)/time_ij).norm();
+    double factor = ((pts_j - pts_i)/time_ij).squaredNorm();
     factor = factor*factor;
-    double v_norm_2 = (speed_v - last_v).norm();
+    double v_norm_2 = (speed_v - last_v).squaredNorm();
     v_norm_2 = v_norm_2*v_norm_2;
-    double a_norm_2 = (speed_a - last_a).norm();
+    double a_norm_2 = (speed_a - last_a).squaredNorm();
     a_norm_2 = a_norm_2*a_norm_2;
 
     residuals[0]= factor * (v_norm_2 + a_norm_2);
@@ -685,21 +685,34 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
             Sophus::Vector3d phi = Sophus::SO3d(R).log();
             double theta = - phi.norm();//右乘矩阵取负号
             Vec3d a = phi.normalized();
-            //构造右乘矩阵
-            Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
 
+            constexpr double eta=0.0001;
+            if(std::abs(theta)<eta){
+                Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[0]);
+                jacobian_pose = Eigen::Matrix<double, 6, 7>::Zero();
+            }
+            else{
+                //构造右乘矩阵
+                Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
 
-            Eigen::Matrix<double,6,3> jacobian_p = Eigen::Matrix<double,6,3>::Zero();
-            jacobian_p.topRows(3) = Mat3d::Identity();
+                Eigen::Matrix<double,6,3> jacobian_p = Eigen::Matrix<double,6,3>::Zero();
+                jacobian_p.topRows(3) = Mat3d::Identity();
 
-            Eigen::Matrix<double,6,3> jacobian_r = Eigen::Matrix<double,6,3>::Zero();
+                Eigen::Matrix<double,6,3> jacobian_r = Eigen::Matrix<double,6,3>::Zero();
 
-            jacobian_r.bottomRows(3) = J_r.inverse();
+                jacobian_r.bottomRows(3) = J_r.inverse();
 
-            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[0]);
-            jacobian_pose.leftCols<3>() = jacobian_p;
-            jacobian_pose.middleCols(3,3) = jacobian_r;
-            jacobian_pose.rightCols(1) = Eigen::Matrix<double,6,1>::Zero();
+                Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[0]);
+                jacobian_pose.leftCols<3>() = jacobian_p;
+                jacobian_pose.middleCols(3,3) = jacobian_r;
+                jacobian_pose.rightCols(1) = Eigen::Matrix<double,6,1>::Zero();
+
+                counter++;
+                if(counter%10==0){
+                    Debugv("SpeedPoseFactor:\n err_v:{} err_w:{}\n theta:{} a:{} \n J_r:{}",
+                           VecToStr(err_v), VecToStr(err_w), theta, VecToStr(a), EigenToStr(J_r));
+                }
+            }
         }
         if (jacobians[1]){
             Mat3d R = R_delta.matrix().transpose() * R_ojw * R_woi;
@@ -707,21 +720,28 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
             Sophus::Vector3d phi = Sophus::SO3d(R).log();
             double theta = - phi.norm();//右乘矩阵取负号
             Vec3d a = phi.normalized();
-            //构造右乘矩阵
-            Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
 
+            constexpr double eta=0.0001;
+            if(std::abs(theta)<eta){
+                Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[1]);
+                jacobian_pose = Eigen::Matrix<double, 6, 7>::Zero();
+            }
+            else{
+                //构造右乘矩阵
+                Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
 
-            Eigen::Matrix<double,6,3> jacobian_p = Eigen::Matrix<double,6,3>::Zero();
-            jacobian_p.topRows(3) = Mat3d::Identity();
+                Eigen::Matrix<double,6,3> jacobian_p = Eigen::Matrix<double,6,3>::Zero();
+                jacobian_p.topRows(3) = Mat3d::Identity();
 
-            Eigen::Matrix<double,6,3> jacobian_r = Eigen::Matrix<double,6,3>::Zero();
+                Eigen::Matrix<double,6,3> jacobian_r = Eigen::Matrix<double,6,3>::Zero();
 
-            jacobian_r.bottomRows(3) = - J_r.inverse() * (R_ojw * R_woi).transpose();
+                jacobian_r.bottomRows(3) = - J_r.inverse() * (R_ojw * R_woi).transpose();
 
-            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[1]);
-            jacobian_pose.leftCols<3>() = jacobian_p;
-            jacobian_pose.middleCols(3,3) = jacobian_r;
-            jacobian_pose.rightCols(1) = Eigen::Matrix<double,6,1>::Zero();
+                Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[1]);
+                jacobian_pose.leftCols<3>() = jacobian_p;
+                jacobian_pose.middleCols(3,3) = jacobian_r;
+                jacobian_pose.rightCols(1) = Eigen::Matrix<double,6,1>::Zero();
+            }
         }
         ///对速度的雅可比
         if (jacobians[2]){
@@ -747,6 +767,8 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
             jacobian_speed = Eigen::Matrix<double,6,6>::Zero();
 
         }
+
+
 
     }
 
@@ -791,18 +813,25 @@ bool SpeedPoseSimpleFactor::Evaluate(double const *const *parameters, double *re
             Sophus::Vector3d phi = Sophus::SO3d(R).log();
             double theta = - phi.norm();//右乘矩阵取负号
             Vec3d a = phi.normalized();
-            //构造右乘矩阵
-            Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
+            constexpr double eta=0.0001;
+            if(std::abs(theta)<eta){
+                Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[0]);
+                jacobian_pose = Eigen::Matrix<double, 6, 7>::Zero();
+            }
+            else{
+                //构造右乘矩阵
+                Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
 
-            Eigen::Matrix<double,6,3> jacobian_v = Eigen::Matrix<double,6,3>::Zero();
-            jacobian_v.topRows(3) = time_ij * Mat3d::Identity();
-            Eigen::Matrix<double,6,3> jacobian_w = Eigen::Matrix<double,6,3>::Zero();
-            jacobian_w.bottomRows(3) = - time_ij * J_r.inverse() * R.transpose();
+                Eigen::Matrix<double,6,3> jacobian_v = Eigen::Matrix<double,6,3>::Zero();
+                jacobian_v.topRows(3) = time_ij * Mat3d::Identity();
+                Eigen::Matrix<double,6,3> jacobian_w = Eigen::Matrix<double,6,3>::Zero();
+                jacobian_w.bottomRows(3) = - time_ij * J_r.inverse() * R.transpose();
 
-            Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_speed(jacobians[0]);
-            jacobian_speed.leftCols<3>() = jacobian_v;
-            jacobian_speed.middleCols(3,3) = jacobian_w;
-            jacobian_speed.rightCols<1>().setZero();
+                Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_speed(jacobians[0]);
+                jacobian_speed.leftCols<3>() = jacobian_v;
+                jacobian_speed.middleCols(3,3) = jacobian_w;
+                jacobian_speed.rightCols<1>().setZero();
+            }
         }
 
     }

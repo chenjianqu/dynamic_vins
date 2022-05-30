@@ -76,10 +76,13 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
             it->second.is_initial=false;
             it->second.color = inst_feat.color;
             it->second.is_curr_visible=true;
-
+            it->second.box2d = inst_feat.box2d;
+            Debugv("PushBack | box2d:{}", inst_feat.box2d->class_name);
+            it->second.box3d = std::make_shared<Box3D>();
             if(inst_feat.box3d){
                 it->second.boxes3d[frame] = inst_feat.box3d;
-                it->second.box3d.class_id = inst_feat.box3d->class_id;
+                it->second.box3d->class_id = inst_feat.box3d->class_id;
+                it->second.box3d->class_name = inst_feat.box3d->class_name;
                 Debugv("PushBack input box3d center:{},yaw:{}", VecToStr(inst_feat.box3d->center),inst_feat.box3d->yaw);
             }
 
@@ -87,6 +90,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
 
             for(auto &[feat_id,feat_vector] : inst_feat){
                 LandmarkPoint lm(feat_id);//创建Landmark
+                Debugv("PushBack lm:{}", lm.id);
 
                 FeaturePoint feat(feat_vector, e->frame, e->td);
                 ///对双目的观测进行三角化,用于后面的场景流计算
@@ -115,10 +119,11 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
         }
         else{ ///将特征添加到物体中
             auto &landmarks = inst_iter->second.landmarks;
-
+            inst_iter->second.box2d = inst_feat.box2d;
             if(inst_feat.box3d){
                 inst_iter->second.boxes3d[frame] = inst_feat.box3d;
-                inst_iter->second.box3d.class_id = inst_feat.box3d->class_id;
+                inst_iter->second.box3d->class_id = inst_feat.box3d->class_id;
+                inst_iter->second.box3d->class_name = inst_feat.box3d->class_name;
                 Debugv("PushBack input box3d center:{},yaw:{}", VecToStr(inst_feat.box3d->center),inst_feat.box3d->yaw);
             }
 
@@ -187,7 +192,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
  * 三角化动态特征点,并限制三角化的点的数量在50以内
  * @param frame_cnt
  */
-void InstanceManager::Triangulate( )
+void InstanceManager::Triangulate()
 {
     if(tracking_number_ < 1)
         return;
@@ -266,7 +271,7 @@ void InstanceManager::Triangulate( )
                 }
                 else{ //判断是否在包围框附近
                     Eigen::Vector3d pts_obj_j=inst.state[imu_i].R.transpose() * (point3d_w - inst.state[imu_i].P);
-                    if(pts_obj_j.norm() < inst.box3d.dims.norm()*4){
+                    if(pts_obj_j.norm() < inst.box3d->dims.norm()*4){
                         lm.depth = depth;
                         inst_add_num++;
                         log_inst_text+=fmt::format("lid:{} d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
@@ -327,9 +332,9 @@ void InstanceManager::ManageTriangulatePoint()
                 for(auto &feat: lm.feats){
                     if(feat.is_triangulated){
                         Vec3d point_obj = inst.state[feat.frame].R.transpose() * (feat.p_w -inst.state[feat.frame].P);
-                        if( std::abs(point_obj.x()) > inst.box3d.dims.x()*3 ||
-                        std::abs(point_obj.y()) > inst.box3d.dims.y()*3 ||
-                        std::abs(point_obj.z()) > inst.box3d.dims.z()*3){
+                        if( std::abs(point_obj.x()) > inst.box3d->dims.x()*3 ||
+                        std::abs(point_obj.y()) > inst.box3d->dims.y()*3 ||
+                        std::abs(point_obj.z()) > inst.box3d->dims.z()*3){
                             feat.is_triangulated=false;
                             log_text += fmt::format("del stereo frame:{} point_w:{}\n",feat.frame, VecToStr(feat.p_w));
                         }
@@ -379,9 +384,6 @@ void InstanceManager::PropagatePose()
     double time_ij= e->headers[frame] - e->headers[last_frame];
 
     InstExec([&](int key,Instance& inst){
-        if(inst.is_initial){
-            inst.age++;
-        }
 
         inst.state[frame].time = e->headers[frame];
 
@@ -494,19 +496,27 @@ void InstanceManager::InitialInstanceVelocity(){
 void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &input_insts){
 
     for(auto &[inst_id,inst] : instances){
+        if(inst.is_initial){
+            inst.age++;
+        }
+
         if(inst.is_initial || !inst.is_tracking)
             continue;
         if(!inst.boxes3d[frame]) //未检测到box3d
             continue;
 
         ///寻找当前帧三角化的路标点
+        auto cam_to_world = [this](const Vec3d &p){
+            return e->Rs[e->frame] * (e->ric[0] * p + e->tic[0]) + e->Ps[e->frame];
+        };
         Vec3d center_point=Vec3d::Zero();
         int cnt=0;
         for(auto &lm : inst.landmarks){
-            if(lm.feats.empty() || lm.depth<=0)
+            if(lm.feats.empty())
                 continue;
-            if(lm.feats.front().frame == e->frame){
-                center_point += (lm.feats.front().point * lm.depth);
+            auto &back_p = lm.feats.back();
+            if(back_p.frame == e->frame && back_p.is_triangulated){
+                center_point += back_p.p_w;
                 cnt++;
             }
         }
@@ -516,15 +526,8 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
 
         ///根据box初始化物体的位姿和包围框
 
-        auto cam_to_world = [this](const Vec3d &p){
-            return e->Rs[e->frame] * (e->ric[0] * p + e->tic[0]) + e->Ps[e->frame];
-        };
-
         State init_state;
-
-        //首先将box中心点从相机坐标系转换到世界坐标系
-        Vec3d avg_center_point = center_point / double(cnt);
-        init_state.P = cam_to_world(avg_center_point);
+        init_state.P = center_point / double(cnt);
 
         //将包围框的8个顶点转换到世界坐标系下
         Mat38d corners;
@@ -547,12 +550,12 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
             inst.state[i].time = e->headers[i];
         }
 
-        inst.box3d.dims = inst.boxes3d[frame]->dims;
+        inst.box3d->dims = inst.boxes3d[frame]->dims;
         inst.is_initial=true;
 
         Debugv("Initialized id:{},cnt_max:{},初始位姿:P:{},R:{} 初始box:{}",
                inst.id, cnt, VecToStr(init_state.P), VecToStr(init_state.R.eulerAngles(2,1,0)),
-               VecToStr(inst.box3d.dims));
+               VecToStr(inst.box3d->dims));
 
         ///删去初始化之前的观测
         for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next){
@@ -636,7 +639,7 @@ string InstanceManager::PrintInstancePoseInfo(bool output_lm){
     string log_text ;
     InstExec([&log_text,&output_lm](int key,Instance& inst){
         log_text += fmt::format("id:{} info:\n box:{} v:{} a:{}\n",inst.id,
-                                VecToStr(inst.box3d.dims),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
+                                VecToStr(inst.box3d->dims),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
         for(int i=0; i <= kWinSize; ++i){
             log_text+=fmt::format("{},P:({}),R:({})\n", i, VecToStr(inst.state[i].P),
                                   VecToStr(inst.state[i].R.eulerAngles(2,1,0)));
@@ -654,16 +657,18 @@ string InstanceManager::PrintInstancePoseInfo(bool output_lm){
     return log_text;
 }
 
-
-void InstanceManager::OutputInstsInfo(){
+/**
+ * 设置所有动态物体的最新的位姿,dims信息到输出变量
+ */
+void InstanceManager::SetOutputInstInfo(){
     std::unique_lock<std::mutex> lk(vel_mutex_);
-    vel_map_.clear();
+    insts_output.clear();
     if(tracking_number_<1){
         return;
     }
-    string log_text = "OutputInstsInfo 物体的速度信息:";
-    InstExec([&log_text,this](int key,Instance& inst){
-        log_text += fmt::format("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
+    //string log_text = "SetOutputInstInfo 物体的速度信息:";
+    InstExec([this](int key,Instance& inst){
+        //log_text += fmt::format("inst:{} v:{} a:{}", inst.id, VecToStr(inst.vel.v), VecToStr(inst.vel.a));
         InstEstimatedInfo estimated_info;
         estimated_info.is_init = inst.is_initial;
         estimated_info.is_init_velocity = inst.is_init_velocity;
@@ -672,13 +677,11 @@ void InstanceManager::OutputInstsInfo(){
         estimated_info.R = inst.state[frame].R;
         estimated_info.a = inst.vel.a;
         estimated_info.v = inst.vel.v;
-        estimated_info.dims = inst.box3d.dims;
+        estimated_info.dims = inst.box3d->dims;
 
-
-
-        vel_map_.insert({inst.id, estimated_info});;
+        insts_output.insert({inst.id, estimated_info});;
     });
-    Debugv(log_text);
+    //Debugv(log_text);
 }
 
 /**
@@ -693,8 +696,8 @@ void InstanceManager::SaveTrajectory(){
     Mat3d R_cw = R_ci * R_iw;
     Vec3d P_cw = R_ci * P_iw + P_ci;
 
-    //追加写入
-    std::ofstream fout(io_para::kObjectResultPath,std::ios::out | std::ios::app);
+
+    std::ofstream fout(io_para::kObjectResultPath,std::ios::out | std::ios::app);//追加写入
 
 
     for(auto &[inst_id,inst] : instances){
@@ -708,7 +711,7 @@ void InstanceManager::SaveTrajectory(){
             ///将物体位姿变换为kitti的位姿，即物体中心位于底部中心
             Mat3d R_offset;
             R_offset<<1,0,0,  0,cos(-M_PI/2),-sin(-M_PI/2),  0,sin(-M_PI/2),cos(-M_PI/2);
-            double H = inst.box3d.dims.y();
+            double H = inst.box3d->dims.y();
             Vec3d P_offset(0,0,-H/2);
 
             Mat3d R_coi_kitti = R_offset * R_coi;
@@ -724,8 +727,8 @@ void InstanceManager::SaveTrajectory(){
             double alpha = - (M_PI + rotation_y + M_PI + beta);
 
             ///计算3D包围框投影得到的2D包围框
-            Vec3d minPt = - inst.box3d.dims/2;
-            Vec3d maxPt = inst.box3d.dims/2;
+            Vec3d minPt = - inst.box3d->dims/2;
+            Vec3d maxPt = inst.box3d->dims/2;
             EigenContainer<Vec3d> vertex(8);
             vertex[0]=minPt;
             vertex[1].x()=maxPt.x();vertex[1].y()=minPt.y();vertex[1].z()=minPt.z();
@@ -753,21 +756,20 @@ void InstanceManager::SaveTrajectory(){
             //                   1,1,double alpha,Vec4d &box,
             //                 inst.box,Vec3d &location,double rotation_y,double score);
 
-            fout<<e->feature_frame.seq_id<<" "<<inst.id<<" "<<kitti::KittiLabel[inst.box3d.class_id]<<" "<<
+            fout<<e->feature_frame.seq_id<<" "<<inst.id<<" "<<kitti::KittiLabel[inst.box3d->class_id]<<" "<<
             1<<" "<<1<<" "<<
             alpha<<" "<<
             corner2d_min_pt.x()<<" "<<corner2d_min_pt.y()<<" "<<corner2d_max_pt.x()<<" "<<corner2d_max_pt.y()<<" "<<
-            VecToStr(inst.box3d.dims)<<" "<<
+            VecToStr(inst.box3d->dims)<<" "<<
             VecToStr(P_coi)<<" "<<
             rotation_y<<" "<<
-            inst.box3d.score<<endl;
+            inst.box3d->score<<endl;
         }
 
     }
 
 
     fout.close();
-
 
 }
 
@@ -817,12 +819,17 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                 statistics["BoxDimsFactor"]++;
                 ///物体的方向误差
                 Mat3d R_cioi = Box3D::GetCoordinateRotationFromCorners(inst.boxes3d[i]->corners);
-                /*problem.AddResidualBlock(new BoxOrientationFactor(R_cioi,e->ric[0]), nullptr,e->para_Pose[i],inst.para_state[i]);
-                statistics["BoxOrientationFactor"]++;*/
+                problem.AddResidualBlock(new BoxOrientationFactor(R_cioi,e->ric[0]), nullptr,e->para_Pose[i],inst.para_state[i]);
+                statistics["BoxOrientationFactor"]++;
 
-                problem.AddResidualBlock(new BoxPoseFactor(R_cioi,inst.boxes3d[i]->center,e->ric[0],e->tic[0]),
+                /*problem.AddResidualBlock(new BoxPoseFactor(R_cioi,inst.boxes3d[i]->center,e->ric[0],e->tic[0]),
                                          loss_function,e->para_Pose[i],inst.para_state[i]);
+                statistics["BoxPoseFactor"]++;*/
 
+                problem.AddResidualBlock(new BoxPoseNormFactor(inst.boxes3d[i]->center,e->ric[0],e->tic[0],
+                                                               e->Rs[i],e->Ps[i]),
+                                         loss_function,inst.para_state[i]);
+                statistics["BoxPoseNormFactor"]++;
 
                 /*///添加顶点误差
                 //效果不好
@@ -959,8 +966,6 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                                             loss_function,inst.para_speed[0]);
                     statistics["ConstSpeedStereoPointFactor"]++;
                 }
-
-
 
             }
 

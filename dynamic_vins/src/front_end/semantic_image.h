@@ -20,8 +20,8 @@
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
 
-#include "det2d/det2d_def.h"
 #include "utils/box3d.h"
+#include "utils/box2d.h"
 #include "utils/parameters.h"
 
 namespace dynamic_vins{\
@@ -45,21 +45,19 @@ struct SemanticImage{
     cv::cuda::GpuMat gray0_gpu,gray1_gpu;
 
     torch::Tensor mask_tensor;
-    std::vector<InstInfo> insts_info;
+    std::vector<Box2D::Ptr> boxes2d;
 
     cv::Mat merge_mask,inv_merge_mask;
     cv::cuda::GpuMat merge_mask_gpu,inv_merge_mask_gpu;
 
     cv::Mat flow;//光流估计结果
 
-    std::vector<Box3D::Ptr> boxes;//3D检测结果
+    std::vector<Box3D::Ptr> boxes3d;//3D检测结果
 
     torch::Tensor img_tensor;
 
     unsigned int seq;
     bool exist_inst{false};//当前帧是否检测到物体
-
-
 };
 
 

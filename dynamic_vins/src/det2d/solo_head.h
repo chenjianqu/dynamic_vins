@@ -17,8 +17,9 @@
 #include <torch/torch.h>
 #include <torchvision/vision.h>
 
-#include "det2d_def.h"
 #include "utils/def.h"
+#include "utils/box2d.h"
+#include "pipeline.h"
 
 namespace dynamic_vins{\
 
@@ -27,10 +28,14 @@ class Solov2 {
 public:
     using Ptr=std::shared_ptr<Solov2>;
     Solov2();
-    static torch::Tensor MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_labels,torch::Tensor &cate_scores,torch::Tensor &sum_mask);
-    cv::Mat GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device device, std::vector<InstInfo> &insts);
-    std::tuple<std::vector<cv::Mat>,std::vector<InstInfo>> GetSingleSeg(std::vector<torch::Tensor> &outputs, ImageInfo& img_info);
-    void GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &mask_tensor, std::vector<InstInfo> &insts);
+    static torch::Tensor MatrixNMS(torch::Tensor &seg_masks,torch::Tensor &cate_labels,
+                                   torch::Tensor &cate_scores,torch::Tensor &sum_mask);
+    cv::Mat GetSingleSeg(std::vector<torch::Tensor> &outputs, torch::Device device,
+                         std::vector<Box2D::Ptr> &insts);
+    std::tuple<std::vector<cv::Mat>,std::vector<Box2D::Ptr>> GetSingleSeg(std::vector<torch::Tensor> &outputs,
+                                                                     ImageInfo& img_info);
+    void GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &mask_tensor,
+                      std::vector<Box2D::Ptr> &insts);
 
 private:
     torch::Tensor size_trans_;

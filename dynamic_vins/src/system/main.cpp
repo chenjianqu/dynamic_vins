@@ -63,7 +63,6 @@ void ImageProcess()
 
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
-
         if(image_queue.size() >= kImageQueueSize){
             std::this_thread::sleep_for(50ms);
             continue;
@@ -127,7 +126,7 @@ void ImageProcess()
         tt.Tic();
         if(cfg::slam != SlamType::kRaw){
             if(!cfg::is_input_seg){
-                detector2d->ForwardTensor(img.img_tensor, img.mask_tensor, img.insts_info);
+                detector2d->ForwardTensor(img.img_tensor, img.mask_tensor, img.boxes2d);
                 if(cfg::slam == SlamType::kNaive)
                     img.SetBackgroundMask();
                 else if(cfg::slam == SlamType::kDynamic)
@@ -158,7 +157,7 @@ void ImageProcess()
         }
 
         ///读取离线检测的3D包围框
-        img.boxes = detector3d->WaitResult();
+        img.boxes3d = detector3d->WaitResult();
 
 
         image_queue.push_back(img);
@@ -198,7 +197,7 @@ void FeatureTrack()
 
             ///前端跟踪
             if(cfg::slam == SlamType::kDynamic){
-                insts_tracker->SetEstimatedInstancesInfo(estimator->insts_manager.vel_map());
+                insts_tracker->SetEstimatedInstancesInfo(estimator->insts_manager.GetOutputInstInfo());
                 TicToc t_i;
                 //开启另一个线程检测动态特征点
                 std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
@@ -371,14 +370,21 @@ int Run(int argc, char **argv){
     cout<<"waiting for image and imu..."<<endl;
 
     std::thread sync_thread{ImageProcess};
-    std::thread fk_thread{FeatureTrack};
+    std::thread fk_thread;
     std::thread vio_thread;
-    if(!cfg::is_only_frontend)
-        vio_thread = std::thread(&Estimator::ProcessMeasurements, estimator);
+
+    if(!cfg::is_only_imgprocess){
+        fk_thread = std::thread(FeatureTrack);
+
+        if(!cfg::is_only_frontend){
+            vio_thread = std::thread(&Estimator::ProcessMeasurements, estimator);
+        }
+    }
 
     ros::spin();
 
     cfg::ok= false;
+    cv::destroyAllWindows();
 
     sync_thread.join();
     fk_thread.join();
@@ -387,6 +393,8 @@ int Run(int argc, char **argv){
     delete callback;
 
     cout<<"vins结束"<<endl;
+
+    return 0;
 }
 
 

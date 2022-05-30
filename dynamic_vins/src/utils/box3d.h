@@ -23,11 +23,11 @@
 namespace dynamic_vins{\
 
 
-class Box2D{
+class Rect2D{
 public:
-    using Ptr = std::shared_ptr<Box2D>;
-    Box2D() =default;
-    Box2D(cv::Point2f &min_p,cv::Point2f &max_p):min_pt(min_p),max_pt(max_p){
+    using Ptr = std::shared_ptr<Rect2D>;
+    Rect2D() =default;
+    Rect2D(cv::Point2f &min_p, cv::Point2f &max_p): min_pt(min_p), max_pt(max_p){
         center_pt = (min_pt+max_pt)/2;
     }
 
@@ -45,7 +45,7 @@ public:
     Box3D(int class_id_,int attribution_id_,double score_)
     :class_id(class_id_),attribution_id(attribution_id_),score(score_){}
 
-    Box3D(vector<string> &tokens);
+    explicit Box3D(vector<string> &tokens);
 
     bool InsideBox(Eigen::Vector3d &point);
 
@@ -68,6 +68,7 @@ public:
 
     ///每行的前3个数字是类别,属性,分数
     int class_id;
+    string class_name;
     int attribution_id ;
     double score;
 
@@ -79,7 +80,7 @@ public:
     Vec3d center{0,0,0};//包围框中心坐标
 
     Eigen::Matrix<double,2,8> corners_2d;////包围框的8个顶点在图像坐标系下的像素坐标
-    Box2D box2d;
+    Rect2D box2d;
 };
 
 

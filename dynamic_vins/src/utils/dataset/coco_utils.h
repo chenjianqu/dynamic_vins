@@ -13,6 +13,8 @@
 
 #include <vector>
 #include <string>
+#include <set>
+#include <map>
 
 namespace dynamic_vins{\
 
@@ -21,7 +23,20 @@ class CocoUtils{
 public:
     inline static std::vector<std::string> CocoLabel;
 
+    inline static std::map<std::string,std::set<std::string>> CocoToKitti = {
+            {"car",{"Car","Van","Truck"}},{"person",{"Pedestrian","Person_sitting"}},
+            {"truck",{"Truck"}}
+    };
+
+    inline static std::map<std::string,std::set<std::string>> CocoToNuScenes = {
+            {"car",{"car","truck","trailer","bus","construction_vehicle"}},
+            {"bicycle",{"bicycle"}},
+            {"motorcycle",{"motorcycle"}},
+            {"person",{"pedestrian"}}
+    };
+
     static void SetParameters(const std::string &config_path);
+
 };
 using coco=CocoUtils;
 
