@@ -33,15 +33,17 @@ public:
     using Ptr = std::shared_ptr<Detector2D>;
     explicit Detector2D(const std::string& config_path);
 
+    void VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<Box2D::Ptr> &insts);
+    void Launch(SemanticImage &img);
+
+private:
     std::tuple<std::vector<cv::Mat>,std::vector<Box2D::Ptr> > Forward(cv::Mat &img);
     void ForwardTensor(cv::Mat &img, torch::Tensor &mask_tensor, std::vector<Box2D::Ptr> &insts);
     void ForwardTensor(cv::cuda::GpuMat &img, torch::Tensor &mask_tensor, std::vector<Box2D::Ptr> &insts);
     void ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor, std::vector<Box2D::Ptr> &insts);
+    static torch::Tensor LoadTensor(const string &load_path);
 
-    void VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<Box2D::Ptr> &insts);
 
-
-private:
     MyBuffer::Ptr buffer;
     Pipeline::Ptr pipeline_;
 
@@ -52,6 +54,9 @@ private:
     std::unique_ptr<nvinfer1::IExecutionContext, InferDeleter> context_;
 
     double infer_time_{0};
+
+    int image_seq_id{};
+
 };
 
 }

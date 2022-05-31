@@ -120,13 +120,13 @@ void ImageProcess()
         }
         ///启动3D目标检测线程
         detector3d->Launch(img);
-        Infos("ImageProcess prepare: {}", tt.TocThenTic());
+        Infos("ImageProcess prepare: {} ms", tt.TocThenTic());
 
         ///实例分割
         tt.Tic();
         if(cfg::slam != SlamType::kRaw){
             if(!cfg::is_input_seg){
-                detector2d->ForwardTensor(img.img_tensor, img.mask_tensor, img.boxes2d);
+                detector2d->Launch(img);
                 if(cfg::slam == SlamType::kNaive)
                     img.SetBackgroundMask();
                 else if(cfg::slam == SlamType::kDynamic)

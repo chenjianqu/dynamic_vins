@@ -10,6 +10,7 @@
 #include<filesystem>
 
 #include <ros/ros.h>
+#include <std_msgs/Bool.h>
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <tf/transform_listener.h>
@@ -19,6 +20,10 @@
 #include <opencv2/core/core.hpp>
 
 using namespace std;
+
+
+bool is_pause=false;
+
 
 void split(const std::string& source, std::vector<std::string>& tokens, const string& delimiters = " ") {
     std::regex re(delimiters);
@@ -96,7 +101,11 @@ void getAllImageFiles(const string& dir, vector<string> &files) {
 }
 
 
-
+void PauseCallback(const std_msgs::BoolConstPtr &restart_msg)
+{
+    is_pause = !is_pause;
+    cout<<"is_pause:"<<is_pause<<endl;
+}
 
 
 int main(int argc, char** argv)
@@ -109,6 +118,18 @@ int main(int argc, char** argv)
 
     string left_images_base = argv[1];
     string right_images_base = argv[2];
+
+    int kPubDeltaTime=100; //发布时间间隔,默认100ms
+    if(argc >= 4){
+        kPubDeltaTime = std::stoi(argv[3]);
+    }
+
+    bool is_show_img=false;
+    if(argc>=5){
+        if(string(argv[4])=="1"){
+            is_show_img=true;
+        }
+    }
 
     vector<string> left_names;
     vector<string> right_names;
@@ -129,12 +150,20 @@ int main(int argc, char** argv)
     image_transport::Publisher pub_left = it.advertise("/kitti_pub/left",1);
     image_transport::Publisher pub_right = it.advertise("/kitti_pub/right",1);
 
+    ros::Subscriber sub_restart = nh.subscribe("/kitti_pub/pause", 100, PauseCallback);
+
     int index=0;
     double time=0.;
 
     TicToc tt;
 
     while(ros::ok()){
+        if(is_pause){
+            ros::spinOnce();
+            std::this_thread::sleep_for(100ms);
+            continue;
+        }
+
         tt.Tic();
 
         if(index >= left_names.size()){
@@ -145,12 +174,9 @@ int main(int argc, char** argv)
         cv::Mat left_img = cv::imread(left_names[index],-1);
         cv::Mat right_img = cv::imread(right_names[index],-1);
 
-        std::filesystem::path name(left_names[index]);
-        std::string name_stem =  name.stem().string();//获得文件名(不含后缀)
-
         std_msgs::Header header;
         header.stamp=ros::Time(time);
-        header.seq= std::stoi(name_stem);
+        header.seq=index;
 
         sensor_msgs::ImagePtr msg_left = cv_bridge::CvImage(header, "bgr8", left_img).toImageMsg();
         sensor_msgs::ImagePtr msg_right = cv_bridge::CvImage(header, "bgr8", right_img).toImageMsg();
@@ -159,10 +185,33 @@ int main(int argc, char** argv)
 
         ros::spinOnce();
 
-        int delta_t =(int) tt.Toc();
-        int wait_time = 100 - delta_t;
-        if(wait_time>0)
-            std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+        if(!is_show_img){
+            int delta_t =(int) tt.Toc();
+            int wait_time = kPubDeltaTime - delta_t;
+            if(wait_time>0)
+                std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+        }
+        else{
+            bool pause=false;
+            int delta_t =(int) tt.Toc();
+            int wait_time = kPubDeltaTime - delta_t;
+            wait_time = std::max(wait_time,1);
+            do{
+                cv::imshow("left_img",left_img);
+                int key = cv::waitKey(wait_time);
+                if(key ==' '){
+                    pause = !pause;
+                }
+                else if(key== 27){ //ESC
+                    return 0;
+                }
+                else if(key == 'r' || key == 'R'){
+                    index=0;
+                    time=0;
+                    pause=false;
+                }
+            } while (pause);
+        }
 
         time+=0.05; // 时间戳
         index++;

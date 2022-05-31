@@ -329,16 +329,20 @@ void InstanceManager::ManageTriangulatePoint()
 
             ///判断之前三角化得到的点是否在包围框内
             if(inst.is_initial){
+                string s;
                 for(auto &feat: lm.feats){
                     if(feat.is_triangulated){
                         Vec3d point_obj = inst.state[feat.frame].R.transpose() * (feat.p_w -inst.state[feat.frame].P);
-                        if( std::abs(point_obj.x()) > inst.box3d->dims.x()*3 ||
-                        std::abs(point_obj.y()) > inst.box3d->dims.y()*3 ||
-                        std::abs(point_obj.z()) > inst.box3d->dims.z()*3){
+                        if( std::abs(point_obj.x()) > inst.box3d->dims.x()*5 ||
+                        std::abs(point_obj.y()) > inst.box3d->dims.y()*5 ||
+                        std::abs(point_obj.z()) > inst.box3d->dims.z()*5){
                             feat.is_triangulated=false;
-                            log_text += fmt::format("del stereo frame:{} point_w:{}\n",feat.frame, VecToStr(feat.p_w));
+                            s += fmt::format(" f-p:{}|{} ",feat.frame, VecToStr(feat.p_w));
                         }
                     }
+                }
+                if(!s.empty()){
+                    log_text += fmt::format("del lid:{} {}\n",lm.id,s);
                 }
 
             }
@@ -385,19 +389,28 @@ void InstanceManager::PropagatePose()
 
     InstExec([&](int key,Instance& inst){
 
+        inst.vel = inst.point_vel;
+
         inst.state[frame].time = e->headers[frame];
 
         /*inst.state[frame].R = inst.state[frame].R;
         inst.state[frame].P = inst.state[frame].P;*/
 
-        if(!inst.is_init_velocity || inst.is_static){
+        /*if(!inst.is_init_velocity || inst.is_static){
             inst.state[frame].R = inst.state[last_frame].R;
             inst.state[frame].P = inst.state[last_frame].P;
             Debugv("InstanceManager::PropagatePose id:{} same",inst.id);
+        }*/
+        if(!inst.is_init_velocity || inst.is_static){
+            Mat3d Roioj=Sophus::SO3d::exp(inst.point_vel.a*time_ij).matrix();
+            Vec3d Poioj=inst.point_vel.v*time_ij;
+            inst.state[frame].R = Roioj * inst.state[last_frame].R;
+            inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
+            Debugv("InstanceManager::PropagatePose id:{} Poioj:{}",inst.id, VecToStr(Poioj));
         }
         else{
-            Mat3d Roioj=Sophus::SO3d::exp(inst.vel.a*time_ij).matrix();
-            Vec3d Poioj=inst.vel.v*time_ij;
+            Mat3d Roioj=Sophus::SO3d::exp(inst.point_vel.a*time_ij).matrix();
+            Vec3d Poioj=inst.point_vel.v*time_ij;
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
             Debugv("InstanceManager::PropagatePose id:{} Poioj:{}",inst.id, VecToStr(Poioj));
@@ -588,7 +601,8 @@ string InstanceManager::PrintInstanceInfo(bool output_lm,bool output_stereo){
     if(tracking_number_<1){
         return {};
     }
-    string s="InstanceInfo :\n";
+
+    string s =fmt::format("--------------InstanceInfo : {} --------------\n",e->headers[e->frame]);
     InstExec([&s,&output_lm,&output_stereo](int key,Instance& inst){
         if(inst.is_tracking){
             s+= fmt::format("id:{} landmarks:{} is_init:{} is_tracking:{} is_static:{} "
@@ -631,12 +645,29 @@ string InstanceManager::PrintInstanceInfo(bool output_lm,bool output_stereo){
         }
 
         },true);
-    return s;
+
+    s+="\n \n";
+
+    ///将这些信息保存到文件中
+
+    static bool first_run=true;
+    if(first_run){
+        std::ofstream fout( io_para::kOutputFolder + "features_info.txt", std::ios::out);
+        fout.close();
+        first_run=false;
+    }
+
+    std::ofstream fout( io_para::kOutputFolder + "features_info.txt", std::ios::app);
+    fout<<s<<endl;
+    fout.close();
+
+    return {};
 }
 
 
 string InstanceManager::PrintInstancePoseInfo(bool output_lm){
-    string log_text ;
+    string log_text =fmt::format("--------------PrintInstancePoseInfo : {} --------------\n",e->headers[e->frame]);
+
     InstExec([&log_text,&output_lm](int key,Instance& inst){
         log_text += fmt::format("id:{} info:\n box:{} v:{} a:{}\n",inst.id,
                                 VecToStr(inst.box3d->dims),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
@@ -654,7 +685,21 @@ string InstanceManager::PrintInstancePoseInfo(bool output_lm){
             log_text += fmt::format("<lid:{},n:{},d:{:.2f}> ",lm.id,lm.feats.size(),lm.depth);
         }
     });
-    return log_text;
+
+    ///将这些信息保存到文件中
+
+    static bool first_run=true;
+    if(first_run){
+        std::ofstream fout( io_para::kOutputFolder + "pose_info.txt", std::ios::out);
+        fout.close();
+        first_run=false;
+    }
+
+    std::ofstream fout( io_para::kOutputFolder + "pose_info.txt", std::ios::app);
+    fout<<log_text<<endl;
+    fout.close();
+
+    return {};
 }
 
 /**
@@ -756,7 +801,7 @@ void InstanceManager::SaveTrajectory(){
             //                   1,1,double alpha,Vec4d &box,
             //                 inst.box,Vec3d &location,double rotation_y,double score);
 
-            fout<<e->feature_frame.seq_id<<" "<<inst.id<<" "<<kitti::KittiLabel[inst.box3d->class_id]<<" "<<
+            fout<<e->feature_frame.seq_id<<" "<<inst.id<<" "<<kitti::GetKittiName(inst.box3d->class_id) <<" "<<
             1<<" "<<1<<" "<<
             alpha<<" "<<
             corner2d_min_pt.x()<<" "<<corner2d_min_pt.y()<<" "<<corner2d_max_pt.x()<<" "<<corner2d_max_pt.y()<<" "<<
@@ -802,14 +847,14 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
 {
     if(tracking_number_ < 1)
         return;
-    std::unordered_map<string,int> statistics;//用于统计每个误差项的数量
 
     for(auto &[key,inst] : instances){
         if(!inst.is_initial || !inst.is_tracking)
             continue;
-        if(inst.landmarks.size()<5)
+        if(inst.landmarks.size()<3)
             continue;
 
+        std::unordered_map<string,int> statistics;//用于统计每个误差项的数量
 
         ///添加包围框预测误差
         for(int i=0;i<=kWinSize;++i){
@@ -819,6 +864,7 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                 statistics["BoxDimsFactor"]++;
                 ///物体的方向误差
                 Mat3d R_cioi = Box3D::GetCoordinateRotationFromCorners(inst.boxes3d[i]->corners);
+
                 problem.AddResidualBlock(new BoxOrientationFactor(R_cioi,e->ric[0]), nullptr,e->para_Pose[i],inst.para_state[i]);
                 statistics["BoxOrientationFactor"]++;
 
@@ -826,9 +872,9 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                          loss_function,e->para_Pose[i],inst.para_state[i]);
                 statistics["BoxPoseFactor"]++;*/
 
-                problem.AddResidualBlock(new BoxPoseNormFactor(inst.boxes3d[i]->center,e->ric[0],e->tic[0],
+                /*problem.AddResidualBlock(new BoxPoseNormFactor(inst.boxes3d[i]->center,e->ric[0],e->tic[0],
                                                                e->Rs[i],e->Ps[i]),
-                                         loss_function,inst.para_state[i]);
+                                         loss_function,inst.para_state[i]);*/
                 statistics["BoxPoseNormFactor"]++;
 
                 /*///添加顶点误差
@@ -886,7 +932,6 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                      loss_function,
                                      inst.para_state[feat_j.frame],inst.para_box[0],inst.para_inv_depth[depth_index]);
             statistics["BoxEncloseTrianglePointFactor"]++;
-
 
 
             if(inst.is_static){ //对于静态物体,仅仅refine包围框
@@ -965,6 +1010,7 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                                             inst.last_vel.v,inst.last_vel.a),
                                                             loss_function,inst.para_speed[0]);
                     statistics["ConstSpeedStereoPointFactor"]++;
+
                 }
 
             }
@@ -973,10 +1019,11 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
 
         ///速度-位姿误差
         if(!inst.is_static && inst.is_init_velocity){
-            for(int i=1;i<=kWinSize;++i){
-                problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i-1].time,inst.state[i].time),
-                                         loss_function,inst.para_state[i-1],inst.para_state[i],inst.para_speed[0]);
+            for(int i=0;i <= kWinSize-1;++i){
+                problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i].time,inst.state[kWinSize].time),
+                                         loss_function,inst.para_state[i],inst.para_state[kWinSize],inst.para_speed[0]);
                 statistics["SpeedPoseFactor"]++;
+
                 /*problem.AddResidualBlock(new SpeedPoseSimpleFactor(inst.state[i-1].time,
                  inst.state[i].time,inst.state[i-1].R,inst.state[i-1].P,
                  inst.state[i].R,inst.state[i].P),
@@ -990,12 +1037,14 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
         }
 
 
+        //log
+        string log_text;
+        for(auto &pair : statistics)  if(pair.second>0) log_text += fmt::format("{} : {}\n",pair.first,pair.second);
+        Debugv("inst:{} 各个残差项的数量: \n{}",inst.id,log_text);
+
     } //inst
 
-    //log
-    string log_text;
-    for(auto &pair : statistics)  if(pair.second>0) log_text += fmt::format("{} : {}\n",pair.first,pair.second);
-    Debugv("各个残差项的数量: \n{}",log_text);
+
 }
 
 
@@ -1006,7 +1055,7 @@ void InstanceManager::Optimization(){
     ceres::Problem problem;
     ceres::LossFunction *loss_function = new ceres::HuberLoss(1.0);
 
-    Debugv(PrintInstancePoseInfo(false));
+    PrintInstancePoseInfo(false);
     ///添加残差块
     AddInstanceParameterBlock(problem);
 
@@ -1034,7 +1083,7 @@ void InstanceManager::Optimization(){
     Debugv("InstanceManager::Optimization | Solve:{} ms",tt.TocThenTic());
 
     GetOptimizationParameters();
-    Debugv(PrintInstancePoseInfo(false));
+    PrintInstancePoseInfo(false);
 
     Debugv("InstanceManager::Optimization all:{} ms",t_all.Toc());
 }

@@ -36,6 +36,15 @@ public:
             {"barrier",{"barrier"}}
     };
 
+    static std::string GetNuScenesName(int class_id){
+        if(class_id==-1){
+            return "DontCare";
+        }
+        else{
+            return NuScenesLabel[class_id];
+        }
+    }
+
     static int ConvertNuScenesToKitti(int nuscenes_id){
         std::string nuscenes_string = NuScenesLabel[nuscenes_id];
         std::string kitti_string = * NuScenesToKitti[nuscenes_string].begin();

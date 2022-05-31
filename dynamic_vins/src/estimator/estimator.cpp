@@ -1503,7 +1503,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
-            Debugv(insts_manager.PrintInstanceInfo(true,false));
+            insts_manager.PrintInstanceInfo(true,false);
 
             ///单独优化动态物体
             insts_manager.Optimization();

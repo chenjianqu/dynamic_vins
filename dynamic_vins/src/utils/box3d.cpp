@@ -23,7 +23,7 @@ Box3D::Box3D(vector<string> &tokens)
 {
     ///每行的前3个数字是类别,属性,分数
     class_id = NuScenes::ConvertNuScenesToKitti(std::stoi(tokens[0]));
-    class_name = kitti::KittiLabel[class_id];
+    class_name = kitti::GetKittiName(class_id) ;
 
     attribution_id = std::stoi(tokens[1]);
     //score = std::stod(tokens[2]);
@@ -64,7 +64,7 @@ Box3D::Box3D(vector<string> &tokens)
     box2d.center_pt = (box2d.min_pt + box2d.max_pt) / 2;
 
     ///计算包围框中心坐标
-    center = (output.row(0)+output.row(6)).transpose()  /2;
+    center = (output.row(0)+output.row(6)).transpose() / 2;
 
 }
 

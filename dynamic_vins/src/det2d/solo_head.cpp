@@ -10,8 +10,6 @@
 
 #include "solo_head.h"
 #include "det2d_parameter.h"
-#include "utils/dataset/coco_utils.h"
-#include "utils/dataset/kitti_utils.h"
 #include "utils/log_utils.h"
 #include "utils/torch_utils.h"
 
@@ -409,8 +407,8 @@ std::tuple<std::vector<cv::Mat>,std::vector<Box2D::Ptr>> Solov2::GetSingleSeg(st
 }
 
 
-void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &mask_tensor,
-                          std::vector<Box2D::Ptr> &insts){
+void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &seg_label_out,
+                          torch::Tensor &cate_labels_out,torch::Tensor &cate_scores_out){
     torch::Device device = outputs[0].device();
 
     constexpr int kBatchIndex=0;
@@ -522,10 +520,10 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     cate_labels = cate_labels.index({keep});
     sum_masks = sum_masks.index({keep});
 
-    for(int i=0;i<cate_scores.sizes()[0];++i){
+    /*for(int i=0;i<cate_scores.sizes()[0];++i){
         Debugs("id:{},cls:{},prob:{}", i, coco::CocoLabel[cate_labels[i].item().toInt()],
                cate_scores[i].item().toFloat());
-    }
+    }*/
 
     ///再次根据置信度进行排序
     sort_inds = torch::argsort(cate_scores,-1,true);
@@ -554,43 +552,10 @@ void Solov2::GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_in
     seg_preds=seg_preds.squeeze(0);
 
     ///阈值化
-    mask_tensor = seg_preds > det2d_para::kSoloMaskThr;
+    seg_label_out = seg_preds > det2d_para::kSoloMaskThr;
 
-    /*cout<<"cate_labels.sizes"<<cate_labels.sizes()<<endl;
-    cout<<"cate_scores.sizes"<<cate_scores.sizes()<<endl;
-    cout<<"sum_masks.sizes"<<sum_masks.sizes()<<endl;
-    cout<<"seg_masks.sizes"<<mask_tensor.sizes()<<endl;*/
-
-    ///根据mask计算包围框
-    for(int i=0;i<mask_tensor.sizes()[0];++i){
-        auto nz=mask_tensor[i].nonzero();
-        auto max_xy =std::get<0>( torch::max(nz,0) );
-        auto min_xy =std::get<0>( torch::min(nz,0) );
-
-        Box2D::Ptr inst = std::make_shared<Box2D>();
-        inst->id = i;
-
-        int coco_id = cate_labels[i].item().toInt();
-        string coco_name = coco::CocoLabel[coco_id];
-        if(auto it=coco::CocoToKitti.find(coco_name);it!=coco::CocoToKitti.end()){
-            string kitti_name = *(it->second.begin());
-            int kitti_id = kitti::GetKittiLabelIndex(kitti_name);
-            inst->class_id =kitti_id;
-            inst->class_name = kitti_name;
-        }
-        else{
-            inst->class_id =coco_id;
-            inst->class_name = coco_name;
-        }
-
-        inst->max_pt.x = max_xy[1].item().toInt();
-        inst->max_pt.y = max_xy[0].item().toInt();
-        inst->min_pt.x = min_xy[1].item().toInt();
-        inst->min_pt.y = min_xy[0].item().toInt();
-        inst->rect = cv::Rect2f(inst->min_pt,inst->max_pt);
-        inst->score = cate_scores[i].item().toFloat();
-        insts.push_back(inst);
-    }
+    cate_labels_out = cate_labels;
+    cate_scores_out = cate_scores;
 }
 
 

@@ -112,9 +112,11 @@ public:
     bool is_initial{false};//是否已经初始化位姿了
     bool is_tracking{true};//是否在滑动窗口中
     bool is_curr_visible{false};//当前帧是否可见
+    bool is_static{false};//物体是运动的还是静态的
 
     State state[(kWinSize + 1)]{}; //物体的位姿
     Vel3d vel,last_vel;//物体的速度
+    Vel3d point_vel;
     bool is_init_velocity{false};
 
     //优化过程中的变量
@@ -126,8 +128,7 @@ public:
     Estimator* e{nullptr};
 
     int triangle_num{0};//已经三角化的路标点的数量
-
-    bool is_static{false};//物体是运动的还是静态的
+    int static_frame{0};//连续静止了多少帧
 
     int age{0};//初始化后走过了多少帧
     int lost_number{0};//已经连续多少帧未检测到特征了

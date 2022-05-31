@@ -615,14 +615,16 @@ void Instance::DetermineStatic()
         Debugv("SetDynamicOrStatic id:{} triangle_num:{} avg_err:{} is_static:{}",id,triangle_num,avg_err,is_static);
     }*/
 
-    if(is_init_velocity && vel.v.norm() > 3){
+    /*if(is_init_velocity && vel.v.norm() > 2){
         is_static = false;
+        static_frame=0;
         return;
-    }
+    }*/
 
     ///下面根据场景流判断物体是否运动
     int cnt=0;
     Vec3d scene_vec=Vec3d::Zero();
+    Vec3d point_v=Vec3d::Zero();
 
     for(auto &lm : landmarks){
         if(lm.depth<=0)
@@ -631,36 +633,52 @@ void Instance::DetermineStatic()
             continue;
         //计算第一个观测所在的世界坐标
         Vec3d ref_vec;
+        double ref_time;
         if(lm.feats.front().is_triangulated){
             ref_vec = lm.feats.front().p_w;
         }
         else{
             //将深度转换到世界坐标系
-            ref_vec =  e->Rs[lm.feats.front().frame] * (e->ric[0] * (lm.feats.front().point * lm.depth) + e->tic[0]) + e->Ps[lm.feats.front().frame];
+            ref_vec =  e->Rs[lm.feats.front().frame] * (e->ric[0] * (lm.feats.front().point * lm.depth) + e->tic[0]) +
+                    e->Ps[lm.feats.front().frame];
         }
+        ref_time= e->headers[lm.feats.front().frame];
+
         //计算其它观测的世界坐标
         int feat_index=1;
         for(auto feat_it = (++lm.feats.begin());feat_it!=lm.feats.end();++feat_it){
             if(feat_it->is_triangulated){//计算i观测时点的3D位置
                 scene_vec += ( feat_it->p_w - ref_vec ) / feat_index; //加上平均距离向量
+                point_v +=  ( feat_it->p_w - ref_vec ) / (e->headers[feat_it->frame] -ref_time);
                 cnt++;
-                feat_index++;
             }
+            feat_index++;
         }
 
     }
     ///根据场景流判断是否是运动物体
-    if(cnt>5){
-        scene_vec /= cnt;
-        if(scene_vec.norm() > 1.){
+    if(cnt>3){
+        point_vel.v = point_v / cnt;
+        scene_vec = point_vel.v;
+
+        if(scene_vec.norm() > 1. || (std::abs(scene_vec.x())>0.8 ||
+            std::abs(scene_vec.y())>0.8 || std::abs(scene_vec.z())>0.8) ){
             is_static=false;
+            static_frame=0;
         }
         else{
-            is_static=true;
+            static_frame++;
         }
-        Debugv("DetermineStatic id:{} is_static:{} scene_vec:{}",id,is_static, VecToStr(scene_vec));
+
     }
 
+    if(static_frame>=3){
+        is_static=true;
+    }
+
+
+    Debugv("DetermineStatic id:{} is_static:{} vec_size:{} scene_vec:{} static_frame:{} point_vel.v:{}",
+           id,is_static,cnt, VecToStr(scene_vec),static_frame, VecToStr(point_vel.v));
 }
 
 

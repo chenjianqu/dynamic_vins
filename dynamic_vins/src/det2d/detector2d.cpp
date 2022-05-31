@@ -10,7 +10,6 @@
 
 #include "detector2d.h"
 
-#include <cstdlib>
 #include <iostream>
 #include <tuple>
 #include <optional>
@@ -53,6 +52,9 @@ Detector2D::Detector2D(const std::string& config_path)
 
     if(cfg::slam == SlamType::kRaw || cfg::is_input_seg){
         fmt::print("cfg::slam == SlamType::kRaw || cfg::is_input_seg. So don't need detector\n");
+        return;
+    }
+    if(det2d_para::use_offline){
         return;
     }
 
@@ -214,7 +216,10 @@ void Detector2D::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor,
         }
     }
 
-    solo_->GetSegTensor(outputs, pipeline_->image_info, mask_tensor, insts);
+    torch::Tensor cate_labels,cate_scores;
+    solo_->GetSegTensor(outputs, pipeline_->image_info, mask_tensor, cate_labels,cate_scores);
+    insts = Box2D::BuildBoxes2D(mask_tensor,cate_labels,cate_scores);
+
 }
 
 
@@ -327,5 +332,65 @@ void Detector2D::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<Box2
         cv::waitKey(1);
     }*/
 }
+
+
+torch::Tensor Detector2D::LoadTensor(const string &load_path){
+
+    std::ifstream input(load_path, std::ios::binary);
+    if(!input.is_open()){
+        string msg=fmt::format("Detector2D::LoadTensor failed in:{}",load_path);
+        Errors(msg);
+        std::cerr<<msg<<std::endl;
+        return {};
+    }
+
+    std::vector<char> bytes( (std::istreambuf_iterator<char>(input)),
+                             (std::istreambuf_iterator<char>()));
+    input.close();
+
+    torch::IValue x = torch::pickle_load(bytes);
+    torch::Tensor tensor = x.toTensor();
+    return tensor;
+}
+
+
+
+
+
+void Detector2D::Launch(SemanticImage &img){
+
+    if(det2d_para::use_offline){
+        image_seq_id = img.seq;
+
+        std::string seq_str = PadNumber(image_seq_id,6);
+
+        torch::Tensor seg_label = LoadTensor(det2d_para::kDet2dPreprocessPath +
+                fmt::format("seg_label_{}.pt",seq_str)).to(torch::kCUDA);
+        torch::Tensor cate_score = LoadTensor(det2d_para::kDet2dPreprocessPath +
+                fmt::format("cate_score_{}.pt",seq_str)).to(torch::kCUDA);
+        torch::Tensor cate_label = LoadTensor(det2d_para::kDet2dPreprocessPath +
+                fmt::format("cate_label_{}.pt",seq_str)).to(torch::kCUDA);
+
+        seg_label = seg_label > det2d_para::kSoloMaskThr;
+
+        ///根据mask计算包围框
+        img.boxes2d = Box2D::BuildBoxes2D(seg_label,cate_label,cate_score);
+        img.mask_tensor = seg_label;
+    }
+    else{
+        ForwardTensor(img.img_tensor, img.mask_tensor, img.boxes2d);
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
 
 }

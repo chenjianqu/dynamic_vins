@@ -58,9 +58,15 @@ public:
 
     inline static std::string kWarnUpImagePath;
 
+    inline static std::string kDet2dPreprocessPath;
+
     inline static int model_input_width;
     inline static int model_input_height;
     inline static int model_input_channel;
+
+
+    inline static bool use_offline;
+
 
     static void SetParameters(const std::string &config_path);
 

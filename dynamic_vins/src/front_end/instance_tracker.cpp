@@ -63,6 +63,8 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
 {
     std::optional<Vec3d> center=std::nullopt;
 
+    string log_text="BoxAssociate2Dto3D:\n";
+
     vector<bool> match_vec(boxes.size(),false);
     for(auto &[inst_id,inst] : instances_){
 
@@ -92,6 +94,12 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
         for(size_t i=0;i<boxes.size();++i){
             if(match_vec[i])
                 continue;
+
+            float iou = BoxIoU(inst.box2d->min_pt,inst.box2d->max_pt,boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
+
+            log_text += fmt::format("inst:{}-box:{},name:({},{}),iou:{}\n",inst_id,i,inst.box2d->class_name,
+                                    boxes[i]->class_name,iou);
+
             ///类别要一致
             if(inst.box2d->class_name != boxes[i]->class_name)
                 continue;
@@ -100,8 +108,8 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
             if(center && (*center - boxes[i]->center).norm() > 10)
                 continue;
 
-            float iou = BoxIoU(inst.box2d->min_pt,inst.box2d->max_pt,boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
-            if(iou>0.1){
+
+            if(iou>0){
                 candidate_match.push_back(boxes[i]);
                 candidate_idx.push_back(i);
             }
@@ -130,10 +138,12 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
         if(!candidate_match.empty()){
             match_vec[min_idx]=true;
             inst.box3d = boxes[min_idx];
-            Debugt("id:{} box2d:{} box3d:{}",inst_id,inst.box2d->class_name,
-                   NuScenes::GetClassName(boxes[min_idx]->class_id));
+            log_text += fmt::format("result : id:{} box2d:{} box3d:{}\n",inst_id,inst.box2d->class_name,
+                                    boxes[min_idx]->class_name);
         }
     }
+
+    Debugt(log_text);
 }
 
 

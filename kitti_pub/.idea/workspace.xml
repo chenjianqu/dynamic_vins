@@ -17,6 +17,7 @@
       <config projectName="kitti_pub" targetName="rosgraph_msgs_generate_messages_nodejs" />
       <config projectName="kitti_pub" targetName="sensor_msgs_generate_messages_cpp" />
       <config projectName="kitti_pub" targetName="roscpp_generate_messages_lisp" />
+      <config projectName="kitti_pub" targetName="pub_oxts_pose" />
       <config projectName="kitti_pub" targetName="rosgraph_msgs_generate_messages_cpp" />
       <config projectName="kitti_pub" targetName="std_msgs_generate_messages_eus" />
       <config projectName="kitti_pub" targetName="roscpp_generate_messages_nodejs" />
@@ -47,29 +48,34 @@
   <component name="ChangeListManager">
     <list default="true" id="06c4a2e3-563c-4f01-90c6-0b94616d33c5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/config/raw.rviz" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/config/rviz.rviz" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/output/estimator_log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/output/estimator_log.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/output/segmentor_log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/output/segmentor_log.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/output/tracker_log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/output/tracker_log.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/readme.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/FlowEstimating/flow_parameter.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/FlowEstimating/flow_parameter.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/FlowEstimating/flow_parameter.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/FlowEstimating/flow_parameter.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/InstanceSegment/solo_head.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/InstanceSegment/solo_head.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/feature_tracker.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/feature_tracker.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/feature_utils.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/feature_utils.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/instance_tracker.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/instance_tracker.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/instance_tracker.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/instance_tracker.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/segment_image.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/featureTracker/segment_image.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/launch/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/launch/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utility/call_back.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utility/call_back.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utility/camera_model.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utility/camera_model.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utility/coco_utils.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utility/coco_utils.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utility/coco_utils.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utility/coco_utils.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utility/parameters.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utility/parameters.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utility/parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utility/parameters.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/data/output/0002_ego-motion.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/data/output/0002_ego-motion.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/data/output/0002_object.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/data/output/0002_object.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/data/output/0003_ego-motion.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/data/output/0003_ego-motion.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/data/output/0003_object.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/data/output/0003_object.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/data/output/frontend_log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/data/output/frontend_log.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/data/output/img_process_log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/data/output/img_process_log.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/data/output/vio_log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/data/output/vio_log.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/estimator/estimator.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/estimator/estimator.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/estimator/estimator.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/estimator/estimator.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/estimator/instance_manager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/estimator/instance_manager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/estimator/instance_manager.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/estimator/instance_manager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/factor/box_factor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/factor/box_factor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/factor/box_factor.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/factor/box_factor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/factor/speed_factor.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/factor/speed_factor.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/factor/speed_factor.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/factor/speed_factor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/system/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/system/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/call_back.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/call_back.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/camera_pose_visualization.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/camera_pose_visualization.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/camera_pose_visualization.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/camera_pose_visualization.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/visualization.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/visualization.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/visualization.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins/src/utils/io/visualization.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins_eval/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins_eval/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins_eval/src/oxts_parser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins_eval/src/oxts_parser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins_eval/src/oxts_parser.h" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins_eval/src/oxts_parser.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins_eval/src/pub_oxts.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins_eval/src/pub_oxts.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../dynamic_vins_eval/src/save_oxts.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../dynamic_vins_eval/src/save_oxts.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/kitti_pub.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/kitti_pub.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -98,7 +104,12 @@
     <property name="cf.first.check.clang-format" value="false" />
     <property name="cidr.known.project.marker" value="true" />
     <property name="cmake.loaded.for.project" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$/CLionProjects/fmt_tets/CMakeLists.txt" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/src" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src" />
+    </key>
   </component>
   <component name="RunManager" selected="CMake Application.kitti_pub">
     <configuration name="clean_test_results" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="kitti_pub" TARGET_NAME="clean_test_results" CONFIG_NAME="Debug">
@@ -162,6 +173,11 @@
       </method>
     </configuration>
     <configuration name="kitti_pub" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="kitti_pub" TARGET_NAME="kitti_pub" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="kitti_pub" RUN_TARGET_NAME="kitti_pub">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="pub_oxts_pose" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="kitti_pub" TARGET_NAME="pub_oxts_pose" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="kitti_pub" RUN_TARGET_NAME="pub_oxts_pose">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
@@ -286,6 +302,7 @@
       <item itemvalue="CMake Application.geometry_msgs_generate_messages_nodejs" />
       <item itemvalue="CMake Application.geometry_msgs_generate_messages_py" />
       <item itemvalue="CMake Application.kitti_pub" />
+      <item itemvalue="CMake Application.pub_oxts_pose" />
       <item itemvalue="CMake Application.roscpp_generate_messages_cpp" />
       <item itemvalue="CMake Application.roscpp_generate_messages_eus" />
       <item itemvalue="CMake Application.roscpp_generate_messages_lisp" />
@@ -326,6 +343,12 @@
       <workItem from="1650966555660" duration="1524000" />
       <workItem from="1650971976230" duration="627000" />
       <workItem from="1650973811430" duration="11000" />
+      <workItem from="1653698377320" duration="1623000" />
+      <workItem from="1653701811237" duration="129000" />
+      <workItem from="1653713128394" duration="255000" />
+      <workItem from="1653717303625" duration="60000" />
+      <workItem from="1653718653503" duration="37000" />
+      <workItem from="1653896834809" duration="625000" />
     </task>
     <servers />
   </component>

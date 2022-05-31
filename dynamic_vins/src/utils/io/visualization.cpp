@@ -868,14 +868,14 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         }
 
         ///可视化历史轨迹
-        if(inst.is_initial && inst.is_init_velocity ){
+        if(inst.is_initial && inst.is_init_velocity && inst.vel.v.norm() > 1. ){
             auto history_marker = BuildTrajectoryMarker(key,inst.history_pose,inst.state,color_norm,action,4);
             markers.markers.push_back(history_marker);
         }
 
 
         ///计算可视化的速度
-        if(!inst.is_static && inst.is_init_velocity){
+        if(!inst.is_static && inst.is_init_velocity && inst.vel.v.norm() > 1.){
             Eigen::Vector3d vel = hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
             string text=fmt::format("{}\n({})", inst.id, VecToStr(vel));
             auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
@@ -887,6 +887,11 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         }
         else if(inst.is_static){
             string text=fmt::format("{} static", inst.id);
+            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
+            markers.markers.push_back(textMarker);
+        }
+        else{
+            string text=fmt::format("{}", inst.id);
             auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
             markers.markers.push_back(textMarker);
         }

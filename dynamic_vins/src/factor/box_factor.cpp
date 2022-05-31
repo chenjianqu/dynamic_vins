@@ -771,7 +771,7 @@ bool BoxOrientationFactor::Evaluate(double const *const *parameters, double *res
     Mat3d R_oiw = R_woi.transpose();
 
     Mat3d R = R_oiw * R_wbi * R_bc * R_cioi;//中间矩阵
-    Sophus::Vector3d err = SO3d(R).log();
+    Sophus::Vector3d err = SO3d(R).log() ;
 
     residuals[0] = err.x();
     residuals[1] = err.y();

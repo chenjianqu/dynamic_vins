@@ -24,6 +24,12 @@ void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path)
     std::string kBasicDir;
     fs["basic_dir"] >> kBasicDir;
 
+    fs["use_offline_det2d"] >> use_offline;
+
+    if(use_offline){
+        fs["det2d_preprocess_path"] >> kDet2dPreprocessPath;
+    }
+
     fs["solo_onnx_path"] >> kDetectorOnnxPath;
     kDetectorOnnxPath = kBasicDir + kDetectorOnnxPath;
     fs["solo_serialize_path"] >> kDetectorSerializePath;

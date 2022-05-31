@@ -44,8 +44,11 @@ aux_source_directory(src src_SOURCES)
 message("${src_SOURCES}")
 
 
-add_executable(oxts_parser src/oxts_parser.cpp)
-target_link_libraries(oxts_parser ${catkin_LIBRARIES} ${OpenCV_LIBS})
+add_executable(pub_oxts src/pub_oxts.cpp src/oxts_parser.cpp)
+target_link_libraries(pub_oxts ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+add_executable(save_oxts src/save_oxts.cpp src/oxts_parser.cpp)
+target_link_libraries(save_oxts ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 
 

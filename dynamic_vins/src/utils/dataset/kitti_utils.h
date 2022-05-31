@@ -18,6 +18,15 @@ namespace dynamic_vins::kitti{\
     inline static std::vector<std::string> KittiLabel = {
         "Car", "Van", "Truck","Pedestrian", "Person_sitting", "Cyclist","Tram", "Misc"};
 
+    static std::string GetKittiName(int class_id){
+        if(class_id==-1){
+            return "DontCare";
+        }
+        else{
+            return KittiLabel[class_id];
+        }
+    }
+
     static int GetKittiLabelIndex(const string &name){
         for(int i=0;i<KittiLabel.size();++i){
             if(KittiLabel[i]==name){

@@ -168,6 +168,8 @@ SemanticImage Dataloader::LoadStereo(int delta_time)
     SemanticImage img;
 
     if(index >= left_names.size()){
+        cfg::ok=false;
+        ros::shutdown();
         return img;
     }
     cout<<left_names[index]<<endl;

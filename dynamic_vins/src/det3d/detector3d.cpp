@@ -78,12 +78,7 @@ std::vector<Box3D::Ptr> Detector3D::ReadBox3dFromTxt(const std::string &txt_path
 
 
 std::vector<Box3D::Ptr> Detector3D::ReadBox3D(unsigned int seq_id){
-    ///补零
-    int name_width=6;
-    std::stringstream ss;
-    ss<<std::setw(name_width)<<std::setfill('0')<<seq_id;
-    string target_name;
-    ss >> target_name;
+    string target_name = PadNumber(seq_id,6);///补零
 
     ///获取目录中所有的文件名
     static vector<fs::path> names;
@@ -107,6 +102,7 @@ std::vector<Box3D::Ptr> Detector3D::ReadBox3D(unsigned int seq_id){
         string name_stem = names[mid].stem().string();
         if(name_stem == target_name){
             string n_path = (det3d_para::kDet3dPreprocessPath/names[mid]).string();
+            Debugs("det3d read:{}",n_path);
             boxes = ReadBox3dFromTxt(n_path,det3d_para::kDet3dScoreThreshold);
             success_read = true;
             break;

@@ -18,7 +18,6 @@
 #include <torchvision/vision.h>
 
 #include "utils/def.h"
-#include "utils/box2d.h"
 #include "pipeline.h"
 
 namespace dynamic_vins{\
@@ -34,8 +33,8 @@ public:
                          std::vector<Box2D::Ptr> &insts);
     std::tuple<std::vector<cv::Mat>,std::vector<Box2D::Ptr>> GetSingleSeg(std::vector<torch::Tensor> &outputs,
                                                                      ImageInfo& img_info);
-    void GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &mask_tensor,
-                      std::vector<Box2D::Ptr> &insts);
+    void GetSegTensor(std::vector<torch::Tensor> &outputs, ImageInfo& img_info, torch::Tensor &seg_label_out,
+                      torch::Tensor &cate_labels_out,torch::Tensor &cate_scores_out);
 
 private:
     torch::Tensor size_trans_;

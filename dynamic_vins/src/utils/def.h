@@ -114,6 +114,15 @@ inline std::string QuaternionToStr(const Eigen::Quaternion<T> &q){
     return fmt::format("x:{:.2f} y:{:.2f} z:{:.2f} w:{:.2f}",q.x(),q.y(),q.z(),q.w());
 }
 
+
+inline std::string PadNumber(int number,int name_width){
+    std::stringstream ss;
+    ss<<std::setw(name_width)<<std::setfill('0')<<number;
+    string target_name;
+    ss >> target_name;
+    return target_name;
+}
+
 }
 
 #endif //DYNAMIC_VINS_DEF_H

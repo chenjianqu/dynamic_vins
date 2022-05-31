@@ -745,7 +745,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
         }
         ///对速度的雅可比
         if (jacobians[2]){
-/*            Mat3d R=R_ojw * R_woi;
+           Mat3d R=R_ojw * R_woi;
 
             Sophus::Vector3d phi = Sophus::SO3d(R).log();
             double theta = - phi.norm();//右乘矩阵取负号
@@ -761,10 +761,10 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
 
             Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> jacobian_speed(jacobians[2]);
             jacobian_speed.leftCols<3>() = jacobian_v;
-            jacobian_speed.middleCols(3,3) = jacobian_w;*/
+            jacobian_speed.middleCols(3,3) = jacobian_w;
 
-            Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> jacobian_speed(jacobians[2]);
-            jacobian_speed = Eigen::Matrix<double,6,6>::Zero();
+            /*Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> jacobian_speed(jacobians[2]);
+            jacobian_speed = Eigen::Matrix<double,6,6>::Zero();*/
 
         }
 

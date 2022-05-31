@@ -26,14 +26,13 @@ basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 #直接读取图像
 dataset_sequence: "0002"
 
-
 kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0002.txt" #相机内参
-
 det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0002/" #预处理的3D框
+det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/0002/" #预处理的2D框
 
 use_dataloader: 1 #是否直接读取图像
 #以下选项当use_dataloader=1时有效
-image_dataset_period: 200 #读取的时间周期,毫秒
+image_dataset_period: 100 #读取的时间周期,毫秒
 image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0002/"
 image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0002/"
 
@@ -46,6 +45,7 @@ image_height: 375
 ######################### 预处理的3D包围框 ########################
 det3d_score_threshold: 0.15
 use_offline_det3d: 1
+use_offline_det2d: 1
 
 ####################### 光流的参数 ########################
 

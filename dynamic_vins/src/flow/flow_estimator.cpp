@@ -31,12 +31,12 @@ FlowEstimator::FlowEstimator(const std::string& config_path){
 
 
 void FlowEstimator::Launch(SemanticImage &img){
-        if(flow_para::use_offline_flow){
-            SynchronizeReadFlow(img.seq);
-        }
-        else{
-            SynchronizeForward(img.img_tensor);
-        }
+    if(flow_para::use_offline_flow){
+        SynchronizeReadFlow(img.seq);
+    }
+    else{
+        SynchronizeForward(img.img_tensor);
+    }
 }
 
 cv::Mat FlowEstimator::WaitResult(){

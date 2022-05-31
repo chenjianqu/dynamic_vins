@@ -24,12 +24,19 @@ public:
     inline static std::vector<std::string> CocoLabel;
 
     inline static std::map<std::string,std::set<std::string>> CocoToKitti = {
-            {"car",{"Car","Van","Truck"}},{"person",{"Pedestrian","Person_sitting"}},
-            {"truck",{"Truck"}}
+            {"car",{"Car","Van","Truck"}},
+            {"bus",{"Car"}},
+            {"truck",{"Car","Truck"}},
+            {"train",{"Car","Tram"}},
+            {"bicycle",{"Cyclist"}},
+            {"motorcycle",{"Cyclist"}},
+            {"person",{"Pedestrian","Person_sitting"}}
     };
+
 
     inline static std::map<std::string,std::set<std::string>> CocoToNuScenes = {
             {"car",{"car","truck","trailer","bus","construction_vehicle"}},
+            {"bus",{"bus"}},
             {"bicycle",{"bicycle"}},
             {"motorcycle",{"motorcycle"}},
             {"person",{"pedestrian"}}
