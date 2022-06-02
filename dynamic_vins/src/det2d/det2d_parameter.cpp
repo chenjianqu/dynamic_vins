@@ -11,6 +11,7 @@
 #include "det2d_parameter.h"
 
 #include <opencv2/opencv.hpp>
+#include <spdlog/spdlog.h>
 
 
 
@@ -27,7 +28,15 @@ void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path)
     fs["use_offline_det2d"] >> use_offline;
 
     if(use_offline){
+        if(fs["det2d_preprocess_path"].isNone()){
+            std::cerr<<fmt::format("use_offline_det2d=true,but not set det2d_preprocess_path")<<std::endl;
+            std::terminate();
+        }
+
+        std::string kDatasetSequence;
+        fs["dataset_sequence"]>>kDatasetSequence;
         fs["det2d_preprocess_path"] >> kDet2dPreprocessPath;
+        kDet2dPreprocessPath = kDet2dPreprocessPath+kDatasetSequence+"/";
     }
 
     fs["solo_onnx_path"] >> kDetectorOnnxPath;

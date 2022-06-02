@@ -205,7 +205,7 @@ void FeatureTrack()
                 frame.features  = feature_tracker->TrackSemanticImage(*img);
 
                 t_inst_track.join();
-                frame.instances = insts_tracker->GetOutputFeature();
+                frame.instances = insts_tracker->Output();
 
                 Infot("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.TocThenTic());
 

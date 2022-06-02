@@ -144,6 +144,9 @@ void VioParameters::SetParameters(const std::string &config_path)
     kInstanceStaticErrThreshold = fs["instance_static_err_threshold"];
     kInstanceInitMinNum = fs["instance_init_min_num"];
 
+    if(!fs["print_detail"].isNone()){
+        fs["print_detail"]>>is_print_detail;
+    }
 
 
     fs.release();

@@ -45,8 +45,20 @@ void IOParameter::SetParameters(const std::string &config_path)
 
     fs["use_dataloader"]>>use_dataloader;
     if(use_dataloader){
-        fs["image_dataset_left"]>>kImageDatasetLeft;
+
+        if(fs["image_dataset_left"].isNone() || fs["image_dataset_right"].isNone()){
+            std::cerr<<fmt::format("use_dataloader=true,but not set image_dataset_left or image_dataset_right")<<std::endl;
+            std::terminate();
+        }
+
+        std::string kDatasetSequence;
+        fs["dataset_sequence"]>>kDatasetSequence;
+        fs["image_dataset_left"] >> kImageDatasetLeft;
+        kImageDatasetLeft = kImageDatasetLeft+kDatasetSequence+"/";
+
         fs["image_dataset_right"]>>kImageDatasetRight;
+        kImageDatasetRight = kImageDatasetRight+kDatasetSequence+"/";
+
         fs["image_dataset_period"] >> kImageDatasetPeriod;
     }
     else{

@@ -32,7 +32,7 @@
 #include "estimator/landmark.h"
 #include "mot/deep_sort.h"
 #include "feature_utils.h"
-#include "estimator/feature_queue.h"
+#include "estimator/semantic_feature.h"
 #include "utils/box3d.h"
 #include "instance_feature.h"
 
@@ -47,7 +47,7 @@ public:
     void InstsTrack(SemanticImage img);
     void InstsTrackByMatching(SemanticImage img);
 
-    std::map<unsigned int,FeatureInstance> GetOutputFeature();
+    std::map<unsigned int,FeatureInstance> Output();
     void AddViodeInstances(SemanticImage &img);
     cv::Mat AddInstancesByIoU(SemanticImage &img);
     void AddInstancesByIouWithGPU(const SemanticImage &img);

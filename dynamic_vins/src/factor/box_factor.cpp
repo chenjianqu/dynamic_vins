@@ -655,7 +655,7 @@ bool BoxEncloseTrianglePointFactor::Evaluate(double const *const *parameters, do
         }
         ///对逆深度求导
         if(jacobians[2]){
-            Vec3d I_v = R_ojw * pts_w_j;
+/*            Vec3d I_v = R_ojw * pts_w_j;
             Mat3d N_pts = Mat3d::Zero();//指示矩阵
             N_pts(0,0)= I_v.x() / std::abs(I_v.x());
             N_pts(1,1)= I_v.y() / std::abs(I_v.y());
@@ -663,8 +663,10 @@ bool BoxEncloseTrianglePointFactor::Evaluate(double const *const *parameters, do
 
 
             Eigen::Map<Vec3d> jacobian_feature(jacobians[2]);
-            jacobian_feature = N_pts * R_ojw * R_wbj * R_bc * pts_j_td / (inv_dep_j*inv_dep_j);
-            //jacobian_feature=Vec3d::Zero();
+            jacobian_feature = N_pts * R_ojw * R_wbj * R_bc * pts_j_td / (inv_dep_j*inv_dep_j);*/
+
+            Eigen::Map<Vec3d> jacobian_feature(jacobians[2]);
+            jacobian_feature=Vec3d::Zero();
         }
     }
 
@@ -771,7 +773,7 @@ bool BoxOrientationFactor::Evaluate(double const *const *parameters, double *res
     Mat3d R_oiw = R_woi.transpose();
 
     Mat3d R = R_oiw * R_wbi * R_bc * R_cioi;//中间矩阵
-    Sophus::Vector3d err = SO3d(R).log() ;
+    Sophus::Vector3d err = SO3d(R).log()  ;
 
     residuals[0] = err.x();
     residuals[1] = err.y();

@@ -115,8 +115,11 @@ public:
     bool is_static{false};//物体是运动的还是静态的
 
     State state[(kWinSize + 1)]{}; //物体的位姿
-    Vel3d vel,last_vel;//物体的速度
-    Vel3d point_vel;
+    Velocity vel,last_vel;//物体的速度
+
+    Velocity point_vel;
+    std::list<Velocity> history_vel;
+
     bool is_init_velocity{false};
 
     //优化过程中的变量

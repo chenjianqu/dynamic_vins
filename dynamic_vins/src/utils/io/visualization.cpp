@@ -868,7 +868,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         }
 
         ///可视化历史轨迹
-        if(inst.is_initial && inst.is_init_velocity && inst.vel.v.norm() > 1. ){
+        if(inst.is_initial ){
             auto history_marker = BuildTrajectoryMarker(key,inst.history_pose,inst.state,color_norm,action,4);
             markers.markers.push_back(history_marker);
         }
@@ -956,7 +956,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
     }
 
     ///设置删除当前帧不显示的marker
-    std::set<int> curr_marker_ids;
+    /*std::set<int> curr_marker_ids;
     for(auto &m:markers.markers){
         curr_marker_ids.insert(m.id);
     }
@@ -975,7 +975,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         msg.type=Marker::LINE_STRIP;
         markers.markers.push_back(msg);
     }
-    last_marker_ids=curr_marker_ids;
+    last_marker_ids=curr_marker_ids;*/
 
     pub_instance_marker->publish(markers);
 

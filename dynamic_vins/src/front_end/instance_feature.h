@@ -102,7 +102,7 @@ struct InstFeat{
 
     int lost_num{0};//无法被跟踪的帧数,超过一定数量该实例将被删除
 
-    unsigned int last_frame_cnt{0};
+    bool is_curr_visible{false};
 
     Box2D::Ptr box2d;
     Box3D::Ptr box3d;

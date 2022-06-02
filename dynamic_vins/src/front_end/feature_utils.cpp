@@ -351,31 +351,7 @@ void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label, co
     }
 }
 
-/**
- * 计算两个包围框的IoU
- * @param box1_minPt
- * @param box1_maxPt
- * @param box2_minPt
- * @param box2_maxPt
- * @return
- */
-float BoxIoU(const cv::Point2f &box1_minPt, const cv::Point2f &box1_maxPt,
-             const cv::Point2f &box2_minPt, const cv::Point2f &box2_maxPt){
-    cv::Point2f center1 = (box1_minPt+box1_maxPt)/2.f;
-    cv::Point2f center2 = (box2_minPt+box2_maxPt)/2.f;
-    float w1 = box1_maxPt.x - (float)box1_minPt.x;
-    float h1 = box1_maxPt.y - (float)box1_minPt.y;
-    float w2 = box2_maxPt.x - (float)box2_minPt.x;
-    float h2 = box2_maxPt.y - (float)box2_minPt.y;
 
-    if(std::abs(center1.x - center2.x) >= (w1/2+w2/2) && std::abs(center1.y - center2.y) >= (h1/2+h2/2)){
-        return 0;
-    }
-
-    float inter_w = w1 + w2 - (std::max(center1.x + w1, center2.x + w2) - std::min(center1.x, center2.x));
-    float inter_h = h1 + h2 - (std::max(center1.y + h1, center2.y + h2) - std::min(center1.y, center2.y));
-    return (inter_h*inter_w) / (w1*h1 + w2*h2 - inter_h*inter_w);
-}
 
 
 /**

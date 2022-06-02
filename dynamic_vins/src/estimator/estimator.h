@@ -39,7 +39,7 @@
 #include "utils/def.h"
 #include "landmark.h"
 #include "vio_parameters.h"
-#include "feature_queue.h"
+#include "semantic_feature.h"
 
 #include "factor/imu_factor.h"
 #include "initial/solve_5pts.h"

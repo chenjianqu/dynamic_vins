@@ -33,7 +33,7 @@
 
 #include "utils/def.h"
 #include "utils/parameters.h"
-#include "feature_queue.h"
+#include "semantic_feature.h"
 
 
 namespace dynamic_vins{\

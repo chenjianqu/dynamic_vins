@@ -352,8 +352,15 @@ bool ProjInst12FactorSimple::Evaluate(double const *const *parameters, double *r
     Eigen::Map<Vec2d> residual(residuals);
 
     double dep_i = pts_cam_i.z();
+
+
+
     double inv_dep_i=1. / dep_i;
     residual = (pts_cam_i / dep_i).head<2>() - pts_i.head<2>();
+
+    if(std::isnan(residual.x())){
+        Errorv("found inf,inv_dep_j:{} pts_cam_i:{} pts_i:{}",inv_dep_j, VecToStr(pts_cam_i), VecToStr(pts_i));
+    }
 
     residual = sqrt_info * residual;
 

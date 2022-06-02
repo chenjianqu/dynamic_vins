@@ -1503,10 +1503,16 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
-            insts_manager.PrintInstanceInfo(true,false);
+
+            if(para::is_print_detail){
+                insts_manager.PrintInstanceInfo(true,false);
+            }
 
             ///单独优化动态物体
             insts_manager.Optimization();
+
+            insts_manager.OutliersRejection();
+
         }
         Debugv("--完成处理动态物体--");
 
@@ -1589,7 +1595,6 @@ void Estimator::ProcessMeasurements(){
             std::this_thread::sleep_for(5ms);
             continue;
         }
-        Warnv("----------Time : {} ----------", std::to_string(*front_time));
 
         tt.Tic();
         ///获取上一帧时刻到当前时刻的IMU测量值
@@ -1600,6 +1605,9 @@ void Estimator::ProcessMeasurements(){
         }
         //获取前端得到的特征
         feature_frame = *(feature_queue.request_frame());
+
+        Warnv("----------Time:{} seq:{} ----------", std::to_string(*front_time),feature_frame.seq_id);
+
 
         ///IMU预积分 和 状态递推
         if(cfg::is_use_imu){

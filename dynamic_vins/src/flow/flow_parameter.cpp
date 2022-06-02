@@ -45,9 +45,11 @@ void FlowParameter::SetParameters(const std::string &config_path)
             std::cerr<<fmt::format("use_offline_flow=true,but not set flow_offline_path")<<std::endl;
             std::terminate();
         }
-        else{
-            fs["flow_offline_path"] >> kFlowOfflinePath;
-        }
+
+        std::string kDatasetSequence;
+        fs["dataset_sequence"]>>kDatasetSequence;
+        fs["flow_offline_path"] >> kFlowOfflinePath;
+        kFlowOfflinePath = kFlowOfflinePath+kDatasetSequence+"/";
     }
 
 

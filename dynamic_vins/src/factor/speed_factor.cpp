@@ -679,6 +679,8 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
     residuals[5]=err_w.z();
 
     if(jacobians){
+        constexpr double eta=0.0001;
+
         if (jacobians[0]){
             Mat3d R = R_delta.matrix().transpose() * R_ojw * R_woi;
 
@@ -686,7 +688,6 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
             double theta = - phi.norm();//右乘矩阵取负号
             Vec3d a = phi.normalized();
 
-            constexpr double eta=0.0001;
             if(std::abs(theta)<eta){
                 Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[0]);
                 jacobian_pose = Eigen::Matrix<double, 6, 7>::Zero();
@@ -721,6 +722,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
             double theta = - phi.norm();//右乘矩阵取负号
             Vec3d a = phi.normalized();
 
+
             constexpr double eta=0.0001;
             if(std::abs(theta)<eta){
                 Eigen::Map<Eigen::Matrix<double, 6, 7, Eigen::RowMajor>> jacobian_pose(jacobians[1]);
@@ -750,6 +752,15 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
             Sophus::Vector3d phi = Sophus::SO3d(R).log();
             double theta = - phi.norm();//右乘矩阵取负号
             Vec3d a = phi.normalized();
+
+            constexpr double eta=0.0001;
+            if(std::abs(theta)<eta){
+                Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> jacobian_pose(jacobians[2]);
+                jacobian_pose = Eigen::Matrix<double, 6, 6>::Zero();
+            }
+            else{
+
+
             //构造右乘矩阵
             Mat3d J_r = sin(theta)/theta * Mat3d::Identity() + (1-sin(theta)/theta) * a * a.transpose() + (1-cos(theta)/theta)*hat(a);
 
@@ -765,7 +776,7 @@ bool SpeedPoseFactor::Evaluate(double const *const *parameters, double *residual
 
             /*Eigen::Map<Eigen::Matrix<double, 6, 6, Eigen::RowMajor>> jacobian_speed(jacobians[2]);
             jacobian_speed = Eigen::Matrix<double,6,6>::Zero();*/
-
+            }
         }
 
 

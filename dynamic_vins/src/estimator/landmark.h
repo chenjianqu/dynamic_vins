@@ -23,8 +23,8 @@
 namespace dynamic_vins{\
 
 
-struct Vel3d{
-    Vel3d()=default;
+struct Velocity{
+    Velocity()=default;
 
     void SetZero(){
         v=Vec3d::Zero();
@@ -35,7 +35,7 @@ struct Vel3d{
 };
 
 
-struct Vel : Vel3d{
+struct Vel : Velocity{
     Vel()=default;
     Vec2d img_v;
 };

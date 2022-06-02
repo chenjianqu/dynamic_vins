@@ -19,22 +19,23 @@ estimate_extrinsic: 0
 
 visual_inst_duration: 120  #物体可视化的持续时间
 
-basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
+basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 
 
 #直接读取图像
-dataset_sequence: "0002"
+dataset_sequence: "0004"
 
 kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0002.txt" #相机内参
-det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0002/" #预处理的3D框
-det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/0002/" #预处理的2D框
+
+det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/" #预处理的3D框
+det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/" #预处理的2D框
 
 use_dataloader: 1 #是否直接读取图像
 #以下选项当use_dataloader=1时有效
 image_dataset_period: 100 #读取的时间周期,毫秒
-image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0002/"
-image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/0002/"
+image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/"
+image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/"
 
 ####################### 相机参数 ########################
 
@@ -50,10 +51,9 @@ use_offline_det2d: 1
 ####################### 光流的参数 ########################
 
 use_dense_flow: 0 #是否使用稠密光流
-use_background_flow: 1 #背景特征点是否使用稠密光流
+use_background_flow: 0 #背景特征点是否使用稠密光流
 use_offline_flow: 1 #是否使用预计算的光流
-
-flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0002/" #预计算的光流
+flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/" #预计算的光流
 
 
 fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
@@ -149,6 +149,8 @@ feature_tracker_log_flush: "debug"
 segmentor_log_path: "data/output/img_process_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
+
+print_detail: 1
 
 ####################### 动态物体参数 ########################
 instance_init_min_num: 4

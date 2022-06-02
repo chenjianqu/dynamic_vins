@@ -8,8 +8,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_FEATURE_QUEUE_H
-#define DYNAMIC_VINS_FEATURE_QUEUE_H
+#ifndef DYNAMIC_VINS_SEMANTIC_FEATURE_H
+#define DYNAMIC_VINS_SEMANTIC_FEATURE_H
 
 #include <optional>
 #include <mutex>
@@ -131,4 +131,4 @@ extern FeatureQueue feature_queue;
 
 }
 
-#endif //DYNAMIC_VINS_FEATURE_QUEUE_H
+#endif //DYNAMIC_VINS_SEMANTIC_FEATURE_H

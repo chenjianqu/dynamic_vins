@@ -9,7 +9,7 @@
  *******************************************************/
 
 
-#include "feature_queue.h"
+#include "semantic_feature.h"
 
 namespace dynamic_vins{\
 

@@ -403,6 +403,8 @@ void Instance::OutlierRejection()
         if(lm.feats.empty() || lm.depth <= 0)
             continue;
 
+        if(std::isfinite(lm.depth)){
+
         ///根据包围框去除外点
         /*int frame=lm.feats[0].frame;
         Vec3d pts_w = e->Rs[frame] * (e->ric[0] * (lm.feats[0].point * lm.depth) + e->tic[0]) + e->Ps[frame];
@@ -458,6 +460,17 @@ void Instance::OutlierRejection()
         index++;
         if(ave_err > 30){
             log_text += fmt::format("del lid:{},d:{:.2f},avg:{:.2f} \n", lm.id, lm.depth, ave_err);
+            it->feats.erase(it->feats.begin());//删除第一个观测
+            it->depth=-1;
+            if(it->feats.empty()){
+                landmarks.erase(it);
+            }
+            num_delete++;
+        }
+
+        }
+        else{
+            log_text += fmt::format("del lid:{} not_finite,d:{:.2f} \n", lm.id, lm.depth);
             it->feats.erase(it->feats.begin());//删除第一个观测
             it->depth=-1;
             if(it->feats.empty()){
@@ -649,17 +662,19 @@ void Instance::DetermineStatic()
         for(auto feat_it = (++lm.feats.begin());feat_it!=lm.feats.end();++feat_it){
             if(feat_it->is_triangulated){//计算i观测时点的3D位置
                 scene_vec += ( feat_it->p_w - ref_vec ) / feat_index; //加上平均距离向量
-                point_v +=  ( feat_it->p_w - ref_vec ) / (e->headers[feat_it->frame] -ref_time);
+                point_v   += ( feat_it->p_w - ref_vec ) / (e->headers[feat_it->frame] -ref_time);
                 cnt++;
             }
             feat_index++;
         }
-
     }
+
     ///根据场景流判断是否是运动物体
     if(cnt>3){
-        point_vel.v = point_v / cnt;
-        scene_vec = point_vel.v;
+        scene_vec = point_v / cnt;
+        Velocity v;
+        v.v = scene_vec;
+        history_vel.push_back(v);
 
         if(scene_vec.norm() > 1. || (std::abs(scene_vec.x())>0.8 ||
             std::abs(scene_vec.y())>0.8 || std::abs(scene_vec.z())>0.8) ){
@@ -669,13 +684,25 @@ void Instance::DetermineStatic()
         else{
             static_frame++;
         }
-
     }
+
+    if(!history_vel.empty()){
+        point_vel.SetZero();
+        for(auto &v:history_vel){
+            point_vel.v += v.v;
+        }
+        point_vel.v /= (double)history_vel.size();
+    }
+    point_vel.v.y()=0;
+
+    if(history_vel.size()>10){
+        history_vel.pop_front();
+    }
+
 
     if(static_frame>=3){
         is_static=true;
     }
-
 
     Debugv("DetermineStatic id:{} is_static:{} vec_size:{} scene_vec:{} static_frame:{} point_vel.v:{}",
            id,is_static,cnt, VecToStr(scene_vec),static_frame, VecToStr(point_vel.v));

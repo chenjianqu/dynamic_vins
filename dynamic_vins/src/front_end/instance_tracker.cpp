@@ -67,8 +67,9 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
 
     vector<bool> match_vec(boxes.size(),false);
     for(auto &[inst_id,inst] : instances_){
-
-        inst.box3d.reset();
+        if(!inst.is_curr_visible){
+            continue;
+        }
 
         /*auto it=estimated_info.find(inst_id);
         if(it!=estimated_info.end()){
@@ -95,7 +96,9 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
             if(match_vec[i])
                 continue;
 
-            float iou = BoxIoU(inst.box2d->min_pt,inst.box2d->max_pt,boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
+            cv::Rect inst_rect(inst.box2d->min_pt,inst.box2d->max_pt);
+            cv::Rect proj_rect(boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
+            float iou = BoxIoU(inst_rect,proj_rect);
 
             log_text += fmt::format("inst:{}-box:{},name:({},{}),iou:{}\n",inst_id,i,inst.box2d->class_name,
                                     boxes[i]->class_name,iou);
@@ -109,7 +112,7 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
                 continue;
 
 
-            if(iou>0){
+            if(iou>0.1){
                 candidate_match.push_back(boxes[i]);
                 candidate_idx.push_back(i);
             }
@@ -138,8 +141,9 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
         if(!candidate_match.empty()){
             match_vec[min_idx]=true;
             inst.box3d = boxes[min_idx];
-            log_text += fmt::format("result : id:{} box2d:{} box3d:{}\n",inst_id,inst.box2d->class_name,
-                                    boxes[min_idx]->class_name);
+
+            //log_text += fmt::format("result : id:{} box2d:{} box3d:{}\n",inst_id,inst.box2d->class_name,
+            //                        boxes[min_idx]->class_name);
         }
     }
 
@@ -158,6 +162,11 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     curr_time=img.time0;
 
     ///MOT
+    for(auto &[inst_id,inst]:instances_){
+        inst.is_curr_visible=false;
+        inst.box2d.reset();
+        inst.box3d.reset();
+    }
     if(cfg::dataset == DatasetType::kKitti){
         AddInstancesByTracking(img);
     }
@@ -167,6 +176,15 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     else{
         throw std::runtime_error("have not this dataset type");
     }
+    //将当前帧未观测到的box设置状态
+    for(auto& [key,inst] : instances_){
+        if(!inst.is_curr_visible){
+            inst.lost_num++;
+        }
+        else{
+            inst.lost_num=0;
+        }
+    }
     Infot("instsTrack AddInstances:{} ms", tic_toc.TocThenTic());
 
     ///2d box和3d box关联
@@ -174,12 +192,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
     is_exist_inst_ = !img.boxes2d.empty();
 
-    for(auto& [key,inst] : instances_){
-        if(inst.last_frame_cnt < global_frame_id)
-            inst.lost_num++;
-        else if(inst.last_frame_cnt == global_frame_id)
-            inst.lost_num=0;
-    }
+
 
     if(is_exist_inst_){
         ///形态学运算
@@ -188,7 +201,9 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
         ///对每个目标进行光流跟踪
         ExecInst([&](unsigned int key, InstFeat& inst){
-            inst.TrackLeft(img,prev_img);
+            if(inst.is_curr_visible){
+                inst.TrackLeft(img,prev_img);
+            }
         });
         Infot("instsTrack flowTrack:{} ms", tic_toc.TocThenTic());
 
@@ -234,6 +249,9 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 for(auto &[key,inst] : instances_){
                     if(inst.lost_num>0 || inst.curr_points.size()>fe_para::kMaxDynamicCnt)
                         continue;
+                    if(!inst.is_curr_visible)
+                        continue;
+
                     if(inst.box2d->mask_cv.at<uchar>(pt) >= 1){
                         inst.curr_points.emplace_back(pt);
                         inst.ids.emplace_back(InstFeat::global_id_count++);
@@ -247,6 +265,8 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         }
 
         for(auto& [key,inst] : instances_){
+            if(!inst.is_curr_visible)
+                continue;
             ///去畸变和计算归一化坐标
             inst.UndistortedPts(camera_);
             ///计算特征点的速度
@@ -258,6 +278,8 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         /// 右边相机图像的跟踪
         if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
             ExecInst([&](unsigned int key, InstFeat& inst){
+                if(!inst.is_curr_visible)
+                    return;
                 inst.TrackRight(img);
                 inst.RightUndistortedPts(right_camera_);
                 inst.RightPtsVelocity(curr_time - last_time);
@@ -315,13 +337,17 @@ void InstsFeatManager::ManageInstances()
  ** 用于将特征点传到VIO模块
  * @param result
  */
-std::map<unsigned int,FeatureInstance> InstsFeatManager::GetOutputFeature()
+std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
 {
     std::map<unsigned int,FeatureInstance> result;
 
-    string log_text="GetOutputFeature:\n";
+    string log_text= fmt::format("GetOutputFeature:{}\n",prev_img.seq);
 
     ExecInst([&](unsigned int key, InstFeat& inst){
+        if(inst.lost_num>0 || inst.curr_points.empty() || !inst.is_curr_visible){
+            return;
+        }
+
         FeatureInstance  features_map;
         features_map.color = inst.color;
         features_map.box2d = inst.box2d;
@@ -348,7 +374,7 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::GetOutputFeature()
             }
         }
         result.insert({key,features_map});
-        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{}", key,inst.box2d->class_name,
+        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{}\n", key,inst.box2d->class_name,
                                 features_map.size(), right_cnt);
     });
     Debugt(log_text);
@@ -377,7 +403,8 @@ void InstsFeatManager::AddViodeInstances(SemanticImage &img)
         inst.box2d = inst_info;
 
         inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->mask_center);
-        inst.last_frame_cnt = global_frame_id;
+        inst.is_curr_visible=true;
+
         Debugt("inst:{} mask_img:({}x{}) local_mask:({}x{})", key,
                inst.box2d->mask_cv.rows,inst.box2d->mask_cv.cols,
                inst.box2d->mask_cv.rows, inst.box2d->mask_cv.cols);
@@ -591,8 +618,7 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
         if(it == instances_.end()){
             InstFeat inst_feat(id);
             inst_feat.box2d = det_box;
-
-            inst_feat.last_frame_cnt = global_frame_id;
+            inst_feat.is_curr_visible=true;
             instances_.insert({id, inst_feat});
             log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, det_box->class_name,
                                     inst_feat.box2d->min_pt.x,inst_feat.box2d->min_pt.y,inst_feat.box2d->max_pt.x,
@@ -600,8 +626,8 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
         }
         else{
             it->second.box2d = det_box;
+            it->second.is_curr_visible=true;
 
-            it->second.last_frame_cnt = global_frame_id;
             log_text += fmt::format("Update inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",
                                     id, det_box->class_name, it->second.box2d->min_pt.x, it->second.box2d->min_pt.y,
                                     it->second.box2d->max_pt.x, it->second.box2d->max_pt.y);
@@ -644,15 +670,12 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
 {
     if(cfg::slam != SlamType::kDynamic)
         return;
+
+
+
     for(const auto &[id,inst]: instances_){
         if(inst.lost_num>0 || inst.curr_points.empty())
             continue;
-
-        //画包围框
-        if(inst.box3d){
-            //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
-            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),*camera_);
-        }
 
         cv::rectangle(img,inst.box2d->min_pt,inst.box2d->max_pt,inst.color,2);
 
@@ -664,9 +687,6 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         for(const auto &pt : inst.visual_new_points){
             cv::circle(img, pt, 3, cv::Scalar(255,255,255), -1);
         }
-        std::string label=fmt::format("id:{},tck:{}",id,inst.curr_points.size() - inst.visual_new_points.size());
-        //cv::putText(img, label, inst.box_center_pt, cv::FONT_HERSHEY_SIMPLEX, 1.0, inst.color, 2);
-        DrawText(img, label, inst.color, inst.box2d->mask_center, 1.0, 2, false);
 
         /*if(vel_map_.count(inst.id)!=0){
             auto anchor=inst.feats_center_pt;
@@ -689,6 +709,29 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
                 cv::circle(img, pt, 2, inst.color, -1);
             }
         }
+
+        //画包围框
+        if(inst.box3d){
+            //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
+            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),*camera_);
+            Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
+
+            Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);
+            Vec2d avg_corner=Vec2d::Zero();
+            /*for(int i=0;i<8;++i){
+                avg_corner += corners2d.col(i);
+            }
+            avg_corner/=8;*/
+            avg_corner = corners2d.col(0);
+            cv::putText(img, std::to_string(id),cv::Point2f(avg_corner.x(),avg_corner.y()),
+                        cv::FONT_HERSHEY_SIMPLEX,1.,inst.color,2);
+        }
+
+        std::string label=fmt::format("{}-{}",id,inst.curr_points.size() - inst.visual_new_points.size());
+        //std::string label=fmt::format("{}",id);
+        //cv::putText(img, label, inst.box_center_pt, cv::FONT_HERSHEY_SIMPLEX, 1.0, inst.color, 2);
+        DrawText(img, label, inst.color, inst.box2d->mask_center, 1.0, 2, false);
+
     }
 
 
