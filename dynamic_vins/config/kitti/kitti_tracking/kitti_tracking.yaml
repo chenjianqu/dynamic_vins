@@ -24,7 +24,7 @@ basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 
 #直接读取图像
-dataset_sequence: "0004"
+dataset_sequence: "0003"
 
 kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0002.txt" #相机内参
 
@@ -153,6 +153,8 @@ segmentor_log_flush: "debug"
 print_detail: 1
 
 ####################### 动态物体参数 ########################
+plane_constraint: 0
+
 instance_init_min_num: 4
 instance_static_err_threshold: 10.0
 

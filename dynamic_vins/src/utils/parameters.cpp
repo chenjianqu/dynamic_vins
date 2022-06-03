@@ -104,6 +104,8 @@ Config::Config(const std::string &file_name)
 
     fs["basic_dir"] >> kBasicDir;
 
+    fs["plane_constraint"] >> use_plane_constraint;
+
     fs.release();
 }
 

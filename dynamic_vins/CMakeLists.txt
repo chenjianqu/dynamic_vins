@@ -156,3 +156,8 @@ target_link_libraries(build_raft ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIB
 add_executable(build_solo src/system/build_solo.cpp ${tensorrt_sources} src/utils/log_utils.cpp src/det2d/det2d_parameter.cpp)
 target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
+
+
+add_executable(pub_object3d src/system/eval/pub_object3d.cpp ${tensorrt_sources} src/utils/log_utils.cpp src/det2d/det2d_parameter.cpp)
+target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
+        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})

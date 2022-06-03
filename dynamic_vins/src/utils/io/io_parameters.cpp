@@ -40,8 +40,7 @@ void IOParameter::SetParameters(const std::string &config_path)
     std::ofstream fout;
     fout.open(kVinsResultPath, std::ios::out);
     fout.close();
-    fout.open(kObjectResultPath, std::ios::out);
-    fout.close();
+
 
     fs["use_dataloader"]>>use_dataloader;
     if(use_dataloader){

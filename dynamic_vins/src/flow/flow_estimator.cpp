@@ -15,10 +15,10 @@
 #include "flow_parameter.h"
 #include "utils/log_utils.h"
 #include "utils/parameters.h"
+#include "utils/io/io_utils.h"
 
 namespace dynamic_vins{\
 
-namespace fs=std::filesystem;
 using Tensor = torch::Tensor;
 
 FlowEstimator::FlowEstimator(const std::string& config_path){
@@ -140,16 +140,8 @@ cv::Mat FlowEstimator::ReadFlowImage(unsigned int seq_id){
     ss >> target_name;
 
     ///获取目录中所有的文件名
-    static vector<fs::path> names;
-    if(names.empty()){
-        fs::path dir_path(flow_para::kFlowOfflinePath);
-        if(!fs::exists(dir_path))
-            return {};
-        fs::directory_iterator dir_iter(dir_path);
-        for(auto &it : dir_iter)
-            names.emplace_back(it.path().filename());
-        std::sort(names.begin(),names.end());
-    }
+    static vector<fs::path> names = GetDirectoryFileNames(flow_para::kFlowOfflinePath);
+
 
     cv::Mat flow_img;
 

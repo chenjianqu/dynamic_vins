@@ -14,100 +14,76 @@
 #include <memory>
 #include <queue>
 #include <filesystem>
+#include <string>
+#include <vector>
+#include <tuple>
 
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 
-#include "utils/parameters.h"
-#include "front_end/semantic_image.h"
-#include "utils/def.h"
 
+using namespace std;
 
 namespace fs=std::filesystem;
 
 
-
-namespace dynamic_vins{\
-
-
-class CallBack{
+class TicToc{
 public:
-    using Ptr=std::unique_ptr<CallBack>;
-    CallBack(){}
-
-    inline cv::Mat GetImageFromMsg(const sensor_msgs::ImageConstPtr &img_msg){
-        cv_bridge::CvImageConstPtr ptr= cv_bridge::toCvShare(img_msg, sensor_msgs::image_encodings::BGR8);
-        return ptr->image.clone();
+    TicToc(){
+        Tic();
     }
-
-    void Img0Callback(const sensor_msgs::ImageConstPtr &img_msg){
-        img0_mutex.lock();
-        if(img0_buf.size() == kQueueSize){
-            img0_buf.pop_front();
-        }
-        img0_buf.push_back(img_msg);
-        img0_mutex.unlock();
+    void Tic(){
+        start_ = std::chrono::system_clock::now();
     }
-
-    void Seg0Callback(const sensor_msgs::ImageConstPtr &img_msg){
-        seg0_mutex.lock();
-        if(seg0_buf.size() == kQueueSize){
-            seg0_buf.pop_front();
-        }
-        seg0_buf.push_back(img_msg);
-        seg0_mutex.unlock();
+    double Toc(){
+        end_ = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end_ - start_;
+        return elapsed_seconds.count() * 1000;
     }
-
-    void Img1Callback(const sensor_msgs::ImageConstPtr &img_msg){
-        img1_mutex.lock();
-        if(img1_buf.size() == kQueueSize){
-            img1_buf.pop_front();
-        }
-        img1_buf.push_back(img_msg);
-        img1_mutex.unlock();
+    double TocThenTic(){
+        auto t= Toc();
+        Tic();
+        return t;
     }
-
-    void Seg1Callback(const sensor_msgs::ImageConstPtr &img_msg){
-        seg1_mutex.lock();
-        if(seg1_buf.size() == kQueueSize){
-            seg1_buf.pop_front();
-        }
-        seg1_buf.push_back(img_msg);
-        seg1_mutex.unlock();
+    void TocPrintTic(const char* str){
+        std::cout << str << ":" << Toc() << " ms" <<std::endl;
+        Tic();
     }
-
-
-    SemanticImage SyncProcess();
-
-
 private:
-    std::list<sensor_msgs::ImageConstPtr> img0_buf;
-    std::list<sensor_msgs::ImageConstPtr> seg0_buf;
-    std::list<sensor_msgs::ImageConstPtr> img1_buf;
-    std::list<sensor_msgs::ImageConstPtr> seg1_buf;
+    std::chrono::time_point<std::chrono::system_clock> start_, end_;
+};
 
-    std::mutex m_buf;
-    std::mutex img0_mutex,img1_mutex,seg0_mutex,seg1_mutex;
+
+struct SemanticImage{
+    SemanticImage()= default;
+
+    cv::Mat color0,color1;
+    double time0,time1;
+    cv::Mat gray0,gray1;
+
+    unsigned int seq;
+    bool exist_inst{false};//当前帧是否检测到物体
 };
 
 
 class Dataloader{
 public:
     using Ptr = std::shared_ptr<Dataloader>;
-    Dataloader();
+    Dataloader(const string &left_path);
 
     // 检查一个路径是否是目录
-    bool checkIsDir(const string &dir);
+    static bool checkIsDir(const string &dir);
 
     // 搜索一个目录下所有的图像文件，以 jpg,jpeg,png 结尾的文件
     void getAllImageFiles(const string& dir, vector<string> &files);
 
     //获取一帧图像
-    SemanticImage LoadStereo(int delta_time);
+    SemanticImage LoadStereo();
+
+    void ShowImage(const cv::Mat& img,int delta_time);
 
 private:
     vector<string> left_names;
-    vector<string> right_names;
 
     int index{0};
     double time{0};
@@ -116,6 +92,5 @@ private:
 };
 
 
-}
 
 #endif //DYNAMIC_VINS_CALLBACK_H

@@ -32,7 +32,8 @@ std::optional<int> GetQueueShapeIndex(int c, int h, int w)
 {
     int index=-1;
     for(int i=0;i< (int)det2d_para::kTensorQueueShapes.size(); ++i){
-        if(c == det2d_para::kTensorQueueShapes[i][1] && h == det2d_para::kTensorQueueShapes[i][2] && w == det2d_para::kTensorQueueShapes[i][3]){
+        if(c == det2d_para::kTensorQueueShapes[i][1] && h == det2d_para::kTensorQueueShapes[i][2]
+        && w == det2d_para::kTensorQueueShapes[i][3]){
             index=i;
             break;
         }

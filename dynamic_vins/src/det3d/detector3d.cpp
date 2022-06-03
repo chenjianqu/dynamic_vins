@@ -17,6 +17,7 @@
 #include "det3d_parameter.h"
 #include "utils/utils.h"
 #include "utils/log_utils.h"
+#include "utils/io/io_utils.h"
 
 namespace dynamic_vins{\
 
@@ -81,16 +82,7 @@ std::vector<Box3D::Ptr> Detector3D::ReadBox3D(unsigned int seq_id){
     string target_name = PadNumber(seq_id,6);///补零
 
     ///获取目录中所有的文件名
-    static vector<fs::path> names;
-    if(names.empty()){
-        fs::path dir_path(det3d_para::kDet3dPreprocessPath);
-        if(!fs::exists(dir_path))
-            return {};
-        fs::directory_iterator dir_iter(dir_path);
-        for(auto &it : dir_iter)
-            names.emplace_back(it.path().filename());
-        std::sort(names.begin(),names.end());
-    }
+    static vector<fs::path> names = GetDirectoryFileNames(det3d_para::kDet3dPreprocessPath);
 
     vector<Box3D::Ptr> boxes;
     bool success_read= false;

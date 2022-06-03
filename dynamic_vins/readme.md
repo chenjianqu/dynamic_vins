@@ -291,29 +291,6 @@ gedit ${TrackEval}/data/gt/kitti/kitti_mots_val/evaluate_mots.seqmap.val
 0014 empty 000000 000106
 0016 empty 000000 000209
 0018 empty 000000 000339
-
-#or training:
-0000 empty 000000 000154
-0001 empty 000000 000447
-0002 empty 000000 000233
-0003 empty 000000 000144
-0004 empty 000000 000314
-0005 empty 000000 000297
-0006 empty 000000 000270
-0007 empty 000000 000800
-0008 empty 000000 000390
-0009 empty 000000 000803
-0010 empty 000000 000294
-0011 empty 000000 000373
-0012 empty 000000 000078
-0013 empty 000000 000340
-0014 empty 000000 000106
-0015 empty 000000 000376
-0016 empty 000000 000209
-0017 empty 000000 000145
-0018 empty 000000 000339
-0019 empty 000000 001059
-0020 empty 000000 000837
 ```
 
 
@@ -324,12 +301,11 @@ Eval:
 export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
 conda activate track_evel
 
-
-TrackEval=/home/chen/PycharmProjects/TrackEval-master
+TrackEval=/home/chen/PycharmProjects/MOT_Eval/TrackEval-master
 
 python  ${TrackEval}/scripts/run_kitti_mots.py --GT_FOLDER  ${TrackEval}/data/gt/kitti/kitti_mots_val   --TRACKERS_FOLDER  ${TrackEval}/data/trackers/kitti/kitti_mots_val --CLASSES_TO_EVAL car --METRICS CLEAR --TRACKERS_TO_EVAL dynamic_vins
 
-或
+或 根据2D包围框评估 
 python  ${TrackEval}/scripts/run_kitti.py --GT_FOLDER  ${TrackEval}/data/gt/kitti/kitti_2d_box_train   --TRACKERS_FOLDER  ${TrackEval}/data/trackers/kitti/kitti_2d_box_train --CLASSES_TO_EVAL car --METRICS CLEAR --TRACKERS_TO_EVAL dynamic_vins
 ```
 
@@ -343,9 +319,61 @@ the output path is `${TrackEval}/data/trackers/kitti/kitti_mots_val `.
 
 
 
+#### Install devkit_tracking
+
+Download the devkit： [The KITTI Vision Benchmark Suite (cvlibs.net)](http://www.cvlibs.net/datasets/kitti/eval_tracking.php) .
+
+Run environment: `Python2`, dependency:
+
+* pip install munkres
 
 
 
+#### Evaluate
+
+​	将模型预测结果的放置到：`.\result\dynamic_vins\data\`，结果的数据格式与 ground truth一致。
+
+```
+python ./evaluate_tracking.py dynamic_vins
+```
+
+​	这是一个python脚本，其中dynamic_vins是.\result下保存模型输出结果的地方。
+
+​	需要注意的是，该kit只评估Car（van）类别和Pedestrian类别的目标，因此输出文件中应该只包含这两个类别的目标跟踪结果，且不应该包含Don't care类别。输出结果中的每行中的`truncated`和`occluded` 项设置为默认值-1.
+
+​	为了设置评估的序列，在./data/tracking/下面的`evaluate_tracking.seqmap`设置要评估的序列。若想更改映射的文件，可在`./evaluate_tracking.py`中的代码 `filename_test_mapping = "./data/tracking/my_test.seqmap"` 设置文件名。
+
+
+
+### Evaluate mot with KITTI devkit_object
+
+#### Intall devkit_object
+
+
+
+
+
+#### Prepare ground-truth
+
+由于devkit_object使用的标签格式与KITTI Tracking的格式不同,因此通过下面的程序将`tracking_label_path`标签文件转换为kitti object数据集的格式文件.
+
+```
+rosrun dynamic_vins_eval convert_tracking_to_object tracking_label_path save_object_label_path
+
+如:
+rosrun dynamic_vins_eval convert_tracking_to_object /home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/0003.txt /home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_object/0003
+```
+
+
+
+
+
+#### Evaluate
+
+```
+label=/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_object/0003
+./evaluate_object ${label} results
+```
 
 
 

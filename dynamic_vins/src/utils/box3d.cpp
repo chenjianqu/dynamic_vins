@@ -26,8 +26,8 @@ Box3D::Box3D(vector<string> &tokens)
     class_name = kitti::GetKittiName(class_id) ;
 
     attribution_id = std::stoi(tokens[1]);
-    //score = std::stod(tokens[2]);
-    score=1.;
+    score = std::stod(tokens[2]);
+    //score=1.;
 
     ///3-5个数字是物体包围框底部的中心
     bottom_center<<std::stod(tokens[3]),std::stod(tokens[4]),std::stod(tokens[5]);

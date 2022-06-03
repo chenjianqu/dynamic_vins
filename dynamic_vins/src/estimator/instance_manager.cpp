@@ -11,6 +11,7 @@
 #include "instance_manager.h"
 
 #include <algorithm>
+#include <filesystem>
 
 #include "estimator.h"
  #include "utils/def.h"
@@ -22,6 +23,7 @@
 #include "factor/box_factor.h"
 #include "utils/dataset/kitti_utils.h"
 #include "utils/io/io_parameters.h"
+#include "utils/io/io_utils.h"
 
 namespace dynamic_vins{\
 
@@ -777,9 +779,22 @@ void InstanceManager::SaveTrajectory(){
     Mat3d R_cw = R_ci * R_iw;
     Vec3d P_cw = R_ci * P_iw + P_ci;
 
+    string object_tracking_path= io_para::kOutputFolder + cfg::kDatasetSequence+"_mot.txt";
+    string object_object_dir= io_para::kOutputFolder + cfg::kDatasetSequence+"/";
 
-    std::ofstream fout(io_para::kObjectResultPath,std::ios::out | std::ios::app);//追加写入
+    static bool first_run=true;
+    if(first_run){
+        std::ofstream fout(object_tracking_path, std::ios::out);
+        fout.close();
 
+        ClearDirectory(object_object_dir);//获取目录中所有的路径,并将这些文件全部删除
+        first_run=false;
+    }
+
+    string object_object_path = object_object_dir+ PadNumber(e->feature_frame.seq_id,6)+".txt";
+    std::ofstream fout_object(object_object_path, std::ios::out);
+
+    std::ofstream fout_mot(object_tracking_path, std::ios::out | std::ios::app);//追加写入
 
     for(auto &[inst_id,inst] : instances){
         if(!inst.is_tracking || !inst.is_initial)
@@ -800,14 +815,24 @@ void InstanceManager::SaveTrajectory(){
             Mat3d R_coi_kitti = R_offset * R_coi;
             Vec3d P_coi_kitti = R_offset*P_coi + P_offset;
 
-            ///计算yaw角 ： rotation_y
-            Vec3d eulerAngle=R_coi_kitti.eulerAngles(2,1,0);
-            double rotation_y = eulerAngle.y();
+            ///计算rotation_y
+            //Vec3d eulerAngle=R_coi_kitti.eulerAngles(2,1,0);
+            //double rotation_y = eulerAngle.y();
+            Vector3d obj_z = R_coi_kitti * Vec3d(0,0,1);//车辆Z轴在相机坐标系下的方向
+            Debugv("inst:{} obj_z:{}",inst.id, VecToStr(obj_z));
+            Vector3d cam_x(1,0,0);//相机坐标系Z轴的向量
+            double rotation_y = atan2(obj_z.z(),obj_z.x()) - atan2(cam_x.z(),cam_x.x());
+
 
             /// 计算观测角度 alpha
-            Vec3d unit_z(0,0,1);
-            double beta = atan( (P_coi_kitti.transpose() * unit_z / (unit_z.norm()*unit_z.norm()))(0) );
-            double alpha = - (M_PI + rotation_y + M_PI + beta);
+            double alpha = rotation_y;
+            alpha += atan2(P_coi_kitti.z(),P_coi_kitti.x()) + 1.5 * M_PI;
+            while(alpha > M_PI){
+                alpha-=M_PI;
+            }
+            while(alpha < -M_PI){
+                alpha+=M_PI;
+            }
 
             ///计算3D包围框投影得到的2D包围框
             /*Vec3d minPt = - inst.box3d->dims/2;
@@ -835,24 +860,59 @@ void InstanceManager::SaveTrajectory(){
             Vec2d corner2d_max_pt = corners_2d.rowwise().maxCoeff();//包围框右下角的坐标*/
 
 
-            //SaveInstanceTrajectory(e->feature_frame.seq_id, inst.id,kitti::KittiLabel[inst.class_label],
-            //                   1,1,double alpha,Vec4d &box,
-            //                 inst.box,Vec3d &location,double rotation_y,double score);
-
-            fout<<e->feature_frame.seq_id<<" "<<inst.id<<" "<<kitti::GetKittiName(inst.box3d->class_id) <<" "<<
-            1<<" "<<1<<" "<<
+            ///保存为KITTI Tracking模式
+            //帧号
+            fout_mot << e->feature_frame.seq_id << " " <<
+            //物体的id
+            inst.id << " "<<
+            //类别名称
+            kitti::GetKittiName(inst.box3d->class_id) <<" "<<
+            // truncated    Integer (0,1,2)
+            -1<<" "<<
+            //occluded     Integer (0,1,2,3)
+            -1<<" "<<
+            // Observation angle of object, ranging [-pi..pi]
             alpha<<" "<<
+            // 2D bounding box of object in the image (0-based index): contains left, top, right, bottom pixel coordinates
             inst.box2d->min_pt.x<<" "<<inst.box2d->min_pt.y<<" "<<inst.box2d->max_pt.x<<" "<<inst.box2d->max_pt.y<<" "<<
+            // 3D object dimensions: height, width, length (in meters)
             VecToStr(inst.box3d->dims)<< //VecToStr()函数会输出一个空格
+            // 3D object location x,y,z in camera coordinates (in meters)
             VecToStr(P_coi)<<
+            // Rotation ry around Y-axis in camera coordinates [-pi..pi]
             rotation_y<<" "<<
-            inst.box3d->score<<endl;
+            //  Only for results: Float, indicating confidence in detection, needed for p/r curves, higher is better.
+            inst.box3d->score<<
+            endl;
+
+
+            ///保存为KITTI Object模式
+            //类别名称
+            fout_object <<kitti::GetKittiName(inst.box3d->class_id) <<" "<<
+            //Float from 0 (non-truncated) to 1 (truncated), where truncated refers to the object leaving image boundaries
+            -1<<" "<<
+            //occluded     Integer (0,1,2,3)
+            -1<<" "<<
+            // Observation angle of object, ranging [-pi..pi]
+            alpha<<" "<<
+            // 2D bounding box of object in the image (0-based index): contains left, top, right, bottom pixel coordinates
+            inst.box2d->min_pt.x<<" "<<inst.box2d->min_pt.y<<" "<<inst.box2d->max_pt.x<<" "<<inst.box2d->max_pt.y<<" "<<
+            // 3D object dimensions: height, width, length (in meters)
+            VecToStr(inst.box3d->dims)<< //VecToStr()函数会输出一个空格
+            // 3D object location x,y,z in camera coordinates (in meters)
+            VecToStr(P_coi)<<
+            // Rotation ry around Y-axis in camera coordinates [-pi..pi]
+            rotation_y<<" "<<
+            //  Only for results: Float, indicating confidence in detection, needed for p/r curves, higher is better.
+            inst.box3d->score<<
+            endl;
         }
 
     }
 
 
-    fout.close();
+    fout_mot.close();
+    fout_object.close();
 
 }
 
@@ -874,9 +934,22 @@ void InstanceManager::AddInstanceParameterBlock(ceres::Problem &problem)
     InstExec([&problem,this](int key,Instance& inst){
         inst.SetOptimizeParameters();
 
-        for(int i=0;i<=(int)e->frame; i++){
-            problem.AddParameterBlock(inst.para_state[i], kSizePose, new PoseLocalParameterization());
+        if(cfg::use_plane_constraint){
+            for(int i=0;i<=(int)e->frame; i++){
+                problem.AddParameterBlock(inst.para_state[i], kSizePose,
+                                          new PoseConstraintLocalParameterization());
+
+                problem.AddParameterBlock(inst.para_speed[0],6,
+                                          new SpeedConstraintLocalParameterization());
+            }
         }
+        else{
+            for(int i=0;i<=(int)e->frame; i++){
+                problem.AddParameterBlock(inst.para_state[i], kSizePose, new PoseLocalParameterization());
+            }
+        }
+
+
     });
 }
 
