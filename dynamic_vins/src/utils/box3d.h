@@ -47,6 +47,8 @@ public:
 
     explicit Box3D(vector<string> &tokens);
 
+    Mat34d GetCoordinateVectorInCamera(double axis_len=1.);
+
     bool InsideBox(Eigen::Vector3d &point);
 
     Mat28d CornersProjectTo2D(PinHoleCamera &cam);

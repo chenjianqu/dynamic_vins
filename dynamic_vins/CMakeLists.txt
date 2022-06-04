@@ -81,49 +81,6 @@ include_directories(${TensorRT_INCLUDE_DIRS})
 
 catkin_package()
 
-#[[
-
-set(Basic_Sources src/parameters.cpp src/utils.cpp src/utility/ViodeUtils.cpp)
-add_library(parameter ${Basic_Sources})
-link_libraries(parameter ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
-
-
-aux_source_directory(src/InstanceSegment InstanceSegmentation_SOURCES)
-add_library(instance_segmentation_lib ${InstanceSegmentation_SOURCES})
-link_libraries(instance_segmentation_lib ${CUDA_LIBRARIES}  ${TORCH_LIBRARIES} TorchVision::TorchVision
-        ${TensorRT_LIBS} parameter)
-
-
-aux_source_directory(src/InstanceTracking InstanceTracking_SOURCES)
-add_library(instance_tracking_lib ${InstanceTracking_SOURCES})
-link_libraries(instance_tracking_lib  ${TORCH_LIBRARIES} TorchVision::TorchVision parameter)
-
-
-aux_source_directory(src/featureTracker featureTracker_SOURCES)
-add_library(feature_tracker_lib ${featureTracker_SOURCES})
-link_libraries(feature_tracker_lib parameter instance_segmentation_lib instance_tracking_lib)
-
-
-aux_source_directory(src/initial initial_SOURCES)
-aux_source_directory(src/utility utility_SOURCES)
-aux_source_directory(src/factor factor_SOURCES)
-aux_source_directory(src/e estimator_SOURCES)
-
-add_library(dynamic_vins_lib ${estimator_SOURCES} ${factor_SOURCES} ${utility_SOURCES} ${initial_SOURCES})
-target_link_libraries(dynamic_vins_lib  ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES}  feature_tracker_lib )
-
-
-add_executable(dynamic_vins src/main.cpp src/featureTracker/SegmentImage.cpp)
-target_link_libraries(dynamic_vins dynamic_vins_lib)
-
-add_executable(front_end src/front_end.cpp)
-target_link_libraries(front_end parameter feature_tracker_lib)
-
-add_executable(tracking src/tracking.cpp)
-target_link_libraries(tracking parameter instance_tracking_lib)
-
-add_executable(build_model src/build_model.cpp src/InstanceSegment/logger.cpp)
-target_link_libraries(build_model  ${TensorRT_LIBS} parameter)]]
 
 include_directories(src)
 
@@ -158,6 +115,8 @@ target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIB
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
 
-add_executable(pub_object3d src/system/eval/pub_object3d.cpp ${tensorrt_sources} src/utils/log_utils.cpp src/det2d/det2d_parameter.cpp)
-target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
-        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
+add_executable(pub_object3d src/system/eval/pub_object3d.cpp src/utils/log_utils.cpp src/utils/parameters.cpp
+        src/utils/box3d.cpp src/utils/io/io_parameters.cpp src/utils/io/io_utils.cpp src/utils/camera_model.cpp
+        src/utils/dataset/kitti_utils.cpp src/det3d/det3d_parameter.cpp src/utils/io/build_markers.cpp
+        src/utils/io/camera_pose_visualization.cpp)
+target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})

@@ -82,32 +82,12 @@ public:
 
     static void PubPredictBox3D(std::vector<Box3D> &boxes);
 
-    static Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,unsigned int id,const cv::Scalar &color,
-                                       Marker::_action_type action=Marker::ADD,int offset=0);
-
-    static  Marker BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::Scalar &color,
-                                        Marker::_action_type action=Marker::ADD,int offset=0);
-
-    static   Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,unsigned int id,const cv::Scalar &color,
-                                         Marker::_action_type action=Marker::ADD,int offset=0);
-
-    static  Marker BuildTextMarker(const PointT &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                                   double scale,Marker::_action_type action=Marker::ADD,int offset=1);
-
-    static  Marker BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                                   double scale=1.,Marker::_action_type action=Marker::ADD,int offset=1);
-
-    static  Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,unsigned int id,
-                                    const cv::Scalar &color,Marker::_action_type action=Marker::ADD,int offset=2);
-
-    static Marker BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned int id,const cv::Scalar &color,
-                                  Marker::_action_type action=Marker::ADD,int offset=3);
-
-    static Marker BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,const cv::Scalar &color,
-                                        Marker::_action_type action=Marker::ADD,int offset=4);
-
     static void PubTransform(const Mat3d &R,const Vec3d &P,tf::TransformBroadcaster &br,ros::Time time,
                       const string &frame_id,const string &child_frame_id);
+
+    static Marker BuildTrajectoryMarker(unsigned int id, std::list<State> &history, State* sliding_window, const cv::Scalar &color,
+                                        Marker::_action_type action=Marker::ADD, int offset=4);
+
 
     inline static std::shared_ptr<Estimator> e;
 };

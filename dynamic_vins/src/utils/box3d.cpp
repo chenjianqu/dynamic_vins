@@ -31,11 +31,29 @@ Box3D::Box3D(vector<string> &tokens)
 
     ///3-5个数字是物体包围框底部的中心
     bottom_center<<std::stod(tokens[3]),std::stod(tokens[4]),std::stod(tokens[5]);
-    ///6-8数字是物体在x,y,z轴上的大小
+    ///6-8数字是物体在x,y,z轴上的大小,由于坐标系定义不同,因此对应的元素不同
+    //dims.x() = std::stod(tokens[6]);
+    //dims.y() = std::stod(tokens[8]);
+    //dims.z() = std::stod(tokens[7]);
     dims<<std::stod(tokens[6]),std::stod(tokens[7]),std::stod(tokens[8]);
-    ///9个yaw角(绕着y轴,因为y轴是垂直向下的)
-    yaw=std::stod(tokens[9]);
 
+    /**
+                             front z
+                                    /
+                                   /
+                   p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
+                                 /|            / |
+                                / |           /  |
+                p0(x0, y0, z0) + ---------p4 +   + p6(x1, y1, z1)
+                               |  /      .   |  /
+                               | / origin    | /
+                p3(x0, y1, z0) + ----------- + -------> x right
+                               |             p7(x1, y1, z0)
+                               |
+                               v
+                        down y
+     输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
+     */
     Eigen::Matrix<double,8,3> corners_norm;
     corners_norm << 0,0,0,  0,0,1,  0,1,1,  0,1,0,  1,0,0,  1,0,1,  1,1,1,  1,1,0;
     Eigen::Vector3d offset(0.5,1,0.5);//预测结果所在的坐标系与相机坐标系之间的偏移
@@ -43,14 +61,18 @@ Box3D::Box3D(vector<string> &tokens)
     corners = corners_norm.transpose(); //得到矩阵 3x8
     corners = corners.array().colwise() * dims.array();//广播逐点乘法
 
+    cout<<fmt::format("class_id:{} type:{} \n{}",class_id,class_name,EigenToStr(corners))<<endl;
+
+    ///9个yaw角(绕着y轴,因为y轴是垂直向下的)
+    yaw=std::stod(tokens[9]);
+
     ///根据yaw角构造旋转矩阵
     Mat3d R;
     R<<cos(yaw),0, -sin(yaw),   0,1,0,   sin(yaw),0,cos(yaw);
 
-    Eigen::Matrix<double,8,3> result =  corners.transpose() * R;//8x3
-    //加上偏移量
-    Eigen::Matrix<double,8,3> output= result.array().rowwise() + bottom_center.transpose().array();
-    corners = output.transpose();///box的8个顶点在相机坐标系下的坐标
+    Eigen::Matrix<double,8,3> result =  corners.transpose() * R;//8x3 = 8x3 * 3x3
+    Eigen::Matrix<double,8,3> output= result.array().rowwise() + bottom_center.transpose().array(); //加上偏移量
+    corners = output.transpose();//box的8个顶点在相机坐标系下的坐标
     ///计算3D box投影到图像平面
     for(int i=0;i<8;++i){
         Vec2d p;
@@ -59,13 +81,61 @@ Box3D::Box3D(vector<string> &tokens)
     }
     Vec2d corner2d_min_pt = corners_2d.rowwise().minCoeff();
     Vec2d corner2d_max_pt = corners_2d.rowwise().maxCoeff();
-    box2d.min_pt = cv::Point2f(corner2d_min_pt.x(),corner2d_min_pt.y());
-    box2d.max_pt = cv::Point2f(corner2d_max_pt.x(),corner2d_max_pt.y());
+    box2d.min_pt.x = (float) corner2d_min_pt.x();
+    box2d.min_pt.y = (float) corner2d_min_pt.y();
+    box2d.max_pt.x = (float) corner2d_max_pt.x();
+    box2d.max_pt.y = (float) corner2d_max_pt.y();
     box2d.center_pt = (box2d.min_pt + box2d.max_pt) / 2;
 
     ///计算包围框中心坐标
     center = (output.row(0)+output.row(6)).transpose() / 2;
 
+}
+
+
+/**
+ * 获得物体包围框的坐标系在相机坐标系下的四个点,
+ * @return
+ */
+Mat34d Box3D::GetCoordinateVectorInCamera(double axis_len){
+    /**
+                             front z
+                                    /
+                                   /
+                   p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
+                                 /|            / |
+                                / |           /  |
+                p0(x0, y0, z0) + ---------p4 +   + p6(x1, y1, z1)
+                               |  /      .   |  /
+                               | / origin    | /
+                p3(x0, y1, z0) + ----------- + -------> x right
+                               |             p7(x1, y1, z0)
+                               |
+                               v
+                        down y
+     输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
+     */
+
+    Mat3d R;
+    R<<cos(yaw),0, -sin(yaw),   0,1,0,   sin(yaw),0,cos(yaw);
+
+    Vec3d x_unit(axis_len,0,0);
+    Vec3d y_unit(0,axis_len,0);
+    Vec3d z_unit(0,0,axis_len);
+    Mat34d matrix;
+    matrix.col(0) = bottom_center;
+    matrix.col(1) = R.transpose() * x_unit + bottom_center;
+    matrix.col(2) = R.transpose() * y_unit + bottom_center;
+    matrix.col(3) = R.transpose() * z_unit + bottom_center;
+
+
+    /*Mat34d matrix;
+    matrix.col(0) = (corners.col(1)+corners.col(7))/2.;
+    matrix.col(1) = (corners.col(4)+corners.col(5)+corners.col(6)+corners.col(7))/4.;
+    matrix.col(2) = (corners.col(1)+corners.col(2)+corners.col(5)+corners.col(6))/4.;
+    matrix.col(3) = (corners.col(2)+corners.col(3)+corners.col(6)+corners.col(7))/4.;*/
+
+    return matrix;
 }
 
 
@@ -323,13 +393,13 @@ vector<std::pair<int,int>> Box3D::GetLineVetexPair(){
  */
 Mat28d Box3D::CornersProjectTo2D(PinHoleCamera &cam)
 {
-    Mat28d corners_2d;
+    Mat28d corners_2d_tmp;
     for(int i=0;i<8;++i){
         Vec2d p;
         cam.ProjectPoint(corners.col(i),p);
-        corners_2d.col(i) = p;
+        corners_2d_tmp.col(i) = p;
     }
-    return corners_2d;
+    return corners_2d_tmp;
 }
 
 /**

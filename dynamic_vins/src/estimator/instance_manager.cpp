@@ -815,6 +815,8 @@ void InstanceManager::SaveTrajectory(){
             Mat3d R_coi_kitti = R_offset * R_coi;
             Vec3d P_coi_kitti = R_offset*P_coi + P_offset;
 
+            ///计算新的dims
+
             ///计算rotation_y
             //Vec3d eulerAngle=R_coi_kitti.eulerAngles(2,1,0);
             //double rotation_y = eulerAngle.y();

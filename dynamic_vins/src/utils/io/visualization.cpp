@@ -17,12 +17,13 @@
  *******************************************************/
 
 
-
 #include "visualization.h"
 
 #include <fstream>
 #include <string>
 
+#include "utils/io/io_utils.h"
+#include "utils/io/build_markers.h"
 #include "estimator/instance_manager.h"
 
 
@@ -32,7 +33,6 @@ using namespace std;
 using namespace ros;
 using namespace Eigen;
 
-constexpr int32_t kMarkerTypeNumber=10;
 
 std::set<int> last_marker_ids;//保存上一时刻发布的marker的id,用于将上一时刻的id清除
 
@@ -125,16 +125,9 @@ void Publisher::PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quatern
     nav_msgs::Odometry odometry;
     odometry.header.stamp = ros::Time(t);
     odometry.header.frame_id = "world";
-    odometry.pose.pose.position.x = P.x();
-    odometry.pose.pose.position.y = P.y();
-    odometry.pose.pose.position.z = P.z();
-    odometry.pose.pose.orientation.x = Q.x();
-    odometry.pose.pose.orientation.y = Q.y();
-    odometry.pose.pose.orientation.z = Q.z();
-    odometry.pose.pose.orientation.w = Q.w();
-    odometry.twist.twist.linear.x = V.x();
-    odometry.twist.twist.linear.y = V.y();
-    odometry.twist.twist.linear.z = V.z();
+    odometry.pose.pose.position = EigenToGeometryPoint(P);
+    odometry.pose.pose.orientation = EigenToGeometryQuaternion(Q);
+    odometry.twist.twist.linear = EigenToGeometryVector3(V);
     pub_latest_odometry->publish(odometry);
 
     //Debugv("Publisher::pubLatestOdometry:{}", VecToStr(P));
@@ -191,16 +184,9 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
     odometry.child_frame_id = "world";
     Quaterniond tmp_Q;
     tmp_Q = Quaterniond(e->Rs[kWinSize]);
-    odometry.pose.pose.position.x = e->Ps[kWinSize].x();
-    odometry.pose.pose.position.y = e->Ps[kWinSize].y();
-    odometry.pose.pose.position.z = e->Ps[kWinSize].z();
-    odometry.pose.pose.orientation.x = tmp_Q.x();
-    odometry.pose.pose.orientation.y = tmp_Q.y();
-    odometry.pose.pose.orientation.z = tmp_Q.z();
-    odometry.pose.pose.orientation.w = tmp_Q.w();
-    odometry.twist.twist.linear.x = e->Vs[kWinSize].x();
-    odometry.twist.twist.linear.y = e->Vs[kWinSize].y();
-    odometry.twist.twist.linear.z = e->Vs[kWinSize].z();
+    odometry.pose.pose.position = EigenToGeometryPoint(e->Ps[kWinSize]);
+    odometry.pose.pose.orientation = EigenToGeometryQuaternion(tmp_Q);
+    odometry.twist.twist.linear = EigenToGeometryVector3(e->Vs[kWinSize]);
     pub_odometry->publish(odometry);
 
     geometry_msgs::PoseStamped pose_stamped;
@@ -267,15 +253,8 @@ void Publisher::PubKeyPoses(const std_msgs::Header &header)
     key_poses.color.r = 1.0;
     key_poses.color.a = 1.0;
 
-    for (int i = 0; i <= kWinSize; i++)
-    {
-        geometry_msgs::Point pose_marker;
-        Vector3d correct_pose;
-        correct_pose = e->key_poses[i];
-        pose_marker.x = correct_pose.x();
-        pose_marker.y = correct_pose.y();
-        pose_marker.z = correct_pose.z();
-        key_poses.points.push_back(pose_marker);
+    for (int i = 0; i <= kWinSize; i++){
+        key_poses.points.push_back(EigenToGeometryPoint(e->key_poses[i]));
     }
     pub_key_poses->publish(key_poses);
 }
@@ -288,24 +267,19 @@ void Publisher::PubCameraPose(const std_msgs::Header &header)
 
     int idx2 = kWinSize - 1;
     int i = idx2;
-    Vector3d P = e->Ps[i] + e->Rs[i] * e->tic[0];
-    Quaterniond R = Quaterniond(e->Rs[i] * e->ric[0]);
+    Vector3d P_eigen = e->Ps[i] + e->Rs[i] * e->tic[0];
+    Quaterniond Q_eigen = Quaterniond(e->Rs[i] * e->ric[0]);
 
     nav_msgs::Odometry odometry;
     odometry.header = header;
     odometry.header.frame_id = "world";
-    odometry.pose.pose.position.x = P.x();
-    odometry.pose.pose.position.y = P.y();
-    odometry.pose.pose.position.z = P.z();
-    odometry.pose.pose.orientation.x = R.x();
-    odometry.pose.pose.orientation.y = R.y();
-    odometry.pose.pose.orientation.z = R.z();
-    odometry.pose.pose.orientation.w = R.w();
+    odometry.pose.pose.position = EigenToGeometryPoint(P_eigen);
+    odometry.pose.pose.orientation = EigenToGeometryQuaternion(Q_eigen);
 
     pub_camera_pose->publish(odometry);
 
     camera_pose_visual->reset();
-    camera_pose_visual->add_pose(P, R);
+    camera_pose_visual->add_pose(P_eigen, Q_eigen);
     if(cfg::is_stereo){
         Vector3d P = e->Ps[i] + e->Rs[i] * e->tic[1];
         Quaterniond R = Quaterniond(e->Rs[i] * e->ric[1]);
@@ -333,11 +307,7 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
         Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
         Vector3d w_pts_i = e->Rs[imu_i] * (e->ric[0] * pts_i + e->tic[0]) + e->Ps[imu_i];
 
-        geometry_msgs::Point32 p;
-        p.x = (float)w_pts_i(0);
-        p.y = (float)w_pts_i(1);
-        p.z = (float)w_pts_i(2);
-        point_cloud.points.push_back(p);
+        point_cloud.points.push_back(EigenToGeometryPoint32(w_pts_i));
     }
     pub_point_cloud->publish(point_cloud);
 
@@ -359,11 +329,7 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
             Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
             Vector3d w_pts_i = e->Rs[imu_i] * (e->ric[0] * pts_i + e->tic[0]) + e->Ps[imu_i];
 
-            geometry_msgs::Point32 p;
-            p.x = (float)w_pts_i(0);
-            p.y = (float)w_pts_i(1);
-            p.z = (float)w_pts_i(2);
-            margin_cloud.points.push_back(p);
+            margin_cloud.points.push_back(EigenToGeometryPoint32(w_pts_i) );
         }
     }
     pub_margin_cloud->publish(margin_cloud);
@@ -374,18 +340,9 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
 void Publisher::PubTransform(const Mat3d &R,const Vec3d &P,tf::TransformBroadcaster &br,ros::Time time,
                   const string &frame_id,const string &child_frame_id){
     Quaterniond q_eigen(R);
-
     tf::Transform transform;
-    transform.setOrigin(tf::Vector3(P.x(),P.y(),P.z()));
-
-    tf::Quaternion q;
-    q.setW(q_eigen.w());
-    q.setX(q_eigen.x());
-    q.setY(q_eigen.y());
-    q.setZ(q_eigen.z());
-
-    transform.setRotation(q);
-
+    transform.setOrigin(EigenToTfVector(P));
+    transform.setRotation(EigenToTfQuaternion(q_eigen));
     br.sendTransform(tf::StampedTransform(transform, time, frame_id, child_frame_id));
 }
 
@@ -404,14 +361,9 @@ void Publisher::PubTF(const std_msgs::Header &header)
     nav_msgs::Odometry odometry;
     odometry.header = header;
     odometry.header.frame_id = "world";
-    odometry.pose.pose.position.x = P_bc.x();
-    odometry.pose.pose.position.y = P_bc.y();
-    odometry.pose.pose.position.z = P_bc.z();
-    Quaterniond tmp_q{e->ric[0]};
-    odometry.pose.pose.orientation.x = tmp_q.x();
-    odometry.pose.pose.orientation.y = tmp_q.y();
-    odometry.pose.pose.orientation.z = tmp_q.z();
-    odometry.pose.pose.orientation.w = tmp_q.w();
+    odometry.pose.pose.position = EigenToGeometryPoint(P_bc);
+    Quaterniond q_eigen{e->ric[0]};
+    odometry.pose.pose.orientation = EigenToGeometryQuaternion(q_eigen);
     pub_extrinsic->publish(odometry);
 }
 
@@ -423,19 +375,13 @@ void Publisher::PubKeyframe()
         int i = kWinSize - 2;
         //Vector3d P = e.Ps[i] + e.Rs[i] * e.tic[0];
         Vector3d P = e->Ps[i];
-        auto R = Quaterniond(e->Rs[i]);
+        auto q_eigen = Quaterniond(e->Rs[i]);
 
         nav_msgs::Odometry odometry;
         odometry.header.stamp = ros::Time(e->headers[kWinSize - 2]);
         odometry.header.frame_id = "world";
-        odometry.pose.pose.position.x = P.x();
-        odometry.pose.pose.position.y = P.y();
-        odometry.pose.pose.position.z = P.z();
-        odometry.pose.pose.orientation.x = R.x();
-        odometry.pose.pose.orientation.y = R.y();
-        odometry.pose.pose.orientation.z = R.z();
-        odometry.pose.pose.orientation.w = R.w();
-
+        odometry.pose.pose.position = EigenToGeometryPoint(P);
+        odometry.pose.pose.orientation = EigenToGeometryQuaternion(q_eigen);
         pub_keyframe_pose->publish(odometry);
 
         sensor_msgs::PointCloud point_cloud;
@@ -449,11 +395,7 @@ void Publisher::PubKeyframe()
                 Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
                 Vector3d w_pts_i = e->Rs[imu_i] * (e->ric[0] * pts_i + e->tic[0])
                         + e->Ps[imu_i];
-                geometry_msgs::Point32 p;
-                p.x = (float)w_pts_i(0);
-                p.y = (float)w_pts_i(1);
-                p.z = (float)w_pts_i(2);
-                point_cloud.points.push_back(p);
+                point_cloud.points.push_back(EigenToGeometryPoint32(w_pts_i));
 
                 int imu_j = kWinSize - 2 - it_per_id.start_frame;
                 sensor_msgs::ChannelFloat32 p_2d;
@@ -464,306 +406,10 @@ void Publisher::PubKeyframe()
                 p_2d.values.push_back(float(it_per_id.feature_id));
                 point_cloud.channels.push_back(p_2d);
             }
-
         }
         pub_keyframe_point->publish(point_cloud);
     }
 }
-
-
-
-Marker Publisher::BuildLineStripMarker(PointT &maxPt,PointT &minPt,unsigned int id,const cv::Scalar &color,
-                                       Marker::_action_type action,int offset)
-{
-    //设置立方体的八个顶点
-    geometry_msgs::Point p[8];
-    p[0].x=minPt.x;p[0].y=minPt.y;p[0].z=minPt.z;
-    p[1].x=maxPt.x;p[1].y=minPt.y;p[1].z=minPt.z;
-    p[2].x=maxPt.x;p[2].y=minPt.y;p[2].z=maxPt.z;
-    p[3].x=minPt.x;p[3].y=minPt.y;p[3].z=maxPt.z;
-    p[4].x=minPt.x;p[4].y=maxPt.y;p[4].z=maxPt.z;
-    p[5].x=maxPt.x;p[5].y=maxPt.y;p[5].z=maxPt.z;
-    p[6].x=maxPt.x;p[6].y=maxPt.y;p[6].z=minPt.z;
-    p[7].x=minPt.x;p[7].y=maxPt.y;p[7].z=minPt.z;
-
-    return BuildLineStripMarker(p,id,color,action,offset);
-}
-
-
-Marker Publisher::BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,unsigned int id,const cv::Scalar &color,
-                                       Marker::_action_type action,int offset){
-    geometry_msgs::Point points[8];
-    for(int i=0;i<8;++i){
-        points[i].x = p[i].x();
-        points[i].y = p[i].y();
-        points[i].z = p[i].z();
-    }
-    return BuildLineStripMarker(points,id,color,action,offset);
-}
-
-
-Marker Publisher::BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::Scalar &color,
-                                       Marker::_action_type action,int offset)
-{
-    Marker msg;
-    msg.header.stamp=ros::Time::now();
-    msg.header.frame_id="world";
-    msg.ns="box_strip";
-    msg.action=action;
-    msg.pose.orientation.w=1.0;
-
-    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
-    msg.type=Marker::LINE_STRIP;//marker的类型
-
-    if(action==Marker::DELETE){
-        return msg;
-    }
-
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
-    msg.scale.x=0.08;//线宽
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];//颜色:0-1
-    msg.color.a=1.0;//不透明度
-
-    //这个类型仅将相邻点进行连线
-    for(int i=0;i<8;++i){
-        msg.points.push_back(p[i]);
-    }
-    //为了保证矩形框的其它边存在：
-    msg.points.push_back(p[0]);
-    msg.points.push_back(p[3]);
-    msg.points.push_back(p[2]);
-    msg.points.push_back(p[5]);
-    msg.points.push_back(p[6]);
-    msg.points.push_back(p[1]);
-    msg.points.push_back(p[0]);
-    msg.points.push_back(p[7]);
-    msg.points.push_back(p[4]);
-
-    return msg;
-}
-
-
-Marker Publisher::BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                                  const double scale,Marker::_action_type action,int offset){
-    Marker msg;
-    msg.header.stamp=ros::Time::now();
-    msg.header.frame_id="world";
-    msg.ns="box_text";
-    msg.action=action;
-
-    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
-    msg.type=Marker::TEXT_VIEW_FACING;//marker的类型
-    if(action==Marker::DELETE){
-        return msg;
-    }
-
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间4s，若为ros::Duration()表示一直持续
-
-    msg.scale.z=scale;//字体大小
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
-    msg.color.a=(float)color[3];//不透明度
-
-    geometry_msgs::Pose pose;
-    pose.position.x=point.x();pose.position.y=point.y();pose.position.z=point.z();
-    pose.orientation.w=1.0;
-    msg.pose=pose;
-
-    msg.text=text;
-
-    return msg;
-}
-
-
-Marker  Publisher::BuildTextMarker(const PointT &point,unsigned int id,const std::string &text,
-                                   const cv::Scalar &color,const double scale,Marker::_action_type action,int offset)
-{
-    Eigen::Vector3d eigen_pt;
-    eigen_pt<<point.x,point.y,point.z;
-    return BuildTextMarker(eigen_pt,id,text,color,scale,action,offset);
-}
-
-Marker Publisher::BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,unsigned int id,
-                                   const cv::Scalar &color,Marker::_action_type action,int offset)
-{
-    Marker msg;
-    msg.header.frame_id="world";
-    msg.header.stamp=ros::Time::now();
-    msg.ns="arrow_strip";
-    msg.action=action;
-
-    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
-    msg.type=Marker::LINE_STRIP;//marker的类型
-
-    if(action==Marker::DELETE){
-        return msg;
-    }
-
-    msg.pose.orientation.w=1.0;
-
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);
-
-    msg.scale.x=0.01;//线宽
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
-    msg.color.a=1.0;//不透明度
-
-    geometry_msgs::Point start,end;
-    start.x=start_pt.x();start.y=start_pt.y();start.z=start_pt.z();
-    end.x=end_pt.x();end.y=end_pt.y();end.z=end_pt.z();
-
-    const double arrow_len=std::sqrt((start.x-end.x) * (start.x-end.x) +(start.y-end.y) * (start.y-end.y) +
-            (start.z-end.z) * (start.z-end.z)) /8.;
-
-    geometry_msgs::Point p[7];
-    p[0]=start;
-    p[1]=end;
-    p[2]=end;
-    if(start.x < end.x){
-        p[2].x -= arrow_len;
-    }else{
-        p[2].x += arrow_len;
-    }
-    p[3]=end;
-    p[4]=end;
-    if(start.y < end.y){
-        p[4].y -= arrow_len;
-    }else{
-        p[4].y += arrow_len;
-    }
-    p[5]=end;
-    p[6]=end;
-    if(start.z < end.z){
-        p[6].z -= arrow_len;
-    }else{
-        p[6].z += arrow_len;
-    }
-
-    //这个类型仅将相邻点进行连线
-    for(auto &pt : p)
-        msg.points.push_back(pt);
-
-    return msg;
-}
-
-
-Marker Publisher::BuildCubeMarker(Eigen::Matrix<double,8,3> &corners,unsigned int id,const cv::Scalar &color,
-                                  Marker::_action_type action,int offset){
-    Marker msg;
-
-    msg.header.frame_id="world";
-    msg.header.stamp=ros::Time::now();
-    msg.ns="box_strip";
-    msg.action=action;
-
-    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
-    msg.type=Marker::LINE_STRIP;//marker的类型
-    if(action==Marker::DELETE){
-        return msg;
-    }
-
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间3s，若为ros::Duration()表示一直持续
-
-    msg.pose.orientation.w=1.0;
-
-    msg.scale.x=0.01;//线宽
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
-    msg.color.a=1.0;
-
-    //设置立方体的八个顶点
-    geometry_msgs::Point p[8];
-    p[0].x= corners(0,0);p[0].y=corners(0,1);p[0].z=corners(0,2);
-    p[1].x= corners(1,0);p[1].y=corners(1,1);p[1].z=corners(1,2);
-    p[2].x= corners(2,0);p[2].y=corners(2,1);p[2].z=corners(2,2);
-    p[3].x= corners(3,0);p[3].y=corners(3,1);p[3].z=corners(3,2);
-    p[4].x= corners(4,0);p[4].y=corners(4,1);p[4].z=corners(4,2);
-    p[5].x= corners(5,0);p[5].y=corners(5,1);p[5].z=corners(5,2);
-    p[6].x= corners(6,0);p[6].y=corners(6,1);p[6].z=corners(6,2);
-    p[7].x= corners(7,0);p[7].y=corners(7,1);p[7].z=corners(7,2);
-    /**
-             .. code-block:: none
-
-                             front z
-                                    /
-                                   /
-                   p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
-                                 /|            / |
-                                / |           /  |
-                p0(x0, y0, z0) + ----------- +   + p6(x1, y1, z1)
-                               |  /      .   |  /
-                               | / origin    | /
-                p3(x0, y1, z0) + ----------- + -------> x right
-                               |             p7(x1, y1, z0)
-                               |
-                               v
-                        down y
-     输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
-
-     */
-    msg.points.push_back(p[0]);
-    msg.points.push_back(p[1]);
-    msg.points.push_back(p[5]);
-    msg.points.push_back(p[4]);
-    msg.points.push_back(p[0]);
-    msg.points.push_back(p[3]);
-    msg.points.push_back(p[7]);
-    msg.points.push_back(p[4]);
-    msg.points.push_back(p[7]);
-    msg.points.push_back(p[6]);
-    msg.points.push_back(p[5]);
-    msg.points.push_back(p[6]);
-    msg.points.push_back(p[2]);
-    msg.points.push_back(p[1]);
-    msg.points.push_back(p[2]);
-    msg.points.push_back(p[3]);
-
-    return msg;
-}
-
-
-Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,
-                                        const cv::Scalar &color,Marker::_action_type action,int offset){
-    Marker msg;
-
-    msg.header.frame_id="world";
-    msg.header.stamp=ros::Time::now();
-    msg.ns="box_strip";
-    msg.action=action;
-    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
-    msg.type=Marker::LINE_STRIP;//marker的类型
-    if(action==Marker::DELETE){
-        return msg;
-    }
-
-    msg.pose.orientation.w=1.0;
-
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()
-
-    msg.scale.x=0.1;//线宽
-    msg.color.r=(float)color[2];msg.color.g=(float)color[1];msg.color.b=(float)color[0];
-    msg.color.a=1.0;//不透明度
-
-    for(auto &pose : history){
-        geometry_msgs::Point point;
-        point.x = pose.P.x();
-        point.y = pose.P.y();
-        point.z = pose.P.z();
-        msg.points.push_back(point);
-    }
-
-    for(int i=0;i<=kWinSize;++i){
-        geometry_msgs::Point point;
-        point.x = sliding_window[i].P.x();
-        point.y = sliding_window[i].P.y();
-        point.z = sliding_window[i].P.z();
-        msg.points.push_back(point);
-    }
-
-    return msg;
-}
-
-
-
-
-
 
 
 
@@ -787,11 +433,10 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
         for(int i=0;i<8;++i){
             corners.col(i) = cam_to_world(corners.col(i));
         }
-        Eigen::Matrix<double,8,3> corners8x3=corners.transpose();
         string log_text = fmt::format("id:{} class:{} score:{}\n",index,box.class_id,box.score);
         log_text += EigenToStr(box.corners);
         Debugv(log_text);
-        auto cube_marker = BuildCubeMarker(corners8x3,index+4000,color_norm);
+        auto cube_marker = BuildCubeMarker(corners,index+4000,color_norm);
 
         markers.markers.push_back(cube_marker);
 
@@ -801,6 +446,38 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
     pub_instance_marker->publish(markers);
 }
 
+
+
+Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,
+                             const cv::Scalar &color,Marker::_action_type action,int offset){
+    Marker msg;
+
+    msg.header.frame_id="world";
+    msg.header.stamp=ros::Time::now();
+    msg.ns="box_strip";
+    msg.action=action;
+    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
+    msg.type=Marker::LINE_STRIP;//marker的类型
+    if(action==Marker::DELETE){
+        return msg;
+    }
+
+    msg.pose.orientation.w=1.0;
+
+    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()
+
+    msg.scale.x=0.1;//线宽
+    msg.color = ScalarBgrToColorRGBA(color);
+    msg.color.a=1.0;//不透明度
+
+    for(auto &pose : history){
+        msg.points.push_back(EigenToGeometryPoint(pose.P));
+    }
+    for(int i=0;i<=kWinSize;++i){
+        msg.points.push_back(EigenToGeometryPoint(sliding_window[i].P));
+    }
+    return msg;
+}
 
 
 
@@ -862,8 +539,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
             Mat38d corners_w = inst.boxes3d[e->frame-1]->GetCornersInWorld(
                     e->Rs[e->frame-1], e->Ps[e->frame-1],
                     e->ric[0],e->tic[0]);
-            Eigen::Matrix<double,8,3> corners_w_t = corners_w.transpose();
-            auto detect_cube_marker = BuildCubeMarker(corners_w_t,key,cv::Scalar(0.5,0.5,0.5),action,3);
+            auto detect_cube_marker = BuildCubeMarker(corners_w,key,GenerateNormBgrColor("gray"),action,3);
             markers.markers.push_back(detect_cube_marker);
         }
 

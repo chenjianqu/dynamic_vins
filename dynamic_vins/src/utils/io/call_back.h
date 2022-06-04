@@ -96,12 +96,6 @@ public:
     using Ptr = std::shared_ptr<Dataloader>;
     Dataloader();
 
-    // 检查一个路径是否是目录
-    bool checkIsDir(const string &dir);
-
-    // 搜索一个目录下所有的图像文件，以 jpg,jpeg,png 结尾的文件
-    void getAllImageFiles(const string& dir, vector<string> &files);
-
     //获取一帧图像
     SemanticImage LoadStereo(int delta_time);
 
