@@ -64,5 +64,20 @@ vector<Box2D::Ptr> Box2D::BuildBoxes2D(torch::Tensor &seg_label,torch::Tensor &c
 }
 
 
+/**
+ * 计算两个box之间的IOU
+ * @param bb_test
+ * @param bb_gt
+ * @return
+ */
+float Box2D::IoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt){
+    auto in = (bb_test & bb_gt).area();
+    auto un = bb_test.area() + bb_gt.area() - in;
+    if (un <  DBL_EPSILON)
+        return 0;
+    return in / un;
+}
+
+
 
 }

@@ -167,7 +167,7 @@ pip install evo --upgrade --no-binary evo
 
 #### Prepare ground-truth KITTI
 
-* Convert KITTI's oxts data to 'TUM' pose
+* Convert KITTI's oxts data to TUM format pose
 
 ```shell
 source ~/ws/dynamic_ws/devel/setup.bash
@@ -185,7 +185,7 @@ sequence="0001" && rosrun dynamic_vins_eval save_oxts ${oxts_path}/${sequence}.t
 export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
 conda activate py36
 
-save_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
+save_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
 sequence="0003"
 
 evo_traj tum ${save_path}/${sequence}.txt -p
@@ -208,7 +208,7 @@ evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt -p
 
 or
 ```shell
-gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
 estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/"
 sequence="0002"
 evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt --ref=${gt_path}/${sequence}.txt --align -p
@@ -331,13 +331,35 @@ Run environment: `Python2`, dependency:
 
 #### Evaluate
 
-​	将模型预测结果的放置到：`.\result\dynamic_vins\data\`，结果的数据格式与 ground truth一致。
+​	将模型预测结果的放置到：`./result/dynamic_vins/data/`，结果的数据格式与 ground truth一致。
 
+```shell
+#项目路径
+project_root=/home/chen/ws/dynamic_ws/src
+#评估工具的数据路径
+eval_data_path=${project_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/results/dynamic_vins/data
+#系统输出的目录
+estimate_data_path=${project_root}/dynamic_vins/data/output
+#序列
+sequence=0003
+#将结果复制到评估位置
+cp ${estimate_data_path}/${sequence}_mot.txt ${eval_data_path}/${sequence}.txt
 ```
+
+
+
+​	执行评估:
+
+```shell
+cd ${project_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python
+
+#退出conda环境
+conda deactivate
+
 python ./evaluate_tracking.py dynamic_vins
 ```
 
-​	这是一个python脚本，其中dynamic_vins是.\result下保存模型输出结果的地方。
+​	这是一个python脚本，其中dynamic_vins是`./result`下保存模型输出结果的地方。
 
 ​	需要注意的是，该kit只评估Car（van）类别和Pedestrian类别的目标，因此输出文件中应该只包含这两个类别的目标跟踪结果，且不应该包含Don't care类别。输出结果中的每行中的`truncated`和`occluded` 项设置为默认值-1.
 

@@ -514,7 +514,7 @@ bool BoxAbsFactor::Evaluate(double const *const *parameters, double *residuals, 
 
 /**
  * 误差计算和雅可比计算
- * @param parameters 顺序:物体位姿,包围框大小
+ * @param parameters 顺序:物体位姿
  * @param residuals
  * @param jacobians
  * @return
@@ -523,73 +523,58 @@ bool BoxEncloseStereoPointFactor::Evaluate(const double *const *parameters, doub
                                            double **jacobians) const{
     Vec3d P_woj(parameters[0][0], parameters[0][1], parameters[0][2]);
     Quatd Q_woj(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
-    Vec3d box(parameters[1][0],parameters[1][1],parameters[1][2]);
-
 
     ///误差计算
     Vec3d pts_obj_j=Q_woj.inverse()*(pts_w-P_woj);//k点在j时刻的物体坐标
-    Vec3d vec_err = box - pts_obj_j.cwiseAbs();
+    Vec3d abs_v=pts_obj_j.cwiseAbs();
+    Vec3d vec_err = abs_v - dims/2;
+    vec_err *=5;
     residuals[0]= std::max(0.,vec_err.x());
     residuals[1]= std::max(0.,vec_err.y());
     residuals[2]= std::max(0.,vec_err.z());
 
-/*    counter++;
+    counter++;
     string log_text;
-    if(counter<=5){
-        log_text += fmt::format("Evaluate 开始\n P_woj:{}, Q_woj:{},\n box:{} pts_w:{}\n",
-                                      VecToStr(P_woj), QuaternionToStr(Q_woj),VecToStr(box), VecToStr(pts_w));
-        log_text += fmt::format("Evaluate 误差:{}\n", VecToStr(vec_err));
+
+    /*if(counter%50==0){
+        log_text += fmt::format("Evaluate 开始\n inst_id:{} P_woj:{}, Q_woj:{},\n dims:{} pts_w:{}\n",
+                                inst_id,VecToStr(P_woj), QuaternionToStr(Q_woj),VecToStr(dims), VecToStr(pts_w));
+        log_text += fmt::format("Evaluate p_obj:{} 误差:{}\n", VecToStr(abs_v), VecToStr(vec_err));
     }*/
 
     ///雅可比计算
     if (jacobians){
 
-        Mat3d R_ojw = Mat3d(Q_woj.inverse());
-        //计算 指示矩阵
-        Vec3d p_j = - R_ojw * P_woj;
-        Mat3d N_p = Mat3d::Zero();
-        N_p(0,0)= p_j.x() / std::abs(p_j.x());
-        N_p(1,1)= p_j.y() / std::abs(p_j.y());
-        N_p(2,2)= p_j.z() / std::abs(p_j.z());
-        Vec3d pts_kl_oj = R_ojw * (pts_w - P_woj);
-        Mat3d N_R = Mat3d::Zero();
-        N_R(0,0)= pts_kl_oj.x() / std::abs(pts_kl_oj.x());
-        N_R(1,1)= pts_kl_oj.y() / std::abs(pts_kl_oj.y());
-        N_R(2,2)= pts_kl_oj.z() / std::abs(pts_kl_oj.z());
-
-        //log_text += fmt::format("Evaluate 雅可比计算\n N_p:{} \n N_R:{}\n", EigenToStr(N_p), EigenToStr(N_R));
-
         /// 对物体位姿求导
         if (jacobians[0]){
+            Mat3d R_ojw = Q_woj.inverse().matrix();
+            //计算 指示矩阵
+            Vec3d e =  R_ojw * (pts_obj_j - P_woj) ;
+            Mat3d N_p = Mat3d::Zero();
+            N_p(0,0) = e.x()/std::abs(e.x());
+            N_p(1,1) = e.y()/std::abs(e.y());
+            N_p(2,2) = e.z()/std::abs(e.z());
+
             /**
              * 注意,这里没有直接写出对max()函数的求导,这是因为已经对误差使用max()函数,这在更新时会间接使用了max函数
              */
-            Mat36d jaco_oj;
-            jaco_oj.leftCols<3>() =  N_p * R_ojw; //对position的雅可比
-            //jaco_oj.rightCols<3>() = - N_R * hat( R_ojw*(pts_w - P_woj) ).matrix();
-            jaco_oj.rightCols<3>() = Mat3d::Zero();//对orientation的雅可比
-
             Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_oj(jacobians[0]);
-            jacobian_pose_oj.leftCols<6>() =   jaco_oj;
+            jacobian_pose_oj.leftCols<3>() = N_p * R_ojw; //对position的雅可比
+            jacobian_pose_oj.middleCols(3,3).setZero();
             jacobian_pose_oj.rightCols<1>().setZero();
 
-/*            if(counter<=5){
+            /*if(counter%50==0){
                 log_text += fmt::format("Evaluate 对物体位姿求导:\n{}\n", EigenToStr(jacobian_pose_oj));
             }*/
 
         }
-        ///对包围框求导
-        if (jacobians[1]){
-            Eigen::Map<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> jacobian_box(jacobians[1]);
-            //jacobian_box = - Mat3d::Identity();
-            jacobian_box = Mat3d::Zero();
-           // log_text += fmt::format("Evaluate 对包围框求导:\n{}\n", EigenToStr(jacobian_box));
-        }
+
     }
-    /*if(counter<=5){
+    /*if(counter%50==0){
         log_text += fmt::format("Evaluate 结束");
         Debugv(log_text);
     }*/
+
 
     return true;
 }

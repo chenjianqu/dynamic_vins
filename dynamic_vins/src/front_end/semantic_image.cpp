@@ -45,7 +45,7 @@ void SemanticImage::SetMask(){
 
     for(int i=0; i < (int)boxes2d.size(); ++i){
         auto inst_mask_tensor = mask_tensor[i];
-        boxes2d[i]->mask_tensor = inst_mask_tensor;
+        //boxes2d[i]->mask_tensor = inst_mask_tensor;
         boxes2d[i]->mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1,
                                                (inst_mask_tensor * 255).to(torch::kUInt8).data_ptr()).clone();
         boxes2d[i]->mask_gpu.download(boxes2d[i]->mask_cv);

@@ -27,6 +27,8 @@ public:
 
     static void InitLogger(const std::string &config_path);
 
+    inline static std::string kLogOutputDir;
+
     inline static std::shared_ptr<spdlog::logger> vio_logger;
     inline static std::shared_ptr<spdlog::logger> tk_logger;
     inline static std::shared_ptr<spdlog::logger> sg_logger;

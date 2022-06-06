@@ -33,6 +33,11 @@ public:
     inline static int kImageDatasetPeriod;
     inline static bool use_dataloader;
 
+    inline static bool is_pub_groundtruth_box{false};
+    inline static bool is_pub_predict_box{false};
+    inline static bool is_pub_object_axis{false};
+    inline static bool is_pub_object_trajectory{false};
+
     static void SetParameters(const std::string &config_path);
 };
 

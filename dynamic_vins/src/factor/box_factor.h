@@ -150,16 +150,18 @@ public:
 
 /**
  * 双目三角化得到的3D点应该要落在包围框内
- * 误差维度3, 优化变量：物体位姿、包围框
+ * 误差维度3, 优化变量：物体位姿
  */
-class BoxEncloseStereoPointFactor: public ceres::SizedCostFunction<3,7,3>{
+class BoxEncloseStereoPointFactor: public ceres::SizedCostFunction<3,7>{
 public:
-    explicit BoxEncloseStereoPointFactor(Vec3d &point_w): pts_w(point_w){}
+    explicit BoxEncloseStereoPointFactor(Vec3d &point_w,Vec3d dims_,int inst_id_):
+    pts_w(point_w),dims(dims_),inst_id(inst_id_){}
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
 
     Vec3d pts_w;//3D点
-
+    Vec3d dims;
+    int inst_id;
     inline static int counter{0};
 
 };

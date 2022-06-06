@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <filesystem>
+#include <unordered_map>
+
 #include <spdlog/logger.h>
 
 #include "det3d_parameter.h"
@@ -64,15 +66,57 @@ std::vector<Box3D::Ptr> Detector3D::ReadBox3dFromTxt(const std::string &txt_path
         if(std::stod(tokens[2]) < score_threshold)
             continue;
 
-        Box3D::Ptr box = std::make_shared<Box3D>(tokens);
-
-        boxes.push_back(box);
+        boxes.push_back(Box3D::Box3dFromFCOS3D(tokens));
 
         index++;
     }
     fp.close();
 
     return boxes;
+}
+
+
+/**
+ * 获取第 frame 帧下的Kitti Tracking数据集的ground truth 3D框
+ * @param frame
+ * @return
+ */
+vector<Box3D::Ptr> Detector3D::ReadGroundtruthFromKittiTracking(int frame){
+    static std::unordered_map<int,vector<Box3D::Ptr>> boxes_gt;
+    static bool is_first_run=true;
+
+    if(det3d_para::kGroundTruthPath.empty()){
+        cerr<<"Detector3D::ReadGroundtruthFromKittiTracking(), \n"
+                  "det3d_para::kGroundTruthPath is empty"<<endl;
+        std::terminate();
+    }
+
+    if(is_first_run){
+        is_first_run=false;
+        std::ifstream fp_gt(det3d_para::kGroundTruthPath);
+        if(!fp_gt.is_open()){
+            cerr<<"Detector3D::ReadGroundtruthFromKittiTracking(), \n"
+                  "open:"<<det3d_para::kGroundTruthPath<<" is failed!"<<endl;
+            std::terminate();
+        }
+
+        string line_gt;
+        while (getline(fp_gt,line_gt)){ //循环读取每行数据
+            vector<string> tokens;
+            split(line_gt,tokens," ");
+            Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens);
+            int curr_frame = std::stoi(tokens[0]);
+            boxes_gt[curr_frame].push_back(box);
+        }
+        fp_gt.close();
+    }
+
+    if(boxes_gt.count(frame)==0){
+        return {};
+    }
+    else{
+        return boxes_gt[frame];
+    }
 }
 
 

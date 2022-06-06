@@ -15,6 +15,8 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
+#include <regex>
+#include <filesystem>
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
@@ -121,6 +123,23 @@ inline std::string PadNumber(int number,int name_width){
     string target_name;
     ss >> target_name;
     return target_name;
+}
+
+
+inline std::string DimsToStr(cv::Size list){
+    return "[" + std::to_string(list.height) + ", " + std::to_string(list.width) + "]";
+}
+
+
+inline cv::Point2f operator*(const cv::Point2f &lp,const cv::Point2f &rp){
+    return {lp.x * rp.x,lp.y * rp.y};
+}
+
+inline void split(const std::string& source, std::vector<std::string>& tokens, const std::string& delimiters = " ") {
+    std::regex re(delimiters);
+    std::copy(std::sregex_token_iterator(source.begin(), source.end(),re,-1),
+              std::sregex_token_iterator(),
+              std::back_inserter(tokens));
 }
 
 }

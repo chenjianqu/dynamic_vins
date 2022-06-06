@@ -53,6 +53,7 @@ Config::Config(const std::string &file_name)
     cout << "is_input_seg:" << is_input_seg << endl;
 
     fs["dataset_sequence"]>>kDatasetSequence;
+    cout << "dataset_sequence:" << kDatasetSequence << endl;
 
     kInputHeight = fs["image_height"];
     kInputWidth = fs["image_width"];
@@ -88,8 +89,6 @@ Config::Config(const std::string &file_name)
             cout<<"is_estimate_td = 0. Synchronized sensors"<<endl;
     }
 
-
-
     fs["use_dense_flow"] >> use_dense_flow;
     cout<<"use_dense_flow: "<<use_dense_flow<<endl;
     if(use_dense_flow){
@@ -102,9 +101,11 @@ Config::Config(const std::string &file_name)
     fs["only_frontend"]>>is_only_frontend;
     cout<<"is_only_frontend: "<<is_only_frontend<<endl;
 
-    fs["basic_dir"] >> kBasicDir;
-
     fs["plane_constraint"] >> use_plane_constraint;
+    cout<<"plane_constraint: "<<use_plane_constraint<<endl;
+
+    fs["basic_dir"] >> kBasicDir;
+    cout<<"basic_dir: "<<kBasicDir<<endl;
 
     fs.release();
 }

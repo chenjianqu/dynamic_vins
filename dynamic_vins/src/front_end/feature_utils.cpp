@@ -344,29 +344,10 @@ void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, con
     cv::putText(img, str, bottom_left, cv::FONT_HERSHEY_SIMPLEX, scale, cv::Scalar(255, 255, 255),thickness);
 }
 
-void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label, const cv::Scalar &color) {
-    cv::rectangle(img, bbox, color);
-    if (!label.empty()) {
-        DrawText(img, label, color, bbox.tl());
-    }
-}
 
 
 
 
-/**
- * 计算两个box之间的IOU
- * @param bb_test
- * @param bb_gt
- * @return
- */
-float BoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt) {
-    auto in = (bb_test & bb_gt).area();
-    auto un = bb_test.area() + bb_gt.area() - in;
-    if (un <  DBL_EPSILON)
-        return 0;
-    return in / un;
-}
 
 
 

@@ -70,6 +70,20 @@ void IOParameter::SetParameters(const std::string &config_path)
         }
     }
 
+    if(fs["pub_groundtruth_box"].isNone()){
+        fs["pub_groundtruth_box"] >> is_pub_groundtruth_box;
+    }
+    if(fs["pub_predict_box"].isNone()){
+        fs["pub_predict_box"] >> is_pub_predict_box;
+    }
+    if(fs["pub_object_axis"].isNone()){
+        fs["pub_object_axis"] >> is_pub_object_axis;
+    }
+    if(fs["pub_object_trajectory"].isNone()){
+        fs["pub_object_trajectory"] >> is_pub_object_trajectory;
+    }
+
+
     fs.release();
 
 }

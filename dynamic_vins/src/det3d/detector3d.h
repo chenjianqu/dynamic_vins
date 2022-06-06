@@ -29,6 +29,7 @@ public:
     std::vector<Box3D::Ptr> WaitResult();
 
     static std::vector<Box3D::Ptr> ReadBox3dFromTxt(const std::string &txt_path,double score_threshold);
+    static std::vector<Box3D::Ptr> ReadGroundtruthFromKittiTracking(int frame);
 
     static std::vector<Box3D::Ptr> ReadBox3D(unsigned int seq_id);
 private:

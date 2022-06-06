@@ -25,29 +25,39 @@ using namespace visualization_msgs;
 extern int32_t kMarkerTypeNumber;
 
 
-Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,unsigned int id,const cv::Scalar &color,
-    Marker::_action_type action=Marker::ADD,int offset=0);
+Marker LineStripMarker(geometry_msgs::Point p[8], unsigned int id,
+                       const cv::Scalar &color, double scale= 0.1,
+                       Marker::_action_type action= Marker::ADD,
+                       const string &ns="cube_strip",int offset= 0);
 
-Marker BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::Scalar &color,
-                            Marker::_action_type action=Marker::ADD,int offset=0);
+Marker LineStripMarker(EigenContainer<Eigen::Vector3d> &p, unsigned int id,
+                       const cv::Scalar &color, double scale= 0.1,
+                       Marker::_action_type action= Marker::ADD,
+                       const string &ns="cube_strip",int offset= 0);
 
-Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,unsigned int id,const cv::Scalar &color,
-                            Marker::_action_type action=Marker::ADD,int offset=0);
+Marker TextMarker(const PointT &point, unsigned int id, const std::string &text,
+                  const cv::Scalar &color, double scale,
+                  Marker::_action_type action= Marker::ADD,
+                  const string &ns="text",int offset= 1);
 
-Marker BuildTextMarker(const PointT &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                       double scale,Marker::_action_type action=Marker::ADD,int offset=1);
+Marker TextMarker(const Eigen::Vector3d &point, unsigned int id, const std::string &text,
+                  const cv::Scalar &color, double scale= 1.,
+                  Marker::_action_type action= Marker::ADD,
+                  const string &ns="text",int offset= 1);
 
-Marker BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                       double scale=1.,Marker::_action_type action=Marker::ADD,int offset=1);
+Marker ArrowMarker(const Eigen::Vector3d &start_pt, const Eigen::Vector3d &end_pt, unsigned int id,
+                   const cv::Scalar &color, double scale= 0.1,
+                   Marker::_action_type action= Marker::ADD,
+                   const string &ns="arrow",int offset= 2);
 
-Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,unsigned int id,
-                        const cv::Scalar &color,Marker::_action_type action=Marker::ADD,int offset=2);
-
-Marker BuildCubeMarker(Mat38d &corners,unsigned int id,const cv::Scalar &color,
-                       Marker::_action_type action=Marker::ADD,int offset=3);
+Marker CubeMarker(Mat38d &corners, unsigned int id, const cv::Scalar &color,
+                  double scale= 0.1, Marker::_action_type action= Marker::ADD,
+                  const string &ns="cube",int offset= 3);
 
 
-std::tuple<Marker,Marker,Marker> BuildAxisMarker(Mat34d &axis,unsigned int id,Marker::_action_type action=Marker::ADD,int offset=5);
+std::tuple<Marker,Marker,Marker> AxisMarker(Mat34d &axis, unsigned int id,
+                                            Marker::_action_type action= Marker::ADD,
+                                            const string &ns="axis",int offset= 5);
 
 
 }

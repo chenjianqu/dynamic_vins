@@ -97,7 +97,7 @@ inline std_msgs::ColorRGBA ScalarBgrToColorRGBA(const cv::Scalar &color){
     return color_rgba;
 }
 
-cv::Scalar GenerateNormBgrColor(const string &color_str);
+cv::Scalar BgrColor(const string &color_str);
 
 
 }

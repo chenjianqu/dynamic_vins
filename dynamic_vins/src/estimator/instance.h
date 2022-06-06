@@ -89,8 +89,6 @@ public:
     double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo) const;
     void GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
 
-    void DetermineStatic();
-
     [[nodiscard]] double AverageDepth() const;
 
     void ClearState(){

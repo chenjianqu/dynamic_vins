@@ -24,7 +24,8 @@
 
 #include "utils/io/io_utils.h"
 #include "utils/io/build_markers.h"
-#include "estimator/instance_manager.h"
+#include "estimator/estimator_insts.h"
+#include "det3d/detector3d.h"
 
 
 namespace dynamic_vins{\
@@ -61,6 +62,16 @@ std::shared_ptr<ros::Publisher> pub_stereo_pointcloud;
 std::shared_ptr<tf::TransformBroadcaster> transform_broadcaster;
 
 nav_msgs::Path path;
+
+
+inline PointT PointPCL(const Vec3d &v,double r,double g,double b){
+    PointT ps(r,g,b);
+    ps.x =(float) v.x();
+    ps.y =(float) v.y();
+    ps.z =(float) v.z();
+    return ps;
+}
+
 
 /**
  * 构造ROS发布器
@@ -413,6 +424,9 @@ void Publisher::PubKeyframe()
 
 
 
+
+
+
 void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
 {
     MarkerArray markers;
@@ -436,7 +450,7 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
         string log_text = fmt::format("id:{} class:{} score:{}\n",index,box.class_id,box.score);
         log_text += EigenToStr(box.corners);
         Debugv(log_text);
-        auto cube_marker = BuildCubeMarker(corners,index+4000,color_norm);
+        auto cube_marker = CubeMarker(corners, index + 4000, color_norm);
 
         markers.markers.push_back(cube_marker);
 
@@ -449,12 +463,13 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
 
 
 Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,
-                             const cv::Scalar &color,Marker::_action_type action,int offset){
+                                        const cv::Scalar &color,Marker::_action_type action,
+                                        const string &ns,int offset){
     Marker msg;
 
     msg.header.frame_id="world";
     msg.header.stamp=ros::Time::now();
-    msg.ns="box_strip";
+    msg.ns=ns;
     msg.action=action;
     msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
     msg.type=Marker::LINE_STRIP;//marker的类型
@@ -522,8 +537,26 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         ///可视化估计的包围框
         EigenContainer<Eigen::Vector3d> vertex;
         inst.GetBoxVertex(vertex);
-        auto lineStripMarker = BuildLineStripMarker(vertex,key,color_norm,action,0);
+        auto lineStripMarker = LineStripMarker(vertex, key, color_norm, 0.1, action);
         markers.markers.push_back(lineStripMarker);
+
+        ///构建坐标轴
+        if(io_para::is_pub_object_axis){
+            double axis_len=4.;
+            Mat34d axis_matrix;
+            axis_matrix.col(0) = Vec3d::Zero();
+            axis_matrix.col(1) = Vec3d(axis_len,0,0);
+            axis_matrix.col(2) = Vec3d(0,axis_len,0);
+            axis_matrix.col(3) = Vec3d(0,0,axis_len);
+            for(int i=0;i<4;++i){
+                axis_matrix.col(i) = inst.state[e->frame].R * axis_matrix.col(i) + inst.state[e->frame].P;
+            }
+            auto axis_markers = AxisMarker(axis_matrix, key);
+            markers.markers.push_back(std::get<0>(axis_markers));
+            markers.markers.push_back(std::get<1>(axis_markers));
+            markers.markers.push_back(std::get<2>(axis_markers));
+        }
+
 
         ///可视化检测得到的包围框
         /*for(int i=0;i<=kWinSize;++i){
@@ -535,46 +568,47 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
                 markers.markers.push_back(detect_cube_marker);
             }
         }*/
-        if(inst.boxes3d[e->frame-1]){
-            Mat38d corners_w = inst.boxes3d[e->frame-1]->GetCornersInWorld(
-                    e->Rs[e->frame-1], e->Ps[e->frame-1],
-                    e->ric[0],e->tic[0]);
-            auto detect_cube_marker = BuildCubeMarker(corners_w,key,GenerateNormBgrColor("gray"),action,3);
-            markers.markers.push_back(detect_cube_marker);
+
+        if(io_para::is_pub_predict_box){
+            if(inst.boxes3d[e->frame-1]){
+                Mat38d corners_w = inst.boxes3d[e->frame-1]->GetCornersInWorld(
+                        e->Rs[e->frame-1], e->Ps[e->frame-1],
+                        e->ric[0],e->tic[0]);
+                auto detect_cube_marker = CubeMarker(corners_w, key, BgrColor("gray"),
+                                                     0.05, action);
+                markers.markers.push_back(detect_cube_marker);
+            }
         }
 
         ///可视化历史轨迹
-        if(inst.is_initial ){
-            auto history_marker = BuildTrajectoryMarker(key,inst.history_pose,inst.state,color_norm,action,4);
-            markers.markers.push_back(history_marker);
+        if(io_para::is_pub_object_trajectory){
+            if(inst.is_initial ){
+                auto history_marker = BuildTrajectoryMarker(key,inst.history_pose,inst.state,color_norm,action);
+                markers.markers.push_back(history_marker);
+            }
         }
 
 
-        ///计算可视化的速度
+        string text=fmt::format("{}\n p:{}", inst.id,VecToStr(inst.state[kWinSize].P));
+        ///计算可视化文字信息
         if(!inst.is_static && inst.is_init_velocity && inst.vel.v.norm() > 1.){
             Eigen::Vector3d vel = hat(inst.vel.a) * inst.state[0].P + inst.vel.v;
-            string text=fmt::format("{}\n({})", inst.id, VecToStr(vel));
-            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
-            markers.markers.push_back(textMarker);
+            text += fmt::format("\n v:{}",VecToStr(vel));
 
-            Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 4;
-            auto arrowMarker = BuildArrowMarker(inst.state[kWinSize].P, end, key, color_norm,action,2);
+            //可视化速度
+            Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 2;
+            auto arrowMarker = ArrowMarker(inst.state[kWinSize].P, end, key, color_norm, 0.1, action);
             markers.markers.push_back(arrowMarker);
         }
         else if(inst.is_static){
-            string text=fmt::format("{} static", inst.id);
-            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
-            markers.markers.push_back(textMarker);
+            text += "\nstatic";
         }
-        else{
-            string text=fmt::format("{}", inst.id);
-            auto textMarker = BuildTextMarker(inst.state[kWinSize].P, key, text, color_inv, 1.2,action,1);
-            markers.markers.push_back(textMarker);
-        }
+        auto textMarker = TextMarker(inst.state[kWinSize].P, key, text, BgrColor("blue"), 1.2, action);
+        markers.markers.push_back(textMarker);
 
 
         ///可视化点
-        bool is_visual_all_point= true;
+        bool is_visual_all_point= false;
         string log_text= fmt::format("inst:{} 3D Points\n",inst.id);
 
         PointCloud cloud;
@@ -597,30 +631,21 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
             Vec3d pt_obj = inst.state[frame_j].R.transpose() * (pt_w_j - inst.state[frame_j].P);
             Vec3d pt = inst.state[frame_i].R *pt_obj + inst.state[frame_i].P;
 
-            PointT p;
-            p.x = (float)pt(0);p.y = (float)pt(1);p.z = (float)pt(2);
-            p.r=(uint8_t)inst.color[2];p.g=(uint8_t)inst.color[1];p.b=(uint8_t)inst.color[0];
-            cloud.push_back(p);
+            cloud.push_back(PointPCL(pt,inst.color[2],inst.color[1],inst.color[0]));
+
 
             //log_text += VecToStr(pt)+" ";
 
+            auto &back_p = lm.feats.back();
             if(!is_visual_all_point){
-                if(lm.feats.back().frame >= e->frame-1 && lm.feats.back().is_triangulated){
-                    PointT ps(255,255,255);
-                    ps.x =(float) lm.feats.back().p_w.x();
-                    ps.y =(float) lm.feats.back().p_w.y();
-                    ps.z =(float) lm.feats.back().p_w.z();
-                    stereo_point_cloud.push_back(ps);
+                if(back_p.frame >= e->frame-1 && back_p.is_triangulated){
+                    cloud.push_back(PointPCL(back_p.p_w,128,128,128));
                 }
             }
             else{
                 for(auto &feat : lm.feats){
                     if(feat.is_triangulated){
-                        PointT ps(255,255,255);
-                        ps.x =(float) feat.p_w.x();
-                        ps.y =(float) feat.p_w.y();
-                        ps.z =(float) feat.p_w.z();
-                        stereo_point_cloud.push_back(ps);
+                        cloud.push_back(PointPCL(feat.p_w,128,128,128));
                     }
                 }
             }
@@ -630,6 +655,23 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
 
         instance_point_cloud+=cloud;
     }
+
+
+    ///可视化gt框
+    if(io_para::is_pub_groundtruth_box){
+        int index=10000;
+        auto boxes_gt = Detector3D::ReadGroundtruthFromKittiTracking(e->feature_frame.seq_id);
+        for(auto &box : boxes_gt){
+            Mat38d corners_w = box->GetCornersInWorld(
+                    e->Rs[e->frame-1], e->Ps[e->frame-1],
+                    e->ric[0],e->tic[0]);
+            auto gt_cube_marker = CubeMarker(corners_w, index, BgrColor("magenta"),
+                                             0.06, Marker::ADD);
+            markers.markers.push_back(gt_cube_marker);
+            index++;
+        }
+    }
+
 
     ///设置删除当前帧不显示的marker
     /*std::set<int> curr_marker_ids;
@@ -663,66 +705,13 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
     point_cloud_msg.header = header;
     pub_instance_pointcloud->publish(point_cloud_msg);
 
-    sensor_msgs::PointCloud2 point_stereo_cloud_msg;
+    /*sensor_msgs::PointCloud2 point_stereo_cloud_msg;
     pcl::toROSMsg(stereo_point_cloud,point_stereo_cloud_msg);
     point_stereo_cloud_msg.header = header;
-    pub_stereo_pointcloud->publish(point_stereo_cloud_msg);
+    pub_stereo_pointcloud->publish(point_stereo_cloud_msg);*/
 }
 
 
-
-
-
-/**
- * 保存到文件中每行的内容
- * 1    frame        Frame within the sequence where the object appearers
-   1    track id     Unique tracking id of this object within this sequence
-   1    type         Describes the type of object: 'Car', 'Van', 'Truck',
-                     'Pedestrian', 'Person_sitting', 'Cyclist', 'Tram',
-                     'Misc' or 'DontCare'
-   1    truncated    Integer (0,1,2) indicating the level of truncation.
-                     Note that this is in contrast to the object detection
-                     benchmark where truncation is a float in [0,1].
-   1    occluded     Integer (0,1,2,3) indicating occlusion state:
-                     0 = fully visible, 1 = partly occluded
-                     2 = largely occluded, 3 = unknown
-   1    alpha        Observation angle of object, ranging [-pi..pi]
-   4    bbox         2D bounding box of object in the image (0-based index):
-                     contains left, top, right, bottom pixel coordinates
-   3    dimensions   3D object dimensions: height, width, length (in meters)
-   3    location     3D object location x,y,z in camera coordinates (in meters)
-   1    rotation_y   Rotation ry around Y-axis in camera coordinates [-pi..pi]
-   1    score        Only for results: Float, indicating confidence in
-                     detection, needed for p/r curves, higher is better.
-
-alpha和rotation_y的区别：
- The coordinates in the camera coordinate system can be projected in the image
-by using the 3x4 projection matrix in the calib folder, where for the left
-color camera for which the images are provided, P2 must be used. The
-difference between rotation_y and alpha is, that rotation_y is directly
-given in camera coordinates, while alpha also considers the vector from the
-camera center to the object center, to compute the relative orientation of
-the object with respect to the camera. For example, a car which is facing
-along the X-axis of the camera coordinate system corresponds to rotation_y=0,
-no matter where it is located in the X/Z plane (bird's eye view), while
-alpha is zero only, when this object is located along the Z-axis of the
-camera. When moving the car away from the Z-axis, the observation angle
-(\alpha) will change.
- */
-
-void SaveInstanceTrajectory(unsigned int frame_id,unsigned int track_id,std::string &type,
-                            int truncated,int occluded,double alpha,Vec4d &box,
-                            Vec3d &dims,Vec3d &location,double rotation_y,double score){
-    //追加写入
-    ofstream fout(io_para::kObjectResultPath,std::ios::out | std::ios::app);
-
-    fout<<frame_id<<" "<<track_id<<" "<<type<<" "<<truncated<<" "<<occluded<<" ";
-    fout<<alpha<<" "<<fmt::format("{} {} {} {}",box.x(),box.y(),box.z(),box.w())<<" "
-    <<VecToStr(dims)<<" "<<VecToStr(location)<<
-    " "<<rotation_y<<" "<<score;
-    fout<<endl;
-    fout.close();
-}
 
 
 

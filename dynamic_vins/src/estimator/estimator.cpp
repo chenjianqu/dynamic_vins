@@ -1505,7 +1505,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
 
             if(para::is_print_detail){
-                insts_manager.PrintInstanceInfo(true,false);
+                insts_manager.PrintInstanceInfo(true,true);
             }
 
             ///单独优化动态物体

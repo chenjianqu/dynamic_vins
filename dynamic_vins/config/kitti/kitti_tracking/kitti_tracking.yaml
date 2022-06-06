@@ -11,6 +11,8 @@ dataset_type: "kitti" #数据集类型,支持kitti,viode
 
 slam_type: "dynamic" #SLAM模式,可选:raw,naive,dynamic
 
+plane_constraint: 1 #是否使用平面约束
+
 #是否估计相机和IMU之间的外参数,
 # 0表示已有固定的外参,不估计外参;
 # 1表示估计外参,且有初始外参
@@ -24,16 +26,18 @@ basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 
 #直接读取图像
-dataset_sequence: "0003"
+dataset_sequence: "0004"
 
-kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0002.txt" #相机内参
+kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0004.txt" #相机内参
 
 det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/" #预处理的3D框
 det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/" #预处理的2D框
 
+object_groundtruth_path: "/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/"
+
 use_dataloader: 1 #是否直接读取图像
 #以下选项当use_dataloader=1时有效
-image_dataset_period: 100 #读取的时间周期,毫秒
+image_dataset_period: 300 #读取的时间周期,毫秒
 image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/"
 image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/"
 
@@ -77,6 +81,11 @@ vins_keyframe_pose_topic: "/dynamic_vins/keyframe_pose"
 vins_extrinsic_topic: "/dynamic_vins/extrinsic"
 vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
 vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
+
+pub_groundtruth_box: 0
+pub_predict_box: 0
+pub_object_axis: 1
+pub_object_trajectory: 1
 
 
 ####################### 前端的参数 ########################
@@ -140,20 +149,17 @@ extractor_model_path: "weights/deepsort/ckpt.bin"
 
 
 ####################### log的参数 ########################
-estimator_log_path: "data/output/vio_log.txt"
 estimator_log_level: "debug"
 estimator_log_flush: "debug"
-feature_tracker_log_path: "data/output/frontend_log.txt"
 feature_tracker_log_level: "debug"
 feature_tracker_log_flush: "debug"
-segmentor_log_path: "data/output/img_process_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
+log_output_path: "data/log/"
 
 print_detail: 1
 
 ####################### 动态物体参数 ########################
-plane_constraint: 0
 
 instance_init_min_num: 4
 instance_static_err_threshold: 10.0

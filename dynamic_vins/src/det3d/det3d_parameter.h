@@ -22,6 +22,8 @@ public:
     inline static std::string kDet3dPreprocessPath;
     inline static double kDet3dScoreThreshold;
 
+    inline static std::string kGroundTruthPath;
+
     inline static bool use_offline;
 
     static void SetParameters(const std::string &config_path);

@@ -24,6 +24,8 @@ struct Box2D{
 
     static  std::vector<Box2D::Ptr> BuildBoxes2D(torch::Tensor &seg_label,torch::Tensor &cate_label,torch::Tensor &cate_score);
 
+    static float IoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
+
 
     std::string class_name;
     int class_id;
@@ -37,7 +39,6 @@ struct Box2D{
 
     cv::Mat mask_cv;
     cv::cuda::GpuMat mask_gpu;
-    torch::Tensor mask_tensor;
 };
 
 }

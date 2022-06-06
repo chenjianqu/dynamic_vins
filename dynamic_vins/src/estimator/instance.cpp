@@ -555,158 +555,16 @@ void Instance::GetOptimizationParameters()
     SetWindowPose();*/
 
     int index=-1;
-    for(auto &landmark : landmarks){
-        if(landmark.depth > 0){
-            index++;
-            landmark.depth= 1.0 / para_inv_depth[index][0];
-        }
-    }
-}
-
-
-
-
-/**
- * 判断物体是运动的还是静止的
- */
-void Instance::DetermineStatic()
-{
-    if(!is_tracking || triangle_num<5){
-        return;
-    }
-    /*
-    ///下面根据重投影误差来判断物体的运动
-    double err = 0;
-    int err_cnt = 0;
-
-    for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
-        it_next++;
-        auto &lm=*it;
-        if(lm.feats.empty() || lm.depth <= 0)
-            continue;
-
-        ///单目重投影误差
-        for(int i=1;i<(int)lm.feats.size(); ++i){
-            int imu_i = lm.feats[0].frame;
-            int imu_j = lm.feats[i].frame;
-            Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
-            Vec3d pts_cj = e->ric[0].transpose() * (e->Rs[imu_j].transpose() * (pts_w - e->Ps[imu_j]) - e->tic[0]);
-            Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
-            double re = residual.norm();
-            err+=re;
-            err_cnt++;
-        }
-        ///双目重投影误差
-        for(int i=0;i<(int)lm.feats.size(); ++i){
-            if(lm.feats[i].is_stereo){
-                int imu_i = lm.feats[0].frame;
-                int imu_j = lm.feats[i].frame;
-                Vec3d pts_w = e->Rs[imu_i] * (e->ric[0] * (lm.depth * lm.feats[0].point) + e->tic[0]) + e->Ps[imu_i];
-                Vec3d pts_cj = e->ric[1].transpose() * (e->Rs[imu_j].transpose() * (pts_w - e->Ps[imu_j]) - e->tic[1]);
-                Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - lm.feats[i].point.head<2>();
-                double re = residual.norm();
-                err+=re;
-                err_cnt++;
-            }
-        }
-    }
-
-    if(err_cnt>0){
-        double avg_err = err / err_cnt * kFocalLength;
-        if(avg_err < para::kInstanceStaticErrThreshold){
-            if(!is_static){
-                if(static_cnt >=3 ){
-                    static_cnt=0;
-                    is_static=true;
-                }
-                else{
-                    static_cnt++;
-                }
-            }
-
-        }
-        Debugv("SetDynamicOrStatic id:{} triangle_num:{} avg_err:{} is_static:{}",id,triangle_num,avg_err,is_static);
-    }*/
-
-    /*if(is_init_velocity && vel.v.norm() > 2){
-        is_static = false;
-        static_frame=0;
-        return;
-    }*/
-
-    ///下面根据场景流判断物体是否运动
-    int cnt=0;
-    Vec3d scene_vec=Vec3d::Zero();
-    Vec3d point_v=Vec3d::Zero();
-
     for(auto &lm : landmarks){
-        if(lm.depth<=0)
+        if(lm.depth<0.2)
             continue;
-        if(lm.feats.size() <= 1)
-            continue;
-        //计算第一个观测所在的世界坐标
-        Vec3d ref_vec;
-        double ref_time;
-        if(lm.feats.front().is_triangulated){
-            ref_vec = lm.feats.front().p_w;
-        }
-        else{
-            //将深度转换到世界坐标系
-            ref_vec =  e->Rs[lm.feats.front().frame] * (e->ric[0] * (lm.feats.front().point * lm.depth) + e->tic[0]) +
-                    e->Ps[lm.feats.front().frame];
-        }
-        ref_time= e->headers[lm.feats.front().frame];
-
-        //计算其它观测的世界坐标
-        int feat_index=1;
-        for(auto feat_it = (++lm.feats.begin());feat_it!=lm.feats.end();++feat_it){
-            if(feat_it->is_triangulated){//计算i观测时点的3D位置
-                scene_vec += ( feat_it->p_w - ref_vec ) / feat_index; //加上平均距离向量
-                point_v   += ( feat_it->p_w - ref_vec ) / (e->headers[feat_it->frame] -ref_time);
-                cnt++;
-            }
-            feat_index++;
-        }
+        index++;
+        lm.depth= 1.0 / para_inv_depth[index][0];
     }
-
-    ///根据场景流判断是否是运动物体
-    if(cnt>3){
-        scene_vec = point_v / cnt;
-        Velocity v;
-        v.v = scene_vec;
-        history_vel.push_back(v);
-
-        if(scene_vec.norm() > 1. || (std::abs(scene_vec.x())>0.8 ||
-            std::abs(scene_vec.y())>0.8 || std::abs(scene_vec.z())>0.8) ){
-            is_static=false;
-            static_frame=0;
-        }
-        else{
-            static_frame++;
-        }
-    }
-
-    if(!history_vel.empty()){
-        point_vel.SetZero();
-        for(auto &v:history_vel){
-            point_vel.v += v.v;
-        }
-        point_vel.v /= (double)history_vel.size();
-    }
-    point_vel.v.y()=0;
-
-    if(history_vel.size()>10){
-        history_vel.pop_front();
-    }
-
-
-    if(static_frame>=3){
-        is_static=true;
-    }
-
-    Debugv("DetermineStatic id:{} is_static:{} vec_size:{} scene_vec:{} static_frame:{} point_vel.v:{}",
-           id,is_static,cnt, VecToStr(scene_vec),static_frame, VecToStr(point_vel.v));
 }
+
+
+
 
 
 }

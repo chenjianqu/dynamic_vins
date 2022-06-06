@@ -64,11 +64,9 @@ bool PoseConstraintLocalParameterization::Plus(const double *x, const double *de
     Eigen::Map<const Eigen::Quaterniond> _q(x + 3);
 
     //Eigen::Map<const Eigen::Vector3d> dp(delta);
-    Vec3d dp(delta[0],delta[1],0);
+    Vec3d dp(delta[0],0,delta[2]);
 
-    Vec3d dr(0,0,delta[5]);
-
-    Eigen::Quaterniond dq = Utility::deltaQ(dr);
+    Eigen::Quaterniond dq = Utility::deltaQ(Eigen::Map<const Eigen::Vector3d>(delta + 3));
 
     Eigen::Map<Eigen::Vector3d> p(x_plus_delta);
     Eigen::Map<Eigen::Quaterniond> q(x_plus_delta + 3);

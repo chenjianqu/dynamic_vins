@@ -94,7 +94,7 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
 }
 
 
-cv::Scalar GenerateNormBgrColor(const string &color_str){
+cv::Scalar BgrColor(const string &color_str){
     cv::Scalar color;
     color[3]=1.;
     if(color_str=="white"){
@@ -106,6 +106,11 @@ cv::Scalar GenerateNormBgrColor(const string &color_str){
         color[0]=0;
         color[1]=0;
         color[2]=0;
+    }
+    else if(color_str=="gray"){
+        color[0]=0.5;
+        color[1]=0.5;
+        color[2]=0.5;
     }
     else if(color_str=="blue"){
         color[0]=1.;
@@ -122,10 +127,20 @@ cv::Scalar GenerateNormBgrColor(const string &color_str){
         color[1]=0;
         color[2]=1.;
     }
-    else if(color_str=="gray"){
-        color[0]=0.5;
-        color[1]=0.5;
-        color[2]=0.5;
+    else if(color_str=="yellow"){//红绿混合
+        color[0]= 0;
+        color[1]= 1;
+        color[2]= 1;
+    }
+    else if(color_str=="cyan"){//青色,蓝绿混合
+        color[0]= 1;
+        color[1]= 1;
+        color[2]= 0;
+    }
+    else if(color_str=="magenta"){//品红,红蓝混合
+        color[0]= 1;
+        color[1]= 0;
+        color[2]= 1;
     }
     else{
         color[0]=1.;

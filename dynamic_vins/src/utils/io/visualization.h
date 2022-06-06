@@ -86,7 +86,7 @@ public:
                       const string &frame_id,const string &child_frame_id);
 
     static Marker BuildTrajectoryMarker(unsigned int id, std::list<State> &history, State* sliding_window, const cv::Scalar &color,
-                                        Marker::_action_type action=Marker::ADD, int offset=4);
+                                        Marker::_action_type action=Marker::ADD, const string &ns="trajectory" ,int offset=4);
 
 
     inline static std::shared_ptr<Estimator> e;

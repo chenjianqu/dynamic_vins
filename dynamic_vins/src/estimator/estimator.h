@@ -35,7 +35,7 @@
 
 #include "front_end/background_tracker.h"
 #include "vio_util.h"
-#include "instance_manager.h"
+#include "estimator_insts.h"
 #include "utils/def.h"
 #include "landmark.h"
 #include "vio_parameters.h"

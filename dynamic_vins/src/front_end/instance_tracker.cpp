@@ -98,7 +98,7 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
 
             cv::Rect inst_rect(inst.box2d->min_pt,inst.box2d->max_pt);
             cv::Rect proj_rect(boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
-            float iou = BoxIoU(inst_rect,proj_rect);
+            float iou = Box2D::IoU(inst_rect,proj_rect);
 
             log_text += fmt::format("inst:{}-box:{},name:({},{}),iou:{}\n",inst_id,i,inst.box2d->class_name,
                                     boxes[i]->class_name,iou);
@@ -108,7 +108,7 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
                 continue;
 
             ///判断3D目标检测得到的box 和 估计的3D box的距离
-            if(center && (*center - boxes[i]->center).norm() > 10)
+            if(center && (*center - boxes[i]->center_pt).norm() > 10)
                 continue;
 
 
@@ -125,8 +125,8 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
         double min_dist= std::numeric_limits<double>::max();
         int min_idx=-1;
         for(int i=0;i<candidate_match.size();++i){
-            if(candidate_match[i]->center.norm() < min_dist){
-                min_dist=candidate_match[i]->center.norm();
+            if(candidate_match[i]->center_pt.norm() < min_dist){
+                min_dist=candidate_match[i]->center_pt.norm();
                 min_idx = candidate_idx[i];
             }
         }

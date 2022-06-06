@@ -181,25 +181,12 @@ void SortPoints(vector<cv::Point2f> &cur_pts, vector<int> &track_cnt, vector<uns
 
 
 
-void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos, float scale= 1.f, int thickness= 1, bool reverse = false);
-
-void DrawBbox(cv::Mat &img, const cv::Rect2f& bbox, const std::string &label = "", const cv::Scalar &color = {0, 0, 0});
+void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos,
+              float scale= 1.f, int thickness= 1, bool reverse = false);
 
 cv::Scalar color_map(int64_t n);
 
 
-
-float BoxIoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
-
-
-inline std::string DimsToStr(cv::Size list){
-    return "[" + std::to_string(list.height) + ", " + std::to_string(list.width) + "]";
-}
-
-
-inline cv::Point2f operator*(const cv::Point2f &lp,const cv::Point2f &rp){
-    return {lp.x * rp.x,lp.y * rp.y};
-}
 
 
 }

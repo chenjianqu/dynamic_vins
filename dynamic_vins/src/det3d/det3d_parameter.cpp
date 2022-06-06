@@ -40,6 +40,13 @@ void Det3dParameter::SetParameters(const std::string &config_path)
         kDet3dPreprocessPath = kDet3dPreprocessPath+kDatasetSequence+"/";
     }
 
+    if(!fs["object_groundtruth_path"].isNone()){
+        std::string kDatasetSequence;
+        fs["dataset_sequence"]>>kDatasetSequence;
+        fs["object_groundtruth_path"] >> kGroundTruthPath;
+        kGroundTruthPath += kDatasetSequence+".txt";
+    }
+
     fs.release();
 }
 

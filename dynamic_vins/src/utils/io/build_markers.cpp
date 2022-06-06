@@ -18,39 +18,22 @@ namespace dynamic_vins{\
 int32_t kMarkerTypeNumber=10;
 
 
-Marker BuildLineStripMarker(PointT &maxPt,PointT &minPt,unsigned int id,const cv::Scalar &color,
-                            Marker::_action_type action,int offset){
-    //设置立方体的八个顶点
-    geometry_msgs::Point p[8];
-    p[0].x=minPt.x;p[0].y=minPt.y;p[0].z=minPt.z;
-    p[1].x=maxPt.x;p[1].y=minPt.y;p[1].z=minPt.z;
-    p[2].x=maxPt.x;p[2].y=minPt.y;p[2].z=maxPt.z;
-    p[3].x=minPt.x;p[3].y=minPt.y;p[3].z=maxPt.z;
-    p[4].x=minPt.x;p[4].y=maxPt.y;p[4].z=maxPt.z;
-    p[5].x=maxPt.x;p[5].y=maxPt.y;p[5].z=maxPt.z;
-    p[6].x=maxPt.x;p[6].y=maxPt.y;p[6].z=minPt.z;
-    p[7].x=minPt.x;p[7].y=maxPt.y;p[7].z=minPt.z;
-
-    return BuildLineStripMarker(p,id,color,action,offset);
-}
-
-
-Marker BuildLineStripMarker(EigenContainer<Eigen::Vector3d> &p,unsigned int id,const cv::Scalar &color,
-                            Marker::_action_type action,int offset){
+Marker LineStripMarker(EigenContainer<Eigen::Vector3d> &p, unsigned int id, const cv::Scalar &color,
+                       double scale, Marker::_action_type action, const string &ns,int offset){
     geometry_msgs::Point points[8];
     for(int i=0;i<8;++i){
         points[i] = EigenToGeometryPoint(p[i]);
     }
-    return BuildLineStripMarker(points,id,color,action,offset);
+    return LineStripMarker(points, id, color, scale, action, ns,offset);
 }
 
 
-Marker BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::Scalar &color,
-                            Marker::_action_type action,int offset){
+Marker LineStripMarker(geometry_msgs::Point p[8], unsigned int id, const cv::Scalar &color,
+                       double scale, Marker::_action_type action,const string &ns, int offset){
     Marker msg;
     msg.header.stamp=ros::Time::now();
     msg.header.frame_id="world";
-    msg.ns="box_strip";
+    msg.ns=ns;
     msg.action=action;
     msg.pose.orientation.w=1.0;
 
@@ -62,9 +45,8 @@ Marker BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::
     }
 
     msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
-    msg.scale.x=0.08;//线宽
+    msg.scale.x=scale;//线宽
     msg.color = ScalarBgrToColorRGBA(color);
-    msg.color.a=1.0;//不透明度
 
     //这个类型仅将相邻点进行连线
     for(int i=0;i<8;++i){
@@ -85,12 +67,12 @@ Marker BuildLineStripMarker(geometry_msgs::Point p[8],unsigned int id,const cv::
 }
 
 
-Marker BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::string &text,const cv::Scalar &color,
-                       const double scale,Marker::_action_type action,int offset){
+Marker TextMarker(const Eigen::Vector3d &point, unsigned int id, const std::string &text, const cv::Scalar &color,
+                  double scale, Marker::_action_type action, const string &ns,int offset){
     Marker msg;
     msg.header.stamp=ros::Time::now();
     msg.header.frame_id="world";
-    msg.ns="box_text";
+    msg.ns=ns;
     msg.action=action;
 
     msg.id=id * kMarkerTypeNumber + offset;
@@ -113,81 +95,50 @@ Marker BuildTextMarker(const Eigen::Vector3d &point,unsigned int id,const std::s
 }
 
 
-Marker BuildTextMarker(const PointT &point,unsigned int id,const std::string &text,
-                        const cv::Scalar &color,const double scale,Marker::_action_type action,int offset){
+Marker TextMarker(const PointT &point, unsigned int id, const std::string &text,
+                  const cv::Scalar &color, double scale, Marker::_action_type action,
+                  const string &ns,int offset){
     Eigen::Vector3d eigen_pt;
     eigen_pt<<point.x,point.y,point.z;
-    return BuildTextMarker(eigen_pt,id,text,color,scale,action,offset);
+    return TextMarker(eigen_pt, id, text, color, scale, action, ns,offset);
 }
 
-Marker BuildArrowMarker(const Eigen::Vector3d &start_pt,const Eigen::Vector3d &end_pt,unsigned int id,
-                                   const cv::Scalar &color,Marker::_action_type action,int offset){
-    Marker msg;
-    msg.header.frame_id="world";
-    msg.header.stamp=ros::Time::now();
-    msg.ns="arrow_strip";
-    msg.action=action;
+Marker ArrowMarker(const Eigen::Vector3d &start_pt, const Eigen::Vector3d &end_pt, unsigned int id,
+                   const cv::Scalar &color, double scale, Marker::_action_type action,
+                   const string &ns,int offset){
 
-    msg.id=id * kMarkerTypeNumber + offset;
-    msg.type=Marker::LINE_STRIP;//marker的类型
+    Marker msg_x;
+    msg_x.header.frame_id="world";
+    msg_x.header.stamp=ros::Time::now();
+    msg_x.ns=ns;
+    msg_x.action=action;
+    msg_x.type = Marker::ARROW;
+    msg_x.lifetime=ros::Duration(io_para::kVisualInstDuration);//若为ros::Duration()表示一直持续
+    msg_x.pose.orientation.w=1.0;
+    msg_x.scale.x=scale;//线宽
+    msg_x.scale.y=scale;
+    msg_x.scale.z=scale;
 
+    msg_x.id=id * kMarkerTypeNumber + offset;
     if(action==Marker::DELETE){
-        return msg;
+        return msg_x;
     }
 
-    msg.pose.orientation.w=1.0;
+    msg_x.points.push_back(EigenToGeometryPoint(start_pt));
+    msg_x.points.push_back(EigenToGeometryPoint(end_pt));
+    msg_x.color = ScalarBgrToColorRGBA(color);
 
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);
-
-    msg.scale.x=0.01;//线宽
-    msg.color = ScalarBgrToColorRGBA(color);
-    msg.color.a=1.0;//不透明度
-
-    geometry_msgs::Point start = EigenToGeometryPoint(start_pt);
-    geometry_msgs::Point end = EigenToGeometryPoint(end_pt);
-
-    const double arrow_len=std::sqrt((start.x-end.x) * (start.x-end.x) +(start.y-end.y) * (start.y-end.y) +
-            (start.z-end.z) * (start.z-end.z)) /8.;
-
-    geometry_msgs::Point p[7];
-    p[0]=start;
-    p[1]=end;
-    p[2]=end;
-    if(start.x < end.x){
-        p[2].x -= arrow_len;
-    }else{
-        p[2].x += arrow_len;
-    }
-    p[3]=end;
-    p[4]=end;
-    if(start.y < end.y){
-        p[4].y -= arrow_len;
-    }else{
-        p[4].y += arrow_len;
-    }
-    p[5]=end;
-    p[6]=end;
-    if(start.z < end.z){
-        p[6].z -= arrow_len;
-    }else{
-        p[6].z += arrow_len;
-    }
-
-    //这个类型仅将相邻点进行连线
-    for(auto &pt : p)
-        msg.points.push_back(pt);
-
-    return msg;
+    return msg_x;
 }
 
 
-Marker BuildCubeMarker(Mat38d &corners,unsigned int id,const cv::Scalar &color,
-                                  Marker::_action_type action,int offset){
+Marker CubeMarker(Mat38d &corners, unsigned int id, const cv::Scalar &color, double scale,
+                  Marker::_action_type action,const string &ns ,int offset){
     Marker msg;
 
     msg.header.frame_id="world";
     msg.header.stamp=ros::Time::now();
-    msg.ns="box_strip";
+    msg.ns=ns;
     msg.action=action;
 
     msg.id=id * kMarkerTypeNumber + offset;
@@ -200,7 +151,7 @@ Marker BuildCubeMarker(Mat38d &corners,unsigned int id,const cv::Scalar &color,
 
     msg.pose.orientation.w=1.0;
 
-    msg.scale.x=0.2;//线宽
+    msg.scale.x=scale;//线宽
     msg.color = ScalarBgrToColorRGBA(color);
 
     //设置立方体的八个顶点
@@ -256,12 +207,12 @@ Marker BuildCubeMarker(Mat38d &corners,unsigned int id,const cv::Scalar &color,
 
 
 
-std::tuple<Marker,Marker,Marker> BuildAxisMarker(Mat34d &axis,unsigned int id,Marker::_action_type action,int offset)
+std::tuple<Marker,Marker,Marker> AxisMarker(Mat34d &axis, unsigned int id, Marker::_action_type action,const string &ns, int offset)
 {
     Marker msg_x;
     msg_x.header.frame_id="world";
     msg_x.header.stamp=ros::Time::now();
-    msg_x.ns="arrow";
+    msg_x.ns=ns;
     msg_x.action=action;
     msg_x.type = Marker::ARROW;
     msg_x.lifetime=ros::Duration(io_para::kVisualInstDuration);//若为ros::Duration()表示一直持续
@@ -274,8 +225,8 @@ std::tuple<Marker,Marker,Marker> BuildAxisMarker(Mat34d &axis,unsigned int id,Ma
     Marker msg_z= msg_x;
 
     msg_x.id=id * kMarkerTypeNumber + offset;
-    msg_y.id=id * kMarkerTypeNumber + offset + 6000;
-    msg_z.id=id * kMarkerTypeNumber + offset + 8000;
+    msg_y.id=id * kMarkerTypeNumber + offset + 1;
+    msg_z.id=id * kMarkerTypeNumber + offset + 2;
     if(action==Marker::DELETE){
         return {msg_x,msg_y,msg_z};
     }
@@ -287,13 +238,13 @@ std::tuple<Marker,Marker,Marker> BuildAxisMarker(Mat34d &axis,unsigned int id,Ma
 
     msg_x.points.push_back(org);
     msg_x.points.push_back(x_d);
-    msg_x.color = ScalarBgrToColorRGBA(GenerateNormBgrColor("red"));
+    msg_x.color = ScalarBgrToColorRGBA(BgrColor("red"));
     msg_y.points.push_back(org);
     msg_y.points.push_back(y_d);
-    msg_y.color = ScalarBgrToColorRGBA(GenerateNormBgrColor("green"));
+    msg_y.color = ScalarBgrToColorRGBA(BgrColor("green"));
     msg_z.points.push_back(org);
     msg_z.points.push_back(z_d);
-    msg_z.color = ScalarBgrToColorRGBA(GenerateNormBgrColor("blue"));
+    msg_z.color = ScalarBgrToColorRGBA(BgrColor("blue"));
 
     return {msg_x,msg_y,msg_z};
 }
