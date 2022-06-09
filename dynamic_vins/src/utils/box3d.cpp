@@ -123,6 +123,7 @@ Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens)
     double score=1.;
 
     Box3D::Ptr box3d = std::make_shared<Box3D>(class_id,class_name,score);
+    box3d->id = track_id;
 
     double alpha=std::stod(tokens[5]);
 

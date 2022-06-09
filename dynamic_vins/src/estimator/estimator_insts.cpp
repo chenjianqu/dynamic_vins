@@ -18,7 +18,7 @@
 #include "vio_parameters.h"
 
 #include "factor/pose_local_parameterization.h"
-#include "factor/instance_factor.h"
+#include "factor/project_instance_factor.h"
 #include "factor/speed_factor.h"
 #include "factor/box_factor.h"
 #include "utils/dataset/kitti_utils.h"
@@ -1049,7 +1049,7 @@ void InstanceManager::SaveTrajectory(){
     Mat3d R_cw = R_ci * R_iw;
     Vec3d P_cw = R_ci * P_iw + P_ci;
 
-    string object_tracking_path= io_para::kOutputFolder + cfg::kDatasetSequence+"_mot.txt";
+    string object_tracking_path= io_para::kOutputFolder + cfg::kDatasetSequence+".txt";
     string object_object_dir= io_para::kOutputFolder + cfg::kDatasetSequence+"/";
 
     static bool first_run=true;
@@ -1504,7 +1504,7 @@ void InstanceManager::Optimization(){
  * @param problem
  * @param loss_function
  */
-void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function)
+void InstanceManager::AddResidualBlockForJointOpt(ceres::Problem &problem, ceres::LossFunction *loss_function)
 {
     if(tracking_number_ < 1)
         return;
@@ -1532,15 +1532,15 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                         e->para_ex_pose[0],
                         e->para_ex_pose[1],
                         inst.para_inv_depth[depth_index]);*/
-/*                problem.AddResidualBlock(
+                problem.AddResidualBlock(
                         new ProjInst12FactorSimple(feat_j.point,feat_j.point_right,
                                                    e->ric[0],e->tic[0],e->ric[1],e->tic[1]),
                         loss_function,
                         inst.para_inv_depth[depth_index]);
-                statistics["ProjInst12FactorSimple"]++;*/
+                statistics["ProjInst12FactorSimple"]++;
             }
 
-            if(inst.is_static){ //对于静态物体,仅仅refine包围框和逆深度
+            if(! inst.is_static){
                 continue;
             }
 
@@ -1566,20 +1566,18 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
             for(auto feat_it = (++lm.feats.begin()); feat_it !=lm.feats.end();++feat_it ){
                 int fi = feat_it->frame;
 
-                ///优化物体位姿和特征点深度
-                 //这一项效果不好, TODO
-                 /*problem.AddResidualBlock(
-                        new ProjInst21SimpleFactor(
-                                feat_j.point,feat_it->point,feat_j.vel,feat_it->vel,
-                                e->Rs[feat_j.frame],e->Ps[feat_j.frame],
-                                e->Rs[feat_it->frame],e->Ps[feat_it->frame],
-                                e->ric[0],e->tic[0],
-                                feat_j.td,feat_it->td,e->td,(int)lm.id),
-                                loss_function,
-                                inst.para_state[feat_j.frame],
-                                inst.para_state[feat_it->frame],
-                                inst.para_inv_depth[depth_index]);
-                 statistics["ProjInst21SimpleFactor"]++;*/
+                problem.AddResidualBlock(
+                        new ProjectionInstanceFactor(feat_j.point,feat_it->point,feat_j.vel,feat_it->vel,
+                                                     feat_j.td,feat_it->td,e->td),
+                        loss_function,
+                        e->para_Pose[fj],
+                        e->para_Pose[fi],
+                        e->para_ex_pose[0],
+                        inst.para_state[fj],
+                        inst.para_state[fi],
+                        inst.para_inv_depth[depth_index]
+                        );
+                statistics["ProjectionInstanceFactor"]++;
 
                 //double factor= 1.;//track_3>=5 ? 5. : 1.;
                 ///优化相机位姿、物体的速度和位姿
@@ -1641,18 +1639,9 @@ void InstanceManager::AddResidualBlock(ceres::Problem &problem, ceres::LossFunct
                                     inst.para_inv_depth[depth_index]);
                      statistics["ProjInst22SimpleFactor"]++;*/
 
-                    if(lm.feats.size() >= 3){
-                        ///优化速度和特征点深度
-                        /*problem.AddResidualBlock(new ProjectionSpeedFactor(
-                                feat_j.point, feat_i.point_right,feat_j.vel, feat_i.vel_right,
-                                e->ric[0], e->tic[0],e->ric[1],e->tic[1],
-                                feat_j.td, feat_i.td, e->td,e->Headers[fj],e->Headers[fi],factor),
-                                                 loss_function,
-                                                 e->para_Pose[fj],
-                                                 e->para_Pose[fi],
-                                                 inst.para_speed[0],
-                                                 inst.para_inv_depth[depth_index]);*/
-                        ///优化相机位姿和物体速度
+                    if(lm.feats.size() >= 2){
+
+                        ///优化相机位姿和物体速度和特征点深度
                         /*problem.AddResidualBlock(new ProjectionSpeedFactor(
                                 feat_j.point, feat_i.point_right,feat_j.vel, feat_i.vel_right,
                                 e->ric[0], e->tic[0],e->ric[1],e->tic[1],

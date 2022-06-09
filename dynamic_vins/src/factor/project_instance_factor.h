@@ -8,8 +8,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_INSTANCE_FACTOR_H
-#define DYNAMIC_VINS_INSTANCE_FACTOR_H
+#ifndef DYNAMIC_VINS_PROJECT_INSTANCE_FACTOR_H
+#define DYNAMIC_VINS_PROJECT_INSTANCE_FACTOR_H
 
 #include <ceres/ceres.h>
 #include <eigen3/Eigen/Dense>
@@ -24,8 +24,7 @@ namespace dynamic_vins{\
 
 /**
  * 两帧之间某个观测的重投影误差
- * 参数：ceres::SizedCostFunction<误差项大小,第一个优化变量大小, 第二个优化变量大小, 第三个优化变量的大小, 第四个优化变量的大小, 第五个优化变量的大小>
- * 优化变量分别是：T_wci,Twok,逆深度
+ * 参数：ceres::SizedCostFunction<误差项大小,P_wbj|Q_wbj, P_wbi|Q_wbi, P_bc|Q_bc, P_woj|Q_woj, P_woi|Q_woi,inv_dep_j>
  */
 class ProjectionInstanceFactor : public ceres::SizedCostFunction<2, 7,7,7,7,7,1>{
 public:
@@ -49,13 +48,12 @@ public:
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
 
-
     Vec3d pts_j;//估计值（以前的观测值）
     Vec3d pts_i;//当前观测值
 
     Vec3d velocity_i, velocity_j;
-    double td_i, td_j,cur_td;
-    inline static Eigen::Matrix2d sqrt_info;
+    double td_i{}, td_j{},cur_td{};
+    inline static Mat2d sqrt_info;
     inline static double sum_t{0};
 };
 
@@ -386,4 +384,4 @@ public:
 
 }
 
-#endif //DYNAMIC_VINS_INSTANCE_FACTOR_H
+#endif //DYNAMIC_VINS_PROJECT_INSTANCE_FACTOR_H

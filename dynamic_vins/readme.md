@@ -313,6 +313,47 @@ evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${se
 
 
 
+### Evaluate object trajectory
+
+* Split mot estimation result to `TUM` format
+
+```shell
+gt_id=1
+estimate_id=3
+
+gt_file=/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/0003.txt
+estimate_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/0003.txt
+
+#cam_pose_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/0003_ego-motion.txt
+gt_cam_pose_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/0003.txt
+estimate_cam_pose_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/0003_ego-motion.txt
+
+rosrun dynamic_vins_eval split_mot_to_tum ${gt_id} ${estimate_id} ${gt_file} ${estimate_file} ${gt_cam_pose_file} ${estimate_cam_pose_file}
+```
+
+
+
+* Estimate object trajectory
+
+```shell
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+base_path=/home/chen/ws/dynamic_ws/
+
+object_id=0
+
+evo_traj tum ${base_path}/${object_id}_estimate.txt --ref=${base_path}/${object_id}_gt.txt --align -p
+
+evo_ape tum --align  ${base_path}/${object_id}_estimate.txt ${base_path}/${object_id}_gt.txt  && evo_rpe tum --align  ${base_path}/${object_id}_estimate.txt ${base_path}/${object_id}_gt.txt   -r trans_part && evo_rpe tum --align  ${base_path}/${object_id}_estimate.txt ${base_path}/${object_id}_gt.txt   -r rot_part
+```
+
+
+
+
+
+
+
 
 
 ### Evaluate mot with TrackEval
@@ -421,16 +462,14 @@ Run environment: `Python2`, dependency:
 
 ​	将模型预测结果的放置到：` ${dynamic_vins_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/results/dynamic_vins/data/`，结果的数据格式与 ground truth一致。
 
-```shell
-dynamic_vins_root=/home/chen/ws/dynamic_ws/src
-sequence=0000
-
-cp ${dynamic_vins_root}/dynamic_vins/data/exp/2022-6-7/kitti_tracking_dynamic/${sequence}_mot.txt ${dynamic_vins_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/results/dynamic_vins/data/${sequence}.txt
-```
-
 ​	执行评估: 
 
 ```shell
+dynamic_vins_root=~/ws/dynamic_ws/src
+
+#修改.segmap文件来设置要评估的序列
+gedit ${dynamic_vins_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/data/tracking/evaluate_tracking.seqmap
+
 cd ${dynamic_vins_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python
 
 python ./evaluate_tracking.py dynamic_vins

@@ -608,9 +608,23 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
     if(img.boxes2d.empty())
         return;
     assert(img.mask_tensor.sizes()[0] == img.boxes2d.size());
-    //cv::Size mask_size((int)img.mask_tensor.sizes()[2],(int)img.mask_tensor.sizes()[1]);
-    //mask_background = img.merge_mask;
-    auto trks = mot_tracker->update(img.boxes2d, img.color0);
+
+    vector<Box2D::Ptr> boxes;
+    ///只跟踪车辆和行人
+    for(auto it=img.boxes2d.begin(),it_next=it;it!=img.boxes2d.end();it=it_next){
+        it_next++;
+        if(cfg::dataset == DatasetType::kKitti && (
+                (*it)->class_name=="Car" ||
+                (*it)->class_name=="Van" ||
+                (*it)->class_name=="Truck" ||
+                (*it)->class_name=="Tram")){
+            boxes.emplace_back(*it);
+        }
+
+    }
+
+
+    auto trks = mot_tracker->update(boxes, img.color0);
 
 
     string log_text="AddInstancesByTracking:\n";

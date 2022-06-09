@@ -84,6 +84,7 @@ public:
 
 
     ///每行的前3个数字是类别,属性,分数
+    unsigned int id{};
     int class_id{};
     string class_name{};
     int attribution_id{};

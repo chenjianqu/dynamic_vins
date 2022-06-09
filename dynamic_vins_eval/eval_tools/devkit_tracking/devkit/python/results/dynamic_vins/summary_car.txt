@@ -1,33 +1,33 @@
 ==========================tracking evaluation summary===========================
-Multiple Object Tracking Accuracy (MOTA)                                0.532934
-Multiple Object Tracking Precision (MOTP)                               0.845681
-Multiple Object Tracking Accuracy (MOTAL)                               0.532934
-Multiple Object Detection Accuracy (MODA)                               0.532934
-Multiple Object Detection Precision (MODP)                              0.872108
+Multiple Object Tracking Accuracy (MOTA)                                0.657938
+Multiple Object Tracking Precision (MOTP)                               0.852912
+Multiple Object Tracking Accuracy (MOTAL)                               0.657938
+Multiple Object Detection Accuracy (MODA)                               0.657938
+Multiple Object Detection Precision (MODP)                              0.869358
 
-Recall                                                                  0.574344
-Precision                                                               0.951691
-F1                                                                      0.716364
-False Alarm Rate                                                        0.068966
+Recall                                                                  0.754815
+Precision                                                               0.921338
+F1                                                                      0.829805
+False Alarm Rate                                                        0.255882
 
-Mostly Tracked                                                          0.250000
-Partly Tracked                                                          0.125000
-Mostly Lost                                                             0.625000
+Mostly Tracked                                                          0.222222
+Partly Tracked                                                          0.500000
+Mostly Lost                                                             0.277778
 
-True Positives                                                               197
-Ignored True Positives                                                         9
-False Positives                                                               10
-False Negatives                                                              146
-Ignored False Negatives                                                       45
-Missed Targets                                                               146
+True Positives                                                              1019
+Ignored True Positives                                                       128
+False Positives                                                               87
+False Negatives                                                              331
+Ignored False Negatives                                                       63
+Missed Targets                                                               331
 ID-switches                                                                    0
-Fragmentations                                                                 2
+Fragmentations                                                                14
 
-Ground Truth Objects (Total)                                                 388
-Ignored Ground Truth Objects                                                  54
-Ground Truth Trajectories                                                      9
+Ground Truth Objects (Total)                                                1413
+Ignored Ground Truth Objects                                                 191
+Ground Truth Trajectories                                                     21
 
-Tracker Objects (Total)                                                      210
-Ignored Tracker Objects                                                        3
-Tracker Trajectories                                                          11
+Tracker Objects (Total)                                                     1216
+Ignored Tracker Objects                                                      110
+Tracker Trajectories                                                          21
 ================================================================================

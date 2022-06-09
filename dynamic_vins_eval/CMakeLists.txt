@@ -59,6 +59,7 @@ target_link_libraries(convert_tracking_to_object ${catkin_LIBRARIES} ${OpenCV_LI
 add_executable(viode_generate_odometry src/viode_generate_odometry.cpp)
 target_link_libraries(viode_generate_odometry ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
-
+add_executable(split_mot_to_tum src/split_mot_to_tum.cpp)
+target_link_libraries(split_mot_to_tum ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 

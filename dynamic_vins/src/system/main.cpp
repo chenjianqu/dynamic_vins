@@ -185,8 +185,14 @@ void ImageProcess()
 
         if(io_para::is_show_input){
             cv::Mat img_show;
-            cv::cvtColor(img.inv_merge_mask,img_show,CV_GRAY2BGR);
-            cv::scaleAdd(img.color0,0.5,img_show,img_show);
+            if(!img.inv_merge_mask.empty()){
+                cv::cvtColor(img.inv_merge_mask,img_show,CV_GRAY2BGR);
+                cv::scaleAdd(img.color0,0.5,img_show,img_show);
+            }
+            else{
+                img_show = cv::Mat(cv::Size(img.color0.cols,img.color0.rows),CV_8UC3,cv::Scalar(255,255,255));
+            }
+
             /*if(flow_tensor.defined()){
                cv::Mat show = VisualFlow(flow_tensor);
                cv::imshow("show",show);

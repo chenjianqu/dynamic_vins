@@ -51,7 +51,7 @@ public:
 
     void AddInstanceParameterBlock(ceres::Problem &problem);
 
-    void AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
+    void AddResidualBlockForJointOpt(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
     void SetOutputInstInfo();
 

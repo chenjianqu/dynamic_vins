@@ -188,7 +188,7 @@ void Estimator::Optimization()
 
     ///添加动态物体的残差项
     if(cfg::slam == SlamType::kDynamic){
-        insts_manager.AddResidualBlock(problem, loss_function);
+        insts_manager.AddResidualBlockForJointOpt(problem, loss_function);
     }
 
     Debugv("optimization | prepare:{} ms",tt.TocThenTic());
@@ -1512,8 +1512,8 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
             insts_manager.OutliersRejection();
 
+            Debugv("--完成处理动态物体--");
         }
-        Debugv("--完成处理动态物体--");
 
 
         ///VIO窗口的非线性优化
