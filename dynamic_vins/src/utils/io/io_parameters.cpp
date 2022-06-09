@@ -70,17 +70,26 @@ void IOParameter::SetParameters(const std::string &config_path)
         }
     }
 
-    if(fs["pub_groundtruth_box"].isNone()){
+    if(!fs["pub_groundtruth_box"].isNone()){
         fs["pub_groundtruth_box"] >> is_pub_groundtruth_box;
+        cout<<"pub_groundtruth_box=true"<<endl;
     }
-    if(fs["pub_predict_box"].isNone()){
+    if(!fs["pub_predict_box"].isNone()){
         fs["pub_predict_box"] >> is_pub_predict_box;
+        cout<<"pub_predict_box=true"<<endl;
     }
-    if(fs["pub_object_axis"].isNone()){
+    if(!fs["pub_object_axis"].isNone()){
         fs["pub_object_axis"] >> is_pub_object_axis;
+        cout<<"pub_object_axis=true"<<endl;
     }
-    if(fs["pub_object_trajectory"].isNone()){
+    if(!fs["pub_object_trajectory"].isNone()){
         fs["pub_object_trajectory"] >> is_pub_object_trajectory;
+        cout<<"pub_object_trajectory=true"<<endl;
+    }
+
+    if(!fs["show_input"].isNone()){
+        fs["show_input"] >> is_show_input;
+        cout<<"show_input=true"<<endl;
     }
 
 

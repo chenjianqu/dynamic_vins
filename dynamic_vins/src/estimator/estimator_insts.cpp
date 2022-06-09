@@ -257,7 +257,7 @@ void InstanceManager::Triangulate()
                 }
                 else{ //判断是否在包围框附近
                     Eigen::Vector3d pts_obj_j=inst.state[imu_i].R.transpose() * (point3d_w - inst.state[imu_i].P);
-                    if(pts_obj_j.norm() < inst.box3d->dims.norm()*4){
+                    if(pts_obj_j.norm() < inst.box3d->dims.norm()*3){
                         lm.depth = depth;
                         inst_add_num++;
                         log_inst_text+=fmt::format("lid:{} d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
@@ -308,32 +308,36 @@ void InstanceManager::ManageTriangulatePoint()
             continue;
         }
 
-        inst.triangle_num = 0;
-
-        log_text += fmt::format("inst:{} \n",inst.id);
-
         double box_norm = inst.box3d->dims.norm();
 
-
+        std::array<int,11> statistics{0};//统计
+        for(auto &lm:inst.landmarks){
+            for(auto &feat:lm.feats){
+                statistics[feat.frame]++;
+            }
+        }
+        //若上一帧中点太少,可能上一帧未不存在特征点,则不进行剔除操作
+        if(statistics[kWinSize-1]<=2){
+            continue;
+        }
+        log_text += fmt::format("inst:{} \n",inst.id);
 
         for(auto &lm:inst.landmarks){
-            ///计算三角化点的数量和总的深度
-            if(lm.depth>0){
-                inst.triangle_num++;
-            }
 
             ///判断之前三角化得到的点是否在包围框内
             if(inst.is_initial){
-                ///根据包围框剔除双目3D点
                 string s;
+
+                ///根据包围框剔除双目3D点
+
                 for(auto &feat: lm.feats){
                     if(feat.is_triangulated &&feat.frame != e->frame){ //这里不剔除当前帧
                         bool is_outbox= false;
                         Vec3d point_obj = inst.state[feat.frame].R.transpose() * (feat.p_w -inst.state[feat.frame].P);
 
-                        if( (std::abs(point_obj.x()) >= 2*inst.box3d->dims.x() ||
-                        std::abs(point_obj.y()) > 2*inst.box3d->dims.y() ||
-                        std::abs(point_obj.z()) > 2*inst.box3d->dims.z() ) ||
+                        if( (std::abs(point_obj.x()) >= 3*inst.box3d->dims.x() ||
+                        std::abs(point_obj.y()) > 3*inst.box3d->dims.y() ||
+                        std::abs(point_obj.z()) > 3*inst.box3d->dims.z() ) ||
                         (point_obj.norm() > 3*box_norm)){
                             is_outbox=true;
                         }
@@ -389,26 +393,33 @@ void InstanceManager::ManageTriangulatePoint()
 
     Debugv(log_text);
 
-    ///管理路标点
+
     for(auto &[key,inst] : instances){
         if(!inst.is_tracking)
             continue;
+
+        inst.triangle_num=0;
+        for(auto &lm:inst.landmarks){
+            if(lm.depth>0){
+                inst.triangle_num++;
+            }
+        }
+
         if(inst.triangle_num < 50)
             continue;
 
         for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next){
             it_next++;
-            if(it->feats.size()<=1 && it->feats.front().frame < frame){ //只有一个观测,且该观测不在当前帧
-                if(it->depth>0){
-                    inst.triangle_num--;
-                }
+            if(it->feats.size()<=1 && it->feats.front().frame < frame && it->depth<=0){ //只有一个观测,且该观测不在当前帧
                 inst.landmarks.erase(it);
             }
             if(inst.triangle_num <10){
                 break;
             }
         }
+
     }
+
 }
 
 
@@ -476,8 +487,10 @@ void InstanceManager::PropagatePose()
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
 
-            log_text += fmt::format("InstanceManager::PropagatePose id:{} Poioj:{}",inst.id, VecToStr(Poioj));
+            log_text += fmt::format("InstanceManager::PropagatePose id:{} Poioj:{} \n",inst.id, VecToStr(Poioj));
         }
+
+        inst.vel = inst.point_vel;
 
     },true);
 
@@ -495,6 +508,8 @@ void InstanceManager::SlideWindow()
     else
         Debugv("InstanceManager::SlideWindow margin_flag = kMarginSecondNew | ");
 
+    string log_text="InstanceManager::SlideWindow\n";
+
     for(auto &[key,inst] : instances){
         if(!inst.is_tracking)
             continue;
@@ -505,20 +520,31 @@ void InstanceManager::SlideWindow()
         else/// 去掉次新帧
             debug_num= inst.SlideWindowNew();
 
+        inst.triangle_num=0;
+        for(auto &lm:inst.landmarks){
+            if(lm.depth>0){
+                inst.triangle_num++;
+            }
+        }
+
         if(debug_num>0){
-            Debugv("InstanceManager::SlideWindow Inst:{},del:{} ", inst.id, debug_num);
+            log_text+=fmt::format("Inst:{},del:{} \n", inst.id, debug_num);
         }
 
         ///当物体没有正在跟踪的特征点时，将其设置为不在跟踪状态
         if(inst.landmarks.empty()){
             inst.ClearState();
             tracking_number_--;
+            log_text+=fmt::format("inst_id:{} ClearState\n", inst.id);
         }
         else if(inst.is_tracking && inst.triangle_num==0){
             inst.is_initial=false;
+            log_text+=fmt::format("inst_id:{} set is_initial=false\n", inst.id);
         }
 
     }
+
+    Debugv(log_text);
 }
 
 
@@ -597,8 +623,6 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
 
         if(inst.is_initial || !inst.is_tracking)
             continue;
-        if(!inst.boxes3d[frame]) //未检测到box3d
-            continue;
 
         ///寻找当前帧三角化的路标点
         vector<Vec3d> points3d_cam;
@@ -611,31 +635,69 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
             }
         }
 
-        if(points3d_cam.size() <= para::kInstanceInitMinNum) //路标数量太少了
-            return;
-
-        ///根据3d点计算物体的中心
-        auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.boxes3d[frame]->dims);
-        if(!init_cam_pt){
-            Errorv("FitBox3D() inst:{} failed,points3d_cam.size():{}",inst.id,points3d_cam.size());
+        if(points3d_cam.size() <= para::kInstanceInitMinNum){ //路标数量太少了
+            log_text += fmt::format("inst:{} have not enough features,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
             continue;
         }
 
         State init_state;
-        init_state.P = cam_to_world(*init_cam_pt);
+        ///根据3d box初始化物体
+        if(cfg::use_det3d){
+            if(!inst.boxes3d[frame]){
+                //未检测到box3d
+                log_text += fmt::format("inst:{} have enough features,but not associate box3d\n",inst.id);
+                continue;
+            }
+            ///只初始化刚体
+            if(cfg::dataset == DatasetType::kKitti && !(
+                    inst.boxes3d[frame]->class_name=="Car" ||
+                    inst.boxes3d[frame]->class_name=="Van" ||
+                    inst.boxes3d[frame]->class_name=="Truck" ||
+                    inst.boxes3d[frame]->class_name=="Tram")){
+                continue;
+            }
 
-        ///根据box初始化物体的位姿和包围框
+            inst.box3d->dims = inst.boxes3d[frame]->dims;
 
-        /*
-        //将包围框的8个顶点转换到世界坐标系下
-        Vec3d corner_sum=Vec3d::Zero();
-        for(int i=0;i<8;++i){
-            corner_sum +=  cam_to_world( inst.boxes3d[frame]->corners.col(i));
+            auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);//根据3d点计算物体的中心
+            if(!init_cam_pt){
+                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
+                continue;
+            }
+            init_state.P = cam_to_world(*init_cam_pt);
+            /*if(cfg::use_plane_constraint){
+                if(cfg::is_use_imu){
+                    init_state.P.z()=0;
+                }
+                else{
+                    init_state.P.y()=0;
+                }
+            }*/
+            ///根据box初始化物体的位姿和包围框
+            /*
+            //将包围框的8个顶点转换到世界坐标系下
+            Vec3d corner_sum=Vec3d::Zero();
+            for(int i=0;i<8;++i){
+                corner_sum +=  cam_to_world( inst.boxes3d[frame]->corners.col(i));
+            }
+            init_state.P = corner_sum/8.;*/
+
+            //init_state.R = Box3D::GetCoordinateRotationFromCorners(corners);//在box中构建坐标系
+            init_state.R = e->Rs[frame] * e->ric[0] * inst.boxes3d[frame]->R_cioi();//设置包围框的旋转为初始旋转
         }
-        init_state.P = corner_sum/8.;*/
+        ///无3D框初始化物体
+        else{
+            inst.box3d->dims = Vec3d(2,4,1.5);
 
-        //init_state.R = Box3D::GetCoordinateRotationFromCorners(corners);//在box中构建坐标系
-        init_state.R = inst.boxes3d[frame]->R_cioi();//设置包围框的旋转为初始旋转
+            auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
+            if(!init_cam_pt){
+                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
+                continue;
+            }
+            init_state.P = cam_to_world(*init_cam_pt);
+            init_state.R.setIdentity();
+        }
+
 
         inst.state[frame].time=e->headers[0];
         inst.vel.SetZero();
@@ -646,14 +708,13 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
             inst.state[i].time = e->headers[i];
         }
 
-        inst.box3d->dims = inst.boxes3d[frame]->dims;
         inst.is_initial=true;
         inst.history_vel.clear();
 
-        log_text += fmt::format("Initialized id:{},cnt:{},初始位姿:P:{},R:{} 初始box:{}",
-               inst.id, points3d_cam.size(), VecToStr(init_state.P),
-               VecToStr(init_state.R.eulerAngles(2,1,0)),
-               VecToStr(inst.box3d->dims));
+        log_text += fmt::format("Initialized id:{},type:{},cnt:{},初始位姿:P:{},R:{} 初始box:{}\n",
+                                inst.id, inst.box3d->class_name,points3d_cam.size(), VecToStr(init_state.P),
+                                VecToStr(init_state.R.eulerAngles(2,1,0)),
+                                VecToStr(inst.box3d->dims));
 
         ///删去初始化之前的观测
         for(auto it=inst.landmarks.begin(),it_next=it;it!=inst.landmarks.end();it=it_next){
@@ -840,7 +901,7 @@ string InstanceManager::PrintInstanceInfo(bool output_lm,bool output_stereo){
     InstExec([&s,&output_lm,&output_stereo](int key,Instance& inst){
         if(inst.is_tracking){
             s+= fmt::format("inst_id:{} landmarks:{} is_init:{} is_tracking:{} is_static:{} "
-                            "is_init_v:{} triangle_num:{} avg_depth:{}\n",
+                            "is_init_v:{} triangle_num:{} curr_avg_depth:{}\n",
                             inst.id,inst.landmarks.size(),inst.is_initial,inst.is_tracking,inst.is_static,inst.is_init_velocity,
                             inst.triangle_num,inst.AverageDepth());
             if(!output_lm)
@@ -976,6 +1037,10 @@ void InstanceManager::SetOutputInstInfo(){
  * 保存所有物体在当前帧的位姿
  */
 void InstanceManager::SaveTrajectory(){
+    if(cfg::slam != SlamType::kDynamic){
+        return;
+    }
+
     Mat3d R_iw = e->Rs[frame].transpose();
     Vec3d P_iw = - R_iw * e->Ps[frame];
     Mat3d R_ci = e->ric[0].transpose();
@@ -996,12 +1061,25 @@ void InstanceManager::SaveTrajectory(){
         first_run=false;
     }
 
-    string object_object_path = object_object_dir+ PadNumber(e->feature_frame.seq_id,6)+".txt";
+    string object_object_path;
+    if(cfg::dataset == DatasetType::kViode){
+        object_object_path = object_object_dir+DoubleToStr(e->feature_frame.time,6)+".txt";
+    }
+    else{
+        object_object_path = object_object_dir+ PadNumber(e->feature_frame.seq_id,6)+".txt";
+    }
     std::ofstream fout_object(object_object_path, std::ios::out);
 
     std::ofstream fout_mot(object_tracking_path, std::ios::out | std::ios::app);//追加写入
 
+    string log_text="InstanceManager::SaveTrajectory()\n";
+
     for(auto &[inst_id,inst] : instances){
+        log_text+=fmt::format("inst_id:{},is_tracking:{},is_initial:{},is_curr_visible:{},"
+                              "is_init_velocity:{},is_static:{},landmarks:{},triangle_num:{}\n",
+               inst_id,inst.is_tracking,inst.is_initial,inst.is_curr_visible,inst.is_init_velocity,
+               inst.is_static,inst.landmarks.size(),inst.triangle_num);
+
         if(!inst.is_tracking || !inst.is_initial)
             continue;
         if(!inst.is_curr_visible)
@@ -1121,6 +1199,7 @@ void InstanceManager::SaveTrajectory(){
     fout_mot.close();
     fout_object.close();
 
+    Debugv(log_text);
 }
 
 
@@ -1169,7 +1248,7 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
     for(auto &[key,inst] : instances){
         if(!inst.is_initial || !inst.is_tracking)
             continue;
-        if(inst.landmarks.size()<3)
+        if(inst.landmarks.size()<1)
             continue;
 
         std::unordered_map<string,int> statistics;//用于统计每个误差项的数量
@@ -1251,12 +1330,12 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                     statistics["BoxEncloseStereoPointFactor"]++;
                 }
             }
-            problem.AddResidualBlock(new BoxEncloseTrianglePointFactor(
+            /*problem.AddResidualBlock(new BoxEncloseTrianglePointFactor(
                     feat_j.point,feat_j.vel,e->Rs[feat_j.frame],e->Ps[feat_j.frame],
                     e->ric[0],e->tic[0],feat_j.td,e->td),
                                      loss_function,
                                      inst.para_state[feat_j.frame],inst.para_box[0],inst.para_inv_depth[depth_index]);
-            statistics["BoxEncloseTrianglePointFactor"]++;
+            statistics["BoxEncloseTrianglePointFactor"]++;*/
 
 
             if(inst.is_static){
@@ -1323,7 +1402,7 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                         }
                     }
                 }
-                /*if(found_first && found_end){
+                if(found_first && found_end){
                     double time_ij = e->headers[end_point->frame] - e->headers[first_point->frame];
                     problem.AddResidualBlock(
                             new SpeedStereoPointFactor(end_point->p_w,first_point->p_w,time_ij),
@@ -1336,7 +1415,7 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                                             loss_function,inst.para_speed[0]);
                     statistics["ConstSpeedStereoPointFactor"]++;
 
-                }*/
+                }
 
             }
 
@@ -1355,9 +1434,9 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                          loss_function,inst.para_speed[0]);
                 statistics["SpeedPoseSimpleFactor"]++;*/
 
-                /*problem.AddResidualBlock(new SpeedPoseFactor(inst.state[frame-1].time,inst.state[frame].time),
-                                         loss_function,inst.para_state[frame-1],inst.para_state[frame],inst.para_speed[0]);
-                statistics["SpeedPoseFactor"]++;*/
+                problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i].time,inst.state[i+1].time),
+                                         loss_function,inst.para_state[i],inst.para_state[i+1],inst.para_speed[0]);
+                statistics["SpeedPoseFactor"]++;
             }
         }
 

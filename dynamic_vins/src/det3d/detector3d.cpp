@@ -13,6 +13,7 @@
 #include <iostream>
 #include <filesystem>
 #include <unordered_map>
+#include <sstream>
 
 #include <spdlog/logger.h>
 
@@ -32,6 +33,7 @@ Detector3D::Detector3D(const std::string& config_path){
 void Detector3D::Launch(SemanticImage &img){
     if(det3d_para::use_offline){
         image_seq_id = img.seq;
+        image_time = img.time0;
         return;
     }
     else{
@@ -42,7 +44,13 @@ void Detector3D::Launch(SemanticImage &img){
 
 std::vector<Box3D::Ptr>  Detector3D::WaitResult(){
     if(det3d_para::use_offline){
-        return Detector3D::ReadBox3D(image_seq_id);
+        if(cfg::dataset == DatasetType::kViode){
+            return Detector3D::ReadBox3D(DoubleToStr(image_time,6));
+        }
+        else if(cfg::dataset == DatasetType::kKitti){
+            string target_name = PadNumber(image_seq_id,6);//补零
+            return Detector3D::ReadBox3D(target_name);
+        }
     }
     else{
         Criticals("det3d_para::use_offline = false, but not implement");
@@ -122,8 +130,7 @@ vector<Box3D::Ptr> Detector3D::ReadGroundtruthFromKittiTracking(int frame){
 
 
 
-std::vector<Box3D::Ptr> Detector3D::ReadBox3D(unsigned int seq_id){
-    string target_name = PadNumber(seq_id,6);///补零
+std::vector<Box3D::Ptr> Detector3D::ReadBox3D(const string &target_name){
 
     ///获取目录中所有的文件名
     static vector<fs::path> names = GetDirectoryFileNames(det3d_para::kDet3dPreprocessPath);

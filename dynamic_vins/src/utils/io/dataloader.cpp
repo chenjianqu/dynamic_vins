@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "call_back.h"
+#include "dataloader.h"
 #include <chrono>
 #include <ros/ros.h>
 
@@ -116,7 +116,6 @@ Dataloader::Dataloader(){
 
     index=0;
     time=0.;
-    tt.Tic();
 }
 
 
@@ -125,7 +124,7 @@ Dataloader::Dataloader(){
  * @param delta_time 读取时间周期,ms
  * @return
  */
-SemanticImage Dataloader::LoadStereo(int delta_time)
+SemanticImage Dataloader::LoadStereo()
 {
     SemanticImage img;
 
@@ -146,20 +145,31 @@ SemanticImage Dataloader::LoadStereo(int delta_time)
     img.time1 = time;
     img.seq = std::stoi(name_stem);
 
-    int delta_t =(int) tt.TocThenTic();
-    int wait_time = delta_time - delta_t;
-    if(wait_time>0)
-        std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+
 
     time+=0.05; // 时间戳
     index++;
 
+    return img;
+}
 
-    ///可视化
-    bool pause=false;
+void ImageViewer::Delay(int period){
+    int delta_t =(int) tt.TocThenTic();
+    int wait_time = period - delta_t;
+    if(wait_time>0){
+        std::this_thread::sleep_for(std::chrono::milliseconds(wait_time));
+    }
+}
+
+
+void ImageViewer::ImageShow(cv::Mat &img,int period){
+    int delta_t =(int) tt.TocThenTic();
+    int wait_time = period - delta_t;
     wait_time = std::max(wait_time,1);
+
+    bool pause=false;
     do{
-        cv::imshow("Dataloader",img.color0);
+        cv::imshow("ImageViewer",img);
         int key = cv::waitKey(wait_time);
         if(key ==' '){
             pause = !pause;
@@ -169,15 +179,16 @@ SemanticImage Dataloader::LoadStereo(int delta_time)
             ros::shutdown();
             pause=false;
         }
-        else if(key == 'r' || key == 'R'){
-            index=0;
-            time=0;
-            pause=false;
-        }
+        wait_time=period;
+
     } while (pause);
 
-    return img;
 }
+
+
+
+
+
 
 
 }

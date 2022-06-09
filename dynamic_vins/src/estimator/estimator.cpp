@@ -1495,7 +1495,6 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             insts_manager.PropagatePose();
             ///动态特征点的三角化
             insts_manager.Triangulate();
-            insts_manager.ManageTriangulatePoint();
             ///若动态物体未初始化, 则进行初始化
             insts_manager.InitialInstance(image.instances);
             ///初始化速度
@@ -1540,6 +1539,8 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
         ///动态物体的滑动窗口
         if(cfg::slam == SlamType::kDynamic){
+            insts_manager.ManageTriangulatePoint();
+
             //insts_manager.SetWindowPose();
             insts_manager.SlideWindow();
         }
@@ -1662,7 +1663,9 @@ void Estimator::ProcessMeasurements(){
         process_mutex.unlock();
 
         ///保存所有物体在当前帧的位姿
-        insts_manager.SaveTrajectory();
+        if(cfg::slam == SlamType::kDynamic){
+            insts_manager.SaveTrajectory();
+        }
 
         static unsigned int estimator_cnt=0;
         estimator_cnt++;

@@ -127,8 +127,8 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
     *pub_stereo_pointcloud=n.advertise<sensor_msgs::PointCloud2>("instance_stereo_point_cloud", 1000);
 
     camera_pose_visual=std::make_shared<CameraPoseVisualization>(1, 0, 0, 1);
-    camera_pose_visual->setScale(0.5);
-    camera_pose_visual->setLineWidth(0.05);
+    camera_pose_visual->setScale(1.);
+    camera_pose_visual->setLineWidth(0.1);
 }
 
 void Publisher::PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t)
@@ -258,9 +258,9 @@ void Publisher::PubKeyPoses(const std_msgs::Header &header)
 
     //static int key_poses_id = 0;
     key_poses.id = 0; //key_poses_id++;
-    key_poses.scale.x = 0.05;
-    key_poses.scale.y = 0.05;
-    key_poses.scale.z = 0.05;
+    key_poses.scale.x = 0.1;
+    key_poses.scale.y = 0.1;
+    key_poses.scale.z = 0.1;
     key_poses.color.r = 1.0;
     key_poses.color.a = 1.0;
 
@@ -511,6 +511,51 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
             continue;
         }
 
+
+        ///可视化点
+        bool is_visual_all_point= false;
+        //string log_text= fmt::format("inst:{} 3D Points\n",inst.id);
+
+        PointCloud cloud;
+
+        for(auto &lm : inst.landmarks){
+            if(lm.depth <= 0)
+                continue;
+
+            int frame_j=lm.feats.front().frame;
+            int frame_i=e->frame;
+            Vec3d pts_cam_j = lm.feats.front().point * lm.depth;//k点在j时刻的相机坐标
+            Vec3d pts_imu_j = e->ric[0] * pts_cam_j + e->tic[0];//k点在j时刻的IMU坐标
+            Vec3d pt_w_j=e->Rs[frame_j] * pts_imu_j + e->Ps[frame_j];//k点在j时刻的世界坐标
+            Vec3d pt_obj = inst.state[frame_j].R.transpose() * (pt_w_j - inst.state[frame_j].P);
+            Vec3d pt = inst.state[frame_i].R *pt_obj + inst.state[frame_i].P;
+
+            cloud.push_back(PointPCL(pt,inst.color[2],inst.color[1],inst.color[0]));
+
+
+            auto &back_p = lm.feats.back();
+            if(!is_visual_all_point){
+                if(back_p.frame >= e->frame-1 && back_p.is_triangulated){
+                    cloud.push_back(PointPCL(back_p.p_w,128,128,128));
+                }
+            }
+            else{
+                for(auto &feat : lm.feats){
+                    if(feat.is_triangulated){
+                        cloud.push_back(PointPCL(feat.p_w,128,128,128));
+                    }
+                }
+            }
+
+        }
+        //Debugv(log_text);
+
+        instance_point_cloud+=cloud;
+
+        if(!inst.is_initial || !inst.is_curr_visible){
+            continue;
+        }
+
         Marker::_action_type action=Marker::ADD;
         if(!inst.is_curr_visible){
             action=Marker::DELETE;
@@ -535,10 +580,15 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         }*/
 
         ///可视化估计的包围框
-        EigenContainer<Eigen::Vector3d> vertex;
+        /*EigenContainer<Eigen::Vector3d> vertex;
         inst.GetBoxVertex(vertex);
         auto lineStripMarker = LineStripMarker(vertex, key, color_norm, 0.1, action);
-        markers.markers.push_back(lineStripMarker);
+        markers.markers.push_back(lineStripMarker);*/
+
+
+        Mat38d corners_w = Box3D::GetCorners(inst.box3d->dims,inst.state[e->frame].R,inst.state[e->frame].P);
+        auto estimate_cube_marker = CubeMarker(corners_w, key, color_norm,0.1, action,"cube_estimation",7);
+        markers.markers.push_back(estimate_cube_marker);
 
         ///构建坐标轴
         if(io_para::is_pub_object_axis){
@@ -571,9 +621,10 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
 
         if(io_para::is_pub_predict_box){
             if(inst.boxes3d[e->frame-1]){
-                Mat38d corners_w = inst.boxes3d[e->frame-1]->GetCornersInWorld(
-                        e->Rs[e->frame-1], e->Ps[e->frame-1],
-                        e->ric[0],e->tic[0]);
+                Mat38d corners_w = inst.boxes3d[e->frame-1]->corners;
+                for(int i=0;i<8;++i){
+                    corners_w.col(i) = e->Rs[e->frame-1] * (e->ric[0] * corners_w.col(i) + e->tic[0]) + e->Ps[e->frame-1];
+                }
                 auto detect_cube_marker = CubeMarker(corners_w, key, BgrColor("gray"),
                                                      0.05, action);
                 markers.markers.push_back(detect_cube_marker);
@@ -606,54 +657,6 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         auto textMarker = TextMarker(inst.state[kWinSize].P, key, text, BgrColor("blue"), 1.2, action);
         markers.markers.push_back(textMarker);
 
-
-        ///可视化点
-        bool is_visual_all_point= false;
-        string log_text= fmt::format("inst:{} 3D Points\n",inst.id);
-
-        PointCloud cloud;
-        /*for(auto &pt : inst.point3d_curr){
-            PointT p;
-            p.x = (float)pt(0);p.y = (float)pt(1);p.z = (float)pt(2);
-            p.r=(uint8_t)inst.color[2];p.g=(uint8_t)inst.color[1];p.b=(uint8_t)inst.color[0];
-            cloud.push_back(p);
-        }*/
-
-        for(auto &lm : inst.landmarks){
-            if(lm.depth <= 0)
-                continue;
-
-            int frame_j=lm.feats.front().frame;
-            int frame_i=e->frame;
-            Vec3d pts_cam_j = lm.feats.front().point * lm.depth;//k点在j时刻的相机坐标
-            Vec3d pts_imu_j = e->ric[0] * pts_cam_j + e->tic[0];//k点在j时刻的IMU坐标
-            Vec3d pt_w_j=e->Rs[frame_j] * pts_imu_j + e->Ps[frame_j];//k点在j时刻的世界坐标
-            Vec3d pt_obj = inst.state[frame_j].R.transpose() * (pt_w_j - inst.state[frame_j].P);
-            Vec3d pt = inst.state[frame_i].R *pt_obj + inst.state[frame_i].P;
-
-            cloud.push_back(PointPCL(pt,inst.color[2],inst.color[1],inst.color[0]));
-
-
-            //log_text += VecToStr(pt)+" ";
-
-            auto &back_p = lm.feats.back();
-            if(!is_visual_all_point){
-                if(back_p.frame >= e->frame-1 && back_p.is_triangulated){
-                    cloud.push_back(PointPCL(back_p.p_w,128,128,128));
-                }
-            }
-            else{
-                for(auto &feat : lm.feats){
-                    if(feat.is_triangulated){
-                        cloud.push_back(PointPCL(feat.p_w,128,128,128));
-                    }
-                }
-            }
-
-        }
-        //Debugv(log_text);
-
-        instance_point_cloud+=cloud;
     }
 
 
@@ -662,9 +665,10 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         int index=10000;
         auto boxes_gt = Detector3D::ReadGroundtruthFromKittiTracking(e->feature_frame.seq_id);
         for(auto &box : boxes_gt){
-            Mat38d corners_w = box->GetCornersInWorld(
-                    e->Rs[e->frame-1], e->Ps[e->frame-1],
-                    e->ric[0],e->tic[0]);
+            Mat38d corners_w = box->corners;
+            for(int i=0;i<8;++i){
+                corners_w.col(i) = e->Rs[e->frame-1] * (e->ric[0] * corners_w.col(i) + e->tic[0]) + e->Ps[e->frame-1];
+            }
             auto gt_cube_marker = CubeMarker(corners_w, index, BgrColor("magenta"),
                                              0.06, Marker::ADD);
             markers.markers.push_back(gt_cube_marker);

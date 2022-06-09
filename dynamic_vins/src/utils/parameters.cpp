@@ -104,6 +104,9 @@ Config::Config(const std::string &file_name)
     fs["plane_constraint"] >> use_plane_constraint;
     cout<<"plane_constraint: "<<use_plane_constraint<<endl;
 
+    fs["use_det3d"] >> use_det3d;
+    cout<<"use_det3d: "<<use_det3d<<endl;
+
     fs["basic_dir"] >> kBasicDir;
     cout<<"basic_dir: "<<kBasicDir<<endl;
 

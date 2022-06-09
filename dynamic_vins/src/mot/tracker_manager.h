@@ -130,8 +130,13 @@ public:
         std::vector<Box2D::Ptr> ret;
         for (auto &t : data) {
             auto bbox = t.kalman.rect();
-            if (t.kalman.state() == TrackState::Confirmed &&
-            img_box.contains(bbox.tl()) && img_box.contains(bbox.br())) {
+            /*if (t.kalman.state() == TrackState::Confirmed &&
+                img_box.contains(bbox.tl()) && img_box.contains(bbox.br())) {
+                t.info->track_id = t.kalman.id();
+                ret.push_back(t.info);
+            }*/
+
+            if (t.kalman.state() == TrackState::Confirmed) {
                 t.info->track_id = t.kalman.id();
                 ret.push_back(t.info);
             }
@@ -141,7 +146,7 @@ public:
 
 private:
     std::vector<TrackData> &data;
-    const cv::Rect2f img_box;
+    const cv::Rect2f img_box;//整个图像的大小
 };
 
 

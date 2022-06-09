@@ -366,11 +366,19 @@ void Detector2D::Launch(SemanticImage &img){
         std::string seq_str = PadNumber(image_seq_id,6);
 
         torch::Tensor seg_label = LoadTensor(det2d_para::kDet2dPreprocessPath +
-                fmt::format("seg_label_{}.pt",seq_str)).to(torch::kCUDA);
+                fmt::format("seg_label_{}.pt",seq_str));
         torch::Tensor cate_score = LoadTensor(det2d_para::kDet2dPreprocessPath +
-                fmt::format("cate_score_{}.pt",seq_str)).to(torch::kCUDA);
+                fmt::format("cate_score_{}.pt",seq_str));
         torch::Tensor cate_label = LoadTensor(det2d_para::kDet2dPreprocessPath +
-                fmt::format("cate_label_{}.pt",seq_str)).to(torch::kCUDA);
+                fmt::format("cate_label_{}.pt",seq_str));
+
+        if(! seg_label.defined()){
+            return;
+        }
+
+        seg_label=seg_label.to(torch::kCUDA);
+        cate_score=cate_score.to(torch::kCUDA);
+        cate_label=cate_label.to(torch::kCUDA);
 
         seg_label = seg_label > det2d_para::kSoloMaskThr;
 

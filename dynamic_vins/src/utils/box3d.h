@@ -69,7 +69,7 @@ public:
 
     void VisCorners2d(cv::Mat &img,const cv::Scalar& color,PinHoleCamera &cam);
 
-    Mat38d GetCornersInWorld(const Mat3d &R_wbi,const Vec3d &P_wbi,const Mat3d &R_bc,const Vec3d &P_bc);
+    static Mat38d GetCorners(Vec3d &dims,Mat3d &R_xo,Vec3d &P_xo);
 
     static Box3D::Ptr Box3dFromFCOS3D(vector<string> &tokens);
     static Box3D::Ptr Box3dFromKittiTracking(vector<string> &tokens);

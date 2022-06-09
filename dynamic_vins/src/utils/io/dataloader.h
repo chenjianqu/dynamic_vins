@@ -97,7 +97,7 @@ public:
     Dataloader();
 
     //获取一帧图像
-    SemanticImage LoadStereo(int delta_time);
+    SemanticImage LoadStereo();
 
 private:
     vector<string> left_names;
@@ -106,8 +106,22 @@ private:
     int index{0};
     double time{0};
 
+};
+
+class ImageViewer{
+public:
+    ImageViewer(){
+        tt.Tic();
+    }
+
+    void ImageShow(cv::Mat &img,int period);
+
+    void Delay(int period);
+
+
     TicToc tt;
 };
+
 
 
 }

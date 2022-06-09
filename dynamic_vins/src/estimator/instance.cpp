@@ -14,23 +14,7 @@
 namespace dynamic_vins{\
 
 
-void Instance::GetBoxVertex(EigenContainer<Vec3d> &vertex) {
-    Vec3d minPt =- box3d->dims/2;
-    Vec3d maxPt = box3d->dims/2;
-    vertex.resize(8);
-    vertex[0]=minPt;
-    vertex[1].x()=maxPt.x();vertex[1].y()=minPt.y();vertex[1].z()=minPt.z();
-    vertex[2].x()=maxPt.x();vertex[2].y()=minPt.y();vertex[2].z()=maxPt.z();
-    vertex[3].x()=minPt.x();vertex[3].y()=minPt.y();vertex[3].z()=maxPt.z();
-    vertex[4].x()=minPt.x();vertex[4].y()=maxPt.y();vertex[4].z()=maxPt.z();
-    vertex[5] = maxPt;
-    vertex[6].x()=maxPt.x();vertex[6].y()=maxPt.y();vertex[6].z()=minPt.z();
-    vertex[7].x()=minPt.x();vertex[7].y()=maxPt.y();vertex[7].z()=minPt.z();
 
-    for(int i=0;i<8;++i){
-        vertex[i] = state[kWinSize].R * vertex[i] + state[kWinSize].P;
-    }
-}
 
 
 /**
@@ -47,95 +31,6 @@ void Instance::SetWindowPose()
         state[i].P = Roioj * state[0].P + Poioj;
     }
 }
-
-
-/**
- * 物体的位姿初始化,并将之前的观测删去
- * 由于动态物体的运动，因此选择某一帧中所有三角化的路标点的世界坐标作为初始P，初始R为单位阵
- * @param estimator
- */
-void Instance::InitialPose()
-{
-    if(is_initial || !is_tracking)
-        return;
-
-    ///初始化的思路是找到某一帧，该帧拥有已经三角化的特征点的开始帧数量最多。
-    int win_cnt[kWinSize + 1]={0};
-    for(auto &lm : landmarks){
-        if(lm.depth > 0){
-            win_cnt[lm.feats.front().frame]++;
-        }
-    }
-    int frame_index=-1;//将作为初始化位姿的帧号
-    int cnt_max=0, cnt_sum=0;
-    for(int i=0; i <= kWinSize; ++i){
-        if(win_cnt[i] > cnt_max){
-            cnt_max=win_cnt[i];
-            frame_index=i;
-        }
-        cnt_sum+=win_cnt[i];
-    }
-    if(cnt_sum < para::kInstanceInitMinNum)
-        return;
-
-    ///计算初始位姿
-    Vec3d center=Vec3d::Zero(),minPt=center,maxPt=center;
-    for(auto &landmark : landmarks){
-        if(landmark.depth > 0 && landmark.feats.front().frame == frame_index){
-            Vec3d point_cam= landmark.feats.front().point * landmark.depth;//相机坐标
-            auto point_imu=e->ric[0] * point_cam + e->tic[0];//IMU坐标
-            Vec3d p= e->Rs[frame_index] * point_imu + e->Ps[frame_index];//世界坐标
-            center+=p;
-
-            if(p.x() < minPt.x()) minPt.x()=p.x();
-            if(p.x() > maxPt.x()) maxPt.x()=p.x();
-            if(p.y() < minPt.y()) minPt.y()=p.y();
-            if(p.y() > maxPt.y()) maxPt.y()=p.y();
-            if(p.z() < minPt.z()) minPt.z()=p.z();
-            if(p.z() > maxPt.z()) maxPt.z()=p.z();
-        }
-    }
-    vel.SetZero();
-
-    state[0].P=center/double(cnt_sum);
-    state[0].R=Mat3d::Identity();
-    state[0].time=e->headers[0];
-    SetWindowPose();
-
-    /*box.x()=(box_max_pt.x()-box_min_pt.x())/2.0;
-    box.y()=(box_max_pt.y()-box_min_pt.y())/2.0;
-    box.z()=(box_max_pt.z()-box_min_pt.z())/2.0;*/
-    box3d->dims=Vec3d::Ones();
-    is_initial=true;
-
-    Debugv("Instance:{} 初始化成功,cnt_max:{} init_frame:{} 初始位姿:P<{}> 初始box:<{}>",
-           id, cnt_max, frame_index, VecToStr(center), VecToStr(box3d->dims));
-
-    ///删去初始化之前的观测
-    for(auto it=landmarks.begin(),it_next=it;it!=landmarks.end();it=it_next){
-        it_next++;
-        if(it->feats.size() == 1 && it->feats.front().frame < frame_index){
-            landmarks.erase(it);
-        }
-    }
-    for(auto &lm:landmarks){
-        if(lm.feats.front().frame < frame_index){
-            for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
-                it_next++;
-                if(it->frame < frame_index) {
-                    lm.feats.erase(it); ///删掉掉前面的观测
-                }
-            }
-            if(lm.depth > 0){
-                lm.depth=-1.0;///需要重新进行三角化
-            }
-        }
-    }
-
-
-}
-
-
 
 
 /**
@@ -178,9 +73,6 @@ int Instance::SlideWindowOld()
             continue;
         }
         else if(it->feats.size() <= 1){ ///起始观测在0帧,但是该路标点只有刚开始这个观测，故将其删掉
-            if(it->depth>0){
-                triangle_num--;
-            }
             landmarks.erase(it);
             debug_num++;
             continue;
@@ -218,7 +110,6 @@ int Instance::SlideWindowOld()
                 }
                 else{
                     it->depth = -1;
-                    triangle_num--;
                 }
             }
 
@@ -539,6 +430,12 @@ void Instance::GetOptimizationParameters()
     box3d->dims.z()=para_box[0][2];
 
     for(int i=0;i<=kWinSize;++i){
+        ///限制其单帧位移不能太大
+        if((state[i].P - Vec3d(para_state[i][0],para_state[i][1],para_state[i][2])).norm() > 10){
+            continue;
+        }
+
+
         state[i].P.x()=para_state[i][0];
         state[i].P.y()=para_state[i][1];
         state[i].P.z()=para_state[i][2];

@@ -25,7 +25,7 @@
 #include "utils/io/io_parameters.h"
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
-#include "utils/io/call_back.h"
+#include "utils/io/dataloader.h"
 #include "flow/flow_estimator.h"
 #include "det3d/detector3d.h"
 #include "det2d/detector2d.h"
@@ -60,10 +60,12 @@ void ImageProcess()
 {
     int cnt = 0;
     TicToc tt, t_all;
+    ImageViewer viewer;
 
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
         if(image_queue.size() >= kImageQueueSize){
+            cerr<<"ImageProcess image_queue.size() >= kImageQueueSize,blocked"<<endl;
             std::this_thread::sleep_for(50ms);
             continue;
         }
@@ -72,11 +74,13 @@ void ImageProcess()
 
         SemanticImage img;
         if(io_para::use_dataloader){
-            img = dataloader->LoadStereo(io_para::kImageDatasetPeriod);
+            img = dataloader->LoadStereo();
         }
         else{
             img = callback->SyncProcess();
         }
+
+        std::cout<<"image seq_id:"<<img.seq<<std::endl;
 
         ///结束程序
         if(img.color0.empty()){
@@ -118,8 +122,12 @@ void ImageProcess()
         if(cfg::use_dense_flow){
             flow_estimator->Launch(img);
         }
+
         ///启动3D目标检测线程
-        detector3d->Launch(img);
+        if(cfg::slam == SlamType::kDynamic && cfg::use_det3d){
+            detector3d->Launch(img);
+        }
+
         Infos("ImageProcess prepare: {} ms", tt.TocThenTic());
 
         ///实例分割
@@ -141,6 +149,14 @@ void ImageProcess()
                 }
             }
             Infos("ImageProcess SetMask: {}", tt.TocThenTic());
+
+            string log_text="detector2d results:\n";
+            for(auto &box2d:img.boxes2d){
+                log_text += fmt::format("inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",box2d->id, box2d->class_name,
+                                        box2d->min_pt.x,box2d->min_pt.y,box2d->max_pt.x,box2d->max_pt.y);
+            }
+            Debugs(log_text);
+
         }
 
         //log
@@ -157,20 +173,32 @@ void ImageProcess()
         }
 
         ///读取离线检测的3D包围框
-        img.boxes3d = detector3d->WaitResult();
+        if(cfg::slam == SlamType::kDynamic && cfg::use_det3d){
+            img.boxes3d = detector3d->WaitResult();
+        }
+
+        ///将结果存放到消息队列中
+        if(!cfg::is_only_imgprocess){
+            image_queue.push_back(img);
+        }
 
 
-        image_queue.push_back(img);
-        /*cv::Mat show;
-        cv::cvtColor(img.inv_merge_mask,show,CV_GRAY2BGR);
-        cv::scaleAdd(img.color0,0.5,show,show);
-        cv::imshow("show",show);
-        cv::waitKey(1);
-         if(flow_tensor.defined()){
-            cv::Mat show = VisualFlow(flow_tensor);
-            cv::imshow("show",show);
-            cv::waitKey(1);
-        }*/
+        if(io_para::is_show_input){
+            cv::Mat img_show;
+            cv::cvtColor(img.inv_merge_mask,img_show,CV_GRAY2BGR);
+            cv::scaleAdd(img.color0,0.5,img_show,img_show);
+            /*if(flow_tensor.defined()){
+               cv::Mat show = VisualFlow(flow_tensor);
+               cv::imshow("show",show);
+               cv::waitKey(1);
+            }*/
+
+            viewer.ImageShow(img_show,io_para::kImageDatasetPeriod);
+        }
+        else{
+            viewer.Delay(io_para::kImageDatasetPeriod);
+        }
+
 
         Warns("ImageProcess, all:{} ms \n",t_all.Toc());
     }

@@ -18,6 +18,7 @@
 
 #include "pose_local_parameterization.h"
 #include "utils/def.h"
+#include "utils/parameters.h"
 
 namespace dynamic_vins{\
 
@@ -63,16 +64,30 @@ bool PoseConstraintLocalParameterization::Plus(const double *x, const double *de
 
     Eigen::Map<const Eigen::Quaterniond> _q(x + 3);
 
-    //Eigen::Map<const Eigen::Vector3d> dp(delta);
-    Vec3d dp(delta[0],0,delta[2]);
+    //由于使用和IMU和vision-only两种情况下的世界坐标系定义不同
+    if(cfg::is_use_imu){
+        Vec3d dp(delta[0],delta[1],0);
 
-    Eigen::Quaterniond dq = Utility::deltaQ(Eigen::Map<const Eigen::Vector3d>(delta + 3));
+        Eigen::Quaterniond dq = Utility::deltaQ(Eigen::Map<const Eigen::Vector3d>(delta + 3));
 
-    Eigen::Map<Eigen::Vector3d> p(x_plus_delta);
-    Eigen::Map<Eigen::Quaterniond> q(x_plus_delta + 3);
+        Eigen::Map<Eigen::Vector3d> p(x_plus_delta);
+        Eigen::Map<Eigen::Quaterniond> q(x_plus_delta + 3);
 
-    p = _p + dp;
-    q = (_q * dq).normalized();
+        p = _p + dp;
+        q = (_q * dq).normalized();
+    }
+    else{
+        Vec3d dp(delta[0],0,delta[2]);
+
+        Eigen::Quaterniond dq = Utility::deltaQ(Eigen::Map<const Eigen::Vector3d>(delta + 3));
+
+        Eigen::Map<Eigen::Vector3d> p(x_plus_delta);
+        Eigen::Map<Eigen::Quaterniond> q(x_plus_delta + 3);
+
+        p = _p + dp;
+        q = (_q * dq).normalized();
+    }
+
 
     return true;
 }
@@ -95,12 +110,22 @@ bool SpeedConstraintLocalParameterization::Plus(const double *x, const double *d
 
     //Eigen::Map<const Eigen::Vector3d> dp(delta);
     Vec6d dv;
-    dv(0,0) = delta[0];
-    dv(1,0) = delta[1];
-    dv(2,0) = 0;
-    dv(3,0) = 0;
-    dv(4,0) = 0;
-    dv(5,0) = delta[5];
+    if(cfg::is_use_imu){
+        dv(0,0) = delta[0];
+        dv(1,0) = delta[1];
+        dv(2,0) = 0;
+        dv(3,0) = 0;
+        dv(4,0) = 0;
+        dv(5,0) = delta[5];
+    }
+    else{
+        dv(0,0) = delta[0];
+        dv(1,0) = 0;
+        dv(2,0) = delta[2];
+        dv(3,0) = delta[3];
+        dv(4,0) = delta[4];
+        dv(5,0) = delta[5];
+    }
 
     Eigen::Map<Vec6d> v(x_plus_delta);
 

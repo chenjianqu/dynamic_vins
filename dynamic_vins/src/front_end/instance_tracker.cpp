@@ -176,6 +176,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     else{
         throw std::runtime_error("have not this dataset type");
     }
+
     //将当前帧未观测到的box设置状态
     for(auto& [key,inst] : instances_){
         if(!inst.is_curr_visible){
@@ -188,7 +189,9 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     Infot("instsTrack AddInstances:{} ms", tic_toc.TocThenTic());
 
     ///2d box和3d box关联
-    BoxAssociate2Dto3D(img.boxes3d);
+    if(cfg::use_det3d){
+        BoxAssociate2Dto3D(img.boxes3d);
+    }
 
     is_exist_inst_ = !img.boxes2d.empty();
 
@@ -636,7 +639,6 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
 
     Debugt(log_text);
 
-    global_instance_id+= n_inst;
 }
 
 

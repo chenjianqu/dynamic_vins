@@ -64,9 +64,126 @@ int PubObject3D(int argc, char **argv)
 }
 
 
-const string object3d_root_path="/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0002/";
+//const string object3d_root_path="/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/0002/";
 const string tracking_gt_path="/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/0002.txt";
-const string img_root_path="/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0002/";
+//const string img_root_path="/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0002/";
+
+const string object3d_root_path="/home/chen/datasets/VIODE/det3d_cam0/day_03_high/";
+const string img_root_path="/home/chen/datasets/VIODE/cam0/day_03_high/";
+
+
+vector<Box3D::Ptr> ReadPredictBox(const string &name){
+    string file_path = object3d_root_path+name+".txt";
+    std::ifstream fp(file_path);
+    if(!fp.is_open()){
+        {};
+    }
+
+    vector<Box3D::Ptr> boxes;
+    string line;
+    while (getline(fp,line)){ //循环读取每行数据
+        vector<string> tokens;
+        split(line,tokens," ");
+        if(std::stod(tokens[2]) < det3d_para::kDet3dScoreThreshold)
+            continue;
+        Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens);
+        boxes.push_back(box);
+    }
+    fp.close();
+
+    return boxes;
+}
+
+int PubViodeFCOS3D(int argc, char **argv,ros::NodeHandle &nh)
+{
+    ros::Publisher pub_instance_marker=nh.advertise<MarkerArray>("fcos3d_markers", 1000);
+
+    ///获取目录中所有的文件名
+    vector<fs::path> names = GetDirectoryFileNames(object3d_root_path);
+    int index=0;
+
+    while(ros::ok()){
+        if(index>=names.size()){
+            break;
+        }
+
+        string file_path = object3d_root_path + names[index].string();
+        cout<<file_path<<endl;
+        string time_str = names[index].stem().string();
+
+        std::ifstream fp(file_path);
+        if(!fp.is_open()){
+            {};
+        }
+
+        vector<Box3D::Ptr> boxes;
+        string line;
+        while (getline(fp,line)){ //循环读取每行数据
+            vector<string> tokens;
+            split(line,tokens," ");
+            //if(std::stod(tokens[2]) < det3d_para::kDet3dScoreThreshold)
+            //    continue;
+            Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens);
+            boxes.push_back(box);
+            //cout<<line<<endl;
+        }
+        fp.close();
+
+        cout<<boxes.size()<<endl;
+
+        string img_path = img_root_path + time_str +".png";
+        cv::Mat img = cv::imread(img_path,-1);
+
+
+
+
+        MarkerArray marker_array;
+
+
+        ///可视化预测的box
+        int cnt=0;
+        for(auto &box : boxes){
+            cnt++;
+            box->VisCorners2d(img,cv::Scalar(255,255,255),*cam0);
+            auto cube_marker = CubeMarker(box->corners,cnt,BgrColor("blue"));
+            marker_array.markers.push_back(cube_marker);
+
+            Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
+            auto axis_markers = AxisMarker(axis_matrix,cnt);
+            marker_array.markers.push_back(std::get<0>(axis_markers));
+            marker_array.markers.push_back(std::get<1>(axis_markers));
+            marker_array.markers.push_back(std::get<2>(axis_markers));
+        }
+
+
+        pub_instance_marker.publish(marker_array);
+
+        ///可视化
+        bool pause=false;
+        do{
+            cv::imshow("PubFCOS3D",img);
+            int key = cv::waitKey(100);
+            if(key ==' '){
+                pause = !pause;
+            }
+            else if(key== 27){ //ESC
+                cfg::ok=false;
+                ros::shutdown();
+                pause=false;
+            }
+            else if(key == 'r' || key == 'R'){
+                pause=false;
+            }
+        } while (pause);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        index++;
+    }
+
+    return 0;
+}
+
 
 vector<Box3D::Ptr> ReadPredictBox(int frame){
     string name = PadNumber(frame,6);
@@ -166,12 +283,12 @@ int PubFCOS3D(int argc, char **argv,ros::NodeHandle &nh)
         }*/
 
         ///可视化gt框
-        vector<Box3D::Ptr> boxes_gt = ReadGroundtruthBox(index);
+        /*vector<Box3D::Ptr> boxes_gt = ReadGroundtruthBox(index);
         for(auto &box : boxes_gt){
             cnt++;
             auto cube_marker = CubeMarker(box->corners, cnt, BgrColor("red"));
             marker_array.markers.push_back(cube_marker);
-        }
+        }*/
 
         pub_instance_marker.publish(marker_array);
 
@@ -238,7 +355,8 @@ int main(int argc, char **argv)
     std::cout<<"InitGlobalParameters finished"<<std::endl;
 
     //return dynamic_vins::PubObject3D(argc,argv);
-    return dynamic_vins::PubFCOS3D(argc, argv,n);
+    //return dynamic_vins::PubFCOS3D(argc, argv,n);
+    return dynamic_vins::PubViodeFCOS3D(argc, argv,n);
 }
 
 

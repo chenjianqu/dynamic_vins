@@ -90,8 +90,6 @@ private:
     SemanticImage prev_img;
     bool is_exist_inst_{false};
 
-    unsigned int global_instance_id{0};
-
     double curr_time{},last_time{};
 
     cv::Ptr<cv::cuda::CornersDetector> detector;

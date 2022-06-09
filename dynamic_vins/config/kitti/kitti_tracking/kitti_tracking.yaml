@@ -1,73 +1,43 @@
 %YAML:1.0
-####################### 通用参数 ########################
+####################### General Parameters ########################
 
-imu: 0 #是否使用IMU
-num_of_cam: 2 #相机的数量
+imu: 0 #enable imu or not
+num_of_cam: 2
 
-only_imgprocess: 0  #是否仅仅图像处理部分
-only_frontend: 0  #是否仅仅启动前端
+only_imgprocess: 0  #for debug
+only_frontend: 0  #for debug
 
-dataset_type: "kitti" #数据集类型,支持kitti,viode
-
-slam_type: "dynamic" #SLAM模式,可选:raw,naive,dynamic
-
-plane_constraint: 1 #是否使用平面约束
-
-#是否估计相机和IMU之间的外参数,
-# 0表示已有固定的外参,不估计外参;
-# 1表示估计外参,且有初始外参
-# 2表示估计外参,但无初始外参
-estimate_extrinsic: 0
-
-visual_inst_duration: 120  #物体可视化的持续时间
+dataset_type: "kitti" #support:kitti,viode
+slam_type: "dynamic" #SLAM mode,optional:raw,naive,dynamic
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
-
-
-#直接读取图像
+#the input sequence id
 dataset_sequence: "0004"
+
+plane_constraint: 0 #是否使用平面约束
+
+####################### Camera Parameters ########################
 
 kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0004.txt" #相机内参
 
-det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/" #预处理的3D框
-det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/" #预处理的2D框
+#kitti tracking seq:18
+#image_width: 1238
+#image_height: 374
 
-object_groundtruth_path: "/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/"
-
-use_dataloader: 1 #是否直接读取图像
-#以下选项当use_dataloader=1时有效
-image_dataset_period: 300 #读取的时间周期,毫秒
-image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/"
-image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/"
-
-####################### 相机参数 ########################
-
-#kitti tracking
+#kitti tracking seq:0-10
 image_width: 1242
 image_height: 375
 
-######################### 预处理的3D包围框 ########################
-det3d_score_threshold: 0.15
-use_offline_det3d: 1
-use_offline_det2d: 1
-
-####################### 光流的参数 ########################
-
-use_dense_flow: 0 #是否使用稠密光流
-use_background_flow: 0 #背景特征点是否使用稠密光流
-use_offline_flow: 1 #是否使用预计算的光流
-flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/" #预计算的光流
+######################### Extrinsic ###########################
+#Whether to estimate the extrinsic between the camera and IMU,
+#0 means that there are fixed extrinsic, and external parameters are not estimated;
+#1 means estimated extrinsic with initial value
+#2 means estimated extrinsic, but no initial initial value
+estimate_extrinsic: 0
 
 
-fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
-fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
-cnet_onnx_path: "weights/raft/kitti_cnet.onnx"
-cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
-update_onnx_path: "weights/raft/kitti_update.onnx"
-update_tensorrt_path: "weights/raft/kitti_update.bin"
-
-####################### 订阅和发布的ROS话题名 ########################
+####################### ROS Topic ########################
 
 ##### 订阅的话题, 若use_dataloader==1,则忽略
 #kitti
@@ -82,13 +52,8 @@ vins_extrinsic_topic: "/dynamic_vins/extrinsic"
 vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
 vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
 
-pub_groundtruth_box: 0
-pub_predict_box: 0
-pub_object_axis: 1
-pub_object_trajectory: 1
 
-
-####################### 前端的参数 ########################
+####################### Frontend Parameters ########################
 
 max_cnt: 250            # max feature number in feature tracking
 min_dist: 25            # min distance between two features
@@ -97,10 +62,10 @@ F_threshold: 1.0        # ransac threshold (pixel)
 show_track: 1           # publish tracking image as topic
 flow_back: 1            # perform forward and backward optical flow to improve feature tracking accuracy
 
-min_dynamic_dist: 10 #检测动态特征点时每个点之间的最小距离
+min_dynamic_dist: 5 #检测动态特征点时每个点之间的最小距离
 max_dynamic_cnt: 50 #前端中每个动态物体上最多同时跟踪的特征数量
 
-####################### VIO的参数 ########################
+####################### VIO Parameters ########################
 
 #optimization parameters
 max_solver_time: 0.08  # max solver itration time (s), to guarantee real time
@@ -123,8 +88,48 @@ BIAS_ACC_THRESHOLD: 0.1
 BIAS_GYR_THRESHOLD: 0.1
 
 
+####################### Log Parameters ########################
+estimator_log_level: "debug"
+estimator_log_flush: "debug"
+feature_tracker_log_level: "debug"
+feature_tracker_log_flush: "debug"
+segmentor_log_level: "debug"
+segmentor_log_flush: "debug"
+log_output_path: "data/log/"
 
-####################### 实例分割SOLO的参数 ########################
+#for debug
+print_detail: 1
+
+####################### Visualization Parameters ########################
+visual_inst_duration: 120  #duration of marker display
+
+pub_groundtruth_box: 0
+pub_predict_box: 0
+pub_object_axis: 1
+pub_object_trajectory: 1
+
+show_input: 1
+
+####################### Dynamic Parameters ########################
+
+instance_init_min_num: 4
+instance_static_err_threshold: 10.0
+
+######################### Bounding box ########################
+use_det3d: 1
+
+det3d_score_threshold: 0.15
+use_offline_det3d: 1
+use_offline_det2d: 1
+
+object_groundtruth_path: "/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/"
+
+det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/" #预处理的3D框
+
+det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/" #预处理的2D框
+
+
+####################### SOLO's Parameters ########################
 
 SOLO_NMS_PRE: 500
 SOLO_MAX_PER_IMG: 100
@@ -140,31 +145,30 @@ solo_serialize_path: "weights/solo/tensorrt_model_1152x384.bin"
 
 warn_up_image: "/home/chen/ws/vio_ws/src/dynamic_vins/config/kitti.png"
 
-####################### MOT的参数 ########################
+####################### MOT Parameters ########################
 tracking_max_age: 30
 tracking_n_init: 3
 
 extractor_model_path: "weights/deepsort/ckpt.bin"
 
+####################### Dataloader Parameters ########################
+use_dataloader: 1 #read image for disk,not from ros
+#以下选项当use_dataloader=1时有效
+image_dataset_period: 200 #
+image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/"
+image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/"
 
+####################### Flow Parameters ########################
 
-####################### log的参数 ########################
-estimator_log_level: "debug"
-estimator_log_flush: "debug"
-feature_tracker_log_level: "debug"
-feature_tracker_log_flush: "debug"
-segmentor_log_level: "debug"
-segmentor_log_flush: "debug"
-log_output_path: "data/log/"
+use_dense_flow: 0 #是否使用稠密光流
+use_background_flow: 0 #背景特征点是否使用稠密光流
+use_offline_flow: 1 #是否使用预计算的光流
+flow_offline_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/" #预计算的光流
 
-print_detail: 1
-
-####################### 动态物体参数 ########################
-
-instance_init_min_num: 4
-instance_static_err_threshold: 10.0
-
-
-
-
-
+#when use_dense_flow=1 and use_offline_flow=0,you should set the flow estimator parameters
+fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
+fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
+cnet_onnx_path: "weights/raft/kitti_cnet.onnx"
+cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
+update_onnx_path: "weights/raft/kitti_update.onnx"
+update_tensorrt_path: "weights/raft/kitti_update.bin"

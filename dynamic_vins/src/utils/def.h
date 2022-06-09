@@ -125,6 +125,18 @@ inline std::string PadNumber(int number,int name_width){
     return target_name;
 }
 
+/**
+ * 将浮点数转换为字符串,并保留decimals_len位小数
+ * @param num
+ * @param decimals_len
+ * @return
+ */
+inline std::string DoubleToStr(double num,int decimals_len){
+    std::stringstream ss;
+    ss<<std::fixed<<std::setprecision(decimals_len)<<num;
+    return ss.str();
+}
+
 
 inline std::string DimsToStr(cv::Size list){
     return "[" + std::to_string(list.height) + ", " + std::to_string(list.width) + "]";

@@ -38,6 +38,7 @@ FeatureTracker::FeatureTracker(const string& config_path)
     lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(
             cv::Size(21, 21), 3, 30, true);
 
+    bg.id = -1;//表示相机
     bg.box2d = std::make_shared<Box2D>();
 }
 
@@ -192,19 +193,19 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
 
     Debugt("TrackImageNaive | input mask:{}", DimsToStr(img.inv_merge_mask_gpu.size()));
 
-    if(cur_img.exist_inst)
-        bg.box2d->mask_cv = cur_img.inv_merge_mask.clone();
-    else
-        bg.box2d->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
-
     ///形态学运算
     if(cur_img.exist_inst){
         static auto erode_kernel = cv::getStructuringElement(
-                cv::MORPH_RECT,cv::Size(10,10),cv::Point(-1,-1));
+                cv::MORPH_RECT,cv::Size(15,15),cv::Point(-1,-1));
         static auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
         erode_filter->apply(img.inv_merge_mask_gpu,img.inv_merge_mask_gpu);
         img.inv_merge_mask_gpu.download(img.inv_merge_mask);
     }
+
+    if(cur_img.exist_inst)
+        bg.box2d->mask_cv = cur_img.inv_merge_mask.clone();
+    else
+        bg.box2d->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
 
     ///特征点跟踪
     bg.TrackLeftGPU(img,prev_img,lk_optical_flow,lk_optical_flow_back);

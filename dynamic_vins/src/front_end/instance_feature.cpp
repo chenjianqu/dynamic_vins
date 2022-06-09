@@ -207,8 +207,10 @@ void InstFeat::TrackRightGPU(SemanticImage &img,
                    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
                    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward){
 
-    if(curr_points.empty())
+    if(curr_points.empty()){
+        Debugt("InstFeat::TrackRightGPU curr_points.empty()");
         return;
+    }
 
     right_points.clear();
 
@@ -223,7 +225,7 @@ void InstFeat::TrackRightGPU(SemanticImage &img,
                                                img.gray0_gpu,
                                                img.gray1_gpu,curr_points, right_points);
 
-    if(cfg::dataset == DatasetType::kViode){
+    if(cfg::dataset == DatasetType::kViode && id != -1){//id=-1时表示背景
         for(size_t i=0;i<status.size();++i){
             if(status[i] && VIODE::PixelToKey(right_points[i], img.seg1) != id )
                 status[i]=0;

@@ -36,32 +36,7 @@ Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens)
     ///6-8数字是物体在x,y,z轴上的大小. 表示将物体旋转到yaw=0时(包围框的坐标系与相机坐标系对齐),物体在各轴上的大小
     box3d->dims<<std::stod(tokens[6]),std::stod(tokens[7]),std::stod(tokens[8]);
 
-    ///构造物体坐标系下的角点
-    /**
-                             front z
-                                    /
-                                   /
-                   p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
-                                 /|            / |
-                                / |           /  |
-                p0(x0, y0, z0) + ---------p4 +   + p6(x1, y1, z1)
-                               |  /      .   |  /
-                               | / origin    | /
-                p3(x0, y1, z0) + ----------- + -------> x right
-                               |             p7(x1, y1, z0)
-                               |
-                               v
-                        down y
-     输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
-     */
-    Eigen::Matrix<double,8,3> corners_norm;
-    corners_norm << 0,0,0,  0,0,1,  0,1,1,  0,1,0,  1,0,0,  1,0,1,  1,1,1,  1,1,0;
-    Eigen::Vector3d offset(0.5,1,0.5);//预测结果所在的坐标系与相机坐标系之间的偏移
-    corners_norm = corners_norm.array().rowwise() - offset.transpose().array();//将每个坐标减去偏移量
-    box3d->corners = corners_norm.transpose(); //得到矩阵 3x8
-    box3d->corners = box3d->corners.array().colwise() * box3d->dims.array();//广播逐点乘法
-
-    cout<<fmt::format("class_id:{} type:{} \n{}",class_id,class_name,EigenToStr(box3d->corners))<<endl;
+    //cout<<fmt::format("class_id:{} type:{} \n{}",class_id,class_name,EigenToStr(box3d->corners))<<endl;
 
     /**
                 z front (yaw=-0.5*pi)
@@ -95,12 +70,11 @@ Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens)
 
     ///根据yaw角构造旋转矩阵
     Mat3d R_co = box3d->R_cioi();
+    box3d->corners = Box3D::GetCorners(box3d->dims,R_co,box3d->bottom_center);
 
     for(int i=0;i<8;++i){
-        Vec3d v=R_co * box3d->corners.col(i) + box3d->bottom_center;
-        box3d->corners.col(i)=v;
         Vec2d p;
-        cam0->ProjectPoint(v,p);//计算3D box投影到图像平面
+        cam0->ProjectPoint(box3d->corners.col(i),p);//计算3D box投影到图像平面
         box3d->corners_2d.col(i) = p;
     }
 
@@ -163,32 +137,6 @@ Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens)
     box3d->bottom_center<<std::stod(tokens[13]),std::stod(tokens[14]),std::stod(tokens[15]);
 
 
-
-    ///构造物体坐标系下的角点
-    /**
-                             front z
-                                    /
-                                   /
-                   p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
-                                 /|            / |
-                                / |           /  |
-                p0(x0, y0, z0) + ---------p4 +   + p6(x1, y1, z1)
-                               |  /      .   |  /
-                               | / origin    | /
-                p3(x0, y1, z0) + ----------- + -------> x right
-                               |             p7(x1, y1, z0)
-                               |
-                               v
-                        down y
-     输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
-     */
-    Eigen::Matrix<double,8,3> corners_norm;
-    corners_norm << 0,0,0,  0,0,1,  0,1,1,  0,1,0,  1,0,0,  1,0,1,  1,1,1,  1,1,0;
-    Eigen::Vector3d offset(0.5,1,0.5);//预测结果所在的坐标系与相机坐标系之间的偏移
-    corners_norm = corners_norm.array().rowwise() - offset.transpose().array();//将每个坐标减去偏移量
-    box3d->corners = corners_norm.transpose(); //得到矩阵 3x8
-    box3d->corners = box3d->corners.array().colwise() * box3d->dims.array();//广播逐点乘法
-
     /**
                 z front (yaw=-0.5*pi)
                /
@@ -217,12 +165,11 @@ Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens)
 
     ///根据yaw角构造旋转矩阵
     Mat3d R_co = box3d->R_cioi();
+    box3d->corners = Box3D::GetCorners(box3d->dims,R_co,box3d->bottom_center);
 
     for(int i=0;i<8;++i){
-        Vec3d v=R_co * box3d->corners.col(i) + box3d->bottom_center;
-        box3d->corners.col(i)=v;
         Vec2d p;
-        cam0->ProjectPoint(v,p);//计算3D box投影到图像平面
+        cam0->ProjectPoint(box3d->corners.col(i),p);//计算3D box投影到图像平面
         box3d->corners_2d.col(i) = p;
     }
 
@@ -240,6 +187,47 @@ Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens)
 }
 
 
+/**
+ * 生成包围框的顶点
+ * @param dims
+ * @param R_xo
+ * @param P_xo
+ * @return
+ */
+Mat38d Box3D::GetCorners(Vec3d &dims,Mat3d &R_xo,Vec3d &P_xo){
+    ///构造物体坐标系下的角点
+    /**
+                             front z
+                                    /
+                                   /
+                   p1(x0, y0, z1) + -----------  + p5(x1, y0, z1)
+                                 /|            / |
+                                / |           /  |
+                p0(x0, y0, z0) + ---------p4 +   + p6(x1, y1, z1)
+                               |  /      .   |  /
+                               | / origin    | /
+                p3(x0, y1, z0) + ----------- + -------> x right
+                               |             p7(x1, y1, z0)
+                               |
+                               v
+                        down y
+     输入的点序列:p0:0,0,0, p1: 0,0,1,  p2: 0,1,1,  p3: 0,1,0,  p4: 1,0,0,  p5: 1,0,1,  p6: 1,1,1,  p7: 1,1,0;
+     */
+    Eigen::Matrix<double,8,3> corners_norm;
+    corners_norm << 0,0,0,  0,0,1,  0,1,1,  0,1,0,  1,0,0,  1,0,1,  1,1,1,  1,1,0;
+    Eigen::Vector3d offset(0.5,1,0.5);//预测结果所在的坐标系与相机坐标系之间的偏移
+    corners_norm = corners_norm.array().rowwise() - offset.transpose().array();//将每个坐标减去偏移量,将坐标系原点设置为包围框底部的中心,
+    Mat38d corners = corners_norm.transpose(); //得到矩阵 3x8
+
+    corners = corners.array().colwise() * dims.array();//广播逐点乘法,乘以长度
+
+    for(int i=0;i<8;++i){
+        Vec3d v=R_xo * corners.col(i) + P_xo;
+        corners.col(i)=v;
+    }
+
+    return corners;
+}
 
 
 /**
@@ -549,21 +537,6 @@ Mat28d Box3D::CornersProjectTo2D(PinHoleCamera &cam)
         corners_2d_tmp.col(i) = p;
     }
     return corners_2d_tmp;
-}
-
-/**
- * 获得世界坐标系下的包围框的顶点,
- * @param R_wbi
- * @param P_wbi
- * @param R_bc
- * @param P_bc
- */
-Mat38d Box3D::GetCornersInWorld(const Mat3d &R_wbi,const Vec3d &P_wbi,const Mat3d &R_bc,const Vec3d &P_bc){
-    Mat38d corners_w;
-    for(int i=0;i<8;++i){
-        corners_w.col(i) = R_wbi * (R_bc * corners.col(i) + P_bc) + P_wbi;
-    }
-    return corners_w;
 }
 
 

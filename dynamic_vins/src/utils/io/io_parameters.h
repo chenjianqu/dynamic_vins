@@ -38,6 +38,10 @@ public:
     inline static bool is_pub_object_axis{false};
     inline static bool is_pub_object_trajectory{false};
 
+    inline static bool is_show_input{false};
+
+
+
     static void SetParameters(const std::string &config_path);
 };
 

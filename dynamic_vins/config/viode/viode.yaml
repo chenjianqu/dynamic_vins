@@ -1,31 +1,38 @@
 %YAML:1.0
-####################### 通用参数 ########################
+####################### General Parameters ########################
 
-imu: 1 #是否使用IMU
-num_of_cam: 2 #相机的数量
+imu: 1 #enable imu or not
+num_of_cam: 2
 
-only_frontend: 0  #是否仅仅启动前端
+only_imgprocess: 0  #for debug
+only_frontend: 0  #for debug
 
-dataset_type: "viode" #数据集类型,支持kitti,viode
-slam_type: "dynamic" #SLAM模式,可选:raw,naive,dynamic
+dataset_type: "viode" #support:kitti,viode
+slam_type: "dynamic" #SLAM mode,optional:raw,naive,dynamic
 
-#是否估计相机和IMU之间的外参数,
-# 0表示已有固定的外参,不估计外参;
-# 1表示估计外参,且有初始外参
-# 2表示估计外参,但无初始外参
-estimate_extrinsic: 0
+basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
-visual_inst_duration: 240  #物体可视化的持续时间
+#the input sequence id
+dataset_sequence: "parking_lot_0_none"
 
-basic_dir:   "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
+plane_constraint: 1 #是否使用平面约束
 
-####################### 相机参数 ########################
+
+####################### Camera Parameters ########################
 
 image_width: 752
 image_height: 480
 
 cam0_calib: "cam0_pinhole.yaml"
 cam1_calib: "cam1_pinhole.yaml"
+
+
+######################### Extrinsic ###########################
+#Whether to estimate the extrinsic between the camera and IMU,
+#0 means that there are fixed extrinsic, and external parameters are not estimated;
+#1 means estimated extrinsic with initial value
+#2 means estimated extrinsic, but no initial initial value
+estimate_extrinsic: 0
 
 body_T_cam0: !!opencv-matrix
   rows: 4
@@ -45,24 +52,9 @@ body_T_cam1: !!opencv-matrix
          0.0, 1.0, 0.0, 0.0,
          0.0, 0.0, 0.0, 1.0]
 
-####################### 光流的参数 ########################
 
-use_dense_flow: 0 #是否使用稠密光流
-use_background_flow: 1 #背景特征点是否使用稠密光流
-use_preprocess_flow: 1 #是否使用预计算的光流
-#flow_preprocess_path: "/home/chen/datasets/kitti/tracking/flow_02/training/image_02/0007/"
-flow_preprocess_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0007/"
-
-fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
-fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
-cnet_onnx_path: "weights/raft/kitti_cnet.onnx"
-cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
-update_onnx_path: "weights/raft/kitti_update.onnx"
-update_tensorrt_path: "weights/raft/kitti_update.bin"
-
-####################### 订阅和发布的ROS话题名 ########################
-##### 订阅的话题
-#kitti
+####################### ROS Topic ########################
+##### 订阅的话题, 若use_dataloader==1,则忽略
 image0_topic: "/cam0/image_raw"
 image1_topic: "/cam1/image_raw"
 
@@ -79,7 +71,7 @@ vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
 vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
 
 
-####################### 前端的参数 ########################
+####################### Frontend Parameters ########################
 
 max_cnt: 160            # max feature number in feature tracking
 min_dist: 20            # min distance between two features
@@ -88,10 +80,10 @@ F_threshold: 1.0        # ransac threshold (pixel)
 show_track: 1           # publish tracking image as topic
 flow_back: 1            # perform forward and backward optical flow to improve feature tracking accuracy
 
-min_dynamic_dist: 10 #检测动态特征点时每个点之间的最小距离
+min_dynamic_dist: 5 #检测动态特征点时每个点之间的最小距离
 max_dynamic_cnt: 50 #前端中每个动态物体上最多同时跟踪的特征数量
 
-####################### VIO的参数 ########################
+####################### VIO Parameters ########################
 
 #optimization parameters
 max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
@@ -114,26 +106,49 @@ BIAS_ACC_THRESHOLD: 0.1
 BIAS_GYR_THRESHOLD: 0.1
 
 
-####################### VIODE参数 ########################
-rgb_to_label_file: "config/viode/VIODE-master/segmentation/rgb_ids.txt"
-dynamic_label_id: [241,242,243,244,245,246,247,248,249,250,251,254,255]
-
-
-####################### log的参数 ########################
-estimator_log_path: "output/estimator_log.txt"
+#######################  Log Parameters ########################
 estimator_log_level: "debug"
 estimator_log_flush: "debug"
-feature_tracker_log_path: "output/tracker_log.txt"
 feature_tracker_log_level: "debug"
 feature_tracker_log_flush: "debug"
-segmentor_log_path: "output/segmentor_log.txt"
 segmentor_log_level: "debug"
 segmentor_log_flush: "debug"
+log_output_path: "data/log/"
 
-####################### 动态物体参数 ########################
-instance_init_min_num: 8
+#是否输出每一帧的每个路标点和位姿的信息,用于debug
+print_detail: 0
+
+####################### Visualization Parameters ########################
+visual_inst_duration: 120  #duration of marker display
+
+pub_groundtruth_box: 0
+pub_predict_box: 0
+pub_object_axis: 1
+pub_object_trajectory: 1
+
+####################### Dynamic Parameters ########################
+instance_init_min_num: 4
 instance_static_err_threshold: 10.0
 
+######################### Bounding box ########################
+use_det3d: 0
+
+####################### Flow Parameters ########################
+use_dense_flow: 0 #是否使用稠密光流
+#use_background_flow: 0 #背景特征点是否使用稠密光流
+#use_preprocess_flow: 0 #是否使用预计算的光流
+#flow_preprocess_path: "/home/chen/datasets/kitti/tracking/flow_02/training/image_02/0007/"
+#flow_preprocess_path: "/home/chen/Datasets/kitti/tracking_flow/image_02/0007/"
+
+#fnet_onnx_path: "weights/raft/kitti_fnet.onnx"
+#fnet_tensorrt_path: "weights/raft/kitti_fnet.bin"
+#cnet_onnx_path: "weights/raft/kitti_cnet.onnx"
+#cnet_tensorrt_path: "weights/raft/kitti_cnet.bin"
+#update_onnx_path: "weights/raft/kitti_update.onnx"
+#update_tensorrt_path: "weights/raft/kitti_update.bin"
 
 
+####################### VIODE parameters ########################
+rgb_to_label_file: "config/viode/VIODE-master/segmentation/rgb_ids.txt"
+dynamic_label_id: [241,242,243,244,245,246,247,248,249,250,251,254,255]
 

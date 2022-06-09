@@ -92,6 +92,7 @@ public:
     inline static bool use_background_flow{false};
 
     inline static bool use_plane_constraint{false};
+    inline static bool use_det3d{false};
 
     inline static std::atomic_bool ok{true};
 

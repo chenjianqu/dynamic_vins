@@ -56,6 +56,9 @@ target_link_libraries(visualize_box ${catkin_LIBRARIES} ${OpenCV_LIBS})
 add_executable(convert_tracking_to_object src/convert_tracking_to_object.cpp)
 target_link_libraries(convert_tracking_to_object ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
+add_executable(viode_generate_odometry src/viode_generate_odometry.cpp)
+target_link_libraries(viode_generate_odometry ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
 
 
 

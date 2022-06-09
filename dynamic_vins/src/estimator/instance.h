@@ -87,7 +87,6 @@ public:
     void OutlierRejection();
 
     double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo) const;
-    void GetBoxVertex(EigenContainer<Eigen::Vector3d> &vertex);
 
     [[nodiscard]] double AverageDepth() const;
 

@@ -72,45 +72,52 @@ roscore
 
 * launch rviz
 ```shell
-rosrun rviz rviz -d {dynamic_vins_dir}/config/rviz/rviz.rviz
-# such as:
-rosrun rviz rviz -d /home/chen/ws/dynamic_ws/src/dynamic_vins/config/rviz/rviz.rviz
+dynamic_vins_root=/home/chen/ws/dynamic_ws
+
+rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 ```
+
+
 
 * launch 
+
 loop_fusion
+
 ```shell
 #loop_fusion
-source ~/ws/vio_ws/devel/setup.bash && \ 
-rosrun loop_fusion loop_fusion_node ~/ws/vio_ws/src/dynamic_vins/config/viode/calibration.yaml 
+dynamic_vins_root=/home/chen/ws/dynamic_ws
 
+source ${dynamic_vins_root}/devel/setup.bash && rosrun loop_fusion loop_fusion_node ${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
 ```
+
+
 
 dynamic_vins
+
 ```shell
 #VINS
-source ~/ws/vio_ws/devel/setup.bash && \ 
-rosrun dynamic_vins dynamic_vins ~/ws/vio_ws/src/dynamic_vins/config/viode/calibration.yaml
+dynamic_vins_root=/home/chen/ws/dynamic_ws
 
-kitti参数
-/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml
-/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
-/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
 
-viode参数：
-/home/chen/ws/dynamic_ws/src/dynamic_vins/config/viode/viode.yaml
 
+source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file}
 ```
 
+
+
+
+
 * play dataset
+
 ```shell
 #viode
-rosbag play  /media/chen/EC4A17F64A17BBF0/datasets/viode/city_day/3_high.bag
-rosbag play /home/chen/Datasets/viode/3_high.bag
+rosbag play /home/chen/datasets/VIODE/bag/city_night/3_high.bag
 
 #kitti
-rosbag play /media/chen/EC4A17F64A17BBF0/datasets/kitti/odometry/colors/odometry_color_07.bag
-rosbag play /media/chen/EC4A17F64A17BBF0/datasets/kitti/odometry/colors/odometry_color_04.bag
 rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
 ```
 
@@ -156,9 +163,33 @@ rosrun dynamic_vins_eval visualize_box  /home/chen/ws/dynamic_ws/src/dynamic_vin
 
 ```shell
 export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
 
 sudo apt install python-pip 
 pip install evo --upgrade --no-binary evo 
+```
+
+
+
+
+
+**Prepare VIODE ground-truth trajectory**
+
+```shell
+cd dynamic_ws
+source devel/setup.bash
+
+save_dir=/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/viode_egomotion/
+save_name=city_night_3_high
+
+rosrun dynamic_vins_eval viode_generate_odometry /odometry ${save_dir}/${save_name}.txt
+
+#########################################
+
+viode_dir=/home/chen/datasets/VIODE/bag/
+sequence=city_night/3_high
+
+rosbag play ${viode_dir}/${sequence}.bag
 ```
 
 
@@ -170,11 +201,12 @@ pip install evo --upgrade --no-binary evo
 * Convert KITTI's oxts data to TUM format pose
 
 ```shell
-source ~/ws/dynamic_ws/devel/setup.bash
-
 oxts_path="/home/chen/datasets/kitti/tracking/data_tracking_oxts/training/oxts/"
-save_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
-sequence="0001" && rosrun dynamic_vins_eval save_oxts ${oxts_path}/${sequence}.txt ${save_path}/${sequence}.txt
+save_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
+sequence="0018" 
+
+source ~/ws/dynamic_ws/devel/setup.bash
+rosrun dynamic_vins_eval save_oxts ${oxts_path}/${sequence}.txt ${save_path}/${sequence}.txt
 ```
 
 
@@ -200,8 +232,8 @@ evo_traj tum ${save_path}/${sequence}.txt -p
 * To visualize the estimate ego-motion,run:
 
 ```shell
-estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/"
-sequence="0003"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-6-7/kitti_tracking_dynamic/"
+sequence="0000"
 
 evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt -p
 ```
@@ -209,21 +241,77 @@ evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt -p
 or
 ```shell
 gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
-estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/"
-sequence="0002"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-6-7/kitti_tracking_dynamic/"
+
 evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt --ref=${gt_path}/${sequence}.txt --align -p
 ```
 
 
 
-* To evaluate the estimate trajectory,run
+* To evaluate the ATE of estimate trajectory,run
 
 ```shell
-gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking/"
-estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/"
-sequence="0003"
-evo_ape tum --align -p ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt 
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-6-7/kitti_tracking_dynamic/"
+sequence="0000"
+#evo_ape tum --align -p ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt
+evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt
 ```
+
+
+
+* To evaluate the RPE_t of estimate trajectory,run
+
+```shell
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-6-7/kitti_tracking_raw/"
+sequence="0000"
+evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part
+```
+
+
+
+* To evaluate the RPE_R of estimate trajectory,run
+
+```shell
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-6-7/kitti_tracking_raw/"
+sequence="0000"
+evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
+```
+
+
+
+* Evaluate 3 metrics simultaneously
+
+```shell
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-6-7/kitti_tracking_naive/"
+sequence="0000"
+
+evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
+
+```
+
+或
+
+```shell
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+gt_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/viode_egomotion/"
+estimate_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-6-7/viode_raw/"
+
+sequence="city_day_0_none"
+
+evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
+
+```
+
+
 
 
 
@@ -331,30 +419,19 @@ Run environment: `Python2`, dependency:
 
 #### Evaluate
 
-​	将模型预测结果的放置到：`./result/dynamic_vins/data/`，结果的数据格式与 ground truth一致。
+​	将模型预测结果的放置到：` ${dynamic_vins_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/results/dynamic_vins/data/`，结果的数据格式与 ground truth一致。
 
 ```shell
-#项目路径
-project_root=/home/chen/ws/dynamic_ws/src
-#评估工具的数据路径
-eval_data_path=${project_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/results/dynamic_vins/data
-#系统输出的目录
-estimate_data_path=${project_root}/dynamic_vins/data/output
-#序列
-sequence=0003
-#将结果复制到评估位置
-cp ${estimate_data_path}/${sequence}_mot.txt ${eval_data_path}/${sequence}.txt
+dynamic_vins_root=/home/chen/ws/dynamic_ws/src
+sequence=0000
+
+cp ${dynamic_vins_root}/dynamic_vins/data/exp/2022-6-7/kitti_tracking_dynamic/${sequence}_mot.txt ${dynamic_vins_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/results/dynamic_vins/data/${sequence}.txt
 ```
 
-
-
-​	执行评估:
+​	执行评估: 
 
 ```shell
-cd ${project_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python
-
-#退出conda环境
-conda deactivate
+cd ${dynamic_vins_root}/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python
 
 python ./evaluate_tracking.py dynamic_vins
 ```

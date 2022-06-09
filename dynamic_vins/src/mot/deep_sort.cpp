@@ -63,9 +63,11 @@ DeepSORT::DeepSORT(const string& config_path,const array<int64_t, 2> &dim)
 
 
 vector<Box2D::Ptr> DeepSORT::update(const std::vector<Box2D::Ptr> &detections, cv::Mat ori_img) {
+    ///卡尔曼预测
     manager->predict();
     manager->remove_nan();
 
+    ///执行更新
     auto matched = manager->update(
             detections,
             [this, &detections, &ori_img](const std::vector<int> &trk_ids, const std::vector<int> &det_ids) {
@@ -99,6 +101,7 @@ vector<Box2D::Ptr> DeepSORT::update(const std::vector<Box2D::Ptr> &detections, c
                 return iou_mat;
             });
 
+    ///更新视觉特征
     vector<cv::Mat> boxes;
     vector<int> targets;
     for (auto[x, y]:matched) {
@@ -109,6 +112,7 @@ vector<Box2D::Ptr> DeepSORT::update(const std::vector<Box2D::Ptr> &detections, c
 
     manager->remove_deleted();
 
+    ///输出结果
     //return manager->visible_tracks();
     return manager->visible_tracks_info();
 }
