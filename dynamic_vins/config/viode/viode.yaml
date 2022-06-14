@@ -13,7 +13,7 @@ slam_type: "dynamic" #SLAM mode,optional:raw,naive,dynamic
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 #the input sequence id
-dataset_sequence: "parking_lot_0_none"
+dataset_sequence: "city_day_3_high"
 
 plane_constraint: 1 #是否使用平面约束
 
@@ -107,12 +107,12 @@ BIAS_GYR_THRESHOLD: 0.1
 
 
 #######################  Log Parameters ########################
-estimator_log_level: "debug"
-estimator_log_flush: "debug"
-feature_tracker_log_level: "debug"
-feature_tracker_log_flush: "debug"
-segmentor_log_level: "debug"
-segmentor_log_flush: "debug"
+estimator_log_level: "info"
+estimator_log_flush: "info"
+feature_tracker_log_level: "info"
+feature_tracker_log_flush: "info"
+segmentor_log_level: "info"
+segmentor_log_flush: "info"
 log_output_path: "data/log/"
 
 #是否输出每一帧的每个路标点和位姿的信息,用于debug

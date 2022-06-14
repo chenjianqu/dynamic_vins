@@ -119,6 +119,7 @@ std::unordered_map<int,std::vector<Box3D::Ptr>> ReadBox3dFromTxt(const std::stri
         box->box2d.min_pt.y = std::stof(tokens[7]);
         box->box2d.max_pt.x = std::stof(tokens[8]);
         box->box2d.max_pt.y = std::stof(tokens[9]);
+        box->box2d.center_pt=(box->box2d.min_pt+box->box2d.max_pt)/2.;
         box->dims.x() = std::stod(tokens[10]);
         box->dims.y() = std::stod(tokens[11]);
         box->dims.z() = std::stod(tokens[12]);
@@ -126,7 +127,7 @@ std::unordered_map<int,std::vector<Box3D::Ptr>> ReadBox3dFromTxt(const std::stri
         box->bottom_center.y() = std::stod(tokens[14]);
         box->bottom_center.z() = std::stod(tokens[15]);
         box->yaw = std::stod(tokens[16]);
-        box->score = std::stod(tokens[17]);
+        //box->score = std::stod(tokens[17]);
 
         if(color_map.find(box->id)==color_map.end()){
             color_map.insert(
@@ -151,22 +152,21 @@ std::unordered_map<int,std::vector<Box3D::Ptr>> ReadBox3dFromTxt(const std::stri
 
 int main(int argc, char** argv)
 {
+    if(argc!=3){
+        cerr<<"usage:rosrun dynamic_vins_eval visualize_box ${tracking_result} ${image_dir}"<<endl;
+        return -1;
+    }
+
     setlocale(LC_ALL, "");//防止中文乱码
-    ros::init(argc, argv, "visualize_box");
+    ros::init(argc, argv, "visualize_3d_detection");
     ros::start();
 
     ros::NodeHandle nh;
 
-    string data_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/0002_object.txt";
-    if(argc>=2){
-        data_path = argv[1];
-    }
-    string image_path="/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0002/";
-    if(argc>=3){
-        image_path = argv[2];
-    }
-    auto boxes = ReadBox3dFromTxt(data_path,0.1);
+    string data_path=argv[1];
+    string image_path=argv[2];
 
+    auto boxes = ReadBox3dFromTxt(data_path,0.1);
 
     Dataloader dataloader(image_path);
 
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
         if(it!=boxes.end()){
             for(auto &box : it->second){
                  cv::rectangle(img.color0,box->box2d.min_pt,box->box2d.max_pt,box->color,2);
-                 cv::putText(img.color0,std::to_string(box->id),box->box2d.min_pt,cv::FONT_HERSHEY_PLAIN,
+                 cv::putText(img.color0,std::to_string(box->id),box->box2d.center_pt,cv::FONT_HERSHEY_PLAIN,
                              1.5,box->color,2);
             }
         }

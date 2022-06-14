@@ -50,10 +50,10 @@ void SemanticImage::SetMask(){
                                                (inst_mask_tensor * 255).to(torch::kUInt8).data_ptr()).clone();
         boxes2d[i]->mask_gpu.download(boxes2d[i]->mask_cv);
         ///cal center
-        auto inds=inst_mask_tensor.nonzero();
+        /*auto inds=inst_mask_tensor.nonzero();
         auto center_inds = inds.sum(0) / inds.sizes()[0];
         boxes2d[i]->mask_center=cv::Point2f(center_inds.index({1}).item().toFloat(),
-                                           center_inds.index({0}).item().toFloat());
+                                           center_inds.index({0}).item().toFloat());*/
     }
 }
 

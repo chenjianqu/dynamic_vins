@@ -17,10 +17,10 @@
  #include "utils/def.h"
 #include "vio_parameters.h"
 
-#include "factor/pose_local_parameterization.h"
-#include "factor/project_instance_factor.h"
-#include "factor/speed_factor.h"
-#include "factor/box_factor.h"
+#include "estimator/factor/pose_local_parameterization.h"
+#include "estimator/factor/project_instance_factor.h"
+#include "estimator/factor/speed_factor.h"
+#include "estimator/factor/box_factor.h"
 #include "utils/dataset/kitti_utils.h"
 #include "utils/io/io_parameters.h"
 #include "utils/io/io_utils.h"
@@ -470,7 +470,7 @@ void InstanceManager::PropagatePose()
         }
         else if(!inst.is_init_velocity){
             Mat3d Roioj=Sophus::SO3d::exp(inst.point_vel.a*time_ij).matrix();
-            Vec3d Poioj=inst.point_vel.v*time_ij/2;
+            Vec3d Poioj=inst.point_vel.v*time_ij;
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
             log_text += fmt::format("InstanceManager::PropagatePose id:{} Poioj:{} \n",inst.id, VecToStr(Poioj));
@@ -483,7 +483,7 @@ void InstanceManager::PropagatePose()
 
 
             Mat3d Roioj=Sophus::SO3d::exp(inst.point_vel.a*time_ij).matrix();
-            Vec3d Poioj=inst.point_vel.v*time_ij/2;
+            Vec3d Poioj=inst.point_vel.v*time_ij;
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
 
@@ -659,12 +659,19 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
 
             inst.box3d->dims = inst.boxes3d[frame]->dims;
 
-            auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);//根据3d点计算物体的中心
-            if(!init_cam_pt){
-                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
-                continue;
+            //auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
+            auto init_cam_pt = FitBox3DFromCameraFrame(points3d_cam,inst.box3d->dims);
+            if(init_cam_pt){
+                init_state.P = cam_to_world(*init_cam_pt);
             }
-            init_state.P = cam_to_world(*init_cam_pt);
+            else{
+                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
+                init_state.P.setZero();
+                for(auto &p:points3d_cam){
+                    init_state.P += p;
+                }
+                init_state.P /= points3d_cam.size();
+            }
             /*if(cfg::use_plane_constraint){
                 if(cfg::is_use_imu){
                     init_state.P.z()=0;
@@ -689,7 +696,9 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
         else{
             inst.box3d->dims = Vec3d(2,4,1.5);
 
-            auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
+            //auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
+            auto init_cam_pt = FitBox3DFromCameraFrame(points3d_cam,inst.box3d->dims);
+
             if(!init_cam_pt){
                 log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
                 continue;
@@ -1006,6 +1015,7 @@ string InstanceManager::PrintInstancePoseInfo(bool output_lm){
     return {};
 }
 
+
 /**
  * 设置所有动态物体的最新的位姿,dims信息到输出变量
  */
@@ -1051,6 +1061,7 @@ void InstanceManager::SaveTrajectory(){
 
     string object_tracking_path= io_para::kOutputFolder + cfg::kDatasetSequence+".txt";
     string object_object_dir= io_para::kOutputFolder + cfg::kDatasetSequence+"/";
+    string object_tum_dir=io_para::kOutputFolder + cfg::kDatasetSequence+"_tum/";
 
     static bool first_run=true;
     if(first_run){
@@ -1058,6 +1069,8 @@ void InstanceManager::SaveTrajectory(){
         fout.close();
 
         ClearDirectory(object_object_dir);//获取目录中所有的路径,并将这些文件全部删除
+        ClearDirectory(object_tum_dir);
+
         first_run=false;
     }
 
@@ -1084,6 +1097,26 @@ void InstanceManager::SaveTrajectory(){
             continue;
         if(!inst.is_curr_visible)
             continue;
+
+        ///将最老帧的轨迹保存到历史轨迹中
+        inst.history_pose.push_back(inst.state[kWinSize]);
+        if(inst.history_pose.size()>100){
+            inst.history_pose.erase(inst.history_pose.begin());
+        }
+
+        string object_tum_path=object_tum_dir+std::to_string(inst_id)+".txt";
+        Eigen::Quaterniond q_obj(inst.state[kWinSize].R);
+        std::ofstream foutC(object_tum_path,std::ios::out | std::ios::app);
+        foutC.setf(std::ios::fixed, std::ios::floatfield);
+        foutC << e->headers[kWinSize] << " "
+        << inst.state[kWinSize].P.x() << " "
+        << inst.state[kWinSize].P.y() << " "
+        << inst.state[kWinSize].P.z() << " "
+        <<q_obj.x()<<" "
+        <<q_obj.y()<<" "
+        <<q_obj.z()<<" "
+        <<q_obj.w()<<endl;
+        foutC.close();
 
         if(cfg::dataset==DatasetType::kKitti){
             ///变换到相机坐标系下
@@ -1272,13 +1305,13 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                 statistics["BoxPoseFactor"]++;*/
 
                 ///包围框中心误差
-                /*if(inst.boxes3d[i]->center_pt.norm() < 10){
-                    problem.AddResidualBlock(new BoxPoseNormFactor(inst.boxes3d[i]->center_pt,
+                if(inst.boxes3d[i]->center_pt.norm() < 50){
+                    problem.AddResidualBlock(new BoxPositionFactor(inst.boxes3d[i]->center_pt,
                                                                    e->ric[0],e->tic[0],
                                                                    e->Rs[i],e->Ps[i]),
                                              loss_function,inst.para_state[i]);
-                    statistics["BoxPoseNormFactor"]++;
-                }*/
+                    statistics["BoxPositionFactor"]++;
+                }
 
 
                 /*///添加顶点误差
@@ -1310,6 +1343,13 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                statistics["BoxVertexFactor"]++;*/
             }
         }
+        if(inst.boxes3d[kWinSize]){
+            problem.AddResidualBlock(new BoxPositionFactor(inst.boxes3d[kWinSize]->center_pt,
+                                                               e->ric[0], e->tic[0],
+                                                               e->Rs[kWinSize], e->Ps[kWinSize]),
+                                     loss_function,inst.para_state[kWinSize]);
+            statistics["BoxPositionFactor"]++;
+        }
 
 
         int depth_index=-1;//注意,这里的depth_index的赋值过程要与 Instance::SetOptimizeParameters()中depth_index的赋值过程一致
@@ -1330,12 +1370,12 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                     statistics["BoxEncloseStereoPointFactor"]++;
                 }
             }
-            /*problem.AddResidualBlock(new BoxEncloseTrianglePointFactor(
+            problem.AddResidualBlock(new BoxEncloseTrianglePointFactor(
                     feat_j.point,feat_j.vel,e->Rs[feat_j.frame],e->Ps[feat_j.frame],
                     e->ric[0],e->tic[0],feat_j.td,e->td),
                                      loss_function,
                                      inst.para_state[feat_j.frame],inst.para_box[0],inst.para_inv_depth[depth_index]);
-            statistics["BoxEncloseTrianglePointFactor"]++;*/
+            statistics["BoxEncloseTrianglePointFactor"]++;
 
 
             if(inst.is_static){
@@ -1402,7 +1442,7 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                         }
                     }
                 }
-                if(found_first && found_end){
+                /*if(found_first && found_end){
                     double time_ij = e->headers[end_point->frame] - e->headers[first_point->frame];
                     problem.AddResidualBlock(
                             new SpeedStereoPointFactor(end_point->p_w,first_point->p_w,time_ij),
@@ -1415,7 +1455,7 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                                             loss_function,inst.para_speed[0]);
                     statistics["ConstSpeedStereoPointFactor"]++;
 
-                }
+                }*/
 
             }
 
@@ -1434,9 +1474,9 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                          loss_function,inst.para_speed[0]);
                 statistics["SpeedPoseSimpleFactor"]++;*/
 
-                problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i].time,inst.state[i+1].time),
+                /*problem.AddResidualBlock(new SpeedPoseFactor(inst.state[i].time,inst.state[i+1].time),
                                          loss_function,inst.para_state[i],inst.para_state[i+1],inst.para_speed[0]);
-                statistics["SpeedPoseFactor"]++;
+                statistics["SpeedPoseFactor"]++;*/
             }
         }
 
@@ -1566,7 +1606,7 @@ void InstanceManager::AddResidualBlockForJointOpt(ceres::Problem &problem, ceres
             for(auto feat_it = (++lm.feats.begin()); feat_it !=lm.feats.end();++feat_it ){
                 int fi = feat_it->frame;
 
-                problem.AddResidualBlock(
+                /*problem.AddResidualBlock(
                         new ProjectionInstanceFactor(feat_j.point,feat_it->point,feat_j.vel,feat_it->vel,
                                                      feat_j.td,feat_it->td,e->td),
                         loss_function,
@@ -1577,7 +1617,7 @@ void InstanceManager::AddResidualBlockForJointOpt(ceres::Problem &problem, ceres
                         inst.para_state[fi],
                         inst.para_inv_depth[depth_index]
                         );
-                statistics["ProjectionInstanceFactor"]++;
+                statistics["ProjectionInstanceFactor"]++;*/
 
                 //double factor= 1.;//track_3>=5 ? 5. : 1.;
                 ///优化相机位姿、物体的速度和位姿

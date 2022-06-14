@@ -440,6 +440,11 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
     if(fe_para::is_show_track)
         DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, prev_left_map);
 
+    /*if(img.seq%10==0){
+        string save_name = cfg::kDatasetSequence+"_"+std::to_string(img.seq)+"_bg.png";
+        cv::imwrite(save_name,img_track_);
+    }*/
+
     prev_img = cur_img;
     prev_time = cur_time;
 

@@ -209,6 +209,15 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
     path.poses.push_back(pose_stamped);
     pub_path->publish(path);
 
+    static bool is_first_run=true;
+    if(is_first_run){
+        is_first_run=false;
+        //清空
+        std::ofstream fout(io_para::kVinsResultPath, std::ios::out);
+        fout.close();
+    }
+
+
     // write result to file
     ofstream foutC(io_para::kVinsResultPath, ios::app);
     foutC.setf(ios::fixed, ios::floatfield);

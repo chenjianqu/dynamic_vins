@@ -39,6 +39,7 @@ bool SplitTrajectory(int target_id,const string& source_file,const string& dst_f
     cout<<"source_file:"<<source_file<<endl;
     cout<<"dst_file:"<<dst_file<<endl;
 
+    int cnt=0;
 
     string line;
     while (getline(fp,line)){ //循环读取每行数据
@@ -86,21 +87,29 @@ bool SplitTrajectory(int target_id,const string& source_file,const string& dst_f
             continue;
         }
         auto &tokens_cam = it_find->second;
-        Eigen::Vector3d t_wc(std::stod(tokens_cam[0]),std::stod(tokens_cam[1]),std::stod(tokens_cam[2]));
-        Eigen::Quaterniond q_wc(std::stod(tokens_cam[6]),
-                                std::stod(tokens_cam[3]),
+        Eigen::Vector3d t_wc(std::stod(tokens_cam[1]),std::stod(tokens_cam[2]),std::stod(tokens_cam[3]));
+        Eigen::Quaterniond q_wc(std::stod(tokens_cam[7]),
                                 std::stod(tokens_cam[4]),
-                                std::stod(tokens_cam[5]));
-
-        Eigen::Matrix3d R_wc = q_wc.matrix();
+                                std::stod(tokens_cam[5]),
+                                std::stod(tokens_cam[6]));
+        q_wc.normalize();
+        Eigen::Matrix3d R_wc = q_wc.toRotationMatrix();
 
         ///构造位姿Tco
         Eigen::Vector3d t_co(std::stod(tokens[13]),std::stod(tokens[14]),std::stod(tokens[15]));
         //cout<<t_co.transpose()<<endl;
 
-        double rotation_y = std::stod(tokens[16]);
+        ///9个yaw角(绕着y轴,因为y轴是垂直向下的)
+        double yaw = std::stod(tokens[16]);
+        //将yaw角限制到[-2pi,0]范围
+        while(yaw>0) yaw -= (2*M_PI);
+        while(yaw< (-2*M_PI)) yaw += (2*M_PI);
+        //将yaw角限定在[-pi,0]上
+        if(yaw < (-M_PI)){
+            yaw += M_PI;
+        }
         Eigen::Matrix3d R_oc;
-        R_oc<<cos(rotation_y),0, -sin(rotation_y),   0,1,0,   sin(rotation_y),0,cos(rotation_y);
+        R_oc<<cos(yaw),0, -sin(yaw),   0,1,0,   sin(yaw),0,cos(yaw);
         Eigen::Matrix3d R_co = R_oc.transpose();
 
         Eigen::Matrix3d R_wo = R_wc * R_co;
@@ -118,6 +127,14 @@ bool SplitTrajectory(int target_id,const string& source_file,const string& dst_f
         q.y()<<" "<<
         q.z()<<" "<<
         q.w()<<endl;
+
+        cnt++;
+        if(cnt==1){
+       cout<<time<<" ";
+            cout<<"t_co:"<<t_co.transpose()<<" ";
+            cout<<"t_wc:"<<t_wc.transpose()<<" ";
+            cout<<"t_wo:"<<t_wo.transpose()<<endl;
+        }
     }
     fp.close();
     out_file.close();
@@ -152,33 +169,24 @@ std::unordered_map<string,vector<string>> ReadCameraPose(const string &pose_file
 
 int main(int argc, char** argv)
 {
-    if(argc != 7){
-        cerr<<"parameters number wrong!,usage: rosrun dynamic_vins_eval convert_mot_to_trajectory"
-              " ${gt_id} ${estimate_id} ${gt_file} ${estimate_file} ${gt_cam_pose_file} ${estimate_cam_pose_file}"<<endl;
+    if(argc != 5){
+        cerr<<"parameters number wrong!,usage: rosrun dynamic_vins_eval split_mot_to_tum"
+              " ${gt_id} ${gt_file} ${gt_cam_pose_file} ${save_to_path}"<<endl;
         return 1;
     }
 
     int gt_id = std::stoi(argv[1]);
-    int estimate_id = std::stoi(argv[2]);
-    string gt_file = argv[3];
-    string estimate_file = argv[4];
-
-    string gt_cam_pose_file = argv[5];
-    string estimate_cam_pose_file = argv[6];
-
-    string save_ref_path=string(argv[1])+"_gt.txt";
-    string save_estimate_path=string(argv[1])+"_estimate.txt";
+    string gt_file = argv[2];
+    string gt_cam_pose_file = argv[3];
+    string save_to_path = argv[4];
 
     ///根据时间获取相机的位姿
     std::unordered_map<string,vector<string>> gt_cam_pose = ReadCameraPose(gt_cam_pose_file);
-    std::unordered_map<string,vector<string>> estimate_cam_pose = ReadCameraPose(estimate_cam_pose_file);
 
     cout<<"ReadCameraPose finished"<<endl;
     cout<<"gt_cam_pose size:"<<gt_cam_pose.size()<<endl;
-    cout<<"estimate_cam_pose size:"<<estimate_cam_pose.size()<<endl;
 
-    SplitTrajectory( gt_id,gt_file,save_ref_path,gt_cam_pose);
-    SplitTrajectory( estimate_id,estimate_file,save_estimate_path,estimate_cam_pose);
+    SplitTrajectory( gt_id,gt_file,save_to_path,gt_cam_pose);
 
     return 0;
 }

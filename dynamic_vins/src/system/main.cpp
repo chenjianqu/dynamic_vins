@@ -13,7 +13,6 @@
 #include <mutex>
 #include <chrono>
 #include <future>
-#include <filesystem>
 #include <iostream>
 
 #include <spdlog/spdlog.h>
@@ -26,13 +25,11 @@
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/io/dataloader.h"
-#include "flow/flow_estimator.h"
-#include "det3d/detector3d.h"
-#include "det2d/detector2d.h"
 #include "estimator/estimator.h"
 #include "front_end/semantic_image.h"
 #include "front_end/background_tracker.h"
 #include "front_end/front_end_parameters.h"
+#include "image_process/image_process.h"
 
 namespace dynamic_vins{\
 
@@ -42,9 +39,7 @@ using namespace std;
 
 
 Estimator::Ptr estimator;
-Detector2D::Ptr detector2d;
-Detector3D::Ptr detector3d;
-FlowEstimator::Ptr flow_estimator;
+ImageProcessor::Ptr processor;
 FeatureTracker::Ptr feature_tracker;
 InstsFeatManager::Ptr insts_tracker;
 CallBack* callback;
@@ -59,7 +54,8 @@ ImageQueue image_queue;
 void ImageProcess()
 {
     int cnt = 0;
-    TicToc tt, t_all;
+    double time_sum=0;
+    TicToc t_all;
     ImageViewer viewer;
 
     while(cfg::ok.load(std::memory_order_seq_cst))
@@ -97,90 +93,27 @@ void ImageProcess()
             std::terminate();
         }
 
-        ///rgb to gray
-        tt.Tic();
-        if(img.gray0.empty()){
-            img.SetGrayImageGpu();
-        }
-        else{
-            img.SetColorImageGpu();
-        }
+        processor->Run(img);
 
+/*
+        //可视化
+        if(img.seq%10==0){
+            string save_name = cfg::kDatasetSequence+"_"+to_string(img.seq)+"_det2d.png";
+            cv::imwrite(save_name,img.merge_mask);
 
-        ///均衡化
-        //static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
-        //clahe->apply(img.gray0, img.gray0);
-        //if(!img.gray1.empty())
-        //    clahe->apply(img.gray1, img.gray1);
-
-        img.img_tensor = Pipeline::ImageToTensor(img.color0);
-
-        //torch::Tensor img_clone = img_tensor.clone();
-        //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
-
-        ///启动光流估计线程
-        if(cfg::use_dense_flow){
-            flow_estimator->Launch(img);
-        }
-
-        ///启动3D目标检测线程
-        if(cfg::slam == SlamType::kDynamic && cfg::use_det3d){
-            detector3d->Launch(img);
-        }
-
-        Infos("ImageProcess prepare: {} ms", tt.TocThenTic());
-
-        ///实例分割
-        tt.Tic();
-        if(cfg::slam != SlamType::kRaw){
-            if(!cfg::is_input_seg){
-                detector2d->Launch(img);
-                if(cfg::slam == SlamType::kNaive)
-                    img.SetBackgroundMask();
-                else if(cfg::slam == SlamType::kDynamic)
-                    img.SetMask();
+            cv::Mat img_w=img.color0.clone();
+            for(auto &box3d:img.boxes3d){
+                box3d->VisCorners2d(img_w,BgrColor("white",false),*cam0);
             }
-            else{
-                if(cfg::dataset == DatasetType::kViode){
-                    if(cfg::slam == SlamType::kNaive)
-                        VIODE::SetViodeMaskSimple(img);
-                    else if(cfg::slam == SlamType::kDynamic)
-                        VIODE::SetViodeMask(img);
-                }
-            }
-            Infos("ImageProcess SetMask: {}", tt.TocThenTic());
+             save_name = cfg::kDatasetSequence+"_"+to_string(img.seq)+"_det3d.png";
+            cv::imwrite(save_name,img_w);
+        }*/
 
-            string log_text="detector2d results:\n";
-            for(auto &box2d:img.boxes2d){
-                log_text += fmt::format("inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",box2d->id, box2d->class_name,
-                                        box2d->min_pt.x,box2d->min_pt.y,box2d->max_pt.x,box2d->max_pt.y);
-            }
-            Debugs(log_text);
+        double time_cost=t_all.Toc();
+        time_sum+=time_cost;
+        cnt++;
 
-        }
-
-        //log
-        //for(auto &inst : img.insts_info)
-        //    Debugs("img.insts_info id:{} min_pt:({},{}),max_pt:({},{})",
-        //    inst.id,inst.min_pt.x,inst.min_pt.y,inst.max_pt.x,inst.max_pt.y);
-
-        ///获得光流估计
-        if(cfg::use_dense_flow){
-            img.flow= flow_estimator->WaitResult();
-            if(!img.flow.data){
-                img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
-            }
-        }
-
-        ///读取离线检测的3D包围框
-        if(cfg::slam == SlamType::kDynamic && cfg::use_det3d){
-            img.boxes3d = detector3d->WaitResult();
-        }
-
-        ///将结果存放到消息队列中
-        if(!cfg::is_only_imgprocess){
-            image_queue.push_back(img);
-        }
+        Warns("ImageProcess, all:{} ms \n",time_cost);
 
 
         if(io_para::is_show_input){
@@ -205,9 +138,16 @@ void ImageProcess()
             viewer.Delay(io_para::kImageDatasetPeriod);
         }
 
+        ///将结果存放到消息队列中
+        if(!cfg::is_only_imgprocess){
+            image_queue.push_back(img);
+        }
 
-        Warns("ImageProcess, all:{} ms \n",t_all.Toc());
+
+
     }
+
+    Infos("Image Process Avg cost:{} ms",time_sum/cnt);
 
     Warns("ImageProcess 线程退出");
 }
@@ -220,6 +160,7 @@ void FeatureTrack()
 {
     TicToc tt;
     int cnt=0;
+    double time_sum=0;
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
         if(auto img = image_queue.request_image();img){
@@ -246,6 +187,15 @@ void FeatureTrack()
                 if(fe_para::is_show_track){
                     insts_tracker->DrawInsts(feature_tracker->img_track());
                 }
+
+                /*if(img->seq%10==0){
+                    cv::Mat img_w=img->color0.clone();
+                    string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
+                    insts_tracker->DrawInsts(img_w);
+
+                    cv::imwrite(save_name,img_w);
+                }*/
+
             }
             else if(cfg::slam == SlamType::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
@@ -260,11 +210,16 @@ void FeatureTrack()
                     feature_queue.push_back(frame);
                 }
                 else{
-                    if((cnt++)%2==0){ //对于其它数据集,控制输入数据到后端的频率
+                    if(cnt%2==0){ //对于其它数据集,控制输入数据到后端的频率
                         feature_queue.push_back(frame);
                     }
                 }
             }
+
+            double time_cost=tt.Toc();
+            time_sum += time_cost;
+            cnt++;
+
 
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){
@@ -276,9 +231,11 @@ void FeatureTrack()
                     cv::imwrite(label,imgTrack);
                 }*/
             }
-            Infot("**************feature_track:{} ms****************\n", tt.Toc());
+            Infot("**************feature_track:{} ms****************\n", time_cost);
         }
     }
+    Infot("Feature Tracking Avg cost:{} ms",time_sum/cnt);
+
     Warnt("FeatureTrack 线程退出");
 }
 
@@ -355,13 +312,11 @@ int Run(int argc, char **argv){
         }
         io_para::SetParameters(file_name);
 
-
         estimator.reset(new Estimator(file_name));
-        detector2d.reset(new Detector2D(file_name));
-        detector3d.reset(new Detector3D(file_name));
+        processor.reset(new ImageProcessor(file_name));
+
         feature_tracker = std::make_unique<FeatureTracker>(file_name);
         insts_tracker.reset(new InstsFeatManager(file_name));
-        flow_estimator = std::make_unique<FlowEstimator>(file_name);
     }
     catch(std::runtime_error &e){
         cerr<<e.what()<<endl;

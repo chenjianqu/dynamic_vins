@@ -20,6 +20,7 @@
 #include "utils/io/io_utils.h"
 #include "utils/io/visualization.h"
 #include "utils/io/build_markers.h"
+#include "utils/io/dataloader.h"
 #include "det3d/det3d_parameter.h"
 
 using namespace std;
@@ -27,6 +28,32 @@ using namespace visualization_msgs;
 
 
 namespace dynamic_vins{\
+
+
+std::unordered_map<string,vector<string>> ReadCameraPose(const string &pose_file)
+{
+    std::ifstream fp(pose_file);
+    if(!fp.is_open()){
+        cerr<<"Can not open:"<<pose_file<<endl;
+        return {};
+    }
+    cout<<"pose_file:"<<pose_file<<endl;
+
+    std::unordered_map<string,vector<string>> cam_pose;
+
+    string line;
+    while (getline(fp,line)){ //循环读取每行数据
+        vector<string> tokens;
+        split(line,tokens," ");
+        //cout<<line<<endl;
+        double time=std::stod(tokens[0]);
+        cam_pose.insert({std::to_string(time),tokens});
+    }
+
+    return cam_pose;
+}
+
+
 
 class PubDemo{
 public:
@@ -69,8 +96,34 @@ public:
 
 
 
-    //const string object3d_root_path="/home/chen/datasets/VIODE/det3d_cam0/day_03_high/";
-    //const string img_root_path="/home/chen/datasets/VIODE/cam0/day_03_high/";
+    [[nodiscard]] std::tuple<Eigen::Matrix3d,Eigen::Vector3d> GetBodyPose(int frame) const{
+        double time = frame*0.05;
+
+        static std::unordered_map<string,vector<string>> cam_pose;
+
+        static bool is_first=true;
+        if(is_first){
+            is_first=false;
+            cam_pose = ReadCameraPose(camera_pose_file);
+        }
+
+        ///获得位姿Two
+        auto it_find = cam_pose.find(std::to_string(time));
+        if(it_find == cam_pose.end()){
+            cerr<<"Can not find cam pose at time:"<<std::to_string(time)<<endl;
+            return {Eigen::Matrix3d::Identity(),Eigen::Vector3d::Zero()};
+        }
+        auto &tokens_cam = it_find->second;
+        Eigen::Vector3d t_wc(std::stod(tokens_cam[1]),std::stod(tokens_cam[2]),std::stod(tokens_cam[3]));
+        Eigen::Quaterniond q_wc(std::stod(tokens_cam[7]),
+                                std::stod(tokens_cam[4]),
+                                std::stod(tokens_cam[5]),
+                                std::stod(tokens_cam[6]));
+        q_wc.normalize();
+        Eigen::Matrix3d R_wc = q_wc.toRotationMatrix();
+
+        return {R_wc,t_wc};
+    }
 
 
     vector<Box3D::Ptr> ReadPredictBox(const string &name){
@@ -186,7 +239,7 @@ public:
     }
 
 
-    vector<Box3D::Ptr> ReadPredictBox(int frame){
+    [[nodiscard]] vector<Box3D::Ptr> ReadPredictBox(int frame) const{
         string name = PadNumber(frame,6);
         string file_path = object3d_root_path+name+".txt";
         std::ifstream fp(file_path);
@@ -211,14 +264,15 @@ public:
     }
 
 
-    vector<Box3D::Ptr> ReadGroundtruthBox(int frame){
+    [[nodiscard]] vector<Box3D::Ptr> ReadGroundtruthBox(int frame) const{
         static unordered_map<int,vector<Box3D::Ptr>> boxes_gt;
         static bool is_first_run=true;
         if(is_first_run){
             is_first_run=false;
             std::ifstream fp_gt(tracking_gt_path);
+            cout<<"tracking_gt_path:"<<tracking_gt_path<<endl;
             if(!fp_gt.is_open()){
-                {};
+                return {};
             }
 
             string line_gt;
@@ -241,7 +295,39 @@ public:
     }
 
 
-    cv::Mat ReadImage(int frame) const{
+    [[nodiscard]] vector<Box3D::Ptr> ReadEstimateBox(int frame) const{
+        static unordered_map<int,vector<Box3D::Ptr>> boxes_gt;
+        static bool is_first_run=true;
+        if(is_first_run){
+            is_first_run=false;
+            std::ifstream fp_gt(tracking_estimation_path);
+            cout<<"tracking_estimation_path:"<<tracking_estimation_path<<endl;
+
+            if(!fp_gt.is_open()){
+                return {};
+            }
+
+            string line_gt;
+            while (getline(fp_gt,line_gt)){ //循环读取每行数据
+                vector<string> tokens;
+                split(line_gt,tokens," ");
+                Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens);
+                int curr_frame = std::stoi(tokens[0]);
+                boxes_gt[curr_frame].push_back(box);
+            }
+            fp_gt.close();
+        }
+
+        if(boxes_gt.count(frame)==0){
+            return {};
+        }
+        else{
+            return boxes_gt[frame];
+        }
+    }
+
+
+    [[nodiscard]] cv::Mat ReadImage(int frame) const{
         string name = PadNumber(frame,6);
         string img_path = img_root_path+name+".png";
         cout<<img_path<<endl;
@@ -263,55 +349,78 @@ public:
 
             MarkerArray marker_array;
 
+            auto [R_wc,t_wc] = GetBodyPose(index);
 
-            ///可视化预测的box
+            Publisher::PubTransform(R_wc,t_wc,transform_broadcaster,ros::Time::now(),"world","body");
 
             int cnt=0;
-            /*
-            vector<Box3D::Ptr> boxes = ReadPredictBox(index);
-            for(auto &box : boxes){
-                cnt++;
-                box->VisCorners2d(img,cv::Scalar(255,255,255),*cam0);
-                auto cube_marker = BuildCubeMarker(box->corners,cnt,GenerateNormBgrColor("blue"));
-                marker_array.markers.push_back(cube_marker);
+            if(mode.find("prediction")!=string::npos){
+                ///可视化深度学习预测的box
+                vector<Box3D::Ptr> boxes = ReadPredictBox(index);
+                for(auto &box : boxes){
+                    cnt++;
+                    box->VisCorners2d(img,cv::Scalar(255,255,255),*cam0);
+                    auto cube_marker = CubeMarker(box->corners,cnt, BgrColor("green"));
+                    marker_array.markers.push_back(cube_marker);
 
-                Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
-                auto axis_markers = BuildAxisMarker(axis_matrix,cnt);
-                marker_array.markers.push_back(std::get<0>(axis_markers));
-                marker_array.markers.push_back(std::get<1>(axis_markers));
-                marker_array.markers.push_back(std::get<2>(axis_markers));
-            }*/
+                    /*Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
+                    auto axis_markers = AxisMarker(axis_matrix,cnt);
+                    marker_array.markers.push_back(std::get<0>(axis_markers));
+                    marker_array.markers.push_back(std::get<1>(axis_markers));
+                    marker_array.markers.push_back(std::get<2>(axis_markers));*/
+                }
+                cout<<"prediction_boxes:"<<boxes.size()<<endl;
+            }
 
-            ///可视化gt框
-            vector<Box3D::Ptr> boxes_gt = ReadGroundtruthBox(index);
-            for(auto &box : boxes_gt){
-                cnt++;
-                auto cube_marker = CubeMarker(box->corners, cnt, BgrColor("red"));
-                marker_array.markers.push_back(cube_marker);
+            if(mode.find("estimation")!=string::npos){
+                ///可视化估计的框
+                vector<Box3D::Ptr> boxes_est = ReadEstimateBox(index);
+                for(auto &box : boxes_est){
+                    cnt++;
+                    Vector3d center_pt=Vector3d::Zero();
+                    Mat38d corners_w = box->corners;
+                    for(int i=0;i<8;++i){
+                        corners_w.col(i) = R_wc * corners_w.col(i) + t_wc;
+                        center_pt+=corners_w.col(i);
+                    }
+                    center_pt/=8.;
+                    auto cube_marker = CubeMarker(corners_w, cnt, BgrColor("blue"));
+                    marker_array.markers.push_back(cube_marker);
 
-                auto textMarker = TextMarker(box->bottom_center, cnt, to_string(box->id), BgrColor("blue"), 1.2);
-                marker_array.markers.push_back(textMarker);
+                    auto textMarker = TextMarker(center_pt, cnt, to_string(box->id), BgrColor("blue"), 1.2);
+                    marker_array.markers.push_back(textMarker);
+
+                    box->VisCorners2d(img, BgrColor("white",false),*cam0);
+                }
+                cout<<"estimation_boxes:"<<boxes_est.size()<<endl;
+            }
+
+
+            if(mode.find("gt")!=string::npos){
+                ///可视化gt框
+                vector<Box3D::Ptr> boxes_gt = ReadGroundtruthBox(index);
+                for(auto &box : boxes_gt){
+                    cnt++;
+                    Vector3d center_pt=Vector3d::Zero();
+                    Mat38d corners_w = box->corners;
+                    for(int i=0;i<8;++i){
+                        corners_w.col(i) = R_wc * corners_w.col(i) + t_wc;
+                        center_pt+=corners_w.col(i);
+                    }
+                    center_pt/=8.;
+                    auto cube_marker = CubeMarker(corners_w, cnt, BgrColor("red"));
+                    marker_array.markers.push_back(cube_marker);
+
+                    auto textMarker = TextMarker(center_pt, cnt, to_string(box->id), BgrColor("red"), 1.2);
+                    marker_array.markers.push_back(textMarker);
+                }
+                cout<<"gt_boxes:"<<boxes_gt.size()<<endl;
             }
 
             pub_instance_marker.publish(marker_array);
 
             ///可视化
-            bool pause=false;
-            do{
-                cv::imshow("PubFCOS3D",img);
-                int key = cv::waitKey(100);
-                if(key ==' '){
-                    pause = !pause;
-                }
-                else if(key== 27){ //ESC
-                    cfg::ok=false;
-                    ros::shutdown();
-                    pause=false;
-                }
-                else if(key == 'r' || key == 'R'){
-                    pause=false;
-                }
-            } while (pause);
+            viewer.ImageShow(img,io_para::kImageDatasetPeriod);
 
             index++;
         }
@@ -337,15 +446,26 @@ public:
         det3d_para::SetParameters(file_name);
 
 
-        object3d_root_path="/home/chen/datasets/kitti/tracking/det3d_02/training/image_02/"+cfg::kDatasetSequence+"/";
-        tracking_gt_path="/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/"+cfg::kDatasetSequence+".txt";
-        img_root_path="/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/"+cfg::kDatasetSequence+"/";
-
+        object3d_root_path=det3d_para::kDet3dPreprocessPath+cfg::kDatasetSequence+"/";
+        tracking_gt_path=det3d_para::kGroundTruthPath;
+        tracking_estimation_path= io_para::kOutputFolder + cfg::kDatasetSequence+".txt";
+        camera_pose_file = io_para::kVinsResultPath;
+        img_root_path=io_para::kImageDatasetLeft;
     }
 
     string object3d_root_path;
     string tracking_gt_path;
+    string tracking_estimation_path;
+    string camera_pose_file;
+
     string img_root_path;
+
+    string mode;
+
+    ImageViewer viewer;
+
+    tf::TransformBroadcaster transform_broadcaster;
+
 };
 
 
@@ -353,8 +473,8 @@ public:
 
 int main(int argc, char **argv)
 {
-    if(argc != 2){
-        std::cerr<<"please input: rosrun vins vins_node [cfg file]"<< std::endl;
+    if(argc != 3){
+        std::cerr<<"please input: rosrun dynamic_vins pub_object3d ${cfg_file} mode"<< std::endl;
         return 1;
     }
 
@@ -366,7 +486,17 @@ int main(int argc, char **argv)
 
     pub_demo.InitGlobalParameters(argv[1]);
 
+    string mode=argv[2];
+    if(mode.find("gt")==string::npos && mode.find("estimation")==string::npos && mode.find("prediction")==string::npos){
+        cerr<<"mode must be gt|estimation|prediction"<<endl;
+        return -1;
+    }
+    pub_demo.mode = mode;
+
     std::cout<<"InitGlobalParameters finished"<<std::endl;
+
+
+
 
     //return dynamic_vins::PubObject3D(argc,argv);
     return pub_demo.PubFCOS3D(argc, argv,n);

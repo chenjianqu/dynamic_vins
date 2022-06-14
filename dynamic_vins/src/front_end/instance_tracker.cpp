@@ -405,7 +405,7 @@ void InstsFeatManager::AddViodeInstances(SemanticImage &img)
         auto &inst = instances_[key];
         inst.box2d = inst_info;
 
-        inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->mask_center);
+        //inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->);
         inst.is_curr_visible=true;
 
         Debugt("inst:{} mask_img:({}x{}) local_mask:({}x{})", key,
@@ -607,9 +607,8 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
     int n_inst = (int)img.boxes2d.size();
     if(img.boxes2d.empty())
         return;
-    assert(img.mask_tensor.sizes()[0] == img.boxes2d.size());
 
-    vector<Box2D::Ptr> boxes;
+    /*vector<Box2D::Ptr> boxes;
     ///只跟踪车辆和行人
     for(auto it=img.boxes2d.begin(),it_next=it;it!=img.boxes2d.end();it=it_next){
         it_next++;
@@ -621,10 +620,10 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
             boxes.emplace_back(*it);
         }
 
-    }
+    }*/
 
 
-    auto trks = mot_tracker->update(boxes, img.color0);
+    auto trks = mot_tracker->update(img.boxes2d, img.color0);
 
 
     string log_text="AddInstancesByTracking:\n";
@@ -732,21 +731,21 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
             inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),*camera_);
             Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
 
-            Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);
-            Vec2d avg_corner=Vec2d::Zero();
+            //Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);
+            //Vec2d avg_corner=Vec2d::Zero();
             /*for(int i=0;i<8;++i){
                 avg_corner += corners2d.col(i);
             }
             avg_corner/=8;*/
-            avg_corner = corners2d.col(0);
-            cv::putText(img, std::to_string(id),cv::Point2f(avg_corner.x(),avg_corner.y()),
-                        cv::FONT_HERSHEY_SIMPLEX,1.,inst.color,2);
+            //avg_corner = corners2d.col(0);
+            //cv::putText(img, std::to_string(id),cv::Point2f(avg_corner.x(),avg_corner.y()),
+            //            cv::FONT_HERSHEY_SIMPLEX,1.,inst.color,2);
         }
 
-        std::string label=fmt::format("{}-{}",id,inst.curr_points.size() - inst.visual_new_points.size());
-        //std::string label=fmt::format("{}",id);
+        //std::string label=fmt::format("{}-{}",id,inst.curr_points.size() - inst.visual_new_points.size());
+        std::string label=fmt::format("{}",id);
         //cv::putText(img, label, inst.box_center_pt, cv::FONT_HERSHEY_SIMPLEX, 1.0, inst.color, 2);
-        DrawText(img, label, inst.color, inst.box2d->mask_center, 1.0, 2, false);
+        DrawText(img, label, inst.color, inst.box2d->center_pt(), 1.0, 2, false);
 
     }
 

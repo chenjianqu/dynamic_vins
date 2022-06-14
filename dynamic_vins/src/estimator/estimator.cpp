@@ -28,10 +28,10 @@
 #include "vio_parameters.h"
 
 #include "utils/utility.h"
-#include "factor/pose_local_parameterization.h"
-#include "factor/projection_two_frame_one_cam_factor.h"
-#include "factor/projection_two_frame_two_cam_factor.h"
-#include "factor/projection_one_frame_two_cam_factor.h"
+#include "estimator/factor/pose_local_parameterization.h"
+#include "estimator/factor/projection_two_frame_one_cam_factor.h"
+#include "estimator/factor/projection_two_frame_two_cam_factor.h"
+#include "estimator/factor/projection_one_frame_two_cam_factor.h"
 
 namespace dynamic_vins{\
 
@@ -1501,7 +1501,6 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             insts_manager.InitialInstanceVelocity();
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
             insts_manager.SetDynamicOrStatic();
-            Infov("processImage dynamic Triangulate:{} ms",tt.TocThenTic());
 
             if(para::is_print_detail){
                 insts_manager.PrintInstanceInfo(true,true);
@@ -1512,6 +1511,8 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
             insts_manager.OutliersRejection();
 
+            Infov("processImage dynamic Optimization:{} ms",tt.TocThenTic());
+
             Debugv("--完成处理动态物体--");
         }
 
@@ -1519,7 +1520,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
         ///VIO窗口的非线性优化
         Optimization();
 
-        Debugv("processImage Optimization:{} ms", tt.TocThenTic());
+        Infov("processImage Optimization:{} ms", tt.TocThenTic());
 
         ///外点剔除
         set<int> removeIndex;
@@ -1535,7 +1536,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             return;
         }
 
-        Debugv("processImage OutliersRejection:{} ms", tt.TocThenTic());
+        Infov("processImage OutliersRejection:{} ms", tt.TocThenTic());
 
         ///动态物体的滑动窗口
         if(cfg::slam == SlamType::kDynamic){
@@ -1552,7 +1553,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             insts_manager.OutliersRejection();
         }
 
-        Debugv("processImage SlideWindow:{} ms", tt.TocThenTic());
+        Infov("processImage SlideWindow:{} ms", tt.TocThenTic());
 
         f_manager.RemoveFailures();
 
@@ -1578,9 +1579,12 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
  * 滑动窗口状态估计的入口函数
  */
 void Estimator::ProcessMeasurements(){
-    static TicToc tt;
-    while (cfg::ok.load(std::memory_order_seq_cst))
-    {
+    int cnt=0;
+    double time_sum=0;
+    TicToc tt,t_all;
+
+
+    while (cfg::ok.load(std::memory_order_seq_cst)){
         if(feature_queue.empty()){
             std::this_thread::sleep_for(2ms);
             continue;
@@ -1598,6 +1602,8 @@ void Estimator::ProcessMeasurements(){
         }
 
         tt.Tic();
+        t_all.Tic();
+
         ///获取上一帧时刻到当前时刻的IMU测量值
         vector<pair<double, Vec3d>> acc_vec, gyr_vec;
         if(cfg::is_use_imu){
@@ -1606,6 +1612,8 @@ void Estimator::ProcessMeasurements(){
         }
         //获取前端得到的特征
         feature_frame = *(feature_queue.request_frame());
+
+        Infov("ProcessMeasurements::GetIMUInterval:{} ms",tt.TocThenTic());
 
         Warnv("----------Time:{} seq:{} ----------", std::to_string(*front_time),feature_frame.seq_id);
 
@@ -1627,15 +1635,24 @@ void Estimator::ProcessMeasurements(){
             }
         }
 
+        Infov("ProcessMeasurements::ProcessIMU:{} ms",tt.TocThenTic());
+
+
         process_mutex.lock();
 
-        Infov("ProcessMeasurements prepare time: {} ms", tt.TocThenTic());
         Debugv("solver_flag:{}", solver_flag == SolverFlag::kInitial ? "INITIAL" : "NO-LINEAR");
 
         ///进入主函数
         ProcessImage(feature_frame ,feature_frame.time);
 
         prev_time = cur_time;
+
+        double time_cost=t_all.Toc();
+        time_sum+=time_cost;
+        cnt++;
+
+        Infov("ProcessMeasurements::ProcessImage:{} ms",tt.TocThenTic());
+
 
         ///输出
         SetOutputEgoInfo(Rs[kWinSize], Ps[kWinSize], ric[0], tic[0]);
@@ -1667,13 +1684,18 @@ void Estimator::ProcessMeasurements(){
             insts_manager.SaveTrajectory();
         }
 
+        Infov("ProcessMeasurements::Output:{} ms",tt.TocThenTic());
+
+
         static unsigned int estimator_cnt=0;
-        estimator_cnt++;
         auto output_msg=fmt::format("cnt:{} ___________estimator process time: {} ms_____________\n",
-                                    estimator_cnt,tt.TocThenTic());
+                                    cnt,t_all.TocThenTic());
         Infov(output_msg);
         cout<<output_msg<<endl;
     }
+
+    Infov("VIO Avg cost:{} ms",time_sum/cnt);
+
 
     Warnv("ProcessMeasurements 线程退出");
 

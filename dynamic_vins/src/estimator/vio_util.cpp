@@ -210,18 +210,19 @@ std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& 
         //选择前80%的点重新计算中心
         center_pt.setZero();
         double len = points_with_dist.size();
-        for(int i=0;i<len*0.8;++i){
+        int len_used=len*0.8;
+        for(int i=0;i<len_used;++i){
             center_pt += std::get<1>(points_with_dist[i]);
         }
-        if(len<2){
+        if(len_used<2){
             break;
         }
-        center_pt /= (len/2);
+        center_pt /= len_used;
 
         log_text += fmt::format("iter:{} center_pt:{}\n",iter, VecToStr(center_pt));
 
         //如前80%的点位于包围框内,则退出
-        if(std::get<0>(points_with_dist[int(len*0.8)]) <= dims_norm){
+        if(std::get<0>(points_with_dist[len_used]) <= dims_norm){
             is_find=true;
             break;
         }

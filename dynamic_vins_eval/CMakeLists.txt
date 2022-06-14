@@ -50,8 +50,8 @@ target_link_libraries(pub_oxts ${catkin_LIBRARIES} ${OpenCV_LIBS})
 add_executable(save_oxts src/save_oxts.cpp src/oxts_parser.cpp)
 target_link_libraries(save_oxts ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
-add_executable(visualize_box src/visualize_box.cpp src/call_back.cpp)
-target_link_libraries(visualize_box ${catkin_LIBRARIES} ${OpenCV_LIBS})
+add_executable(visualize_3d_box src/visualize_3d_box.cpp src/call_back.cpp)
+target_link_libraries(visualize_3d_box ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(convert_tracking_to_object src/convert_tracking_to_object.cpp)
 target_link_libraries(convert_tracking_to_object ${catkin_LIBRARIES} ${OpenCV_LIBS})
@@ -61,5 +61,8 @@ target_link_libraries(viode_generate_odometry ${catkin_LIBRARIES} ${OpenCV_LIBS}
 
 add_executable(split_mot_to_tum src/split_mot_to_tum.cpp)
 target_link_libraries(split_mot_to_tum ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+add_executable(split_mot_to_single src/split_mot_to_single.cpp)
+target_link_libraries(split_mot_to_single ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 

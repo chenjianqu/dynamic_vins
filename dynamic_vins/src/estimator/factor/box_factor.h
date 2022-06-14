@@ -271,9 +271,9 @@ public:
 /**
  * 3D目标检测和估计包围框的二范数误差
  */
-class BoxPoseNormFactor:public ceres::SizedCostFunction<1,7>{
+class BoxPositionNormFactor: public ceres::SizedCostFunction<1,7>{
 public:
-    BoxPoseNormFactor(Vec3d P_cioi_,Mat3d R_bc_,Vec3d P_bc_,Mat3d R_wbi_,Vec3d P_wbi_)
+    BoxPositionNormFactor(Vec3d P_cioi_, Mat3d R_bc_, Vec3d P_bc_, Mat3d R_wbi_, Vec3d P_wbi_)
     :P_cioi(std::move(P_cioi_)),R_bc(std::move(R_bc_)),P_bc(std::move(P_bc_)),
     R_wbi(std::move(R_wbi_)),P_wbi(std::move(P_wbi_)){}
 
@@ -288,6 +288,22 @@ public:
     inline static int counter{0};
 };
 
+class BoxPositionFactor:public ceres::SizedCostFunction<3,7>{
+public:
+    BoxPositionFactor(Vec3d P_cioi_,Mat3d R_bc_,Vec3d P_bc_,Mat3d R_wbi_,Vec3d P_wbi_)
+    :P_cioi(std::move(P_cioi_)),R_bc(std::move(R_bc_)),P_bc(std::move(P_bc_)),
+    R_wbi(std::move(R_wbi_)),P_wbi(std::move(P_wbi_)){}
+
+    bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
+
+    Vec3d P_cioi;
+    Mat3d R_bc;
+    Vec3d P_bc;
+    Mat3d R_wbi;
+    Vec3d P_wbi;
+
+    inline static int counter{0};
+};
 
 
 

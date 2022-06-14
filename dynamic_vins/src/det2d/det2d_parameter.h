@@ -64,6 +64,7 @@ public:
     inline static int model_input_height;
     inline static int model_input_channel;
 
+    inline static int kBoxMinHeight;
 
     inline static bool use_offline;
 

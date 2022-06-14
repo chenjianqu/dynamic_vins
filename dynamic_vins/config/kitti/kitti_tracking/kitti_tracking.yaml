@@ -13,13 +13,13 @@ slam_type: "dynamic" #SLAM mode,optional:raw,naive,dynamic
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 #the input sequence id
-dataset_sequence: "0003"
+dataset_sequence: "0004"
 
 plane_constraint: 1 #是否使用平面约束
 
 ####################### Camera Parameters ########################
 
-kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0003.txt" #相机内参
+kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0004.txt" #相机内参
 
 #kitti tracking seq:18
 #image_width: 1238
@@ -62,7 +62,7 @@ F_threshold: 1.0        # ransac threshold (pixel)
 show_track: 1           # publish tracking image as topic
 flow_back: 1            # perform forward and backward optical flow to improve feature tracking accuracy
 
-min_dynamic_dist: 5 #检测动态特征点时每个点之间的最小距离
+min_dynamic_dist: 4 #检测动态特征点时每个点之间的最小距离
 max_dynamic_cnt: 50 #前端中每个动态物体上最多同时跟踪的特征数量
 
 ####################### VIO Parameters ########################
@@ -93,18 +93,18 @@ estimator_log_level: "debug"
 estimator_log_flush: "debug"
 feature_tracker_log_level: "debug"
 feature_tracker_log_flush: "debug"
-segmentor_log_level: "debug"
-segmentor_log_flush: "debug"
+segmentor_log_level: "info"
+segmentor_log_flush: "info"
 log_output_path: "data/log/"
 
 #for debug
 print_detail: 1
 
 ####################### Visualization Parameters ########################
-visual_inst_duration: 120  #duration of marker display
+visual_inst_duration: 300  #duration of marker display
 
-pub_groundtruth_box: 0
-pub_predict_box: 0
+pub_groundtruth_box: 1
+pub_predict_box: 1
 pub_object_axis: 1
 pub_object_trajectory: 1
 
@@ -128,6 +128,7 @@ det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/ima
 
 det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/" #预处理的2D框
 
+box2d_min_height: 0 #至少高40pixel才会被处理
 
 ####################### SOLO's Parameters ########################
 
@@ -146,7 +147,7 @@ solo_serialize_path: "weights/solo/tensorrt_model_1152x384.bin"
 warn_up_image: "/home/chen/ws/vio_ws/src/dynamic_vins/config/kitti.png"
 
 ####################### MOT Parameters ########################
-tracking_max_age: 30
+tracking_max_age: 5
 tracking_n_init: 3
 
 extractor_model_path: "weights/deepsort/ckpt.bin"
@@ -154,7 +155,7 @@ extractor_model_path: "weights/deepsort/ckpt.bin"
 ####################### Dataloader Parameters ########################
 use_dataloader: 1 #read image for disk,not from ros
 #以下选项当use_dataloader=1时有效
-image_dataset_period: 200 #
+image_dataset_period: 400 #
 image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/"
 image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/"
 

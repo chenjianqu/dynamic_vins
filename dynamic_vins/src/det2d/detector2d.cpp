@@ -23,6 +23,8 @@
 #include "det2d_parameter.h"
 #include "utils/parameters.h"
 #include "utils/torch_utils.h"
+#include "utils/dataset/coco_utils.h"
+#include "utils/dataset/kitti_utils.h"
 
 namespace dynamic_vins{\
 
@@ -43,6 +45,63 @@ std::optional<int> GetQueueShapeIndex(int c, int h, int w)
     else
         return index;
 }
+
+
+
+/**
+ * 根据实例分割的mask构建box2d
+ * @param seg_label 实例分割mask,大小:[num_mask, cols, rows]
+ * @param cate_label 类别标签:[num_mask]
+ * @param cate_score 类别分数
+ * @return
+ */
+vector<Box2D::Ptr> BuildBoxes2D(torch::Tensor &seg_label,torch::Tensor &cate_label,torch::Tensor &cate_score,
+                                double height_threshold){
+    vector<Box2D::Ptr> insts;
+
+    ///根据mask计算包围框
+    for(int i=0;i<seg_label.sizes()[0];++i){
+        auto nz=seg_label[i].nonzero();
+        auto max_xy =std::get<0>( torch::max(nz,0) );
+        auto min_xy =std::get<0>( torch::min(nz,0) );
+
+        cv::Point2f max_pt(max_xy[1].item().toInt(),max_xy[0].item().toInt());
+        cv::Point2f min_pt(min_xy[1].item().toInt(),min_xy[0].item().toInt());
+
+        if(max_pt.y - min_pt.y < height_threshold){
+            //删除对应的mask
+            ///TODO
+            continue;
+        }
+
+        Box2D::Ptr inst = std::make_shared<Box2D>();
+        inst->id = i;
+
+        int coco_id = cate_label[i].item().toInt();
+        string coco_name = coco::CocoLabel[coco_id];
+        if(auto it=coco::CocoToKitti.find(coco_name);it!=coco::CocoToKitti.end()){
+            string kitti_name = *(it->second.begin());
+            int kitti_id = kitti::GetKittiLabelIndex(kitti_name);
+            inst->class_id =kitti_id;
+            inst->class_name = kitti_name;
+        }
+        else{
+            inst->class_id =coco_id;
+            inst->class_name = coco_name;
+        }
+
+        inst->max_pt = max_pt;
+        inst->min_pt = min_pt;
+        inst->rect = cv::Rect2f(inst->min_pt,inst->max_pt);
+
+        inst->score = cate_score[i].item().toFloat();
+
+        insts.push_back(inst);
+    }
+
+    return insts;
+}
+
 
 
 
@@ -217,9 +276,12 @@ void Detector2D::ForwardTensor(torch::Tensor &img, torch::Tensor &mask_tensor,
         }
     }
 
+    ///SOLO的后处理
     torch::Tensor cate_labels,cate_scores;
     solo_->GetSegTensor(outputs, pipeline_->image_info, mask_tensor, cate_labels,cate_scores);
-    insts = Box2D::BuildBoxes2D(mask_tensor,cate_labels,cate_scores);
+
+    ///构造Box2D
+    insts = BuildBoxes2D(mask_tensor,cate_labels,cate_scores,det2d_para::kBoxMinHeight);
 
 }
 
@@ -335,6 +397,8 @@ void Detector2D::VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<Box2
 }
 
 
+
+
 torch::Tensor Detector2D::LoadTensor(const string &load_path){
 
     std::ifstream input(load_path, std::ios::binary);
@@ -383,7 +447,7 @@ void Detector2D::Launch(SemanticImage &img){
         seg_label = seg_label > det2d_para::kSoloMaskThr;
 
         ///根据mask计算包围框
-        img.boxes2d = Box2D::BuildBoxes2D(seg_label,cate_label,cate_score);
+        img.boxes2d = BuildBoxes2D(seg_label,cate_label,cate_score,det2d_para::kBoxMinHeight);
         img.mask_tensor = seg_label;
     }
     else{

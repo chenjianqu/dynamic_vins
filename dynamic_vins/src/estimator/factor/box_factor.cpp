@@ -869,7 +869,7 @@ bool BoxPoseFactor::Evaluate(double const *const *parameters, double *residuals,
 
 
 
-bool BoxPoseNormFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+bool BoxPositionNormFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
     Vec3d P_woi(parameters[0][0], parameters[0][1], parameters[0][2]);
     Quatd Q_woi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
@@ -886,6 +886,8 @@ bool BoxPoseNormFactor::Evaluate(double const *const *parameters, double *residu
         ///物体位姿
         if(jacobians[0]){
 
+            ///TODO,some bugs here
+
             Eigen::Map<Eigen::Matrix<double, 1, 7, Eigen::RowMajor>> jacobian_pose_woi(jacobians[0]);
             jacobian_pose_woi = Eigen::Matrix<double,1,7>::Zero();
             jacobian_pose_woi.leftCols(3) =  2* (P_woi - P_woi_observe).transpose();
@@ -896,6 +898,39 @@ bool BoxPoseNormFactor::Evaluate(double const *const *parameters, double *residu
                        VecToStr(P_woi), VecToStr(P_woi_observe),err_t.squaredNorm(),
                        EigenToStr(jacobian_pose_woi));
             }
+        }
+
+    }
+
+    return true;
+}
+
+
+
+
+bool BoxPositionFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
+{
+    Vec3d P_woi(parameters[0][0], parameters[0][1], parameters[0][2]);
+    Quatd Q_woi(parameters[0][6], parameters[0][3], parameters[0][4], parameters[0][5]);
+
+    Mat3d R_woi(Q_woi);
+    Mat3d R_oiw = R_woi.transpose();
+
+    Vec3d P_woi_observe = (R_wbi*(R_bc * P_cioi + P_bc)+P_wbi);
+    Vec3d err_t = P_woi - P_woi_observe;
+
+    residuals[0] = err_t.x();
+    residuals[1] = err_t.y();
+    residuals[2] = err_t.z();
+
+    if(jacobians){
+        ///物体位姿
+        if(jacobians[0]){
+
+            Eigen::Map<Eigen::Matrix<double, 3, 7, Eigen::RowMajor>> jacobian_pose_woi(jacobians[0]);
+            jacobian_pose_woi = Eigen::Matrix<double,3,7>::Zero();
+            jacobian_pose_woi.leftCols(3) =  Eigen::Matrix3d::Identity();
+
         }
 
     }

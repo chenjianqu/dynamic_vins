@@ -55,6 +55,8 @@ void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path)
         fs["warn_up_image"] >> kWarnUpImagePath;
     }
 
+    fs["box2d_min_height"]>>kBoxMinHeight;
+
     fs.release();
 
 }

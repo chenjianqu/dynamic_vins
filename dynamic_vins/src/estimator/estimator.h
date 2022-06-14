@@ -41,12 +41,12 @@
 #include "vio_parameters.h"
 #include "semantic_feature.h"
 
-#include "factor/imu_factor.h"
-#include "initial/solve_5pts.h"
-#include "initial/initial_sfm.h"
-#include "initial/initial_alignment.h"
-#include "initial/initial_ex_rotation.h"
-#include "factor/marginalization_factor.h"
+#include "estimator/factor/imu_factor.h"
+#include "estimator/initial/solve_5pts.h"
+#include "estimator/initial/initial_sfm.h"
+#include "estimator/initial/initial_alignment.h"
+#include "estimator/initial/initial_ex_rotation.h"
+#include "estimator/factor/marginalization_factor.h"
 
 namespace dynamic_vins{\
 

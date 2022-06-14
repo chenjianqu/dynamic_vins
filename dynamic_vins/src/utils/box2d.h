@@ -22,10 +22,11 @@ namespace dynamic_vins{\
 struct Box2D{
     using Ptr=std::shared_ptr<Box2D>;
 
-    static  std::vector<Box2D::Ptr> BuildBoxes2D(torch::Tensor &seg_label,torch::Tensor &cate_label,torch::Tensor &cate_score);
-
     static float IoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
 
+    cv::Point2f center_pt(){
+        return {(min_pt.x+max_pt.x)/2.f,(min_pt.y+max_pt.y)/2.f};
+    }
 
     std::string class_name;
     int class_id;

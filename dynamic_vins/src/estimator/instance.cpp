@@ -120,13 +120,7 @@ int Instance::SlideWindowOld()
         }
     }
 
-    ///将最老帧的轨迹保存到历史轨迹中
-    if(is_initial && is_init_velocity){
-        history_pose.push_back(state[0]);
-        if(history_pose.size()>100){
-            history_pose.erase(history_pose.begin());
-        }
-    }
+
 
     ///将最老帧的相关变量去掉
     for (int i = 0; i < kWinSize; i++){
@@ -297,12 +291,12 @@ void Instance::OutlierRejection()
         if(std::isfinite(lm.depth)){
 
         ///根据包围框去除外点
-        /*int frame=lm.feats[0].frame;
-        Vec3d pts_w = e->Rs[frame] * (e->ric[0] * (lm.feats[0].point * lm.depth) + e->tic[0]) + e->Ps[frame];
+        int frame=lm.feats.begin()->frame;
+        Vec3d pts_w = e->Rs[frame] * (e->ric[0] * (lm.feats.begin()->point * lm.depth) + e->tic[0]) + e->Ps[frame];
         Vec3d pts_oi=state[frame].R.transpose() * ( pts_w - state[frame].P);
         constexpr double factor=4.;
-        bool is_in_box = (std::abs(pts_oi.x()) < factor*box.x()) && (std::abs(pts_oi.y())<factor*box.y() ) &&
-                (std::abs(pts_oi.z()) < factor*box.z());
+        bool is_in_box = (std::abs(pts_oi.x()) < factor* box3d->dims.x()) && (std::abs(pts_oi.y())<factor*box3d->dims.y() ) &&
+                (std::abs(pts_oi.z()) < factor*box3d->dims.z());
         if(!is_in_box){
             log_text += fmt::format("del outbox lid:{},d:{:.2f},pts_oi:{} \n", lm.id, lm.depth, VecToStr(pts_oi));
             it->feats.erase(it->feats.begin());//删除第一个观测
@@ -312,7 +306,7 @@ void Instance::OutlierRejection()
             }
             num_delete++;
             continue;
-        }*/
+        }
 
         double err = 0;
         int err_cnt = 0;

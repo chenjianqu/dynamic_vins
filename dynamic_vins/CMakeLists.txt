@@ -92,15 +92,16 @@ aux_source_directory(src/det2d det2d_sources)
 aux_source_directory(src/det3d det3d_sources)
 aux_source_directory(src/mot mot_sources)
 aux_source_directory(src/flow flow_sources)
+aux_source_directory(src/image_process image_process_source)
 aux_source_directory(src/front_end front_end_sources)
-aux_source_directory(src/initial initial_sources)
-aux_source_directory(src/factor factor_sources)
+aux_source_directory(src/estimator/initial initial_sources)
+aux_source_directory(src/estimator/factor factor_sources)
 aux_source_directory(src/estimator estimator_sources)
 
 message("estimator: ${estimator} ")
 
 add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources}
-        ${det2d_sources} ${det3d_sources} ${io_sources}
+        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source}
         ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
@@ -115,8 +116,8 @@ target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIB
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
 
-add_executable(pub_object3d src/system/eval/pub_object3d.cpp src/utils/log_utils.cpp src/utils/parameters.cpp
-        src/utils/box3d.cpp src/utils/io/io_parameters.cpp src/utils/io/io_utils.cpp src/utils/camera_model.cpp
-        src/utils/dataset/kitti_utils.cpp src/det3d/det3d_parameter.cpp src/utils/io/build_markers.cpp
-        src/utils/io/camera_pose_visualization.cpp)
-target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
+add_executable(pub_object3d src/system/eval/pub_object3d.cpp  ${utils_sources} ${dataset_sources} ${tensorrt_sources}
+        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source}
+        ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
+target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
+        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})

@@ -27,7 +27,7 @@
 #include <ros/ros.h>
 #include <eigen3/Eigen/Dense>
 
-#include "factor/imu_factor.h"
+#include "estimator/factor/imu_factor.h"
 #include "utils/utility.h"
 #include "estimator/feature_manager.h"
 
