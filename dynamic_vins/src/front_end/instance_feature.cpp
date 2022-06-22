@@ -105,6 +105,22 @@ void InstFeat::UndistortedPts(PinHoleCamera::Ptr &cam)
     }
 }
 
+void InstFeat::UndistortedPoints(PinHoleCamera::Ptr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un)
+{
+    point_un.clear();
+    for (auto & pt : point_cam){
+        //Eigen::Vector2d a(pt.x, pt.y);
+        //Eigen::Vector3d b;
+        //cam->LiftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        //point_un.emplace_back(b.x() / b.z(), b.y() / b.z());
+
+        float x = (pt.x - cam0->cx) / cam0->fx;
+        float y = (pt.y - cam0->cy) /cam0->fy;
+        point_un.emplace_back(x, y);
+    }
+}
+
+
 void InstFeat::RightUndistortedPts(PinHoleCamera::Ptr &cam)
 {
     right_un_points.clear();

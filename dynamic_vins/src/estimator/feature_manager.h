@@ -77,14 +77,14 @@ class FeaturePerId
   public:
     const int feature_id;
     int start_frame;
-    vector<FeaturePerFrame> feature_per_frame;
+    vector<FeaturePerFrame> feats;
     int used_num;
-    double estimated_depth;
+    double depth;
     int solve_flag; // 0 haven't solve yet; 1 solve succ; 2 solve fail;
 
     FeaturePerId(int _feature_id, int _start_frame)
         : feature_id(_feature_id), start_frame(_start_frame),
-          used_num(0), estimated_depth(-1.0), solve_flag(0)
+          used_num(0), depth(-1.0), solve_flag(0)
     {
     }
 
@@ -117,11 +117,11 @@ class FeatureManager
     void RemoveFront(int frame_count);
     void RemoveOutlier(std::set<int> &outlierIndex);
 
-    std::list<FeaturePerId> feature;
+    std::list<FeaturePerId> landmarks;
     int last_track_num;
 
   private:
-    static double CompensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
+    static double CompensatedParallax2(const FeaturePerId &landmark, int frame_count);
     const Mat3d *Rs;
     Mat3d ric[2];
 

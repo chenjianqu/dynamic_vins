@@ -115,6 +115,9 @@ show_input: 1
 instance_init_min_num: 4
 instance_static_err_threshold: 10.0
 
+
+stereo_preprocess_path: "/home/chen/datasets/kitti/tracking/stereo/training/"
+
 ######################### Bounding box ########################
 use_det3d: 1
 

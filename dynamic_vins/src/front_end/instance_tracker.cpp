@@ -15,6 +15,7 @@
 #include "utils/dataset/coco_utils.h"
 #include "utils/dataset/nuscenes_utils.h"
 #include "utils/dataset/kitti_utils.h"
+#include "estimator/landmark.h"
 
 namespace dynamic_vins{\
 
@@ -161,12 +162,17 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     TicToc tic_toc;
     curr_time=img.time0;
 
-    ///MOT
     for(auto &[inst_id,inst]:instances_){
         inst.is_curr_visible=false;
         inst.box2d.reset();
         inst.box3d.reset();
+
+        inst.extra_ids.clear();
+        inst.extra_points.clear();
     }
+
+    ///MOT
+
     if(cfg::dataset == DatasetType::kKitti){
         AddInstancesByTracking(img);
     }
@@ -218,6 +224,10 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             max_new_detect += (fe_para::kMaxDynamicCnt - (int)inst.curr_points.size());
         });
         if(max_new_detect > 0){
+
+
+            /*
+
             mask_background = img.merge_mask;
             ExecInst([&](unsigned int key, InstFeat& inst){
                 if(inst.curr_points.size() < fe_para::kMaxDynamicCnt){
@@ -235,17 +245,16 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
             ///添加新的特征点
             vector<cv::Point2f> new_pts;
+
             if(cfg::use_dense_flow){
-                new_pts = DetectRegularCorners(max_new_detect,mask_background);
+                new_pts = DetectRegularCorners(max_new_detect,mask_background,5);
             }
             else{
                 mask_background_gpu.upload(mask_background);
                 new_pts = DetectShiTomasiCornersGpu(max_new_detect, img.gray0_gpu, mask_background_gpu);
-                /*cv::goodFeaturesToTrack(img.gray0, new_pts, (int)new_detect, 0.01, DYNAMIC_MIN_DIST, mask_bg_new); //检测新的角点
-                cv::imshow("mask_background",mask_background);
-                cv::waitKey(0);
-                cv::cuda::threshold(img.merge_mask_gpu,img.merge_mask_gpu,0.5,255,CV_8UC1);*/
             }
+
+
 
             Debugt("instsTrack actually detect num:{}", new_pts.size());
             for(auto &pt : new_pts){
@@ -264,14 +273,39 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                     }
                 }
             }
-            Infot("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.TocThenTic());
+            Infot("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.TocThenTic());*/
+
+            ///若某个实例的点太少,则采用密集采样的方法得到点
+            for(auto& [key,inst] : instances_){
+                if(!inst.is_curr_visible)
+                    continue;
+                int inst_size=inst.curr_points.size();
+                if(inst_size>30)
+                    continue;
+
+                for(int i=0;i<inst_size;++i){
+                    cv::circle(inst.box2d->mask_cv,inst.curr_points[i],2,cv::Scalar(0),-1);
+                }
+
+                auto new_pts = DetectRegularCorners(50-inst_size,inst.box2d->mask_cv,2);
+
+                for(auto &pt:new_pts){
+                    inst.extra_points.emplace_back(pt);
+                    inst.extra_ids.emplace_back(InstFeat::global_id_count++);
+                    inst.visual_new_points.emplace_back(pt);
+                    inst.track_cnt.push_back(1);
+                }
+            }
         }
 
         for(auto& [key,inst] : instances_){
             if(!inst.is_curr_visible)
                 continue;
             ///去畸变和计算归一化坐标
-            inst.UndistortedPts(camera_);
+            inst.UndistortedPoints(camera_,inst.curr_points,inst.curr_un_points);
+            inst.UndistortedPoints(camera_,inst.extra_points,inst.extra_un_points);
+
+            //inst.UndistortedPts(camera_);
             ///计算特征点的速度
             inst.PtsVelocity(curr_time - last_time);
         }
@@ -279,7 +313,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         Infot("instsTrack UndistortedPts & PtsVelocity:{} ms", tic_toc.TocThenTic());
 
         /// 右边相机图像的跟踪
-        if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
+        /*if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
             ExecInst([&](unsigned int key, InstFeat& inst){
                 if(!inst.is_curr_visible)
                     return;
@@ -288,7 +322,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 inst.RightPtsVelocity(curr_time - last_time);
             });
         }
-        Infot("instsTrack track right:{} ms", tic_toc.TocThenTic());
+        Infot("instsTrack track right:{} ms", tic_toc.TocThenTic());*/
 
         ManageInstances();
 
@@ -323,7 +357,7 @@ void InstsFeatManager::ManageInstances()
     for(auto it=instances_.begin(),it_next=it; it != instances_.end(); it=it_next){
         it_next++;
         auto &inst=it->second;
-        if(inst.lost_num ==0 && inst.curr_points.empty()){
+        if(inst.lost_num ==0 && !inst.box2d){
             inst.lost_num++;
         }
         if(inst.lost_num > 0){
@@ -347,7 +381,7 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
     string log_text= fmt::format("GetOutputFeature:{}\n",prev_img.seq);
 
     ExecInst([&](unsigned int key, InstFeat& inst){
-        if(inst.lost_num>0 || inst.curr_points.empty() || !inst.is_curr_visible){
+        if(inst.lost_num>0 ||  !inst.is_curr_visible){
             return;
         }
 
@@ -357,28 +391,52 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
         features_map.box3d = inst.box3d;
 
         for(int i=0;i<(int)inst.curr_un_points.size();++i){
-            Eigen::Matrix<double,5,1> feat;
-            feat<<inst.curr_un_points[i].x,inst.curr_un_points[i].y, 1 ,inst.pts_velocity[i].x,inst.pts_velocity[i].y;
-            vector<Eigen::Matrix<double,5,1>> vp={feat};
-            features_map.insert({inst.ids[i],vp});
+            FeaturePoint::Ptr feat=std::make_shared<FeaturePoint>();
+
+            feat->point.x() = inst.curr_un_points[i].x;
+            feat->point.y() = inst.curr_un_points[i].y;
+            feat->point.z()=1;
+
+            feat->vel.x()=inst.pts_velocity[i].x;
+            feat->vel.y()=inst.pts_velocity[i].y;
+
+            feat->disp = prev_img.disp.at<float>(inst.curr_points[i]);
+
+            features_map.features.insert({inst.ids[i],feat});
+        }
+
+        for(int i=0;i<(int)inst.extra_un_points.size();++i){
+            FeaturePoint::Ptr feat=std::make_shared<FeaturePoint>();
+            feat->is_extra=true;
+
+            feat->point.x() = inst.extra_un_points[i].x;
+            feat->point.y() = inst.extra_un_points[i].y;
+            feat->point.z()=1;
+
+            feat->disp = prev_img.disp.at<float>(inst.extra_points[i]);
+
+            features_map.features.insert({inst.extra_ids[i],feat});
         }
 
         int right_cnt=0;
         if(cfg::is_stereo){
             for(int i=0; i<(int)inst.right_un_points.size(); i++){
                 auto r_id = inst.right_ids[i];
-                if(features_map.count(r_id) ==0)
+                auto it=features_map.features.find(r_id);
+                if(it==features_map.features.end())
                     continue;
-                Eigen::Matrix<double,5,1> feat;
-                feat<<inst.right_un_points[i].x,inst.right_un_points[i].y, 1 ,inst.right_pts_velocity[i].x,
-                inst.right_pts_velocity[i].y;
-                features_map[r_id].push_back(feat);
-                right_cnt++;
+
+                it->second->is_stereo=true;
+                it->second->point_right.x() = inst.right_un_points[i].x;
+                it->second->point_right.y() = inst.right_un_points[i].y;
+                it->second->point_right.z() = 1;
+                it->second->vel_right.x() = inst.right_pts_velocity[i].x;
+                it->second->vel_right.y() = inst.right_pts_velocity[i].y;
             }
         }
         result.insert({key,features_map});
-        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{}\n", key,inst.box2d->class_name,
-                                features_map.size(), right_cnt);
+        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{} extra:{}\n", key,inst.box2d->class_name,
+                                inst.curr_points.size(), inst.right_points.size(),inst.extra_points.size());
     });
     Debugt(log_text);
 
@@ -689,7 +747,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
 
 
     for(const auto &[id,inst]: instances_){
-        if(inst.lost_num>0 || inst.curr_points.empty())
+        if(inst.lost_num>0 || !inst.is_curr_visible)
             continue;
 
         cv::rectangle(img,inst.box2d->min_pt,inst.box2d->max_pt,inst.color,2);

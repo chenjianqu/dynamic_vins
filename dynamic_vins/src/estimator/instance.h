@@ -25,11 +25,11 @@
 #include "utils/parameters.h"
 #include "utils/box2d.h"
 #include "utils/box3d.h"
+#include "body.h"
 
 namespace dynamic_vins{\
 
 
-class Estimator;
 
 struct State{
     State():R(Mat3d::Identity()),P(Vec3d::Zero()){
@@ -71,14 +71,13 @@ public:
     using Ptr=std::shared_ptr<Instance>;
     Instance()=default;
 
-    Instance(const unsigned int frame_id,const unsigned int &id,Estimator* estimator)
-    : id(id),e(estimator){
+    Instance(const unsigned int frame_id,const unsigned int &id)
+    : id(id){
     }
 
     int SlideWindowOld();
     int SlideWindowNew();
 
-    void InitialPose();
     void SetCurrentPoint3d();
 
     void SetOptimizeParameters();
@@ -86,9 +85,26 @@ public:
     void SetWindowPose();
     void OutlierRejection();
 
-    double ReprojectTwoFrameError(FeaturePoint &feat_j, FeaturePoint &feat_i, double depth, bool isStereo) const;
+    [[nodiscard]] Vec3d WorldToObject(const Vec3d& pt,int frame_idx) const{
+        return state[frame_idx].R.transpose() * ( pt - state[frame_idx].P);
+    }
+
+    [[nodiscard]] Vec3d ObjectToWorld(const Vec3d& pt,int frame_idx) const{
+        return  state[frame_idx].R * pt + state[frame_idx].P;
+    }
+
+    [[nodiscard]] Vec3d CamToObject(const Vec3d& pt,int frame_idx,int cam_idx=0) const{
+        return WorldToObject(body.CamToWorld(pt,frame_idx,cam_idx),frame_idx);
+    }
+
+    [[nodiscard]] Vec3d  ObjectToCam(const Vec3d& pt,int frame_idx,int cam_idx=0) const{
+        return body.WorldToCam(ObjectToWorld(pt,frame_idx),frame_idx,cam_idx);
+    }
 
     [[nodiscard]] double AverageDepth() const;
+
+    int DeleteBadLandmarks();
+
 
     void ClearState(){
         is_init_velocity=false;
@@ -125,7 +141,6 @@ public:
     double para_box[1][kBoxSize]{};
     double para_inv_depth[kInstFeatSize][kSizeFeature]{};//逆深度参数数组
 
-    Estimator* e{nullptr};
 
     int triangle_num{0};//已经三角化的路标点的数量
     int static_frame{0};//连续静止了多少帧

@@ -138,7 +138,7 @@ std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cud
  * @param curr_pts 已有的点
  * @return
  */
-std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask, cv::Rect rect=cv::Rect());
+std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask, int step,cv::Rect rect=cv::Rect());
 
 
 /**

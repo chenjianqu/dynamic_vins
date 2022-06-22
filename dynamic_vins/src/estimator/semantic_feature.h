@@ -21,6 +21,8 @@
 #include "utils/box3d.h"
 #include "utils/parameters.h"
 
+#include "landmark.h"
+
 namespace dynamic_vins{\
 
 
@@ -30,8 +32,12 @@ namespace dynamic_vins{\
  */
 using FeatureBackground=std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>>;
 
-class FeatureInstance : public std::map<unsigned int,std::vector<Eigen::Matrix<double,5,1>>>{
+
+
+class FeatureInstance{
 public:
+    std::map<unsigned int,FeaturePoint::Ptr> features;
+
     cv::Scalar color;
     Box2D::Ptr box2d;
     Box3D::Ptr box3d;

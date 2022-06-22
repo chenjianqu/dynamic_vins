@@ -36,6 +36,10 @@ public:
         p2d.y() = p3d.y()/p3d.z() * fy + cy;
     }
 
+    float DepthFromDisparity(float disp){
+        return fx * baseline / disp;
+    }
+
     float fx,fy,cx,cy;
     float baseline;
     int image_width,image_height;

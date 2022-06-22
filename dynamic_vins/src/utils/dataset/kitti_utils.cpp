@@ -11,7 +11,6 @@
 #include "kitti_utils.h"
 #include <regex>
 #include "utils/def.h"
-#include "utils/utils.h"
 
 namespace dynamic_vins::kitti{ \
 

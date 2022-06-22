@@ -13,6 +13,7 @@ ImageProcessor::ImageProcessor(const std::string &config_file){
     detector2d.reset(new Detector2D(config_file));
     detector3d.reset(new Detector3D(config_file));
     flow_estimator = std::make_unique<FlowEstimator>(config_file);
+    stereo_matcher = std::make_shared<MyStereoMatcher>(config_file);
 }
 
 
@@ -128,6 +129,9 @@ void ImageProcessor::Run(SemanticImage &img) {
         detector3d->Launch(img);
     }
 
+    ///启动双目估计
+    stereo_matcher->Launch(img.seq);
+
     Infos("ImageProcess prepare: {} ms", tt.TocThenTic());
 
     ///实例分割,并设置mask
@@ -174,6 +178,9 @@ void ImageProcessor::Run(SemanticImage &img) {
             img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
         }
     }
+
+    ///双目立体匹配得到深度
+    img.disp = stereo_matcher->WaitResult();
 
     ///读取离线检测的3D包围框
     if(cfg::slam == SlamType::kDynamic && cfg::use_det3d){

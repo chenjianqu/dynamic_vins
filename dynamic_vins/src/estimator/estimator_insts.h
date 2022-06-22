@@ -29,7 +29,6 @@
 namespace dynamic_vins{\
 
 
-class Estimator;
 
 class InstanceManager{
 public:
@@ -47,7 +46,7 @@ public:
 
     void GetOptimizationParameters();
 
-    void SlideWindow();
+    void SlideWindow(const MarginFlag &flag);
 
     void AddInstanceParameterBlock(ceres::Problem &problem);
 
@@ -55,8 +54,6 @@ public:
 
     void SetOutputInstInfo();
 
-    string PrintInstanceInfo(bool output_lm,bool output_stereo=false);
-    string PrintInstancePoseInfo(bool output_lm);
 
     void InitialInstance(std::map<unsigned int,FeatureInstance> &input_insts);
 
@@ -65,8 +62,6 @@ public:
     void AddResidualBlockForInstOpt(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
     void Optimization();
-
-    void SaveTrajectory();
 
 
     /**
@@ -90,6 +85,12 @@ public:
         });
     }
 
+    void DeleteBadLandmarks(){
+        InstExec([](int key,Instance& inst){
+            inst.DeleteBadLandmarks();
+        });
+    }
+
     void SetDynamicOrStatic();
 
     std::unordered_map<unsigned int,InstEstimatedInfo> GetOutputInstInfo(){
@@ -97,12 +98,6 @@ public:
         return insts_output;
     }
 
-    void set_estimator(Estimator* estimator);
-
-    int tracking_number() const {return tracking_number_;}
-
-    std::unordered_map<unsigned int,Instance> instances;
-private:
     void InstExec(std::function<void(unsigned int,Instance&)> function,bool exec_all=false){
         if(tracking_number_ < 1)
             return;
@@ -119,14 +114,20 @@ private:
         }
     }
 
+    int tracking_number() const {return tracking_number_;}
+
+    std::unordered_map<unsigned int,Instance> instances;
+private:
+
+
     std::mutex vel_mutex_;
     std::unordered_map<unsigned int,InstEstimatedInfo> insts_output;
 
-    Estimator* e{nullptr};
     int opt_inst_num_{0};//优化位姿的数量
     int tracking_number_{0};//正在跟踪的物体数量
 
     int frame{0};
+
 };
 
 }

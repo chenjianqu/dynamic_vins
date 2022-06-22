@@ -29,7 +29,7 @@ namespace dynamic_vins{\
 
 int FeaturePerId::endFrame()
 {
-    return start_frame + feature_per_frame.size() - 1;
+    return start_frame + feats.size() - 1;
 }
 
 FeatureManager::FeatureManager(Mat3d _Rs[])
@@ -48,7 +48,7 @@ void FeatureManager::SetRic(Mat3d _ric[])
 
 void FeatureManager::ClearState()
 {
-    feature.clear();
+    landmarks.clear();
 }
 
 /**
@@ -58,8 +58,8 @@ void FeatureManager::ClearState()
 int FeatureManager::GetFeatureCount()
 {
     int cnt = 0;
-    for (auto &it : feature){
-        it.used_num = it.feature_per_frame.size();
+    for (auto &it : landmarks){
+        it.used_num = it.feats.size();
         if (it.used_num >= 4){
             cnt++;
         }
@@ -84,26 +84,26 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureBackg
     long_track_num = 0;
 
     for (auto &[feature_id,feat_vec] : image){
-        FeaturePerFrame f_per_fra(feat_vec[0].second, td);
+        FeaturePerFrame feat(feat_vec[0].second, td);
         assert(feat_vec[0].first == 0);
         if(feat_vec.size() == 2){
-            f_per_fra.rightObservation(feat_vec[1].second);
+            feat.rightObservation(feat_vec[1].second);
             assert(feat_vec[1].first == 1);
         }
 
-        if (auto it = find_if(feature.begin(), feature.end(),
+        if (auto it = find_if(landmarks.begin(), landmarks.end(),
                               [feature_id=feature_id](const FeaturePerId &it){
             return it.feature_id == feature_id;
         });
-        it == feature.end()){
-            feature.emplace_back(feature_id, frame_count);
-            feature.back().feature_per_frame.push_back(f_per_fra);
+        it == landmarks.end()){
+            landmarks.emplace_back(feature_id, frame_count);
+            landmarks.back().feats.push_back(feat);
             new_feature_num++;
         }
         else if (it->feature_id == feature_id){
-            it->feature_per_frame.push_back(f_per_fra);
+            it->feats.push_back(feat);
             last_track_num++;
-            if( it-> feature_per_frame.size() >= 4)
+            if(it-> feats.size() >= 4)
                 long_track_num++;
         }
     }
@@ -113,10 +113,9 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureBackg
     if (frame_count < 2 || last_track_num < 20 || long_track_num < 40 || new_feature_num > 0.5 * last_track_num)
         return true;
 
-    for (auto &it_per_id : feature){
-        if (it_per_id.start_frame <= frame_count - 2 &&
-        it_per_id.start_frame + int(it_per_id.feature_per_frame.size()) - 1 >= frame_count - 1){
-            parallax_sum += CompensatedParallax2(it_per_id, frame_count);
+    for (auto &lm : landmarks){
+        if (lm.start_frame <= frame_count - 2 && lm.start_frame + int(lm.feats.size()) - 1 >= frame_count - 1){
+            parallax_sum += CompensatedParallax2(lm, frame_count);
             parallax_num++;
         }
     }
@@ -135,7 +134,7 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const FeatureBackg
 vector<pair<Vec3d, Vec3d>> FeatureManager::GetCorresponding(int frame_count_l, int frame_count_r)
 {
     vector<pair<Vec3d, Vec3d>> corres;
-    for (auto &it : feature)
+    for (auto &it : landmarks)
     {
         if (it.start_frame <= frame_count_l && it.endFrame() >= frame_count_r)
         {
@@ -143,8 +142,8 @@ vector<pair<Vec3d, Vec3d>> FeatureManager::GetCorresponding(int frame_count_l, i
             int idx_l = frame_count_l - it.start_frame;
             int idx_r = frame_count_r - it.start_frame;
 
-            a = it.feature_per_frame[idx_l].point;
-            b = it.feature_per_frame[idx_r].point;
+            a = it.feats[idx_l].point;
+            b = it.feats[idx_r].point;
             corres.push_back(std::make_pair(a, b));
         }
     }
@@ -154,48 +153,47 @@ vector<pair<Vec3d, Vec3d>> FeatureManager::GetCorresponding(int frame_count_l, i
 void FeatureManager::SetDepth(const Eigen::VectorXd &x)
 {
     int feature_index = -1;
-    for (auto &it_per_id : feature){
-        it_per_id.used_num = it_per_id.feature_per_frame.size();
-        if (it_per_id.used_num < 4)
+    for (auto &lm : landmarks){
+        lm.used_num = lm.feats.size();
+        if (lm.used_num < 4)
             continue;
-        it_per_id.estimated_depth = 1.0 / x(++feature_index);
-        if (it_per_id.estimated_depth < 0){
-            it_per_id.solve_flag = 2;
+        lm.depth = 1.0 / x(++feature_index);
+        if (lm.depth < 0){
+            lm.solve_flag = 2;
         }
         else{
-            it_per_id.solve_flag = 1;
+            lm.solve_flag = 1;
         }
     }
 }
 
 void FeatureManager::RemoveFailures()
 {
-    for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next){
+    for (auto it = landmarks.begin(), it_next = landmarks.begin(); it != landmarks.end(); it = it_next){
         it_next++;
         if (it->solve_flag == 2)
-            feature.erase(it);
+            landmarks.erase(it);
     }
 }
 
 void FeatureManager::ClearDepth()
 {
-    for (auto &it_per_id : feature)
-        it_per_id.estimated_depth = -1;
+    for (auto &lm : landmarks)
+        lm.depth = -1;
 }
 
 Eigen::VectorXd FeatureManager::GetDepthVector()
 {
     Eigen::VectorXd dep_vec(GetFeatureCount());
     int feature_index = -1;
-    for (auto &it_per_id : feature)
-    {
-        it_per_id.used_num = it_per_id.feature_per_frame.size();
-        if (it_per_id.used_num < 4)
+    for (auto &lm : landmarks){
+        lm.used_num = lm.feats.size();
+        if (lm.used_num < 4)
             continue;
 #if 1
-        dep_vec(++feature_index) = 1. / it_per_id.estimated_depth;
+        dep_vec(++feature_index) = 1. / lm.depth;
 #else
-        dep_vec(++feature_index) = it_per_id->depth;
+        dep_vec(++feature_index) = lm->depth;
 #endif
     }
     return dep_vec;
@@ -280,15 +278,15 @@ void FeatureManager::initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
         ///构建3D-2D匹配对
         vector<cv::Point2f> pts2D;
         vector<cv::Point3f> pts3D;
-        for (auto &it_per_id : feature){
-            if (it_per_id.estimated_depth > 0){
-                int index = frameCnt - it_per_id.start_frame;
-                if((int)it_per_id.feature_per_frame.size() >= index + 1){
-                    Vec3d ptsInCam = ric[0] * (it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth) + tic[0];
-                    Vec3d ptsInWorld = Rs[it_per_id.start_frame] * ptsInCam + Ps[it_per_id.start_frame];
+        for (auto &lm : landmarks){
+            if (lm.depth > 0){
+                int index = frameCnt - lm.start_frame;
+                if((int)lm.feats.size() >= index + 1){
+                    Vec3d ptsInCam = ric[0] * (lm.feats[0].point * lm.depth) + tic[0];
+                    Vec3d ptsInWorld = Rs[lm.start_frame] * ptsInCam + Ps[lm.start_frame];
 
                     cv::Point3f point3d(ptsInWorld.x(), ptsInWorld.y(), ptsInWorld.z());
-                    cv::Point2f point2d(it_per_id.feature_per_frame[index].point.x(), it_per_id.feature_per_frame[index].point.y());
+                    cv::Point2f point2d(lm.feats[index].point.x(), lm.feats[index].point.y());
                     pts3D.push_back(point3d);
                     pts2D.push_back(point2d);
                 }
@@ -320,12 +318,12 @@ void FeatureManager::initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
  */
 void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[])
 {
-    for (auto &it_per_id : feature){
-        if (it_per_id.estimated_depth > 0)
+    for (auto &lm : landmarks){
+        if (lm.depth > 0)
             continue;
 
-        if(Config::is_stereo && it_per_id.feature_per_frame[0].is_stereo){
-            int imu_i = it_per_id.start_frame;
+        if(Config::is_stereo && lm.feats[0].is_stereo){
+            int imu_i = lm.start_frame;
             Eigen::Matrix<double, 3, 4> leftPose;
             Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
             Mat3d R0 = Rs[imu_i] * ric[0];
@@ -340,22 +338,22 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
 
             Eigen::Vector2d point0, point1;
             Vec3d point3d;
-            point0 = it_per_id.feature_per_frame[0].point.head(2);
-            point1 = it_per_id.feature_per_frame[0].pointRight.head(2);
+            point0 = lm.feats[0].point.head(2);
+            point1 = lm.feats[0].pointRight.head(2);
 
             TriangulatePoint(leftPose, rightPose, point0, point1, point3d);
             Vec3d localPoint;
             localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
             double depth = localPoint.z();
             if (depth > 0)
-                it_per_id.estimated_depth = depth;
+                lm.depth = depth;
             else
-                it_per_id.estimated_depth = para::kInitDepth;
+                lm.depth = para::kInitDepth;
             continue;
         }
-        else if(it_per_id.feature_per_frame.size() > 1)
+        else if(lm.feats.size() > 1)
         {
-            int imu_i = it_per_id.start_frame;
+            int imu_i = lm.start_frame;
             Eigen::Matrix<double, 3, 4> leftPose;
             Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
             Mat3d R0 = Rs[imu_i] * ric[0];
@@ -371,28 +369,28 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
 
             Eigen::Vector2d point0, point1;
             Vec3d point3d;
-            point0 = it_per_id.feature_per_frame[0].point.head(2);
-            point1 = it_per_id.feature_per_frame[1].point.head(2);
+            point0 = lm.feats[0].point.head(2);
+            point1 = lm.feats[1].point.head(2);
             TriangulatePoint(leftPose, rightPose, point0, point1, point3d);
             Vec3d localPoint;
             localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
             double depth = localPoint.z();
             if (depth > 0)
-                it_per_id.estimated_depth = depth;
+                lm.depth = depth;
             else
-                it_per_id.estimated_depth = para::kInitDepth;
+                lm.depth = para::kInitDepth;
             continue;
         }
 
-        it_per_id.used_num = it_per_id.feature_per_frame.size();
-        if (it_per_id.used_num < 4)
+        lm.used_num = lm.feats.size();
+        if (lm.used_num < 4)
             continue;
 
         //以下代码好像执行不到
 
-        int imu_i = it_per_id.start_frame, imu_j = imu_i - 1;
+        int imu_i = lm.start_frame, imu_j = imu_i - 1;
 
-        Eigen::MatrixXd svd_A(2 * it_per_id.feature_per_frame.size(), 4);
+        Eigen::MatrixXd svd_A(2 * lm.feats.size(), 4);
         int svd_idx = 0;
 
         Eigen::Matrix<double, 3, 4> P0;
@@ -401,7 +399,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
         P0.leftCols<3>() = Mat3d::Identity();
         P0.rightCols<1>() = Vec3d::Zero();
 
-        for (auto &it_per_frame : it_per_id.feature_per_frame)
+        for (auto &feat : lm.feats)
         {
             imu_j++;
 
@@ -412,7 +410,7 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
             Eigen::Matrix<double, 3, 4> P;
             P.leftCols<3>() = R.transpose();
             P.rightCols<1>() = -R.transpose() * t;
-            Vec3d f = it_per_frame.point.normalized();
+            Vec3d f = feat.point.normalized();
             svd_A.row(svd_idx++) = f[0] * P.row(2) - f[2] * P.row(0);
             svd_A.row(svd_idx++) = f[1] * P.row(2) - f[2] * P.row(1);
 
@@ -425,12 +423,12 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
         //it_per_id->depth = -b / A;
         //it_per_id->depth = svd_V[2] / svd_V[3];
 
-        it_per_id.estimated_depth = svd_method;
+        lm.depth = svd_method;
         //it_per_id->depth = kInitDepth;
 
-        if (it_per_id.estimated_depth < 0.1)
+        if (lm.depth < 0.1)
         {
-            it_per_id.estimated_depth = para::kInitDepth;
+            lm.depth = para::kInitDepth;
         }
 
     }
@@ -442,39 +440,39 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
  */
 void FeatureManager::RemoveOutlier(std::set<int> &outlierIndex){
     std::set<int>::iterator itSet;
-    for (auto it = feature.begin(), it_next = feature.begin();  it != feature.end(); it = it_next){
+    for (auto it = landmarks.begin(), it_next = landmarks.begin(); it != landmarks.end(); it = it_next){
         it_next++;
         int index = it->feature_id;
         itSet = outlierIndex.find(index);
         if(itSet != outlierIndex.end()){
-            feature.erase(it);
+            landmarks.erase(it);
         }
     }
 }
 
 void FeatureManager::RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg_P, Mat3d new_R, Vec3d new_P){
-    for (auto it = feature.begin(), it_next = feature.begin();it != feature.end(); it = it_next){
+    for (auto it = landmarks.begin(), it_next = landmarks.begin(); it != landmarks.end(); it = it_next){
         it_next++;
 
         if (it->start_frame != 0){
             it->start_frame--;
         }
         else{
-            Vec3d uv_i = it->feature_per_frame[0].point;
-            it->feature_per_frame.erase(it->feature_per_frame.begin());
-            if (it->feature_per_frame.size() < 2){
-                feature.erase(it);
+            Vec3d uv_i = it->feats[0].point;
+            it->feats.erase(it->feats.begin());
+            if (it->feats.size() < 2){
+                landmarks.erase(it);
                 continue;
             }
             else{
-                Vec3d pts_i = uv_i * it->estimated_depth;
+                Vec3d pts_i = uv_i * it->depth;
                 Vec3d w_pts_i = marg_R * pts_i + marg_P;
                 Vec3d pts_j = new_R.transpose() * (w_pts_i - new_P);
                 double dep_j = pts_j(2);
                 if (dep_j > 0)
-                    it->estimated_depth = dep_j;
+                    it->depth = dep_j;
                 else
-                    it->estimated_depth = para::kInitDepth;
+                    it->depth = para::kInitDepth;
             }
         }
         /*
@@ -489,22 +487,22 @@ void FeatureManager::RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg
 
 void FeatureManager::RemoveBack()
 {
-    for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next){
+    for (auto it = landmarks.begin(), it_next = landmarks.begin(); it != landmarks.end(); it = it_next){
         it_next++;
         if (it->start_frame != 0){
             it->start_frame--;
         }
         else{
-            it->feature_per_frame.erase(it->feature_per_frame.begin());
-            if (it->feature_per_frame.empty())
-                feature.erase(it);
+            it->feats.erase(it->feats.begin());
+            if (it->feats.empty())
+                landmarks.erase(it);
         }
     }
 }
 
 void FeatureManager::RemoveFront(int frame_count)
 {
-    for (auto it = feature.begin(), it_next = feature.begin(); it != feature.end(); it = it_next){
+    for (auto it = landmarks.begin(), it_next = landmarks.begin(); it != landmarks.end(); it = it_next){
         it_next++;
         if (it->start_frame == frame_count){
             it->start_frame--;
@@ -513,19 +511,19 @@ void FeatureManager::RemoveFront(int frame_count)
             int j = kWinSize - 1 - it->start_frame;
             if (it->endFrame() < frame_count - 1)
                 continue;
-            it->feature_per_frame.erase(it->feature_per_frame.begin() + j);
-            if (it->feature_per_frame.empty())
-                feature.erase(it);
+            it->feats.erase(it->feats.begin() + j);
+            if (it->feats.empty())
+                landmarks.erase(it);
         }
     }
 }
 
-double FeatureManager::CompensatedParallax2(const FeaturePerId &it_per_id, int frame_count)
+double FeatureManager::CompensatedParallax2(const FeaturePerId &landmark, int frame_count)
 {
     //check the second last frame is keyframe or not
     //parallax betwwen seconde last frame and third last frame
-    const FeaturePerFrame &frame_i = it_per_id.feature_per_frame[frame_count - 2 - it_per_id.start_frame];
-    const FeaturePerFrame &frame_j = it_per_id.feature_per_frame[frame_count - 1 - it_per_id.start_frame];
+    const FeaturePerFrame &frame_i = landmark.feats[frame_count - 2 - landmark.start_frame];
+    const FeaturePerFrame &frame_j = landmark.feats[frame_count - 1 - landmark.start_frame];
 
     double ans = 0;
     Vec3d p_j = frame_j.point;

@@ -14,6 +14,7 @@
 
 #include "utils/dataset/kitti_utils.h"
 #include "utils/def.h"
+#include "utils/parameters.h"
 
 
 namespace dynamic_vins{\

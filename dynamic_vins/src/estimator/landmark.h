@@ -44,6 +44,8 @@ struct Vel : Velocity{
  * 特征点(单次观测)
  */
 struct FeaturePoint{
+    using Ptr=std::shared_ptr<FeaturePoint>;
+
     FeaturePoint()=default;
     /**
      * 单目特征点初始化
@@ -102,10 +104,15 @@ struct FeaturePoint{
         }
     }
 
+
+
+
     Vec3d point{0,0,0};//归一化坐标
     Vec3d point_right{0,0,0};
 
     bool is_stereo{false};
+    bool is_extra{false};
+
     int frame{0};
 
     Vec2d vel{0,0};//左相机归一化点的速度
@@ -115,14 +122,35 @@ struct FeaturePoint{
 
     Vec3d p_w{0,0,0};//该观测在世界坐标系下的坐标
     bool is_triangulated{false};//当前观测是否已经进行了三角化
+
+    float disp{0.f};//视差
 };
 
 
 
 struct LandmarkPoint{
     explicit LandmarkPoint(unsigned int id_):id(id_){}
+
+    FeaturePoint::Ptr front(){
+        return feats.front();
+    }
+
+    int frame() const{
+        return feats.front()->frame;
+    }
+
+    int size() const{
+        return feats.size();
+    }
+
+    void EraseBegin(){
+        feats.erase(feats.begin());
+    }
+
+    bool bad{false};//坏点
+
     unsigned int id;
-    std::list<FeaturePoint> feats;//每个id的特征在各个帧上的特征点,因为要经常删除，故使用链表
+    std::list<FeaturePoint::Ptr> feats;//每个id的特征在各个帧上的特征点,因为要经常删除，故使用链表
     double depth{-1.0};
 };
 

@@ -47,6 +47,7 @@
 #include "estimator/initial/initial_alignment.h"
 #include "estimator/initial/initial_ex_rotation.h"
 #include "estimator/factor/marginalization_factor.h"
+#include "body.h"
 
 namespace dynamic_vins{\
 
@@ -67,8 +68,6 @@ class Estimator
     void ProcessMeasurements();
     void ChangeSensorType(int use_imu, int use_stereo);
 
-    void GetPoseInWorldFrame(Eigen::Matrix4d &T);
-    void GetPoseInWorldFrame(int index, Eigen::Matrix4d &T);
     void PredictPtsInNextFrame();
 
     void ClearState();
@@ -85,28 +84,11 @@ class Estimator
         return {R_out,P_out,R_bc_out,P_bc_out};
     }
 
-    Mat3d ric[2];
-    Vec3d tic[2];
-    Vec3d Ps[(kWinSize + 1)];
-    Vec3d Vs[(kWinSize + 1)];
-    Mat3d Rs[(kWinSize + 1)];
-    Vec3d Bas[(kWinSize + 1)];
-    Vec3d Bgs[(kWinSize + 1)];
-    double td{};
-    double headers[(kWinSize + 1)]{};
-    int frame{};
 
     vector<Vec3d> key_poses;
     SolverFlag solver_flag;
     MarginFlag margin_flag;
 
-    double para_ex_pose[2][kSizePose]{};
-    double para_Pose[kWinSize + 1][kSizePose]{};
-    double para_SpeedBias[kWinSize + 1][kSizeSpeedBias]{};
-    double para_Feature[kNumFeat][kSizeFeature]{};
-    double para_Retrive_Pose[kSizePose]{};
-    double para_Td[1][1]{};
-    double para_Tr[1][1]{};
 
     InstanceManager insts_manager;
     FeatureManager f_manager;
@@ -114,6 +96,8 @@ class Estimator
     InitialEXRotation initial_ex_rotation;
 
     SemanticFeature feature_frame;
+
+    int frame;
 
 private:
 
@@ -160,14 +144,14 @@ private:
     string LogCurrentPose(){
         string result;
         for(int i=0; i <= kWinSize; ++i)
-            result+= fmt::format("{} t:({}) q:({})\n", i, VecToStr(Ps[i]),
-                                 QuaternionToStr(Eigen::Quaterniond(Rs[i])));
+            result+= fmt::format("{} t:({}) q:({})\n", i, VecToStr(body.Ps[i]),
+                                 QuaternionToStr(Eigen::Quaterniond(body.Rs[i])));
         return result;
     }
 
     void initFirstPose(Vec3d p, Mat3d r){
-        Ps[0] = p;
-        Rs[0] = r;
+        body.Ps[0] = p;
+        body.Rs[0] = r;
         initP = p;
         initR = r;
     }

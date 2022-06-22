@@ -11,6 +11,8 @@
 #include "flow/flow_estimator.h"
 #include "det3d/detector3d.h"
 #include "det2d/detector2d.h"
+#include "stereo/stereo.h"
+
 
 namespace dynamic_vins{\
 
@@ -29,6 +31,7 @@ public:
     Detector2D::Ptr detector2d;
     Detector3D::Ptr detector3d;
     FlowEstimator::Ptr flow_estimator;
+    MyStereoMatcher::Ptr stereo_matcher;
 
 };
 

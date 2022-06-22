@@ -92,6 +92,7 @@ aux_source_directory(src/det2d det2d_sources)
 aux_source_directory(src/det3d det3d_sources)
 aux_source_directory(src/mot mot_sources)
 aux_source_directory(src/flow flow_sources)
+aux_source_directory(src/stereo stereo_sources)
 aux_source_directory(src/image_process image_process_source)
 aux_source_directory(src/front_end front_end_sources)
 aux_source_directory(src/estimator/initial initial_sources)
@@ -101,7 +102,7 @@ aux_source_directory(src/estimator estimator_sources)
 message("estimator: ${estimator} ")
 
 add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources}
-        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source}
+        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources}
         ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})

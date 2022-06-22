@@ -213,7 +213,7 @@ vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
 
 
 
-std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask, cv::Rect rect){
+std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask,int step ,cv::Rect rect){
     int cnt=0;
     int row_start=0,row_end=inst_mask.rows,col_start=0,col_end=inst_mask.cols;
     if(!rect.empty()){
@@ -224,8 +224,8 @@ std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &ins
     }
     vector<cv::Point2f> vec;
     constexpr int kMinDist=3;
-    for(int i=row_start;i<row_end;i+=kMinDist){
-        for(int j=col_start;j<col_end;j+=kMinDist){
+    for(int i=row_start;i<row_end;i+=step){
+        for(int j=col_start;j<col_end;j+=step){
             if(inst_mask.at<uchar>(i,j) > 0){
                 vec.emplace_back(j,i);
                 cnt++;
@@ -235,7 +235,9 @@ std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &ins
 
     std::shuffle(vec.begin(),vec.end(),
                  std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
-    return vec;
+
+    vector<cv::Point2f> vec_out(vec.begin(),vec.begin()+std::min(detect_num,(int)vec.size()));
+    return vec_out;
 }
 
 /**

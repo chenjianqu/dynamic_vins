@@ -162,8 +162,8 @@ void Publisher::PrintStatistics(double t)
         cv::FileStorage fs(cfg::kExCalibResultPath, cv::FileStorage::WRITE);
         for (int i = 0; i < cfg::kCamNum; i++){
             Eigen::Matrix4d eigen_T = Eigen::Matrix4d::Identity();
-            eigen_T.block<3, 3>(0, 0) = e->ric[i];
-            eigen_T.block<3, 1>(0, 3) = e->tic[i];
+            eigen_T.block<3, 3>(0, 0) = body.ric[i];
+            eigen_T.block<3, 1>(0, 3) = body.tic[i];
             cv::Mat cv_T;
             cv::eigen2cv(eigen_T, cv_T);
             if(i == 0)
@@ -174,8 +174,8 @@ void Publisher::PrintStatistics(double t)
         fs.release();
     }
 
-    sum_of_path += (e->Ps[kWinSize] - last_path).norm();
-    last_path = e->Ps[kWinSize];
+    sum_of_path += (body.Ps[kWinSize] - last_path).norm();
+    last_path = body.Ps[kWinSize];
 }
 
 
@@ -194,10 +194,10 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
     odometry.header.frame_id = "world";
     odometry.child_frame_id = "world";
     Quaterniond tmp_Q;
-    tmp_Q = Quaterniond(e->Rs[kWinSize]);
-    odometry.pose.pose.position = EigenToGeometryPoint(e->Ps[kWinSize]);
+    tmp_Q = Quaterniond(body.Rs[kWinSize]);
+    odometry.pose.pose.position = EigenToGeometryPoint(body.Ps[kWinSize]);
     odometry.pose.pose.orientation = EigenToGeometryQuaternion(tmp_Q);
-    odometry.twist.twist.linear = EigenToGeometryVector3(e->Vs[kWinSize]);
+    odometry.twist.twist.linear = EigenToGeometryVector3(body.Vs[kWinSize]);
     pub_odometry->publish(odometry);
 
     geometry_msgs::PoseStamped pose_stamped;
@@ -237,16 +237,16 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
           << e.Vs[kWindowSize].z() << endl;
         */
     foutC << header.stamp << " "
-    << e->Ps[kWinSize].x() << " "
-    << e->Ps[kWinSize].y() << " "
-    << e->Ps[kWinSize].z() << " "
+    << body.Ps[kWinSize].x() << " "
+    << body.Ps[kWinSize].y() << " "
+    << body.Ps[kWinSize].z() << " "
     <<tmp_Q.x()<<" "
     <<tmp_Q.y()<<" "
     <<tmp_Q.z()<<" "
     <<tmp_Q.w()<<endl;
     foutC.close();
 
-    Eigen::Vector3d tmp_T = e->Ps[kWinSize];
+    Eigen::Vector3d tmp_T = body.Ps[kWinSize];
     printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(),
            tmp_T.x(), tmp_T.y(), tmp_T.z(),
            tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
@@ -287,8 +287,8 @@ void Publisher::PubCameraPose(const std_msgs::Header &header)
 
     int idx2 = kWinSize - 1;
     int i = idx2;
-    Vector3d P_eigen = e->Ps[i] + e->Rs[i] * e->tic[0];
-    Quaterniond Q_eigen = Quaterniond(e->Rs[i] * e->ric[0]);
+    Vector3d P_eigen = body.Ps[i] + body.Rs[i] * body.tic[0];
+    Quaterniond Q_eigen = Quaterniond(body.Rs[i] * body.ric[0]);
 
     nav_msgs::Odometry odometry;
     odometry.header = header;
@@ -301,8 +301,8 @@ void Publisher::PubCameraPose(const std_msgs::Header &header)
     camera_pose_visual->reset();
     camera_pose_visual->add_pose(P_eigen, Q_eigen);
     if(cfg::is_stereo){
-        Vector3d P = e->Ps[i] + e->Rs[i] * e->tic[1];
-        Quaterniond R = Quaterniond(e->Rs[i] * e->ric[1]);
+        Vector3d P = body.Ps[i] + body.Rs[i] * body.tic[1];
+        Quaterniond R = Quaterniond(body.Rs[i] * body.ric[1]);
         camera_pose_visual->add_pose(P, R);
     }
     camera_pose_visual->publish_by(*pub_camera_pose_visual, odometry.header);
@@ -316,18 +316,16 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
     point_cloud.header = header;
     loop_point_cloud.header = header;
 
-    for (auto &it_per_id : e->f_manager.feature)
+    for (auto &it_per_id : e->f_manager.landmarks)
     {
-        int used_num = (int)it_per_id.feature_per_frame.size();
+        int used_num = (int)it_per_id.feats.size();
         if (!(used_num >= 2 && it_per_id.start_frame < kWinSize - 2))
             continue;
         if (it_per_id.start_frame > kWinSize * 3.0 / 4.0 || it_per_id.solve_flag != 1)
             continue;
         int imu_i = it_per_id.start_frame;
-        Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
-        Vector3d w_pts_i = e->Rs[imu_i] * (e->ric[0] * pts_i + e->tic[0]) + e->Ps[imu_i];
-
-        point_cloud.points.push_back(EigenToGeometryPoint32(w_pts_i));
+        point_cloud.points.push_back(EigenToGeometryPoint32(
+                body.CamToWorld(it_per_id.feats[0].point * it_per_id.depth, imu_i)));
     }
     pub_point_cloud->publish(point_cloud);
 
@@ -335,21 +333,19 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
     sensor_msgs::PointCloud margin_cloud;
     margin_cloud.header = header;
 
-    for (auto &it_per_id : e->f_manager.feature){
-        int used_num = (int)it_per_id.feature_per_frame.size();
+    for (auto &it_per_id : e->f_manager.landmarks){
+        int used_num = (int)it_per_id.feats.size();
         if (!(used_num >= 2 && it_per_id.start_frame < kWinSize - 2))
             continue;
         //if (it_per_id->start_frame > kWindowSize * 3.0 / 4.0 || it_per_id->solve_flag != 1)
         //        continue;
 
-        if (it_per_id.start_frame == 0 && it_per_id.feature_per_frame.size() <= 2 
+        if (it_per_id.start_frame == 0 && it_per_id.feats.size() <= 2
         && it_per_id.solve_flag == 1 )
         {
             int imu_i = it_per_id.start_frame;
-            Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
-            Vector3d w_pts_i = e->Rs[imu_i] * (e->ric[0] * pts_i + e->tic[0]) + e->Ps[imu_i];
-
-            margin_cloud.points.push_back(EigenToGeometryPoint32(w_pts_i) );
+            margin_cloud.points.push_back(EigenToGeometryPoint32(
+                    body.CamToWorld(it_per_id.feats[0].point * it_per_id.depth, imu_i)) );
         }
     }
     pub_margin_cloud->publish(margin_cloud);
@@ -382,7 +378,7 @@ void Publisher::PubTF(const std_msgs::Header &header)
     odometry.header = header;
     odometry.header.frame_id = "world";
     odometry.pose.pose.position = EigenToGeometryPoint(P_bc);
-    Quaterniond q_eigen{e->ric[0]};
+    Quaterniond q_eigen{body.ric[0]};
     odometry.pose.pose.orientation = EigenToGeometryQuaternion(q_eigen);
     pub_extrinsic->publish(odometry);
 }
@@ -394,35 +390,33 @@ void Publisher::PubKeyframe()
     {
         int i = kWinSize - 2;
         //Vector3d P = e.Ps[i] + e.Rs[i] * e.tic[0];
-        Vector3d P = e->Ps[i];
-        auto q_eigen = Quaterniond(e->Rs[i]);
+        Vector3d P = body.Ps[i];
+        auto q_eigen = Quaterniond(body.Rs[i]);
 
         nav_msgs::Odometry odometry;
-        odometry.header.stamp = ros::Time(e->headers[kWinSize - 2]);
+        odometry.header.stamp = ros::Time(body.headers[kWinSize - 2]);
         odometry.header.frame_id = "world";
         odometry.pose.pose.position = EigenToGeometryPoint(P);
         odometry.pose.pose.orientation = EigenToGeometryQuaternion(q_eigen);
         pub_keyframe_pose->publish(odometry);
 
         sensor_msgs::PointCloud point_cloud;
-        point_cloud.header.stamp = ros::Time(e->headers[kWinSize - 2]);
+        point_cloud.header.stamp = ros::Time(body.headers[kWinSize - 2]);
         point_cloud.header.frame_id = "world";
-        for (auto &it_per_id : e->f_manager.feature){
-            int frame_size = (int)it_per_id.feature_per_frame.size();
+        for (auto &it_per_id : e->f_manager.landmarks){
+            int frame_size = (int)it_per_id.feats.size();
             if(it_per_id.start_frame < kWinSize - 2 && it_per_id.start_frame + frame_size - 1 >= kWinSize - 2
             && it_per_id.solve_flag == 1){
                 int imu_i = it_per_id.start_frame;
-                Vector3d pts_i = it_per_id.feature_per_frame[0].point * it_per_id.estimated_depth;
-                Vector3d w_pts_i = e->Rs[imu_i] * (e->ric[0] * pts_i + e->tic[0])
-                        + e->Ps[imu_i];
-                point_cloud.points.push_back(EigenToGeometryPoint32(w_pts_i));
+                point_cloud.points.push_back(EigenToGeometryPoint32(
+                        body.CamToWorld(it_per_id.feats[0].point * it_per_id.depth, imu_i)));
 
                 int imu_j = kWinSize - 2 - it_per_id.start_frame;
                 sensor_msgs::ChannelFloat32 p_2d;
-                p_2d.values.push_back(float(it_per_id.feature_per_frame[imu_j].point.x()));
-                p_2d.values.push_back(float(it_per_id.feature_per_frame[imu_j].point.y()));
-                p_2d.values.push_back(float(it_per_id.feature_per_frame[imu_j].uv.x()));
-                p_2d.values.push_back(float(it_per_id.feature_per_frame[imu_j].uv.y()));
+                p_2d.values.push_back(float(it_per_id.feats[imu_j].point.x()));
+                p_2d.values.push_back(float(it_per_id.feats[imu_j].point.y()));
+                p_2d.values.push_back(float(it_per_id.feats[imu_j].uv.x()));
+                p_2d.values.push_back(float(it_per_id.feats[imu_j].uv.y()));
                 p_2d.values.push_back(float(it_per_id.feature_id));
                 point_cloud.channels.push_back(p_2d);
             }
@@ -441,11 +435,6 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
     MarkerArray markers;
 
     ///根据box初始化物体的位姿和包围框
-    auto cam_to_world = [](const Vec3d &p){
-        Vec3d p_imu = e->ric[0] * p + e->tic[0];
-        Vec3d p_world = e->Rs[e->frame] * p_imu + e->Ps[e->frame];
-        return p_world;
-    };
 
     cv::Scalar color_norm(0.5,0.5,0.5);
 
@@ -454,7 +443,7 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
         //将包围框的8个顶点转换到世界坐标系下
         Mat38d corners = box.corners;
         for(int i=0;i<8;++i){
-            corners.col(i) = cam_to_world(corners.col(i));
+            corners.col(i) = body.CamToWorld(corners.col(i),body.frame);
         }
         string log_text = fmt::format("id:{} class:{} score:{}\n",index,box.class_id,box.score);
         log_text += EigenToStr(box.corners);
@@ -531,27 +520,22 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
             if(lm.depth <= 0)
                 continue;
 
-            int frame_j=lm.feats.front().frame;
+            int frame_j=lm.feats.front()->frame;
             int frame_i=e->frame;
-            Vec3d pts_cam_j = lm.feats.front().point * lm.depth;//k点在j时刻的相机坐标
-            Vec3d pts_imu_j = e->ric[0] * pts_cam_j + e->tic[0];//k点在j时刻的IMU坐标
-            Vec3d pt_w_j=e->Rs[frame_j] * pts_imu_j + e->Ps[frame_j];//k点在j时刻的世界坐标
-            Vec3d pt_obj = inst.state[frame_j].R.transpose() * (pt_w_j - inst.state[frame_j].P);
-            Vec3d pt = inst.state[frame_i].R *pt_obj + inst.state[frame_i].P;
-
+            Vec3d pt = inst.ObjectToWorld(inst.CamToObject(lm.feats.front()->point * lm.depth,frame_j),frame_i);
             cloud.push_back(PointPCL(pt,inst.color[2],inst.color[1],inst.color[0]));
 
 
             auto &back_p = lm.feats.back();
             if(!is_visual_all_point){
-                if(back_p.frame >= e->frame-1 && back_p.is_triangulated){
-                    cloud.push_back(PointPCL(back_p.p_w,128,128,128));
+                if(back_p->frame >= e->frame-1 && back_p->is_triangulated){
+                    cloud.push_back(PointPCL(back_p->p_w,128,128,128));
                 }
             }
             else{
                 for(auto &feat : lm.feats){
-                    if(feat.is_triangulated){
-                        cloud.push_back(PointPCL(feat.p_w,128,128,128));
+                    if(feat->is_triangulated){
+                        cloud.push_back(PointPCL(feat->p_w,128,128,128));
                     }
                 }
             }
@@ -620,8 +604,8 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         ///可视化检测得到的包围框
         /*for(int i=0;i<=kWinSize;++i){
             if(inst.boxes3d[i]){
-                Mat38d corners_w = inst.boxes3d[i]->GetCornersInWorld(e->Rs[i],e->Ps[i],
-                                                                      e->ric[0],e->tic[0]);
+                Mat38d corners_w = inst.boxes3d[i]->GetCornersInWorld(body.Rs[i],body.Ps[i],
+                                                                      body.ric[0],body.tic[0]);
                 Eigen::Matrix<double,8,3> corners_w_t = corners_w.transpose();
                 auto detect_cube_marker = BuildCubeMarker(corners_w_t,key,action);
                 markers.markers.push_back(detect_cube_marker);
@@ -632,7 +616,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
             if(inst.boxes3d[e->frame-1]){
                 Mat38d corners_w = inst.boxes3d[e->frame-1]->corners;
                 for(int i=0;i<8;++i){
-                    corners_w.col(i) = e->Rs[e->frame-1] * (e->ric[0] * corners_w.col(i) + e->tic[0]) + e->Ps[e->frame-1];
+                    corners_w.col(i) = body.Rs[body.frame-1] * (body.ric[0] * corners_w.col(i) + body.tic[0]) + body.Ps[body.frame-1];
                 }
                 auto detect_cube_marker = CubeMarker(corners_w, key, BgrColor("gray"),
                                                      0.05, action);
@@ -672,11 +656,11 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
     ///可视化gt框
     if(io_para::is_pub_groundtruth_box){
         int index=10000;
-        auto boxes_gt = Detector3D::ReadGroundtruthFromKittiTracking(e->feature_frame.seq_id);
+        auto boxes_gt = Detector3D::ReadGroundtruthFromKittiTracking(body.seq_id);
         for(auto &box : boxes_gt){
             Mat38d corners_w = box->corners;
             for(int i=0;i<8;++i){
-                corners_w.col(i) = e->Rs[e->frame-1] * (e->ric[0] * corners_w.col(i) + e->tic[0]) + e->Ps[e->frame-1];
+                corners_w.col(i) = body.Rs[body.frame-1] * (body.ric[0] * corners_w.col(i) + body.tic[0]) + body.Ps[body.frame-1];
             }
             auto gt_cube_marker = CubeMarker(corners_w, index, BgrColor("magenta"),
                                              0.06, Marker::ADD);

@@ -11,7 +11,7 @@
 #ifndef DYNAMIC_VINS_KITTI_UTILS_H
 #define DYNAMIC_VINS_KITTI_UTILS_H
 
-#include "utils/parameters.h"
+#include "utils/def.h"
 
 namespace dynamic_vins::kitti{\
 

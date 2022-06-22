@@ -56,6 +56,9 @@ struct InstFeat{
     void UndistortedPts(PinHoleCamera::Ptr &cam);
     void RightUndistortedPts(PinHoleCamera::Ptr &cam);
 
+    void UndistortedPoints(PinHoleCamera::Ptr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un);
+
+
     ///跟踪图像
     void TrackLeft(SemanticImage &img,SemanticImage &prev_img,bool dense_flow=cfg::use_dense_flow);
     void TrackLeftGPU(SemanticImage &img,SemanticImage &prev_img,
@@ -98,8 +101,6 @@ struct InstFeat{
     std::list<std::pair<cv::Point2f,cv::Point2f>> visual_right_points_pair;
     std::list<cv::Point2f> visual_new_points;
 
-    cv::Point2f feats_center_pt;//当前跟踪的特征点的中心坐标
-
     int lost_num{0};//无法被跟踪的帧数,超过一定数量该实例将被删除
 
     bool is_curr_visible{false};
@@ -111,6 +112,10 @@ struct InstFeat{
     inline static std::uniform_int_distribution<unsigned int> color_rd{0,255};
 
     inline static unsigned long global_id_count{0};//全局特征序号
+
+    vector<cv::Point2f> extra_points;
+    vector<cv::Point2f> extra_un_points;
+    vector<unsigned int> extra_ids;
 
 };
 

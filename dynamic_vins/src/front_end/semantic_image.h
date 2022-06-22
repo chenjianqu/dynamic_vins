@@ -52,6 +52,8 @@ struct SemanticImage{
 
     cv::Mat flow;//光流估计结果
 
+    cv::Mat disp;//视差图
+
     std::vector<Box3D::Ptr> boxes3d;//3D检测结果
 
     torch::Tensor img_tensor;
