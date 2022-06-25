@@ -16,12 +16,15 @@
 
 namespace dynamic_vins{\
 
-string PrintInstanceInfo(InstanceManager& im,bool output_lm,bool output_stereo);
+string PrintFeaturesInfo(InstanceManager& im, bool output_lm, bool output_stereo);
 
 void SaveTrajectory(InstanceManager& im);
 
 string PrintInstancePoseInfo(InstanceManager& im,bool output_lm);
 
+cv::Mat DrawTopView(InstanceManager& im,cv::Size size=cv::Size(600,600));
+
+string PrintFactorDebugMsg(InstanceManager& im);
 
 
 }

@@ -85,6 +85,20 @@ public:
     void SetWindowPose();
     void OutlierRejection();
 
+    int OutlierRejectionByBox3d();
+
+    int set_triangle_num(){
+        triangle_num=0;
+        for(auto &lm:landmarks){
+            if(lm.bad)
+                continue;
+            else if(lm.depth>0){
+                triangle_num++;
+            }
+        }
+        return triangle_num;
+    }
+
     [[nodiscard]] Vec3d WorldToObject(const Vec3d& pt,int frame_idx) const{
         return state[frame_idx].R.transpose() * ( pt - state[frame_idx].P);
     }
@@ -102,6 +116,20 @@ public:
     }
 
     [[nodiscard]] double AverageDepth() const;
+
+    /**
+     * 所有非bad的路标点的数量
+     * @return
+     */
+    [[nodiscard]] int valid_size(){
+        int cnt=0;
+        for(auto &lm:landmarks){
+            if(!lm.bad){
+                cnt++;
+            }
+        }
+        return cnt;
+    }
 
     int DeleteBadLandmarks();
 

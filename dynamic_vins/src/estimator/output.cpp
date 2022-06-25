@@ -18,7 +18,37 @@
 namespace dynamic_vins{ \
 
 
-string PrintInstanceInfo(InstanceManager& im,bool output_lm,bool output_stereo){
+
+string PrintFactorDebugMsg(InstanceManager& im){
+    string log_text=fmt::format("***********PrintFactorDebugMsg:{}***************\n",body.frame_time);
+
+    for(auto &[key,inst]:im.instances){
+        if(key==1){
+            log_text += fmt::format("inst:{} P_woj:{} \n",key, VecToStr(inst.state[body.frame].P));
+            log_text += fmt::format("dims:{} \n", VecToStr(inst.box3d->dims));
+
+            for(auto &lm:inst.landmarks){
+                if(lm.bad || lm.depth<=0)
+                    continue;
+                ///误差计算
+                Vec3d pts_obj_j=inst.state[body.frame].R.transpose() * (lm.front()->p_w - inst.state[body.frame].P);//k点在j时刻的物体坐标
+                Vec3d abs_v=pts_obj_j.cwiseAbs();
+                Vec3d vec_err = abs_v - inst.box3d->dims/2;
+                vec_err *=10;
+                log_text += fmt::format("p_w:{} abs_v:{} vec_err:{}\n",
+                                        VecToStr(lm.front()->p_w), VecToStr(abs_v),VecToStr(vec_err));
+            }
+        }
+
+    }
+
+    WriteTextFile(MyLogger::kLogOutputDir + "FactorDebugMsg.txt",log_text);
+
+    return {};
+}
+
+
+string PrintFeaturesInfo(InstanceManager& im, bool output_lm, bool output_stereo){
     if(im.tracking_number()<1){
         return {};
     }
@@ -79,18 +109,7 @@ string PrintInstanceInfo(InstanceManager& im,bool output_lm,bool output_stereo){
     s+="\n \n";
 
     ///将这些信息保存到文件中
-
-    static bool first_run=true;
-    if(first_run){
-        std::ofstream fout( MyLogger::kLogOutputDir + "features_info.txt", std::ios::out);
-        fout.close();
-        first_run=false;
-    }
-
-    std::ofstream fout( MyLogger::kLogOutputDir + "features_info.txt", std::ios::app);
-    fout<<s<<endl;
-    fout.close();
-
+    WriteTextFile(MyLogger::kLogOutputDir + "features_info.txt",s);
     return {};
 }
 
@@ -124,17 +143,7 @@ string PrintInstancePoseInfo(InstanceManager& im,bool output_lm){
     });
 
     ///将这些信息保存到文件中
-
-    static bool first_run=true;
-    if(first_run){
-        std::ofstream fout( MyLogger::kLogOutputDir + "pose_info.txt", std::ios::out);
-        fout.close();
-        first_run=false;
-    }
-
-    std::ofstream fout( MyLogger::kLogOutputDir + "pose_info.txt", std::ios::app);
-    fout<<log_text<<endl;
-    fout.close();
+    WriteTextFile(MyLogger::kLogOutputDir + "pose_info.txt",log_text);
 
     return {};
 }
@@ -186,6 +195,8 @@ void SaveTrajectory(InstanceManager& im){
     string log_text="InstanceManager::SaveTrajectory()\n";
 
     for(auto &[inst_id,inst] : im.instances){
+        if(!inst.is_curr_visible)
+            continue;
         log_text+=fmt::format("inst_id:{},is_tracking:{},is_initial:{},is_curr_visible:{},"
                               "is_init_velocity:{},is_static:{},landmarks:{},triangle_num:{}\n",
                               inst_id,inst.is_tracking,inst.is_initial,inst.is_curr_visible,inst.is_init_velocity,
@@ -193,8 +204,7 @@ void SaveTrajectory(InstanceManager& im){
 
         if(!inst.is_tracking || !inst.is_initial)
             continue;
-        if(!inst.is_curr_visible)
-            continue;
+
 
         ///将最老帧的轨迹保存到历史轨迹中
         inst.history_pose.push_back(inst.state[kWinSize]);
@@ -332,6 +342,66 @@ void SaveTrajectory(InstanceManager& im){
 
     Debugv(log_text);
 }
+
+
+/**
+ * 将物体坐标系下的点投影到12mx12m的区域中,并绘制到图像中
+ * @param im
+ * @param size
+ * @return
+ */
+cv::Mat DrawTopView(InstanceManager& im,cv::Size size){
+    cv::Mat img(size,CV_8UC3,cv::Scalar(255,255,255));
+
+    double half_size=size.width / 2.;
+    double half_metric = 6.;
+
+    for(auto &[key,inst] : im.instances){
+        if(key==1){
+
+            //绘制车辆包围框的矩形
+            double x_max = inst.box3d->dims.x()/2.;
+            x_max = x_max / half_metric * half_size + half_size;
+            double x_min = -inst.box3d->dims.x()/2.;
+            x_min = x_min / half_metric * half_size + half_size;
+            double z_max = inst.box3d->dims.z()/2.;
+            z_max = z_max / half_metric * half_size + half_size;
+            double z_min = -inst.box3d->dims.z()/2.;
+            z_min = z_min / half_metric * half_size + half_size;
+            cv::Rect2i rect(cv::Point2i(x_max,z_max),cv::Point2i(x_min,z_min));
+            cv::rectangle(img,rect, BgrColor("blue",false),2);
+
+            //将点变换到物体坐标系
+            for(auto &lm:inst.landmarks){
+                if(!lm.bad && lm.depth>0){
+                    Vec3d pts_obj = inst.WorldToObject(lm.front()->p_w,lm.frame());
+
+                    double x = pts_obj.x() / half_metric * half_size + half_size;
+                    double z = pts_obj.z() / half_metric * half_size + half_size;
+
+                    cv::circle(img,cv::Point2d(x,z),2, BgrColor("red",false),-1);
+
+                }
+
+            }
+        }
+
+    }
+
+
+    return img;
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

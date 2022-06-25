@@ -181,7 +181,7 @@ void Estimator::Optimization()
     ///添加动态物体的相关顶点
     if(cfg::slam == SlamType::kDynamic){
         //Debugv(insts_manager.PrintInstancePoseInfo(false));
-        insts_manager.AddInstanceParameterBlock(problem);
+        im.AddInstanceParameterBlock(problem);
     }
 
     ///添加重投影误差
@@ -189,7 +189,7 @@ void Estimator::Optimization()
 
     ///添加动态物体的残差项
     if(cfg::slam == SlamType::kDynamic){
-        insts_manager.AddResidualBlockForJointOpt(problem, loss_function);
+        im.AddResidualBlockForJointOpt(problem, loss_function);
     }
 
     Debugv("optimization | prepare:{} ms",tt.TocThenTic());
@@ -220,7 +220,7 @@ void Estimator::Optimization()
     //string msg="相机位姿 优化前：\n" + LogCurrentPose();
 
     if(cfg::slam == SlamType::kDynamic){
-        insts_manager.GetOptimizationParameters();
+        im.GetOptimizationParameters();
 
        // Debugv(insts_manager.PrintInstancePoseInfo(false));
     }
@@ -1231,7 +1231,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
     ///添加动态特征点,并创建物体
     if(cfg::slam == SlamType::kDynamic){
-        insts_manager.PushBack(frame, image.instances);
+        im.PushBack(frame, image.instances);
     }
 
     Debugv("processImage margin_flag:{}", margin_flag == MarginFlag::kMarginSecondNew ? "kMarginSecondNew" : "kMarginOld");
@@ -1349,34 +1349,34 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
         Debugv("--开始处理动态物体--");
 
         if(cfg::slam == SlamType::kDynamic){
-            insts_manager.SetOutputInstInfo();//将输出实例的速度信息
+            im.SetOutputInstInfo();//将输出实例的速度信息
             ///动态物体的位姿递推
-            insts_manager.PropagatePose();
+            im.PropagatePose();
             ///动态特征点的三角化
-            insts_manager.Triangulate();
+            im.Triangulate();
             ///若动态物体未初始化, 则进行初始化
-            insts_manager.InitialInstance(image.instances);
+            im.InitialInstance(image.instances);
             ///初始化速度
-            insts_manager.InitialInstanceVelocity();
+            im.InitialInstanceVelocity();
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
-            insts_manager.SetDynamicOrStatic();
+            im.SetDynamicOrStatic();
 
             if(para::is_print_detail){
-                PrintInstanceInfo(insts_manager,true,true);
+                PrintFeaturesInfo(im, true, true);
             }
 
             ///单独优化动态物体
             if(para::is_print_detail){
-                PrintInstancePoseInfo(insts_manager,true);
+                PrintInstancePoseInfo(im, true);
             }
-            insts_manager.Optimization();
+            im.Optimization();
 
             if(para::is_print_detail){
-                PrintInstancePoseInfo(insts_manager,true);
+                PrintInstancePoseInfo(im, true);
             }
 
 
-            insts_manager.OutliersRejection();
+            im.OutliersRejection();
 
             Infov("processImage dynamic Optimization:{} ms",tt.TocThenTic());
 
@@ -1407,19 +1407,19 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
         ///动态物体的滑动窗口
         if(cfg::slam == SlamType::kDynamic){
-            insts_manager.ManageTriangulatePoint();
-
+            im.ManageTriangulatePoint();
+            Debugv("finish ManageTriangulatePoint()");
             //insts_manager.SetWindowPose();
-            insts_manager.SlideWindow(margin_flag);
+            im.SlideWindow(margin_flag);
         }
         /// 滑动窗口
         SlideWindow();
 
         ///动态物体的外点剔除
         if(cfg::slam == SlamType::kDynamic){
-            insts_manager.OutliersRejection();
+            im.OutliersRejection();
 
-            insts_manager.DeleteBadLandmarks();
+             im.DeleteBadLandmarks();
         }
 
         Infov("processImage SlideWindow:{} ms", tt.TocThenTic());
@@ -1439,7 +1439,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
     }
 
     if(cfg::slam == SlamType::kDynamic){
-        insts_manager.SetInstanceCurrentPoint3d();
+        im.SetInstanceCurrentPoint3d();
     }
 
 }
@@ -1537,6 +1537,9 @@ void Estimator::ProcessMeasurements(){
         if(cfg::slam == SlamType::kDynamic){
             //printInstanceData(*this);
             Publisher::PubInstancePointCloud(header);
+
+            cv::Mat img_topview = DrawTopView(im);
+            ImagePublisher::Pub(img_topview,"top_view");
         }
 
         Publisher::PubOdometry(header);
@@ -1552,7 +1555,7 @@ void Estimator::ProcessMeasurements(){
 
         ///保存所有物体在当前帧的位姿
         if(cfg::slam == SlamType::kDynamic){
-            SaveTrajectory(insts_manager);
+            SaveTrajectory(im);
         }
 
         Infov("ProcessMeasurements::Output:{} ms",tt.TocThenTic());

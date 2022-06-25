@@ -85,11 +85,7 @@ public:
         });
     }
 
-    void DeleteBadLandmarks(){
-        InstExec([](int key,Instance& inst){
-            inst.DeleteBadLandmarks();
-        });
-    }
+    void DeleteBadLandmarks();
 
     void SetDynamicOrStatic();
 

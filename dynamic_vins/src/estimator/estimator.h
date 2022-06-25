@@ -90,7 +90,7 @@ class Estimator
     MarginFlag margin_flag;
 
 
-    InstanceManager insts_manager;
+    InstanceManager im;
     FeatureManager f_manager;
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;

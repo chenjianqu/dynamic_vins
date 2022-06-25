@@ -54,7 +54,6 @@ std::shared_ptr<ros::Publisher> pub_camera_pose_visual;
 std::shared_ptr<ros::Publisher> pub_keyframe_pose;
 std::shared_ptr<ros::Publisher> pub_keyframe_point;
 std::shared_ptr<ros::Publisher> pub_extrinsic;
-std::shared_ptr<ros::Publisher> pub_image_track;
 std::shared_ptr<ros::Publisher> pub_instance_pointcloud;
 std::shared_ptr<ros::Publisher> pub_instance_marker;
 std::shared_ptr<ros::Publisher> pub_stereo_pointcloud;
@@ -80,6 +79,8 @@ inline PointT PointPCL(const Vec3d &v,double r,double g,double b){
 void Publisher::RegisterPub(ros::NodeHandle &n)
 {
     transform_broadcaster = std::make_shared<tf::TransformBroadcaster>();
+
+    ImagePublisher imagePublisher(n);
 
     pub_latest_odometry=std::make_shared<ros::Publisher>();
     *pub_latest_odometry = n.advertise<nav_msgs::Odometry>("imu_propagate", 1000);
@@ -114,9 +115,6 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
     pub_extrinsic=std::make_shared<ros::Publisher>();
     *pub_extrinsic = n.advertise<nav_msgs::Odometry>("extrinsic", 1000);
 
-    pub_image_track=std::make_shared<ros::Publisher>();
-    *pub_image_track = n.advertise<sensor_msgs::Image>("image_track", 1000);
-
     pub_instance_pointcloud=std::make_shared<ros::Publisher>();
     *pub_instance_pointcloud=n.advertise<sensor_msgs::PointCloud2>("instance_point_cloud", 1000);
 
@@ -142,15 +140,6 @@ void Publisher::PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quatern
     pub_latest_odometry->publish(odometry);
 
     //Debugv("Publisher::pubLatestOdometry:{}", VecToStr(P));
-}
-
-void Publisher::PubTrackImage(const cv::Mat &imgTrack, const double t)
-{
-    std_msgs::Header header;
-    header.frame_id = "world";
-    header.stamp = ros::Time(t);
-    sensor_msgs::ImagePtr imgTrackMsg = cv_bridge::CvImage(header, "bgr8", imgTrack).toImageMsg();
-    pub_image_track->publish(imgTrackMsg);
 }
 
 
@@ -316,16 +305,16 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
     point_cloud.header = header;
     loop_point_cloud.header = header;
 
-    for (auto &it_per_id : e->f_manager.landmarks)
+    for (auto &lm : e->f_manager.landmarks)
     {
-        int used_num = (int)it_per_id.feats.size();
-        if (!(used_num >= 2 && it_per_id.start_frame < kWinSize - 2))
+        int used_num = (int)lm.feats.size();
+        if (!(used_num >= 2 && lm.start_frame < kWinSize - 2))
             continue;
-        if (it_per_id.start_frame > kWinSize * 3.0 / 4.0 || it_per_id.solve_flag != 1)
+        if (lm.start_frame > kWinSize * 3.0 / 4.0 || lm.solve_flag != 1)
             continue;
-        int imu_i = it_per_id.start_frame;
+        int imu_i = lm.start_frame;
         point_cloud.points.push_back(EigenToGeometryPoint32(
-                body.CamToWorld(it_per_id.feats[0].point * it_per_id.depth, imu_i)));
+                body.CamToWorld(lm.feats[0].point * lm.depth, imu_i)));
     }
     pub_point_cloud->publish(point_cloud);
 
@@ -333,19 +322,19 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
     sensor_msgs::PointCloud margin_cloud;
     margin_cloud.header = header;
 
-    for (auto &it_per_id : e->f_manager.landmarks){
-        int used_num = (int)it_per_id.feats.size();
-        if (!(used_num >= 2 && it_per_id.start_frame < kWinSize - 2))
+    for (auto &lm : e->f_manager.landmarks){
+        int used_num = (int)lm.feats.size();
+        if (!(used_num >= 2 && lm.start_frame < kWinSize - 2))
             continue;
-        //if (it_per_id->start_frame > kWindowSize * 3.0 / 4.0 || it_per_id->solve_flag != 1)
+        //if (lm->start_frame > kWindowSize * 3.0 / 4.0 || lm->solve_flag != 1)
         //        continue;
 
-        if (it_per_id.start_frame == 0 && it_per_id.feats.size() <= 2
-        && it_per_id.solve_flag == 1 )
+        if (lm.start_frame == 0 && lm.feats.size() <= 2
+        && lm.solve_flag == 1 )
         {
-            int imu_i = it_per_id.start_frame;
+            int imu_i = lm.start_frame;
             margin_cloud.points.push_back(EigenToGeometryPoint32(
-                    body.CamToWorld(it_per_id.feats[0].point * it_per_id.depth, imu_i)) );
+                    body.CamToWorld(lm.feats[0].point * lm.depth, imu_i)) );
         }
     }
     pub_margin_cloud->publish(margin_cloud);
@@ -403,21 +392,21 @@ void Publisher::PubKeyframe()
         sensor_msgs::PointCloud point_cloud;
         point_cloud.header.stamp = ros::Time(body.headers[kWinSize - 2]);
         point_cloud.header.frame_id = "world";
-        for (auto &it_per_id : e->f_manager.landmarks){
-            int frame_size = (int)it_per_id.feats.size();
-            if(it_per_id.start_frame < kWinSize - 2 && it_per_id.start_frame + frame_size - 1 >= kWinSize - 2
-            && it_per_id.solve_flag == 1){
-                int imu_i = it_per_id.start_frame;
+        for (auto &lm : e->f_manager.landmarks){
+            int frame_size = (int)lm.feats.size();
+            if(lm.start_frame < kWinSize - 2 && lm.start_frame + frame_size - 1 >= kWinSize - 2
+            && lm.solve_flag == 1){
+                int imu_i = lm.start_frame;
                 point_cloud.points.push_back(EigenToGeometryPoint32(
-                        body.CamToWorld(it_per_id.feats[0].point * it_per_id.depth, imu_i)));
+                        body.CamToWorld(lm.feats[0].point * lm.depth, imu_i)));
 
-                int imu_j = kWinSize - 2 - it_per_id.start_frame;
+                int imu_j = kWinSize - 2 - lm.start_frame;
                 sensor_msgs::ChannelFloat32 p_2d;
-                p_2d.values.push_back(float(it_per_id.feats[imu_j].point.x()));
-                p_2d.values.push_back(float(it_per_id.feats[imu_j].point.y()));
-                p_2d.values.push_back(float(it_per_id.feats[imu_j].uv.x()));
-                p_2d.values.push_back(float(it_per_id.feats[imu_j].uv.y()));
-                p_2d.values.push_back(float(it_per_id.feature_id));
+                p_2d.values.push_back(float(lm.feats[imu_j].point.x()));
+                p_2d.values.push_back(float(lm.feats[imu_j].point.y()));
+                p_2d.values.push_back(float(lm.feats[imu_j].uv.x()));
+                p_2d.values.push_back(float(lm.feats[imu_j].uv.y()));
+                p_2d.values.push_back(float(lm.feature_id));
                 point_cloud.channels.push_back(p_2d);
             }
         }
@@ -497,14 +486,14 @@ Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &histor
 
 void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
 {
-    if(e->insts_manager.tracking_number() < 1)
+    if(e->im.tracking_number() < 1)
         return;
 
     MarkerArray markers;
     PointCloud instance_point_cloud;
     PointCloud stereo_point_cloud;
 
-    for(auto &[key,inst] : e->insts_manager.instances){
+    for(auto &[key,inst] : e->im.instances){
         if(!inst.is_tracking ){
             continue;
         }
@@ -613,7 +602,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
         }*/
 
         if(io_para::is_pub_predict_box){
-            if(inst.boxes3d[e->frame-1]){
+/*            if(inst.boxes3d[e->frame-1]){
                 Mat38d corners_w = inst.boxes3d[e->frame-1]->corners;
                 for(int i=0;i<8;++i){
                     corners_w.col(i) = body.Rs[body.frame-1] * (body.ric[0] * corners_w.col(i) + body.tic[0]) + body.Ps[body.frame-1];
@@ -621,7 +610,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
                 auto detect_cube_marker = CubeMarker(corners_w, key, BgrColor("gray"),
                                                      0.05, action);
                 markers.markers.push_back(detect_cube_marker);
-            }
+            }*/
         }
 
         ///可视化历史轨迹
@@ -655,7 +644,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
 
     ///可视化gt框
     if(io_para::is_pub_groundtruth_box){
-        int index=10000;
+/*        int index=10000;
         auto boxes_gt = Detector3D::ReadGroundtruthFromKittiTracking(body.seq_id);
         for(auto &box : boxes_gt){
             Mat38d corners_w = box->corners;
@@ -666,7 +655,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
                                              0.06, Marker::ADD);
             markers.markers.push_back(gt_cube_marker);
             index++;
-        }
+        }*/
     }
 
 
@@ -709,8 +698,26 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
 }
 
 
+ImagePublisher::ImagePublisher(ros::NodeHandle &n){
+    nh = &n;
+}
 
 
+void ImagePublisher::Pub(cv::Mat &img,const string &topic){
+
+    if(pub_map.find(topic)==pub_map.end()){
+        ros::Publisher pub = nh->advertise<sensor_msgs::Image>(topic,10);
+        pub_map.insert({topic,pub});
+    }
+
+    std_msgs::Header header;
+    header.frame_id = "world";
+    header.stamp = ros::Time::now();
+    sensor_msgs::ImagePtr imgTrackMsg = cv_bridge::CvImage(header, "bgr8", img).toImageMsg();
+
+    pub_map[topic].publish(imgTrackMsg);
+
+}
 
 
 

@@ -33,6 +33,9 @@ bool CheckIsDir(const string &dir);
 
 void GetAllImageFiles(const string& dir, vector<string> &files) ;
 
+void WriteTextFile(const string& path,string &text);
+
+
 inline geometry_msgs::Point EigenToGeometryPoint(const Vec3d &vec_point){
     geometry_msgs::Point point;
     point.x = vec_point.x();

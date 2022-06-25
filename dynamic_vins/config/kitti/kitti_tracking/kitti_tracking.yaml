@@ -103,8 +103,8 @@ print_detail: 1
 ####################### Visualization Parameters ########################
 visual_inst_duration: 300  #duration of marker display
 
-pub_groundtruth_box: 1
-pub_predict_box: 1
+pub_groundtruth_box: 0
+pub_predict_box: 0
 pub_object_axis: 1
 pub_object_trajectory: 1
 

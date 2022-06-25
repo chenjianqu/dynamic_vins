@@ -94,6 +94,29 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
 }
 
 
+/**
+ * 将字符串写入到文件中
+ * @param path
+ * @param text
+ */
+void WriteTextFile(const string& path,string &text){
+    static std::set<string> path_set;
+    ///第一次,清空文件
+    if(path_set.find(path)==path_set.end()){
+        path_set.insert(path);
+        std::ofstream fout( path, std::ios::out);
+        fout.close();
+    }
+
+    ///添加到文件后面
+    std::ofstream fout(path, std::ios::app);
+    fout<<text<<endl;
+    fout.close();
+
+}
+
+
+
 cv::Scalar BgrColor(const string &color_str,bool is_norm){
     cv::Scalar color;
     color[3]=1.;

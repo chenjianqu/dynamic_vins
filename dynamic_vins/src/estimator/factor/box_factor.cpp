@@ -528,7 +528,7 @@ bool BoxEncloseStereoPointFactor::Evaluate(const double *const *parameters, doub
     Vec3d pts_obj_j=Q_woj.inverse()*(pts_w-P_woj);//k点在j时刻的物体坐标
     Vec3d abs_v=pts_obj_j.cwiseAbs();
     Vec3d vec_err = abs_v - dims/2;
-    vec_err *=5;
+    vec_err *=10;
     residuals[0]= std::max(0.,vec_err.x());
     residuals[1]= std::max(0.,vec_err.y());
     residuals[2]= std::max(0.,vec_err.z());
@@ -536,11 +536,11 @@ bool BoxEncloseStereoPointFactor::Evaluate(const double *const *parameters, doub
     counter++;
     string log_text;
 
-    /*if(counter%50==0){
-        log_text += fmt::format("Evaluate 开始\n inst_id:{} P_woj:{}, Q_woj:{},\n dims:{} pts_w:{}\n",
-                                inst_id,VecToStr(P_woj), QuaternionToStr(Q_woj),VecToStr(dims), VecToStr(pts_w));
-        log_text += fmt::format("Evaluate p_obj:{} 误差:{}\n", VecToStr(abs_v), VecToStr(vec_err));
-    }*/
+    if(counter%10==0){
+        //log_text += fmt::format("Evaluate 开始\n inst_id:{} P_woj:{}, Q_woj:{},\n dims:{} pts_w:{}\n",
+        //                        inst_id,VecToStr(P_woj), QuaternionToStr(Q_woj),VecToStr(dims), VecToStr(pts_w));
+        //log_text += fmt::format("Evaluate p_obj:{} 误差:{}\n", VecToStr(abs_v), VecToStr(vec_err));
+    }
 
     ///雅可比计算
     if (jacobians){
@@ -570,10 +570,10 @@ bool BoxEncloseStereoPointFactor::Evaluate(const double *const *parameters, doub
         }
 
     }
-    /*if(counter%50==0){
-        log_text += fmt::format("Evaluate 结束");
-        Debugv(log_text);
-    }*/
+    if(counter%10==0){
+        //log_text += fmt::format("Evaluate 结束");
+        //Debugv(log_text);
+    }
 
 
     return true;

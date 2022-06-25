@@ -143,8 +143,38 @@ struct LandmarkPoint{
         return feats.size();
     }
 
+    bool is_extra(){
+        return feats.front()->is_extra;
+    }
+
     void EraseBegin(){
-        feats.erase(feats.begin());
+        erase(feats.begin());
+    }
+
+    /**
+     * 删除路标点的某个观测,同时设置空路标点
+     * @param it
+     */
+    void erase(std::list<FeaturePoint::Ptr>::iterator it){
+        feats.erase(it);
+
+        if(feats.empty()){
+            bad=true;
+        }
+    }
+
+    void erase(std::list<FeaturePoint::Ptr>::iterator left,std::list<FeaturePoint::Ptr>::iterator right){
+        feats.erase(left,right);
+
+        if(feats.empty()){
+            bad=true;
+        }
+    }
+
+    FeaturePoint::Ptr& operator[](int index){
+        auto it=feats.begin();
+        std::advance(it,index);
+        return *it;
     }
 
     bool bad{false};//坏点

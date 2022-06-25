@@ -141,7 +141,6 @@ public:
 };
 
 
-
 class ProjInst21SimpleFactor : public ceres::SizedCostFunction<2,7,7, 1>{
 public:
     ProjInst21SimpleFactor(Vec3d _pts_j, Vec3d _pts_i,
@@ -184,7 +183,6 @@ public:
     Mat3d R_wbj,R_wbi,R_bc;
     Vec3d P_wbj,P_wbi,P_bc;
 };
-
 
 
 

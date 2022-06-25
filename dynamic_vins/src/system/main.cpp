@@ -172,7 +172,7 @@ void FeatureTrack()
 
             ///前端跟踪
             if(cfg::slam == SlamType::kDynamic){
-                insts_tracker->SetEstimatedInstancesInfo(estimator->insts_manager.GetOutputInstInfo());
+                insts_tracker->SetEstimatedInstancesInfo(estimator->im.GetOutputInstInfo());
                 TicToc t_i;
                 //开启另一个线程检测动态特征点
                 std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
@@ -223,7 +223,7 @@ void FeatureTrack()
 
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){
-                Publisher::PubTrackImage(feature_tracker->img_track(), img->time0);
+                ImagePublisher::Pub(feature_tracker->img_track(),"image_track");
                 /*cv::imshow("img",feature_tracker->img_track);
                 cv::waitKey(1);*/
                 /*string label=to_string(img.time0)+".jpg";

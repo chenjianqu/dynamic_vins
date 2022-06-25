@@ -60,8 +60,6 @@ public:
 
     static  void PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t);
 
-    static   void PubTrackImage(const cv::Mat &imgTrack, double t);
-
     static   void PrintStatistics(double t);
 
     static   void PubOdometry(const std_msgs::Header &header);
@@ -93,9 +91,19 @@ public:
 };
 
 
- void SaveInstanceTrajectory(unsigned int frame_id,unsigned int track_id,std::string &type,
-                                   int truncated,int occluded,double alpha,Vec4d &box,
-                                   Vec3d &dims,Vec3d &location,double rotation_y,double score);
+class ImagePublisher{
+public:
+    using Ptr=std::shared_ptr<ImagePublisher>;
+
+    ImagePublisher(ros::NodeHandle &n);
+
+    static void Pub(cv::Mat &img,const string &topic);
+
+
+    inline static ros::NodeHandle *nh;
+    inline static std::unordered_map<string,ros::Publisher> pub_map;
+
+};
 
 
 }

@@ -38,8 +38,10 @@ int Instance::SlideWindowOld()
     ///为了加快速度，先计算用于求坐标系变换的临时矩阵.使用的公式来自附录的第12条，temp_x表示公式的第x项
     Mat3d R_margin;
     Vec3d t_margin;
-    for(auto &landmark : landmarks){
-        if(landmark.frame() == 0 && landmark.feats.size() > 1 && (*(++landmark.feats.begin()))->frame == 1){ //此时才有必要计算
+    for(auto &lm : landmarks){
+        if(lm.bad)
+            continue;
+        if(lm.frame() == 0 && lm.size() > 1 && lm[1]->frame == 1){ //此时才有必要计算
             auto &R_bc = body.ric[0];
             auto R_cb = R_bc.transpose();
             auto &P_bc = body.tic[0];
@@ -57,13 +59,16 @@ int Instance::SlideWindowOld()
         }
     }
 
+    //Debugv("Instance::SlideWindowOld() inst:{} prepare",id);
+
     int debug_num=0;
 
     ///改变所有路标点的start_frame ,并保留最老帧中的特征点，寻找一个新的归宿
     for(auto &lm:landmarks){
-        if(lm.bad)
+        if(lm.bad){
             continue;
-        if(lm.frame() != 0){ ///起始观测不在0帧, 则将所有的观测的frame--
+        }
+        else if(lm.frame() != 0){ ///起始观测不在0帧, 则将所有的观测的frame--
             for(auto &feat : lm.feats){
                 feat->frame--;
             }
@@ -158,7 +163,7 @@ int Instance::SlideWindowNew()
         //删除上一帧中观测
         for(auto feat_it=lm.feats.begin();feat_it!=lm.feats.end();++feat_it){
             if((*feat_it)->frame == body.frame-1){
-                lm.feats.erase(feat_it);
+                lm.erase(feat_it);
                 break;
             }
         }
@@ -312,6 +317,74 @@ void Instance::OutlierRejection()
 
 
 /**
+ * 判断之前三角化得到的点是否在包围框内
+ * @return
+ */
+int Instance::OutlierRejectionByBox3d(){
+    int del_num=0;
+
+    double box_norm = box3d->dims.norm();
+
+    for(auto &lm:landmarks){
+        if(lm.bad)
+            continue;
+
+        ///根据包围框剔除双目3D点
+        for(auto &feat: lm.feats){
+            if(feat->is_triangulated &&feat->frame != body.frame){ //这里不剔除当前帧
+                bool is_outbox= false;
+                Vec3d point_obj = WorldToObject(feat->p_w,feat->frame);
+
+                if( (std::abs(point_obj.x()) >= 3*box3d->dims.x() ||
+                std::abs(point_obj.y()) > 3*box3d->dims.y() ||
+                std::abs(point_obj.z()) > 3*box3d->dims.z() ) ||
+                (point_obj.norm() > 3*box_norm)){
+                    is_outbox=true;
+                }
+
+                if(is_outbox && boxes3d[feat->frame]){
+                    Vec3d pts_cam = body.WorldToCam(feat->p_w,body.frame);
+                    if((pts_cam - boxes3d[feat->frame]->center_pt).norm() >
+                    3 * boxes3d[feat->frame]->dims.norm()){
+                        is_outbox = false;
+                    }
+                }
+
+                if(is_outbox){
+                    feat->is_triangulated=false;
+                    feat->is_stereo = false;
+                    del_num++;
+                }
+            }
+        }
+
+        ///根据包围框剔除单目三角化得到的点
+        if(lm.depth>0){
+            auto feat = lm.front();
+            bool is_outbox= false;
+            Vec3d point_obj = CamToObject(feat->point * lm.depth,body.frame);
+
+            if( (std::abs(point_obj.x()) >= 3*box3d->dims.x() ||
+            std::abs(point_obj.y()) > 3*box3d->dims.y() ||
+            std::abs(point_obj.z()) > 3*box3d->dims.z() ) ||
+            (point_obj.norm() > 3*box_norm)){
+                is_outbox=true;
+            }
+
+            if(is_outbox){
+                lm.EraseBegin();
+                lm.depth = -1;
+                del_num++;
+            }
+        }
+    }
+    return del_num;
+
+}
+
+
+
+/**
  * 删除被标记为bad的路标点
  * @return 删除的路标点的数量
  */
@@ -358,7 +431,9 @@ void Instance::SetOptimizeParameters()
 
     int index=-1;
     for(auto &lm : landmarks){
-        if(lm.depth<0.2 || lm.bad)
+        if(lm.bad
+        || lm.depth < 0.2
+        || lm.is_extra())
             continue;
         index++;
         para_inv_depth[index][0]= 1.0 / lm.depth;
@@ -405,7 +480,9 @@ void Instance::GetOptimizationParameters()
 
     int index=-1;
     for(auto &lm : landmarks){
-        if(lm.depth<0.2 || lm.bad)
+        if(lm.bad
+        || lm.depth < 0.2
+        || lm.is_extra())
             continue;
         index++;
         lm.depth= 1.0 / para_inv_depth[index][0];

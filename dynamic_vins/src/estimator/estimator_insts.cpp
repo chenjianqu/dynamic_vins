@@ -22,6 +22,7 @@
 #include "estimator/factor/box_factor.h"
 #include "utils/io/io_parameters.h"
 #include "utils/io/io_utils.h"
+#include "output.h"
 
 
 namespace dynamic_vins{\
@@ -38,6 +39,11 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
 {
     frame = frame_id;
 
+    for(auto &inst_pair : instances){
+        inst_pair.second.lost_number++;
+        inst_pair.second.is_curr_visible=false;
+    }
+
     if( input_insts.empty()){
         return;
     }
@@ -45,11 +51,6 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
            std::accumulate(input_insts.begin(), input_insts.end(), 0,
                            [](int sum, auto &p) { return sum + p.second.features.size(); }));
     string log_text;
-
-    for(auto &inst_pair : instances){
-        inst_pair.second.lost_number++;
-        inst_pair.second.is_curr_visible=false;
-    }
 
     for(auto &[instance_id , inst_feat] : input_insts){
         Debugv("PushBack 跟踪实例id:{} 特征点数:{}",instance_id,inst_feat.features.size());
@@ -73,8 +74,6 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                 Debugv("PushBack input box3d center:{},yaw:{} score:{}",
                        VecToStr(inst_feat.box3d->center_pt), inst_feat.box3d->yaw, inst_feat.box3d->score);
             }
-
-            tracking_number_++;
 
             for(auto &[feat_id,feat_ptr] : inst_feat.features){
                 LandmarkPoint lm(feat_id);//创建Landmark
@@ -105,7 +104,6 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
             if(!inst_iter->second.is_tracking){
                 inst_iter->second.is_tracking=true;
                 Debugv("重新发现目标 id:{}",inst_iter->second.id);
-                tracking_number_++;
             }
 
             for(auto &[feat_id,feat_ptr] : inst_feat.features){
@@ -124,13 +122,21 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
         }
     }
 
-    ///根据观测次数,对特征点进行排序
-    for(auto &[inst_id,inst] : instances){
+    //根据观测次数,对特征点进行排序
+    /*for(auto &[inst_id,inst] : instances){
         if(inst.lost_number==0){
             inst.landmarks.sort([](const LandmarkPoint &lp1,const LandmarkPoint &lp2){
                 return lp1.feats.size() > lp2.feats.size();});
         }
+    }*/
+
+    ///计算当前跟踪的物体数量
+    for(auto &inst_p : instances){
+        if(inst_p.second.is_curr_visible || inst_p.second.is_tracking){
+            tracking_number_++;
+        }
     }
+    Infov("tracking_number:{}",tracking_number_);
 
 }
 
@@ -147,9 +153,9 @@ void InstanceManager::Triangulate()
 
     auto getCamPose=[this](int index,int cam_id){
         assert(cam_id == 0 || cam_id == 1);
-        Mat34d pose;
         Vec3d t0 = body.Ps[index] + body.Rs[index] * body.tic[cam_id];
         Mat3d R0 = body.Rs[index] * body.ric[cam_id];
+        Mat34d pose;
         pose.leftCols<3>() = R0.transpose();
         pose.rightCols<1>() = -R0.transpose() * t0;
         return pose;
@@ -157,25 +163,36 @@ void InstanceManager::Triangulate()
 
     string log_text = "InstanceManager::Triangulate\n";
 
-    int num_triangle=0,num_failed=0,num_delete_landmark=0,num_mono=0;
     for(auto &[key,inst] : instances){
         if(!inst.is_tracking )
             continue;
 
         string log_inst_text;
 
-        int num_stereo=0;
+        int extra_triangle_succeed=0,extra_triangle_failed=0;
+        int stereo_triangle_succeed=0,stereo_triangle_failed=0;
+        int mono_triangle_succeed=0,mono_triangle_failed=0;
+
         for(auto &lm : inst.landmarks){
+            if(lm.bad)
+                continue;
             ///根据视差进行计算深度
-            if(lm.size()==1 && lm.front()->is_extra){
+            if(lm.front()->is_extra && lm.depth<=0){
                 if(lm.front()->disp > 0){
                     float depth = cam1->DepthFromDisparity(lm.front()->disp);
                     if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
                         lm.front()->is_triangulated = true;
                         lm.depth = depth;
                         lm.front()->p_w = body.CamToWorld(lm.front()->point*depth,frame);
-                        log_inst_text += fmt::format("un:{} d:{} pw:{}",VecToStr(lm.front()->point),
-                                                     depth,VecToStr(lm.front()->p_w))+"\n";
+                        //log_inst_text += fmt::format("un:{} d:{} pw:{} \n",VecToStr(lm.front()->point),
+                        //                             depth,VecToStr(lm.front()->p_w));
+                        extra_triangle_succeed++;
+                    }
+                    else{
+                        log_inst_text += fmt::format("un bad:{} d:{} \n",VecToStr(lm.front()->point),
+                                                     depth);
+                        lm.bad=true;
+                        extra_triangle_failed++;
                     }
                 }
                 continue;//extra点只有一个观测
@@ -186,7 +203,7 @@ void InstanceManager::Triangulate()
                 it_next++;
                 auto &feat = *it;
 
-                if(feat->is_stereo && !feat->is_triangulated){
+                if(feat->is_stereo && !feat->is_triangulated){ //对于未进行三角化的点
                     auto leftPose = getCamPose(feat->frame,0);
                     auto rightPose= getCamPose(feat->frame,1);
                     Vec2d point0 = feat->point.head(2);
@@ -199,66 +216,53 @@ void InstanceManager::Triangulate()
                     if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
                         feat->is_triangulated = true;
                         feat->p_w = point3d_w;
-                        num_stereo++;
+                        stereo_triangle_succeed++;
                         if(lm.depth <=0 ){//这里的情况更加复杂一些,只有当该路标点未初始化时,才会进行初始化
-                            ///清空该点之前的观测
-                            lm.feats.erase(lm.feats.begin(),it);
+                            //清空该点之前的观测
+                            lm.erase(lm.feats.begin(),it);
                             lm.depth = depth;
                         }
                     }
                     else{
+                        stereo_triangle_failed++;
                         feat->is_stereo=false;
                     }
                 }
-
             }
 
         }
 
-        log_inst_text += fmt::format("add num_stereo:{} \n",num_stereo);
+        ///下面是单目的三角化
 
-
-        ///下面初始化每个路标的深度值
-
-        int inst_add_num=0;
         //double avg_depth= inst.AverageDepth();//在当前帧平均深度
 
         for(auto &lm:inst.landmarks){
-            if(lm.depth > 0 || lm.feats.empty() || lm.bad)
+            if(lm.depth > 0
+            || lm.bad
+            || (lm.size()==1  ) //只有一个单目观测,且不在当前帧,则删除
+            ){
                 continue;
+            }
+
             int imu_i = lm.frame();
             Eigen::Vector3d point3d_w;
-            ///额外点
-            if(lm.front()->is_extra && lm.front()->is_triangulated){
-                point3d_w = lm.front()->p_w;
-                log_inst_text += fmt::format("lid:{} E ,point3d_w:{}\n",lm.id, VecToStr(point3d_w));
-            }
-            ///双目三角化,由于其它函数可能会将lm.depth 设置为-1,因此下面的分支可能会执行
-            else if(lm.front()->is_stereo && lm.front()->is_triangulated){
-                point3d_w = lm.front()->p_w;
-                log_inst_text += fmt::format("lid:{} S ,point3d_w:{}\n",lm.id, VecToStr(point3d_w));
-            }
+
             ///单目三角化，以开始帧和开始帧的后一帧的观测作为三角化的点
-            else if(lm.size() >= 2){
-                Mat34d leftPose = getCamPose(imu_i,0);
-                auto feat_j = (++lm.feats.begin());
-                int imu_j=(*feat_j)->frame;
-                Mat34d rightPose = getCamPose(imu_j,0);
-                Vec2d point0 = lm.front()->point.head(2);
-                Vec2d point1 = (*feat_j)->point.head(2);
-                if(inst.is_initial){
-                    TriangulateDynamicPoint(leftPose, rightPose, point0, point1,
-                                            inst.state[imu_i].R, inst.state[imu_i].P,
-                                            inst.state[imu_j].R, inst.state[imu_j].P, point3d_w);
-                    log_inst_text += fmt::format("lid:{} M init ,point3d_w:{}\n",lm.id, VecToStr(point3d_w));
-                }
-                else{
-                    TriangulatePoint(leftPose, rightPose, point0, point1, point3d_w);
-                    log_inst_text += fmt::format("lid:{} M not_init ,point3d_w:{}\n",lm.id, VecToStr(point3d_w));
-                }
+            Mat34d leftPose = getCamPose(imu_i,0);
+            auto &feat_j = lm[1];
+            int imu_j=feat_j->frame;
+            Mat34d rightPose = getCamPose(imu_j,0);
+            Vec2d point0 = lm.front()->point.head(2);
+            Vec2d point1 = feat_j->point.head(2);
+            if(inst.is_initial){
+                TriangulateDynamicPoint(leftPose, rightPose, point0, point1,
+                                        inst.state[imu_i].R, inst.state[imu_i].P,
+                                        inst.state[imu_j].R, inst.state[imu_j].P, point3d_w);
+                //log_inst_text += fmt::format("lid:{} M init ,point3d_w:{}\n",lm.id, VecToStr(point3d_w));
             }
             else{
-                continue;
+                TriangulatePoint(leftPose, rightPose, point0, point1, point3d_w);
+                //log_inst_text += fmt::format("lid:{} M not_init ,point3d_w:{}\n",lm.id, VecToStr(point3d_w));
             }
 
             //将点投影当前帧
@@ -268,63 +272,60 @@ void InstanceManager::Triangulate()
             if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){ //判断深度值是否符合
                 if(!inst.is_initial || inst.triangle_num < 5){ //若未初始化或路标点太少，则加入
                     lm.depth = depth;
-                    inst_add_num++;
-                    log_inst_text+=fmt::format("lid:{} NotInit d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                    mono_triangle_succeed++;
+                    //log_inst_text+=fmt::format("lid:{} NotInit d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
                 }
                 else{ //判断是否在包围框附近
                     Eigen::Vector3d pts_obj_j= inst.WorldToObject(point3d_w,imu_i);
                     if(pts_obj_j.norm() < inst.box3d->dims.norm()*3){
                         lm.depth = depth;
-                        inst_add_num++;
-                        log_inst_text+=fmt::format("lid:{} d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                        mono_triangle_succeed++;
+                        //log_inst_text+=fmt::format("lid:{} d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
                     }
                     else{
-                        log_inst_text+=fmt::format("lid:{} outbox d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                        lm.bad=true;
+                        //log_inst_text+=fmt::format("lid:{} outbox d:{:.2f} p:{}\n", lm.id, depth, VecToStr(point3d_w));
+                        mono_triangle_failed++;
                     }
                 }
             }
             else{///深度值太大或太小
-                num_failed++;
-                if(lm.size() == 1){//删除该路标
-                    lm.bad=true;
-                    num_delete_landmark++;
-                }
-                else{//删除该观测
-                    lm.EraseBegin();
-                }
+                lm.bad=true;
+                mono_triangle_failed++;
             }
         }
 
-        log_text += fmt::format("inst:{} landmarks.size:{} depth.size:{} new_add:{}\n",
-                                inst.id, inst.landmarks.size(), inst.triangle_num, inst_add_num);
         log_text += log_inst_text;
-        num_triangle += inst_add_num;
+
+        inst.set_triangle_num();
+        log_text += fmt::format("inst:{} landmarks.size:{} triangle_size:{} valid:{}\n",
+                                inst.id, inst.landmarks.size(), inst.triangle_num, inst.valid_size());
+        log_text += fmt::format("extra_triangle_succeed:{} failed:{} stereo_triangle_succeed:{} failed:{} mono_triangle_succeed:{} failed:{} \n",
+                                extra_triangle_succeed,extra_triangle_failed,stereo_triangle_succeed,stereo_triangle_failed,
+                                mono_triangle_succeed,mono_triangle_failed);
     }
 
-    if(num_triangle>0 || num_delete_landmark>0){
-        log_text += fmt::format("InstanceManager::Triangulate: 增加:{}=(M:{},S:{}) 失败:{} 删除:{}",
-               num_triangle, num_mono, num_triangle - num_mono,
-               num_failed, num_delete_landmark);
-    }
     Debugv(log_text);
 }
+
+
+
 
 
 void InstanceManager::ManageTriangulatePoint()
 {
     string log_text="InstanceManager::ManageTriangulatePoint\n";
 
+    ///对已初始化的路标点根据包围框进行剔除操作
     for(auto &[key,inst] : instances){
-        if(!inst.is_tracking)
+        if(inst.landmarks.empty()
+        || !inst.is_initial //未初始化
+        || inst.valid_size() < 50 //路标太少,不进行删除
+        )
             continue;
-        ///路标太少,不进行删除
-        if(inst.landmarks.size()<10){
-            continue;
-        }
 
-        double box_norm = inst.box3d->dims.norm();
-
-        std::array<int,11> statistics{0};//统计
+        ///统计各个帧的观测次数
+        std::array<int,11> statistics{0};
         for(auto &lm:inst.landmarks){
             if(lm.bad)
                 continue;
@@ -337,101 +338,71 @@ void InstanceManager::ManageTriangulatePoint()
         if(statistics[kWinSize-1]<=2){
             continue;
         }
-        log_text += fmt::format("inst:{} \n",inst.id);
 
-        for(auto &lm:inst.landmarks){
-
-            ///判断之前三角化得到的点是否在包围框内
-            if(inst.is_initial){
-                string s;
-
-                ///根据包围框剔除双目3D点
-                for(auto &feat: lm.feats){
-                    if(feat->is_triangulated &&feat->frame != body.frame){ //这里不剔除当前帧
-                        bool is_outbox= false;
-                        Vec3d point_obj = inst.WorldToObject(feat->p_w,feat->frame);
-
-                        if( (std::abs(point_obj.x()) >= 3*inst.box3d->dims.x() ||
-                        std::abs(point_obj.y()) > 3*inst.box3d->dims.y() ||
-                        std::abs(point_obj.z()) > 3*inst.box3d->dims.z() ) ||
-                        (point_obj.norm() > 3*box_norm)){
-                            is_outbox=true;
-                        }
-
-                        if(is_outbox && inst.boxes3d[feat->frame]){
-                            Vec3d pts_cam = body.WorldToCam(feat->p_w,frame);
-                            if((pts_cam - inst.boxes3d[feat->frame]->center_pt).norm() >
-                            3 * inst.boxes3d[feat->frame]->dims.norm()){
-                                is_outbox = false;
-                            }
-                        }
-
-                        if(is_outbox){
-                            feat->is_triangulated=false;
-                            feat->is_stereo = false;
-                            s += fmt::format("del S {}-{} ",feat->frame, VecToStr(feat->p_w));
-                        }
-                    }
-                }
-                if(!s.empty()){
-                    log_text += fmt::format("del lid:{} {}\n",lm.id,s);
-                }
-
-
-                ///根据包围框剔除单目三角化得到的点
-                if(lm.depth>0){
-                    auto feat = lm.front();
-                    bool is_outbox= false;
-                    Vec3d point_obj = inst.CamToObject(feat->point * lm.depth,frame);
-
-                    if( (std::abs(point_obj.x()) >= 3*inst.box3d->dims.x() ||
-                    std::abs(point_obj.y()) > 3*inst.box3d->dims.y() ||
-                    std::abs(point_obj.z()) > 3*inst.box3d->dims.z() ) ||
-                    (point_obj.norm() > 3*box_norm)){
-                        is_outbox=true;
-                    }
-
-                    if(is_outbox){
-                        lm.EraseBegin();
-                        lm.depth = -1;
-                        s += fmt::format("del T {}-d:{} ",feat->frame, lm.depth);
-                    }
-                }
-
-            }
-        }
-
+        int del_num = inst.OutlierRejectionByBox3d();
+        log_text += fmt::format("inst:{} del by box:{}\n",key,del_num);
     }
 
     Debugv(log_text);
 
+    ///路标点太多,删除
+    log_text="";
 
     for(auto &[key,inst] : instances){
-        if(!inst.is_tracking)
-            continue;
-
+        ///计算三角化的路标点数量
         inst.triangle_num=0;
-        for(auto &lm:inst.landmarks){
-            if(lm.bad)
-                continue;
-            if(lm.depth>0){
-                inst.triangle_num++;
-            }
-        }
-
-        if(inst.triangle_num < 50)
+        if(inst.landmarks.empty()){
             continue;
+        }
 
-        for(auto &lm:inst.landmarks){
-            if( lm.size()<=1 && !lm.front()->is_extra && lm.frame() < frame && lm.depth<=0){ //只有一个观测,且该观测不在当前帧
-                lm.bad=true;
-            }
-            if(inst.triangle_num <10){
-                break;
+        inst.set_triangle_num();
+
+        constexpr int KEEP_SIZE=-100;
+        int cnt_del_nodepth=0;
+
+        ///先删除所有的非当前帧,且未三角化的路标点
+        if(inst.triangle_num > KEEP_SIZE){
+            for(auto &lm:inst.landmarks){
+                if(lm.bad)
+                    continue;
+                else if(lm.depth<=0){
+                    if( (lm.frame()!=frame) ||
+                        (lm.frame()==frame && lm.is_extra())){
+                        lm.bad=true;
+                        cnt_del_nodepth++;
+                    }
+                }
             }
         }
+
+        ///删除了大部分的未三角化路标点后,剩下的路标点数量仍然非常多,则删除所有非当前帧的额外点直到只剩150个有效点
+        int cnt_del_valid_num=0;
+        if(int cnt= inst.valid_size(); cnt > KEEP_SIZE){
+            cnt -= KEEP_SIZE;
+            for(auto &lm:inst.landmarks){
+                if(lm.bad)
+                    continue;
+
+                if(lm.is_extra() && lm.frame()!=frame){
+                    lm.bad=true;
+                    cnt--;
+                    cnt_del_valid_num++;
+                }
+
+                if(cnt<=0){
+                    break;
+                }
+            }
+        }
+
+        inst.set_triangle_num();
+        log_text+=fmt::format("inst:{}  cnt_del_nodepth:{} cnt_del_valid_num:{} remain triangle_num:{} valid:{} all:{}\n",
+                              inst.id, cnt_del_nodepth,cnt_del_valid_num,
+                              inst.triangle_num, inst.valid_size(), inst.landmarks.size());
 
     }
+
+    Debugv(log_text);
 
 }
 
@@ -450,6 +421,10 @@ void InstanceManager::PropagatePose()
     double time_ij= body.headers[frame] - body.headers[last_frame];
 
     InstExec([&](int key,Instance& inst){
+
+        if(!inst.is_tracking){
+            return;
+        }
 
         //inst.vel = inst.point_vel;
 
@@ -524,7 +499,7 @@ void InstanceManager::SlideWindow(const MarginFlag &flag)
     string log_text="InstanceManager::SlideWindow\n";
 
     for(auto &[key,inst] : instances){
-        if(!inst.is_tracking)
+        if(!inst.is_tracking && inst.landmarks.empty())
             continue;
 
         int debug_num=0;
@@ -533,13 +508,7 @@ void InstanceManager::SlideWindow(const MarginFlag &flag)
         else/// 去掉次新帧
             debug_num= inst.SlideWindowNew();
 
-        inst.triangle_num=0;
-        for(auto &lm:inst.landmarks){
-            if(lm.bad)continue;
-            if(lm.depth>0){
-                inst.triangle_num++;
-            }
-        }
+        inst.set_triangle_num();
 
         if(debug_num>0){
             log_text+=fmt::format("Inst:{},del:{} \n", inst.id, debug_num);
@@ -548,7 +517,6 @@ void InstanceManager::SlideWindow(const MarginFlag &flag)
         ///当物体没有正在跟踪的特征点时，将其设置为不在跟踪状态
         if(inst.landmarks.empty()){
             inst.ClearState();
-            tracking_number_--;
             log_text+=fmt::format("inst_id:{} ClearState\n", inst.id);
         }
         else if(inst.is_tracking && inst.triangle_num==0){
@@ -556,9 +524,11 @@ void InstanceManager::SlideWindow(const MarginFlag &flag)
             log_text+=fmt::format("inst_id:{} set is_initial=false\n", inst.id);
         }
 
+        Debugv(log_text);
+        log_text="";
+
     }
 
-    Debugv(log_text);
 }
 
 
@@ -631,7 +601,7 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
             inst.age++;
         }
 
-        if(inst.is_initial || !inst.is_tracking)
+        if(inst.is_initial || !inst.is_tracking || inst.valid_size() <= 0)
             continue;
 
         ///寻找当前帧三角化的路标点
@@ -744,6 +714,7 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
                 lm.bad=true;
             }
         }
+
         for(auto &lm:inst.landmarks){
             if(lm.bad)
                 continue;
@@ -751,7 +722,7 @@ void InstanceManager::InitialInstance(std::map<unsigned int,FeatureInstance> &in
                 for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
                     it_next++;
                     if((*it)->frame < frame) {
-                        lm.feats.erase(it); //删掉掉前面的观测
+                        lm.erase(it); //删掉掉前面的观测
                     }
                 }
                 if(lm.depth > 0){
@@ -789,12 +760,12 @@ void InstanceManager::SetDynamicOrStatic(){
         Vec3d point_v=Vec3d::Zero();
 
         for(auto &lm : inst.landmarks){
-            if(lm.bad)
+            if(lm.bad
+            || lm.depth<=0
+            || lm.size() <= 1){
                 continue;
-            if(lm.depth<=0)
-                continue;
-            if(lm.size() <= 1)
-                continue;
+            }
+
             //计算第一个观测所在的世界坐标
             Vec3d ref_vec;
             double ref_time;
@@ -860,6 +831,18 @@ void InstanceManager::SetDynamicOrStatic(){
         },true);
 
     Debugv(log_text);
+}
+
+
+void InstanceManager::DeleteBadLandmarks(){
+
+    for(auto &[key,inst]:instances){
+        if(inst.landmarks.empty())
+            continue;
+        int del =  inst.DeleteBadLandmarks();
+        Debugv("inst:{} del bad num:{}",inst.id,del);
+    }
+
 }
 
 
@@ -934,10 +917,17 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
     if(tracking_number_ < 1)
         return;
 
+    ///DEBUG
+    PrintFactorDebugMsg(*this);
+
+
     for(auto &[key,inst] : instances){
         if(!inst.is_initial || !inst.is_tracking)
             continue;
-        if(inst.landmarks.size()<1)
+        if(inst.valid_size() < 1)
+            continue;
+
+        if(key!=1)
             continue;
 
         std::unordered_map<string,int> statistics;//用于统计每个误差项的数量
@@ -946,29 +936,28 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
         for(int i=0;i<=kWinSize;++i){
             if(inst.boxes3d[i]){
                 ///包围框大小误差
-                problem.AddResidualBlock(new BoxDimsFactor(inst.boxes3d[i]->dims),loss_function,inst.para_box[0]);
-                statistics["BoxDimsFactor"]++;
+                /*problem.AddResidualBlock(new BoxDimsFactor(inst.boxes3d[i]->dims),loss_function,inst.para_box[0]);
+                statistics["BoxDimsFactor"]++;*/
                 ///物体的方向误差
                 //Mat3d R_cioi = Box3D::GetCoordinateRotationFromCorners(inst.boxes3d[i]->corners);
-                Mat3d R_cioi = inst.boxes3d[i]->R_cioi();
+                /*Mat3d R_cioi = inst.boxes3d[i]->R_cioi();
                 problem.AddResidualBlock(
                         new BoxOrientationFactor(R_cioi,body.ric[0]),
                         nullptr,body.para_Pose[i],inst.para_state[i]);
-                statistics["BoxOrientationFactor"]++;
+                statistics["BoxOrientationFactor"]++;*/
 
                 /*problem.AddResidualBlock(new BoxPoseFactor(R_cioi,inst.boxes3d[i]->center,body.ric[0],body.tic[0]),
                                          loss_function,body.para_Pose[i],inst.para_state[i]);
                 statistics["BoxPoseFactor"]++;*/
 
                 ///包围框中心误差
-                if(inst.boxes3d[i]->center_pt.norm() < 50){
+                /*if(inst.boxes3d[i]->center_pt.norm() < 50){
                     problem.AddResidualBlock(new BoxPositionFactor(inst.boxes3d[i]->center_pt,
                                                                    body.ric[0],body.tic[0],
                                                                    body.Rs[i],body.Ps[i]),
                                              loss_function,inst.para_state[i]);
                     statistics["BoxPositionFactor"]++;
-                }
-
+                }*/
 
                 /*///添加顶点误差
                 //效果不好
@@ -999,27 +988,41 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                statistics["BoxVertexFactor"]++;*/
             }
         }
-        if(inst.boxes3d[kWinSize]){
+        /*if(inst.boxes3d[kWinSize]){
             problem.AddResidualBlock(new BoxPositionFactor(inst.boxes3d[kWinSize]->center_pt,
                                                                body.ric[0], body.tic[0],
                                                                body.Rs[kWinSize], body.Ps[kWinSize]),
                                      loss_function,inst.para_state[kWinSize]);
             statistics["BoxPositionFactor"]++;
+        }*/
+
+        ///额外点的约束
+        for(auto &lm:inst.landmarks){
+            if(!lm.bad && lm.is_extra() && lm.depth >0){
+                problem.AddResidualBlock(
+                        new BoxEncloseStereoPointFactor(lm.front()->p_w,inst.box3d->dims,inst.id),
+                        loss_function,
+                        inst.para_state[lm.frame()]);
+                statistics["BoxEncloseStereoPointFactor_extra"]++;
+
+
+            }
         }
 
 
         int depth_index=-1;//注意,这里的depth_index的赋值过程要与 Instance::SetOptimizeParameters()中depth_index的赋值过程一致
         for(auto &lm : inst.landmarks){
-            if(lm.bad)
+            if(lm.bad
+            || lm.depth < 0.2
+            || lm.is_extra())
                 continue;
-            if(lm.depth < 0.2)
-                continue;
+
             depth_index++;
 
             auto feat_j=lm.front();
 
             ///根据3D应该要落在包围框内产生的误差
-            for(auto &feat : lm.feats){
+          /*  for(auto &feat : lm.feats){
                 if(feat->is_triangulated){
                     problem.AddResidualBlock(
                             new BoxEncloseStereoPointFactor(feat->p_w,inst.box3d->dims,inst.id),
@@ -1028,12 +1031,13 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                     statistics["BoxEncloseStereoPointFactor"]++;
                 }
             }
+
             problem.AddResidualBlock(new BoxEncloseTrianglePointFactor(
                     feat_j->point,feat_j->vel,body.Rs[feat_j->frame],body.Ps[feat_j->frame],
                     body.ric[0],body.tic[0],feat_j->td,body.td),
                                      loss_function,
                                      inst.para_state[feat_j->frame],inst.para_box[0],inst.para_inv_depth[depth_index]);
-            statistics["BoxEncloseTrianglePointFactor"]++;
+            statistics["BoxEncloseTrianglePointFactor"]++;*/
 
 
             if(inst.is_static){
@@ -1209,10 +1213,9 @@ void InstanceManager::AddResidualBlockForJointOpt(ceres::Problem &problem, ceres
 
         int depth_index=-1;//注意,这里的depth_index的赋值过程要与 Instance::SetOptimizeParameters()中depth_index的赋值过程一致
         for(auto &lm : inst.landmarks){
-            if(lm.bad)
+            if(lm.bad || lm.depth < 0.2 || lm.is_extra())
                 continue;
-            if(lm.depth < 0.2)
-                continue;
+
             depth_index++;
             auto feat_j=lm.front();
             int fj=feat_j->frame;
