@@ -27,8 +27,8 @@ struct Velocity{
     Velocity()=default;
 
     void SetZero(){
-        v=Vec3d::Zero();
-        a=Vec3d::Zero();
+        v.setZero();
+        a.setZero();
     }
     Vec3d v{0,0,0};
     Vec3d a{0,0,0};

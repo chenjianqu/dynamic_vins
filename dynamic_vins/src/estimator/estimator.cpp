@@ -1536,7 +1536,7 @@ void Estimator::ProcessMeasurements(){
 
         if(cfg::slam == SlamType::kDynamic){
             //printInstanceData(*this);
-            Publisher::PubInstancePointCloud(header);
+            Publisher::PubInstances(header);
 
             cv::Mat img_topview = DrawTopView(im);
             ImagePublisher::Pub(img_topview,"top_view");

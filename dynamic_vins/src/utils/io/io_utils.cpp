@@ -99,17 +99,17 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
  * @param path
  * @param text
  */
-void WriteTextFile(const string& path,string &text){
-    static std::set<string> path_set;
+void WriteTextFile(std::string_view path,std::string_view text){
+    static std::set<std::string_view> path_set;
     ///第一次,清空文件
     if(path_set.find(path)==path_set.end()){
         path_set.insert(path);
-        std::ofstream fout( path, std::ios::out);
+        std::ofstream fout( path.data(), std::ios::out);
         fout.close();
     }
 
     ///添加到文件后面
-    std::ofstream fout(path, std::ios::app);
+    std::ofstream fout(path.data(), std::ios::app);
     fout<<text<<endl;
     fout.close();
 

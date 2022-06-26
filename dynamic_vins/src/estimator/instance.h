@@ -138,7 +138,13 @@ public:
         is_init_velocity=false;
         is_initial = false;
         is_tracking = false;
+        is_curr_visible=false;
+        is_static=false;
         age=0;
+
+        vel.SetZero();
+
+        Debugv("ClearState() inst:{}",id);
     }
 
     vector<Eigen::Vector3d> point3d_curr;
@@ -154,6 +160,8 @@ public:
     bool is_tracking{true};//是否在滑动窗口中
     bool is_curr_visible{false};//当前帧是否可见
     bool is_static{false};//物体是运动的还是静态的
+    bool is_init_velocity{false};
+
 
     State state[(kWinSize + 1)]{}; //物体的位姿
     Velocity vel,last_vel;//物体的速度
@@ -161,7 +169,6 @@ public:
     Velocity point_vel;
     std::list<Velocity> history_vel;
 
-    bool is_init_velocity{false};
 
     //优化过程中的变量
     double para_state[kWinSize + 1][kSizePose]{};

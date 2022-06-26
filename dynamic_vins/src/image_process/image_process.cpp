@@ -155,7 +155,7 @@ void ImageProcessor::Run(SemanticImage &img) {
 
             }
         }
-        Infos("ImageProcess SetMask: {}", tt.TocThenTic());
+        Infos("ImageProcess SetMask: {} ms", tt.TocThenTic());
 
         string log_text="detector2d results:\n";
         for(auto &box2d:img.boxes2d){

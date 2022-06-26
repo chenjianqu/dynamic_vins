@@ -250,7 +250,7 @@ void Instance::OutlierRejection()
         bool is_in_box = (std::abs(pts_oi.x()) < factor* box3d->dims.x()) && (std::abs(pts_oi.y())<factor*box3d->dims.y() ) &&
                 (std::abs(pts_oi.z()) < factor*box3d->dims.z());
         if(!is_in_box){
-            log_text += fmt::format("del outbox lid:{},d:{:.2f},pts_oi:{} \n", lm.id, lm.depth, VecToStr(pts_oi));
+           // log_text += fmt::format("del outbox lid:{},d:{:.2f},pts_oi:{} \n", lm.id, lm.depth, VecToStr(pts_oi));
             lm.EraseBegin();
             lm.depth=-1;
             if(lm.feats.empty()){
@@ -290,7 +290,7 @@ void Instance::OutlierRejection()
         double ave_err = err / err_cnt * kFocalLength;
         index++;
         if(ave_err > 30){
-            log_text += fmt::format("del lid:{},d:{:.2f},avg:{:.2f} \n", lm.id, lm.depth, ave_err);
+            //log_text += fmt::format("del lid:{},d:{:.2f},avg:{:.2f} \n", lm.id, lm.depth, ave_err);
             lm.EraseBegin();
             lm.depth=-1;
             if(lm.feats.empty()){
@@ -301,7 +301,7 @@ void Instance::OutlierRejection()
 
         }
         else{
-            log_text += fmt::format("del lid:{} not_finite,d:{:.2f} \n", lm.id, lm.depth);
+            //log_text += fmt::format("del lid:{} not_finite,d:{:.2f} \n", lm.id, lm.depth);
             lm.EraseBegin();
             lm.depth=-1;
             if(lm.feats.empty()){
@@ -328,6 +328,20 @@ int Instance::OutlierRejectionByBox3d(){
     for(auto &lm:landmarks){
         if(lm.bad)
             continue;
+
+        ///剔除额外点
+        if(lm.is_extra()){
+            if(lm.depth>0){
+                Vec3d point_obj = WorldToObject(lm.front()->p_w,lm.frame());
+                if( (std::abs(point_obj.x()) >= 3*box3d->dims.x() ||
+                std::abs(point_obj.y()) > 2*box3d->dims.y() ||
+                std::abs(point_obj.z()) > 2*box3d->dims.z() ) ||
+                (point_obj.norm() > 3*box_norm)){
+                    lm.bad = true;
+                }
+            }
+            continue;
+        }
 
         ///根据包围框剔除双目3D点
         for(auto &feat: lm.feats){
@@ -397,6 +411,11 @@ int Instance::DeleteBadLandmarks(){
             cnt++;
         }
     }
+
+    if(landmarks.empty()){
+        ClearState();
+    }
+
     return cnt;
 }
 
@@ -458,14 +477,18 @@ void Instance::GetOptimizationParameters()
     box3d->dims.z()=para_box[0][2];
 
     for(int i=0;i<=kWinSize;++i){
+        Vec3d step = Vec3d(para_state[i][0],para_state[i][1],para_state[i][2]) - state[i].P;
+
         ///限制其单帧位移不能太大
-        if((state[i].P - Vec3d(para_state[i][0],para_state[i][1],para_state[i][2])).norm() > 10){
-            continue;
+        if(step.norm() > 10){
+            Vec3d step_constraint = step.normalized() * 10.;
+            Warnv("To much step in inst:{} frame:{}, raw step:{}, used step:{}",
+                  id,i,VecToStr(step), VecToStr(step_constraint));
+            step = step_constraint;
         }
 
-        state[i].P.x()=para_state[i][0];
-        state[i].P.y()=para_state[i][1];
-        state[i].P.z()=para_state[i][2];
+        state[i].P = state[i].P + step;
+
         Eigen::Quaterniond q(para_state[i][6],para_state[i][3],para_state[i][4],para_state[i][5]);
         q.normalize();
         state[i].R=q.toRotationMatrix();

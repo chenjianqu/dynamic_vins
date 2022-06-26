@@ -11,6 +11,7 @@
 #include "box_factor.h"
 #include "utils/log_utils.h"
 #include "utils/box3d.h"
+#include "utils/io/io_utils.h"
 
 namespace dynamic_vins{\
 
@@ -536,11 +537,6 @@ bool BoxEncloseStereoPointFactor::Evaluate(const double *const *parameters, doub
     counter++;
     string log_text;
 
-    if(counter%10==0){
-        //log_text += fmt::format("Evaluate 开始\n inst_id:{} P_woj:{}, Q_woj:{},\n dims:{} pts_w:{}\n",
-        //                        inst_id,VecToStr(P_woj), QuaternionToStr(Q_woj),VecToStr(dims), VecToStr(pts_w));
-        //log_text += fmt::format("Evaluate p_obj:{} 误差:{}\n", VecToStr(abs_v), VecToStr(vec_err));
-    }
 
     ///雅可比计算
     if (jacobians){
@@ -570,10 +566,18 @@ bool BoxEncloseStereoPointFactor::Evaluate(const double *const *parameters, doub
         }
 
     }
-    if(counter%10==0){
-        //log_text += fmt::format("Evaluate 结束");
-        //Debugv(log_text);
-    }
+
+
+    ///Debug
+    /*if(lid%20==0){
+        log_text = fmt::format("Evaluate开始 lid:{} counter:{}\n",lid,counter);
+        log_text += fmt::format("P_woj:{}, Q_woj:{},\n dims:{} pts_w:{}\n",
+                                VecToStr(P_woj), QuaternionToStr(Q_woj),VecToStr(dims), VecToStr(pts_w));
+        log_text += fmt::format("Evaluate p_obj:{} 误差:{}\n", VecToStr(abs_v), VecToStr(vec_err));
+        log_text += fmt::format("Evaluate结束");
+
+        WriteTextFile(MyLogger::kLogOutputDir + "FactorDebugMsg.txt",log_text);
+    }*/
 
 
     return true;

@@ -37,6 +37,8 @@ void SemanticImage::SetMask(){
     cv::cuda::bitwise_not(merge_mask_gpu,inv_merge_mask_gpu);
     inv_merge_mask_gpu.download(inv_merge_mask);
 
+    Debugs("SemanticImage::SetMask() set inv_merge_mask_gpu");
+
     /*std::stringstream ss;
     ss<<merge_tensor.scalar_type();
     Debugs("SetMaskGpu merge_tensor:type:{}", ss.str());
@@ -55,6 +57,8 @@ void SemanticImage::SetMask(){
         boxes2d[i]->mask_center=cv::Point2f(center_inds.index({1}).item().toFloat(),
                                            center_inds.index({0}).item().toFloat());*/
     }
+    Debugs("SemanticImage::SetMask() finished");
+
 }
 
 

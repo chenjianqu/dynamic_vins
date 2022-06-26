@@ -19,12 +19,16 @@ namespace dynamic_vins{ \
 
 
 
+
+
+
+
 string PrintFactorDebugMsg(InstanceManager& im){
     string log_text=fmt::format("***********PrintFactorDebugMsg:{}***************\n",body.frame_time);
 
     for(auto &[key,inst]:im.instances){
         if(key==1){
-            log_text += fmt::format("inst:{} P_woj:{} \n",key, VecToStr(inst.state[body.frame].P));
+            log_text += fmt::format("Time:{} inst:{} P_woj:{} \n",body.frame_time,key, VecToStr(inst.state[body.frame].P));
             log_text += fmt::format("dims:{} \n", VecToStr(inst.box3d->dims));
 
             for(auto &lm:inst.landmarks){
@@ -55,11 +59,15 @@ string PrintFeaturesInfo(InstanceManager& im, bool output_lm, bool output_stereo
 
     string s =fmt::format("--------------InstanceInfo : {} --------------\n",body.headers[body.frame]);
     im.InstExec([&s,&output_lm,&output_stereo](int key,Instance& inst){
+
+        if(key!=1)
+            return;
+
         if(inst.is_tracking){
-            s+= fmt::format("inst_id:{} landmarks:{} is_init:{} is_tracking:{} is_static:{} "
+            s+= fmt::format("Time:{} inst:{} landmarks:{} is_init:{} is_tracking:{} is_static:{} "
                             "is_init_v:{} triangle_num:{} curr_avg_depth:{}\n",
-                            inst.id,inst.landmarks.size(),inst.is_initial,inst.is_tracking,inst.is_static,inst.is_init_velocity,
-                            inst.triangle_num,inst.AverageDepth());
+                            body.frame_time,inst.id,inst.landmarks.size(),inst.is_initial,inst.is_tracking,
+                            inst.is_static,inst.is_init_velocity,inst.triangle_num,inst.AverageDepth());
             if(!output_lm)
                 return;
 
@@ -121,7 +129,11 @@ string PrintInstancePoseInfo(InstanceManager& im,bool output_lm){
     string log_text =fmt::format("--------------PrintInstancePoseInfo : {} --------------\n",body.headers[body.frame]);
 
     im.InstExec([&log_text,&output_lm](int key,Instance& inst){
-        log_text += fmt::format("inst_id:{} info:\n box:{} v:{} a:{}\n",inst.id,
+
+        if(key!=1)
+            return;
+
+        log_text += fmt::format("Time:{} inst_id:{} info:\n box:{} v:{} a:{}\n",body.frame_time,inst.id,
                                 VecToStr(inst.box3d->dims),VecToStr(inst.vel.v),VecToStr(inst.vel.a));
         for(int i=0; i <= kWinSize; ++i){
             log_text+=fmt::format("{},P:({}),R:({})\n", i, VecToStr(inst.state[i].P),

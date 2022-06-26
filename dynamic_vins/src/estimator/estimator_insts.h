@@ -44,8 +44,6 @@ public:
 
     void PropagatePose();
 
-    void GetOptimizationParameters();
-
     void SlideWindow(const MarginFlag &flag);
 
     void AddInstanceParameterBlock(ceres::Problem &problem);
@@ -56,6 +54,8 @@ public:
 
 
     void InitialInstance(std::map<unsigned int,FeatureInstance> &input_insts);
+
+    void SetDynamicOrStatic();
 
     void InitialInstanceVelocity();
 
@@ -73,11 +73,7 @@ public:
         });
     }
 
-    void SetInstanceCurrentPoint3d(){
-        InstExec([](int key,Instance& inst){
-            inst.SetCurrentPoint3d();
-        });
-    }
+
 
     void OutliersRejection(){
         InstExec([](int key,Instance& inst){
@@ -85,9 +81,29 @@ public:
         });
     }
 
-    void DeleteBadLandmarks();
+    void DeleteBadLandmarks(){
+        for(auto &[key,inst]:instances){
+            if(inst.landmarks.empty())
+                continue;
+            int del =  inst.DeleteBadLandmarks();
+            Debugv("inst:{} del bad num:{}",inst.id,del);
+        }
 
-    void SetDynamicOrStatic();
+    }
+
+    void SetInstanceCurrentPoint3d(){
+        InstExec([](int key,Instance& inst){
+            inst.SetCurrentPoint3d();
+        });
+    }
+
+
+    void GetOptimizationParameters(){
+        InstExec([](int key,Instance& inst){
+            inst.GetOptimizationParameters();
+        });
+    }
+
 
     std::unordered_map<unsigned int,InstEstimatedInfo> GetOutputInstInfo(){
         std::unique_lock<std::mutex> lk(vel_mutex_);

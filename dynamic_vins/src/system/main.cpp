@@ -125,6 +125,7 @@ void ImageProcess()
             else{
                 img_show = cv::Mat(cv::Size(img.color0.cols,img.color0.rows),CV_8UC3,cv::Scalar(255,255,255));
             }
+            cv::resize(img_show,img_show,cv::Size(),0.5,0.5);
 
             /*if(flow_tensor.defined()){
                cv::Mat show = VisualFlow(flow_tensor);

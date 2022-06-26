@@ -225,9 +225,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         });
         if(max_new_detect > 0){
 
-
-            /*
-
             mask_background = img.merge_mask;
             ExecInst([&](unsigned int key, InstFeat& inst){
                 if(inst.curr_points.size() < fe_para::kMaxDynamicCnt){
@@ -254,8 +251,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 new_pts = DetectShiTomasiCornersGpu(max_new_detect, img.gray0_gpu, mask_background_gpu);
             }
 
-
-
             Debugt("instsTrack actually detect num:{}", new_pts.size());
             for(auto &pt : new_pts){
                 for(auto &[key,inst] : instances_){
@@ -273,23 +268,20 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                     }
                 }
             }
-            Infot("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.TocThenTic());*/
+            Infot("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.TocThenTic());
 
             ///若某个实例的点太少,则采用密集采样的方法得到点
             for(auto& [key,inst] : instances_){
                 if(!inst.is_curr_visible)
                     continue;
                 int inst_size=inst.curr_points.size();
-                if(inst_size>30)
-                    continue;
 
                 for(int i=0;i<inst_size;++i){
                     cv::circle(inst.box2d->mask_cv,inst.curr_points[i],2,cv::Scalar(0),-1);
                 }
-
-                auto new_pts = DetectRegularCorners(50-inst_size,inst.box2d->mask_cv,2);
-
-                for(auto &pt:new_pts){
+                int detect_num = std::max(20,50-inst_size);
+                auto new_ex_pts = DetectRegularCorners(detect_num,inst.box2d->mask_cv,2);
+                for(auto &pt:new_ex_pts){
                     inst.extra_points.emplace_back(pt);
                     inst.extra_ids.emplace_back(InstFeat::global_id_count++);
                     inst.visual_new_points.emplace_back(pt);

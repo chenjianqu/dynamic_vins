@@ -21,6 +21,7 @@
 #include "feature_manager.h"
 #include "vio_util.h"
 #include "vio_parameters.h"
+#include "body.h"
 
 
 namespace dynamic_vins{\
@@ -200,8 +201,8 @@ Eigen::VectorXd FeatureManager::GetDepthVector()
 }
 
 
-void FeatureManager::TriangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
-                                      Eigen::Vector2d &point0, Eigen::Vector2d &point1, Vec3d &point_3d){
+void FeatureManager::TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
+                                      Vec2d &point0, Vec2d &point1, Vec3d &point_3d){
     Eigen::Matrix4d design_matrix = Eigen::Matrix4d::Zero();
     design_matrix.row(0) = point0[0] * Pose0.row(2) - Pose0.row(0);
     design_matrix.row(1) = point0[1] * Pose0.row(2) - Pose0.row(1);
@@ -225,8 +226,8 @@ void FeatureManager::TriangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen:
  */
 bool FeatureManager::SolvePoseByPnP(Mat3d &R, Vec3d &P,
                                     vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D){
-    Eigen::Matrix3d R_initial;
-    Eigen::Vector3d P_initial;
+    Mat3d R_initial;
+    Vec3d P_initial;
 
     // w_T_cam ---> cam_T_w
     R_initial = R.inverse();
@@ -324,19 +325,11 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
 
         if(Config::is_stereo && lm.feats[0].is_stereo){
             int imu_i = lm.start_frame;
-            Eigen::Matrix<double, 3, 4> leftPose;
-            Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
-            Mat3d R0 = Rs[imu_i] * ric[0];
-            leftPose.leftCols<3>() = R0.transpose();
-            leftPose.rightCols<1>() = -R0.transpose() * t0;
 
-            Eigen::Matrix<double, 3, 4> rightPose;
-            Vec3d t1 = Ps[imu_i] + Rs[imu_i] * tic[1];
-            Mat3d R1 = Rs[imu_i] * ric[1];
-            rightPose.leftCols<3>() = R1.transpose();
-            rightPose.rightCols<1>() = -R1.transpose() * t1;
+            Mat34d leftPose = body.GetCamPose34d(imu_i,0);
+            Mat34d rightPose = body.GetCamPose34d(imu_i,1);
 
-            Eigen::Vector2d point0, point1;
+            Vec2d point0, point1;
             Vec3d point3d;
             point0 = lm.feats[0].point.head(2);
             point1 = lm.feats[0].pointRight.head(2);
@@ -354,20 +347,11 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
         else if(lm.feats.size() > 1)
         {
             int imu_i = lm.start_frame;
-            Eigen::Matrix<double, 3, 4> leftPose;
-            Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
-            Mat3d R0 = Rs[imu_i] * ric[0];
-            leftPose.leftCols<3>() = R0.transpose();
-            leftPose.rightCols<1>() = -R0.transpose() * t0;
-
+            Mat34d leftPose = body.GetCamPose34d(imu_i,0);
             imu_i++;
-            Eigen::Matrix<double, 3, 4> rightPose;
-            Vec3d t1 = Ps[imu_i] + Rs[imu_i] * tic[0];
-            Mat3d R1 = Rs[imu_i] * ric[0];
-            rightPose.leftCols<3>() = R1.transpose();
-            rightPose.rightCols<1>() = -R1.transpose() * t1;
+            Mat34d rightPose = body.GetCamPose34d(imu_i,0);
 
-            Eigen::Vector2d point0, point1;
+            Vec2d point0, point1;
             Vec3d point3d;
             point0 = lm.feats[0].point.head(2);
             point1 = lm.feats[1].point.head(2);
@@ -393,21 +377,20 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
         Eigen::MatrixXd svd_A(2 * lm.feats.size(), 4);
         int svd_idx = 0;
 
-        Eigen::Matrix<double, 3, 4> P0;
+        Mat34d P0;
         Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
         Mat3d R0 = Rs[imu_i] * ric[0];
         P0.leftCols<3>() = Mat3d::Identity();
         P0.rightCols<1>() = Vec3d::Zero();
 
-        for (auto &feat : lm.feats)
-        {
+        for (auto &feat : lm.feats){
             imu_j++;
 
             Vec3d t1 = Ps[imu_j] + Rs[imu_j] * tic[0];
             Mat3d R1 = Rs[imu_j] * ric[0];
             Vec3d t = R0.transpose() * (t1 - t0);
             Mat3d R = R0.transpose() * R1;
-            Eigen::Matrix<double, 3, 4> P;
+            Mat34d P;
             P.leftCols<3>() = R.transpose();
             P.rightCols<1>() = -R.transpose() * t;
             Vec3d f = feat.point.normalized();

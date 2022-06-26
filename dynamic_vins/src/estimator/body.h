@@ -42,6 +42,22 @@ public:
         return T;
     }
 
+    /**
+     * 获取某一时刻的相机位姿的3x4矩阵
+     * @param index
+     * @param cam_id
+     * @return
+     */
+    Mat34d GetCamPose34d(int index,int cam_id){
+        assert(cam_id == 0 || cam_id == 1);
+        Vec3d t0 = Ps[index] + Rs[index] * tic[cam_id];
+        Mat3d R0 = Rs[index] * ric[cam_id];
+        Mat34d pose;
+        pose.leftCols<3>() = R0.transpose();
+        pose.rightCols<1>() = -R0.transpose() * t0;
+        return pose;
+    };
+
     void SetOptimizeParameters();
     void GetOptimizationParameters(Vec3d &origin_R0,Vec3d &origin_P0);
 

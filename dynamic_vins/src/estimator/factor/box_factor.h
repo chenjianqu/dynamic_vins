@@ -154,16 +154,15 @@ public:
  */
 class BoxEncloseStereoPointFactor: public ceres::SizedCostFunction<3,7>{
 public:
-    explicit BoxEncloseStereoPointFactor(Vec3d &point_w,Vec3d dims_,int inst_id_):
-    pts_w(point_w),dims(dims_),inst_id(inst_id_){}
+    explicit BoxEncloseStereoPointFactor(Vec3d &point_w,Vec3d dims_,int lid_):
+    pts_w(point_w),dims(dims_),lid(lid_){}
 
     bool Evaluate(double const *const *parameters, double *residuals, double **jacobians) const override;
 
     Vec3d pts_w;//3D点
     Vec3d dims;
-    int inst_id;
+    int lid;
     inline static int counter{0};
-
 };
 
 /**

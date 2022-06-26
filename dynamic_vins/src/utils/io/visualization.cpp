@@ -46,17 +46,13 @@ CameraPoseVisualization::Ptr camera_pose_visual;
 std::shared_ptr<ros::Publisher> pub_odometry;
 std::shared_ptr<ros::Publisher> pub_latest_odometry;
 std::shared_ptr<ros::Publisher> pub_path;
-std::shared_ptr<ros::Publisher> pub_point_cloud;
-std::shared_ptr<ros::Publisher> pub_margin_cloud;
 std::shared_ptr<ros::Publisher> pub_key_poses;
 std::shared_ptr<ros::Publisher> pub_camera_pose;
 std::shared_ptr<ros::Publisher> pub_camera_pose_visual;
 std::shared_ptr<ros::Publisher> pub_keyframe_pose;
 std::shared_ptr<ros::Publisher> pub_keyframe_point;
 std::shared_ptr<ros::Publisher> pub_extrinsic;
-std::shared_ptr<ros::Publisher> pub_instance_pointcloud;
 std::shared_ptr<ros::Publisher> pub_instance_marker;
-std::shared_ptr<ros::Publisher> pub_stereo_pointcloud;
 
 std::shared_ptr<tf::TransformBroadcaster> transform_broadcaster;
 
@@ -81,6 +77,7 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
     transform_broadcaster = std::make_shared<tf::TransformBroadcaster>();
 
     ImagePublisher imagePublisher(n);
+    PointCloudPublisher pointCloudPublisher(n);
 
     pub_latest_odometry=std::make_shared<ros::Publisher>();
     *pub_latest_odometry = n.advertise<nav_msgs::Odometry>("imu_propagate", 1000);
@@ -90,12 +87,6 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
 
     pub_odometry=std::make_shared<ros::Publisher>();
     *pub_odometry = n.advertise<nav_msgs::Odometry>("odometry", 1000);
-
-    pub_point_cloud=std::make_shared<ros::Publisher>();
-    *pub_point_cloud = n.advertise<sensor_msgs::PointCloud>("point_cloud", 1000);
-
-    pub_margin_cloud=std::make_shared<ros::Publisher>();
-    *pub_margin_cloud = n.advertise<sensor_msgs::PointCloud>("margin_cloud", 1000);
 
     pub_key_poses=std::make_shared<ros::Publisher>();
     *pub_key_poses = n.advertise<Marker>("key_poses", 1000);
@@ -115,14 +106,8 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
     pub_extrinsic=std::make_shared<ros::Publisher>();
     *pub_extrinsic = n.advertise<nav_msgs::Odometry>("extrinsic", 1000);
 
-    pub_instance_pointcloud=std::make_shared<ros::Publisher>();
-    *pub_instance_pointcloud=n.advertise<sensor_msgs::PointCloud2>("instance_point_cloud", 1000);
-
     pub_instance_marker=std::make_shared<ros::Publisher>();
     *pub_instance_marker=n.advertise<MarkerArray>("instance_marker", 1000);
-
-    pub_stereo_pointcloud=std::make_shared<ros::Publisher>();
-    *pub_stereo_pointcloud=n.advertise<sensor_msgs::PointCloud2>("instance_stereo_point_cloud", 1000);
 
     camera_pose_visual=std::make_shared<CameraPoseVisualization>(1, 0, 0, 1);
     camera_pose_visual->setScale(1.);
@@ -302,11 +287,8 @@ void Publisher::PubCameraPose(const std_msgs::Header &header)
 void Publisher::PubPointCloud(const std_msgs::Header &header)
 {
     sensor_msgs::PointCloud point_cloud, loop_point_cloud;
-    point_cloud.header = header;
-    loop_point_cloud.header = header;
 
-    for (auto &lm : e->f_manager.landmarks)
-    {
+    for (auto &lm : e->f_manager.landmarks){
         int used_num = (int)lm.feats.size();
         if (!(used_num >= 2 && lm.start_frame < kWinSize - 2))
             continue;
@@ -316,11 +298,11 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
         point_cloud.points.push_back(EigenToGeometryPoint32(
                 body.CamToWorld(lm.feats[0].point * lm.depth, imu_i)));
     }
-    pub_point_cloud->publish(point_cloud);
+
+    PointCloudPublisher::Pub(point_cloud,"point_cloud");
 
     // pub margined potin
     sensor_msgs::PointCloud margin_cloud;
-    margin_cloud.header = header;
 
     for (auto &lm : e->f_manager.landmarks){
         int used_num = (int)lm.feats.size();
@@ -330,14 +312,15 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
         //        continue;
 
         if (lm.start_frame == 0 && lm.feats.size() <= 2
-        && lm.solve_flag == 1 )
-        {
+        && lm.solve_flag == 1 ){
             int imu_i = lm.start_frame;
             margin_cloud.points.push_back(EigenToGeometryPoint32(
                     body.CamToWorld(lm.feats[0].point * lm.depth, imu_i)) );
         }
     }
-    pub_margin_cloud->publish(margin_cloud);
+
+    PointCloudPublisher::Pub(margin_cloud,"margin_cloud");
+
 }
 
 
@@ -484,7 +467,7 @@ Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &histor
 
 
 
-void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
+void Publisher::PubInstances(const std_msgs::Header &header)
 {
     if(e->im.tracking_number() < 1)
         return;
@@ -509,7 +492,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
             if(lm.depth <= 0)
                 continue;
 
-            int frame_j=lm.feats.front()->frame;
+            int frame_j=lm.frame();
             int frame_i=e->frame;
             Vec3d pt = inst.ObjectToWorld(inst.CamToObject(lm.feats.front()->point * lm.depth,frame_j),frame_i);
             cloud.push_back(PointPCL(pt,inst.color[2],inst.color[1],inst.color[0]));
@@ -686,15 +669,10 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header)
 
     printf("实例点云的数量: %ld\n",instance_point_cloud.size());
 
-    sensor_msgs::PointCloud2 point_cloud_msg;
-    pcl::toROSMsg(instance_point_cloud,point_cloud_msg);
-    point_cloud_msg.header = header;
-    pub_instance_pointcloud->publish(point_cloud_msg);
 
-    /*sensor_msgs::PointCloud2 point_stereo_cloud_msg;
-    pcl::toROSMsg(stereo_point_cloud,point_stereo_cloud_msg);
-    point_stereo_cloud_msg.header = header;
-    pub_stereo_pointcloud->publish(point_stereo_cloud_msg);*/
+    PointCloudPublisher::Pub(instance_point_cloud,"instance_point_cloud");
+    //PointCloudPublisher::Pub(stereo_point_cloud,"instance_stereo_point_cloud");
+
 }
 
 
@@ -712,12 +690,54 @@ void ImagePublisher::Pub(cv::Mat &img,const string &topic){
 
     std_msgs::Header header;
     header.frame_id = "world";
-    header.stamp = ros::Time::now();
+    header.stamp = ros::Time(body.frame_time);
     sensor_msgs::ImagePtr imgTrackMsg = cv_bridge::CvImage(header, "bgr8", img).toImageMsg();
 
     pub_map[topic].publish(imgTrackMsg);
 
 }
+
+
+PointCloudPublisher::PointCloudPublisher(ros::NodeHandle &n){
+    nh = &n;
+}
+
+
+void PointCloudPublisher::Pub(sensor_msgs::PointCloud &cloud,const string &topic){
+    if(pub_map.find(topic)==pub_map.end()){
+        ros::Publisher pub = nh->advertise<sensor_msgs::PointCloud>(topic,10);
+        pub_map.insert({topic,pub});
+    }
+
+    std_msgs::Header header;
+    header.frame_id = "world";
+    header.stamp = ros::Time(body.frame_time);
+
+    cloud.header = header;
+
+    pub_map[topic].publish(cloud);
+
+}
+
+
+void PointCloudPublisher::Pub(PointCloud &cloud,const string &topic){
+
+    if(pub_map.find(topic)==pub_map.end()){
+        ros::Publisher pub = nh->advertise<sensor_msgs::PointCloud2>(topic,10);
+        pub_map.insert({topic,pub});
+    }
+
+    std_msgs::Header header;
+    header.frame_id = "world";
+    header.stamp = ros::Time(body.frame_time);
+
+    sensor_msgs::PointCloud2 point_cloud_msg;
+    pcl::toROSMsg(cloud,point_cloud_msg);
+    point_cloud_msg.header = header;
+
+    pub_map[topic].publish(point_cloud_msg);
+}
+
 
 
 
