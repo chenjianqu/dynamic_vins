@@ -74,9 +74,10 @@ public:
     int frame{};
 
     double para_ex_pose[2][kSizePose]{};
-    double para_Pose[kWinSize + 1][kSizePose]{};
-    double para_SpeedBias[kWinSize + 1][kSizeSpeedBias]{};
-    double para_Feature[kNumFeat][kSizeFeature]{};
+    double para_pose[kWinSize + 1][kSizePose]{};
+    double para_speed_bias[kWinSize + 1][kSizeSpeedBias]{};
+    double para_point_features[kNumFeat][kSizePoint]{};
+    double para_line_features[kNumFeat][kSizeLine];
     double para_Retrive_Pose[kSizePose]{};
     double para_Td[1][1]{};
     double para_Tr[1][1]{};

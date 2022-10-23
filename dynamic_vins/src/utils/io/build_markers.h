@@ -45,6 +45,8 @@ Marker TextMarker(const Eigen::Vector3d &point, unsigned int id, const std::stri
                   Marker::_action_type action= Marker::ADD,
                   const string &ns="text",int offset= 1);
 
+
+
 Marker ArrowMarker(const Eigen::Vector3d &start_pt, const Eigen::Vector3d &end_pt, unsigned int id,
                    const cv::Scalar &color, double scale= 0.1,
                    Marker::_action_type action= Marker::ADD,
@@ -59,6 +61,8 @@ std::tuple<Marker,Marker,Marker> AxisMarker(Mat34d &axis, unsigned int id,
                                             Marker::_action_type action= Marker::ADD,
                                             const string &ns="axis",int offset= 5);
 
+Marker LineMarker(const Eigen::Vector3d &p1,const Eigen::Vector3d &p2,unsigned int id, const cv::Scalar &color,
+                  double scale=0.1, Marker::_action_type action=Marker::ADD, const string &ns="line",int offset=4);
 
 }
 

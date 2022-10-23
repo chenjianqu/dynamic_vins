@@ -26,7 +26,7 @@
 
 namespace dynamic_vins{
 
-void solveGyroscopeBias(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bgs)
+void SolveGyroscopeBias(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bgs)
 {
     Mat3d A;
     Vec3d b;
@@ -226,7 +226,7 @@ bool LinearAlignment(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Ei
 
 bool VisualIMUAlignment(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bgs, Vec3d &g, Eigen::VectorXd &x)
 {
-    solveGyroscopeBias(all_image_frame, Bgs);
+    SolveGyroscopeBias(all_image_frame, Bgs);
 
     if(LinearAlignment(all_image_frame, g, x))
         return true;

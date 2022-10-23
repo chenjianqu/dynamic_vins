@@ -32,6 +32,8 @@
 #include "det2d/detector2d.h"
 #include "feature_utils.h"
 #include "estimator/vio_util.h"
+#include "line_detector/line_detector.h"
+
 
 namespace dynamic_vins{\
 
@@ -42,6 +44,7 @@ public:
     explicit FeatureTracker(const string& config_path);
 
     FeatureBackground TrackImage(SemanticImage &img);
+    FeatureBackground TrackImageLine(SemanticImage &img);
     FeatureBackground TrackImageNaive(SemanticImage &img);
     FeatureBackground TrackSemanticImage(SemanticImage &img);
 
@@ -71,6 +74,8 @@ private:
     cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow;
     cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow_back;
     cv::Ptr<cv::cuda::CornersDetector> detector;
+
+    LineDetector::Ptr line_detector;
 
     InstFeat bg;
 };

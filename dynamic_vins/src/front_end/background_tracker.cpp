@@ -40,6 +40,8 @@ FeatureTracker::FeatureTracker(const string& config_path)
 
     bg.id = -1;//表示相机
     bg.box2d = std::make_shared<Box2D>();
+
+    line_detector = std::make_shared<LineDetector>(config_path);
 }
 
 
@@ -148,9 +150,153 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 }
 
 
+
+
+
+
+/**
+ * 不对动态物体进行任何处理,而直接将所有的特征点当作静态区域,跟踪点线特征
+ * @param img
+ * @return
+ */
+FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
+{
+    TicToc t_r,tt;
+    cur_time = img.time0;
+    cur_img = img;
+
+    bg.box2d->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
+
+
+    ///线特征的提取和跟踪
+    bg.curr_lines = line_detector->Detect(img.gray0);
+    Debugt("TrackImageLine | detect new lines size:{}",bg.curr_lines->keylsd.size());
+
+    line_detector->TrackLeftLine(bg.prev_lines, bg.curr_lines);
+    Debugt("TrackImageLine | track lines size:{}",bg.curr_lines->keylsd.size());
+
+    if(cfg::is_stereo){
+        bg.curr_lines_right = line_detector->Detect(img.gray1);
+        line_detector->TrackRightLine(bg.curr_lines,bg.curr_lines_right);
+    }
+
+    bg.curr_lines->SetLines();
+    bg.curr_lines->UndistortedLineEndPoints(cam0);
+
+    bg.curr_lines_right->SetLines();
+    bg.curr_lines_right->UndistortedLineEndPoints(cam1);
+
+    bg.prev_lines = bg.curr_lines;
+
+    ///跟踪左图像的点特征
+    bg.curr_points.clear();
+    if (!bg.last_points.empty()){
+        vector<uchar> status = FeatureTrackByLK(prev_img.gray0, img.gray0, bg.last_points, bg.curr_points);
+        ReduceVector(bg.last_points, status);
+        ReduceVector(bg.curr_points, status);
+        ReduceVector(bg.ids, status);
+        ReduceVector(bg.track_cnt, status);
+    }
+
+
+    for (auto &n : bg.track_cnt)
+        n++;
+
+    Infot("TrackImage | flowTrack:{} ms", tt.TocThenTic());
+
+    //RejectWithF();
+    TicToc t_m;
+    SortPoints(bg.curr_points, bg.track_cnt, bg.ids);
+    for(const auto& pt : bg.curr_points)
+        cv::circle(bg.box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
+    TicToc t_t;
+    int n_max_cnt = fe_para::kMaxCnt - static_cast<int>(bg.curr_points.size());
+    vector<cv::Point2f> n_pts;
+    if (n_max_cnt > 0)
+        cv::goodFeaturesToTrack(cur_img.gray0, n_pts, fe_para::kMaxCnt - bg.curr_points.size(),
+                                0.01, fe_para::kMinDist, bg.box2d->mask_cv);
+    else
+        n_pts.clear();
+
+    for (auto &p : n_pts){
+        bg.curr_points.push_back(p);
+        bg.ids.push_back(InstFeat::global_id_count++);
+        bg.track_cnt.push_back(1);
+    }
+
+    Infot("TrackImage | goodFeaturesToTrack:{} ms", tt.TocThenTic());
+
+    bg.UndistortedPts(cam0);
+    bg.PtsVelocity(cur_time-prev_time);
+    //bg.curr_un_points = UndistortedPts(bg.curr_points, cam0);
+    //bg.pts_velocity = PtsVelocity(bg.ids, bg.curr_un_points, bg.curr_id_pts,bg.prev_id_pts);
+
+    Infot("TrackImage | un&&vel:{} ms", tt.TocThenTic());
+
+    if(cfg::is_stereo && !cur_img.gray1.empty())
+    {
+        bg.right_ids.clear();
+        bg.right_points.clear();
+        bg.right_un_points.clear();
+        bg.right_pts_velocity.clear();
+        bg.right_curr_id_pts.clear();
+        if(!bg.curr_points.empty())
+        {
+            vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, bg.curr_points, bg.right_points);
+
+            bg.right_ids = bg.ids;
+            ReduceVector(bg.right_points, status);
+            ReduceVector(bg.right_ids, status);
+            // only keep left-right pts
+            /*
+            reduceVector(bg.curr_points, status);
+            reduceVector(ids, status);
+            reduceVector(bg.track_cnt, status);
+            reduceVector(cur_un_pts, status);
+            ReduceVector(pts_velocity, status);
+            */
+            //bg.right_un_points = UndistortedPts(bg.right_points, cam1);
+            //bg.right_pts_velocity = PtsVelocity(bg.right_ids, bg.right_un_points, bg.right_curr_id_pts, bg.right_prev_id_pts);
+            bg.RightUndistortedPts(cam1);
+            bg.RightPtsVelocity(cur_time-prev_time);
+        }
+        bg.right_prev_id_pts = bg.right_curr_id_pts;
+
+        Infot("TrackImage | flowTrack right:{} ms", tt.TocThenTic());
+    }
+
+    if(fe_para::is_show_track){
+        ///可视化点
+        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, prev_left_map);
+
+        ///可视化线
+        line_detector->VisualizeLine(img_track_, bg.curr_lines);
+        line_detector->VisualizeRightLine(img_track_,bg.curr_lines_right,true);
+
+    }
+
+    Infot("TrackImage | DrawTrack right:{} ms", tt.TocThenTic());
+
+    prev_img = cur_img;
+    prev_time = cur_time;
+
+    bg.PostProcess();
+
+    prev_left_map.clear();
+    for(size_t i = 0; i < bg.curr_points.size(); i++)
+        prev_left_map[bg.ids[i]] = bg.curr_points[i];
+
+    return SetOutputFeats();
+}
+
+
+
 FeatureBackground FeatureTracker::SetOutputFeats()
 {
     FeatureBackground fm;
+
+    std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> points;
+
     //left cam
     for (size_t i = 0; i < bg.ids.size(); i++){
         constexpr int camera_id = 0;
@@ -158,7 +304,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
         xyz_uv_velocity << bg.curr_un_points[i].x, bg.curr_un_points[i].y, 1,
         bg.curr_points[i].x, bg.curr_points[i].y,
         bg.pts_velocity[i].x, bg.pts_velocity[i].y;
-        fm[bg.ids[i]].emplace_back(camera_id,  xyz_uv_velocity);
+        points[bg.ids[i]].emplace_back(camera_id,  xyz_uv_velocity);
         //Debugt("id:{} cam:{}",ids[i],camera_id);
     }
     //stereo
@@ -169,10 +315,30 @@ FeatureBackground FeatureTracker::SetOutputFeats()
             xyz_uv_velocity << bg.right_un_points[i].x, bg.right_un_points[i].y, 1,
             bg.right_points[i].x, bg.right_points[i].y,
             bg.right_pts_velocity[i].x, bg.right_pts_velocity[i].y;
-            fm[bg.right_ids[i]].emplace_back(camera_id,  xyz_uv_velocity);
+            points[bg.right_ids[i]].emplace_back(camera_id,  xyz_uv_velocity);
             //Debugt("id:{} cam:{}",bg.right_ids[i],camera_id);
         }
     }
+
+    fm.points = points;
+
+    if(cfg::slam == SlamType::kLine){
+        std::map<unsigned int, std::vector<std::pair<int,Line>>> lines;
+        ///左图像的先特征
+        for(Line& l:bg.curr_lines->un_lines){
+            std::vector<std::pair<int,Line>> lv;
+            lv.push_back({0,l});
+            lines.insert({l.id,lv});
+        }
+        ///右图像的线特征
+        for(Line& l:bg.curr_lines_right->un_lines){
+            lines[l.id].push_back({1,l});
+        }
+
+        fm.lines = lines;
+    }
+
+
     return fm;
 }
 
@@ -343,6 +509,7 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
             cv::hconcat(img_track_, img.color1, img_track_);
         }
     }
+
     //cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
     for (size_t j = 0; j < curLeftPts.size(); j++){
         double len = std::min(1.0, 1.0 * bg.track_cnt[j] / 20);
@@ -364,12 +531,14 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
             }
         }
     }
-    for (size_t i = 0; i < curLeftIds.size(); i++){
+
+    /*for (size_t i = 0; i < curLeftIds.size(); i++){
         if(auto it = prevLeftPts.find(curLeftIds[i]); it != prevLeftPts.end()){
             cv::arrowedLine(img_track_, curLeftPts[i], it->second, cv::Scalar(0, 255, 0),
                             1, 8, 0, 0.2);
         }
-    }
+    }  */
+
 }
 
 

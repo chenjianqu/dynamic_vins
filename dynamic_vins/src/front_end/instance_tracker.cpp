@@ -101,8 +101,10 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
             cv::Rect proj_rect(boxes[i]->box2d.min_pt,boxes[i]->box2d.max_pt);
             float iou = Box2D::IoU(inst_rect,proj_rect);
 
-            log_text += fmt::format("inst:{}-box:{},name:({},{}),iou:{}\n",inst_id,i,inst.box2d->class_name,
-                                    boxes[i]->class_name,iou);
+            if(iou>0){
+                log_text += fmt::format("inst:{}-box:{},name:({},{}),iou:{}\n",inst_id,i,inst.box2d->class_name,
+                                        boxes[i]->class_name,iou);
+            }
 
             ///类别要一致
             if(inst.box2d->class_name != boxes[i]->class_name)
@@ -111,7 +113,6 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
             ///判断3D目标检测得到的box 和 估计的3D box的距离
             if(center && (*center - boxes[i]->center_pt).norm() > 10)
                 continue;
-
 
             if(iou>0.1){
                 candidate_match.push_back(boxes[i]);
@@ -224,7 +225,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             max_new_detect += (fe_para::kMaxDynamicCnt - (int)inst.curr_points.size());
         });
         if(max_new_detect > 0){
-
             mask_background = img.merge_mask;
             ExecInst([&](unsigned int key, InstFeat& inst){
                 if(inst.curr_points.size() < fe_para::kMaxDynamicCnt){

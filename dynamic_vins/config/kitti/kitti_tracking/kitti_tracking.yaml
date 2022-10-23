@@ -5,10 +5,10 @@ imu: 0 #enable imu or not
 num_of_cam: 2
 
 only_imgprocess: 0  #for debug
-only_frontend: 0  #for debug
+only_frontend: 1  #for debug
 
 dataset_type: "kitti" #support:kitti,viode
-slam_type: "dynamic" #SLAM mode,optional:raw,naive,dynamic
+slam_type: "line" #SLAM mode,optional:raw,naive,dynamic,line
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 

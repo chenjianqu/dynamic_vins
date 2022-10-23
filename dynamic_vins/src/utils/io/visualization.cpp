@@ -46,6 +46,7 @@ CameraPoseVisualization::Ptr camera_pose_visual;
 std::shared_ptr<ros::Publisher> pub_odometry;
 std::shared_ptr<ros::Publisher> pub_latest_odometry;
 std::shared_ptr<ros::Publisher> pub_path;
+std::shared_ptr<ros::Publisher> pub_line;
 std::shared_ptr<ros::Publisher> pub_key_poses;
 std::shared_ptr<ros::Publisher> pub_camera_pose;
 std::shared_ptr<ros::Publisher> pub_camera_pose_visual;
@@ -108,6 +109,9 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
 
     pub_instance_marker=std::make_shared<ros::Publisher>();
     *pub_instance_marker=n.advertise<MarkerArray>("instance_marker", 1000);
+
+    pub_line=std::make_shared<ros::Publisher>();
+    *pub_line=n.advertise<MarkerArray>("lines", 1000);
 
     camera_pose_visual=std::make_shared<CameraPoseVisualization>(1, 0, 0, 1);
     camera_pose_visual->setScale(1.);
@@ -288,7 +292,7 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
 {
     sensor_msgs::PointCloud point_cloud, loop_point_cloud;
 
-    for (auto &lm : e->f_manager.landmarks){
+    for (auto &lm : e->feat_manager.point_landmarks){
         int used_num = (int)lm.feats.size();
         if (!(used_num >= 2 && lm.start_frame < kWinSize - 2))
             continue;
@@ -304,7 +308,7 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
     // pub margined potin
     sensor_msgs::PointCloud margin_cloud;
 
-    for (auto &lm : e->f_manager.landmarks){
+    for (auto &lm : e->feat_manager.point_landmarks){
         int used_num = (int)lm.feats.size();
         if (!(used_num >= 2 && lm.start_frame < kWinSize - 2))
             continue;
@@ -375,7 +379,7 @@ void Publisher::PubKeyframe()
         sensor_msgs::PointCloud point_cloud;
         point_cloud.header.stamp = ros::Time(body.headers[kWinSize - 2]);
         point_cloud.header.frame_id = "world";
-        for (auto &lm : e->f_manager.landmarks){
+        for (auto &lm : e->feat_manager.point_landmarks){
             int frame_size = (int)lm.feats.size();
             if(lm.start_frame < kWinSize - 2 && lm.start_frame + frame_size - 1 >= kWinSize - 2
             && lm.solve_flag == 1){
@@ -428,6 +432,21 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
     }
 
     pub_instance_marker->publish(markers);
+}
+
+
+void Publisher::PubLines(const std_msgs::Header &header)
+{
+    MarkerArray markers;
+    ///根据box初始化物体的位姿和包围框
+    cv::Scalar color_norm(0.5,0.5,0.5);
+
+    for(auto &line:e->feat_manager.line_landmarks){
+        Marker m = LineMarker(line.ptw1,line.ptw2,line.feature_id,color_norm);
+        markers.markers.push_back(m);
+    }
+
+    pub_line->publish(markers);
 }
 
 
@@ -672,7 +691,6 @@ void Publisher::PubInstances(const std_msgs::Header &header)
 
     PointCloudPublisher::Pub(instance_point_cloud,"instance_point_cloud");
     //PointCloudPublisher::Pub(stereo_point_cloud,"instance_stereo_point_cloud");
-
 }
 
 
@@ -694,7 +712,6 @@ void ImagePublisher::Pub(cv::Mat &img,const string &topic){
     sensor_msgs::ImagePtr imgTrackMsg = cv_bridge::CvImage(header, "bgr8", img).toImageMsg();
 
     pub_map[topic].publish(imgTrackMsg);
-
 }
 
 
@@ -721,7 +738,6 @@ void PointCloudPublisher::Pub(sensor_msgs::PointCloud &cloud,const string &topic
 
 
 void PointCloudPublisher::Pub(PointCloud &cloud,const string &topic){
-
     if(pub_map.find(topic)==pub_map.end()){
         ros::Publisher pub = nh->advertise<sensor_msgs::PointCloud2>(topic,10);
         pub_map.insert({topic,pub});
@@ -741,4 +757,7 @@ void PointCloudPublisher::Pub(PointCloud &cloud,const string &topic){
 
 
 
+
 }
+
+

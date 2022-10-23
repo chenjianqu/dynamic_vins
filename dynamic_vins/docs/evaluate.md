@@ -115,6 +115,9 @@ evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${se
 export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
 conda activate py36
 
+cd ${dynamic_vins_root}
+source devel/setup.bash
+
 sequence=0004
 gt_id=2
 object_id=1

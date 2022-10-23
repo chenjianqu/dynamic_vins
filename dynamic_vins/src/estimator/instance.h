@@ -174,7 +174,7 @@ public:
     double para_state[kWinSize + 1][kSizePose]{};
     double para_speed[1][kSpeedSize]{};
     double para_box[1][kBoxSize]{};
-    double para_inv_depth[kInstFeatSize][kSizeFeature]{};//逆深度参数数组
+    double para_inv_depth[kInstFeatSize][kSizePoint]{};//逆深度参数数组
 
 
     int triangle_num{0};//已经三角化的路标点的数量

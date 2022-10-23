@@ -27,7 +27,7 @@
 #include <ros/ros.h>
 #include <eigen3/Eigen/Dense>
 
-#include "estimator/factor/imu_factor.h"
+#include "estimator/imu/imu_factor.h"
 #include "utils/utility.h"
 #include "estimator/feature_manager.h"
 
@@ -52,7 +52,7 @@ class ImageFrame
 };
 
 
-void solveGyroscopeBias(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bgs);
+void SolveGyroscopeBias(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bgs);
 bool VisualIMUAlignment(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bgs, Vec3d &g, Eigen::VectorXd &x);
 
 }

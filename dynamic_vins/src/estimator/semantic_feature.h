@@ -20,19 +20,29 @@
 #include "utils/box2d.h"
 #include "utils/box3d.h"
 #include "utils/parameters.h"
+#include "line_detector/line.h"
 
 #include "landmark.h"
 
 namespace dynamic_vins{\
 
 
-/*
- * 格式：{id, [(camera_id,feature1),...,(camera_id,featureN)]}
- * feature1：Vector7d，分别表示
+/**
+ * 从前端传到后端的所有特征
  */
-using FeatureBackground=std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>>;
+struct FeatureBackground{
+    /*
+     * 点特征
+     * 格式：{id, [(camera_id,feature1),...,(camera_id,featureN)]}
+     * feature1：Vector7d，分别表示
+     */
+    std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> points;
 
-
+    /*
+     * 线特征,格式：{line_id,[{cam_id,line},...]}
+     */
+    std::map<unsigned int, std::vector<std::pair<int,Line>>> lines;
+};
 
 class FeatureInstance{
 public:
@@ -47,8 +57,8 @@ public:
 /**
  * 用于在前端和VIO之间传递信息
  */
-struct SemanticFeature{
-    SemanticFeature()=default;
+struct FrontendFeature{
+    FrontendFeature()=default;
     ///背景特征点
     FeatureBackground features;
     double time{0.0};
@@ -82,7 +92,7 @@ class FeatureQueue{
 public:
     using Ptr = std::shared_ptr<FeatureQueue>;
 
-    void push_back(SemanticFeature& frame){
+    void push_back(FrontendFeature& frame){
         std::unique_lock<std::mutex> lock(queue_mutex);
         if(frame_list.size() < kImageQueueSize){
             frame_list.push_back(frame);
@@ -90,12 +100,12 @@ public:
         queue_cond.notify_one();
     }
 
-    std::optional<SemanticFeature> request_frame() {
+    std::optional<FrontendFeature> request_frame() {
         std::unique_lock<std::mutex> lock(queue_mutex);
         if(!queue_cond.wait_for(lock, 30ms, [&]{return !frame_list.empty();}))
             return std::nullopt;
         //queue_cond_.wait(lock,[&]{return !seg_frame_list_.empty();});
-        SemanticFeature frame=std::move(frame_list.front());
+        FrontendFeature frame=std::move(frame_list.front());
         frame_list.pop_front();
         return frame;
     }
@@ -129,7 +139,7 @@ public:
 private:
     std::mutex queue_mutex;
     std::condition_variable queue_cond;
-    std::list<SemanticFeature> frame_list;
+    std::list<FrontendFeature> frame_list;
 };
 
 extern FeatureQueue feature_queue;

@@ -167,7 +167,7 @@ void FeatureTrack()
         if(auto img = image_queue.request_image();img){
             tt.Tic();
             Warnt("----------Time : {} ----------", std::to_string(img->time0));
-            SemanticFeature frame;
+            FrontendFeature frame;
             frame.time = img->time0;
             frame.seq_id = img->seq;
 
@@ -200,6 +200,9 @@ void FeatureTrack()
             }
             else if(cfg::slam == SlamType::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
+            }
+            else if(cfg::slam == SlamType::kLine){
+                frame.features = feature_tracker->TrackImageLine(*img);
             }
             else{
                 frame.features = feature_tracker->TrackImage(*img);

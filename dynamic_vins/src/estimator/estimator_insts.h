@@ -53,7 +53,7 @@ public:
     void SetOutputInstInfo();
 
 
-    void InitialInstance(std::map<unsigned int,FeatureInstance> &input_insts);
+    void InitialInstance();
 
     void SetDynamicOrStatic();
 
@@ -111,7 +111,7 @@ public:
     }
 
     void InstExec(std::function<void(unsigned int,Instance&)> function,bool exec_all=false){
-        if(tracking_number_ < 1)
+        if(tracking_num < 1)
             return;
         if(exec_all){
             for(auto &[key,inst] : instances){
@@ -126,7 +126,7 @@ public:
         }
     }
 
-    int tracking_number() const {return tracking_number_;}
+    int tracking_number() const {return tracking_num;}
 
     std::unordered_map<unsigned int,Instance> instances;
 private:
@@ -136,7 +136,7 @@ private:
     std::unordered_map<unsigned int,InstEstimatedInfo> insts_output;
 
     int opt_inst_num_{0};//优化位姿的数量
-    int tracking_number_{0};//正在跟踪的物体数量
+    int tracking_num{0};//正在跟踪的物体数量
 
     int frame{0};
 

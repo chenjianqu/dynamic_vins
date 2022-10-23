@@ -23,25 +23,34 @@ Config::Config(const std::string &file_name)
         throw std::runtime_error(fmt::format("ERROR: Wrong path to settings:{}\n",file_name));
     }
 
+    ///设置slam模式
+
     string slam_type;
     fs["slam_type"]>>slam_type;
     if(slam_type=="raw")
         slam=SlamType::kRaw;
     else if(slam_type=="naive")
         slam=SlamType::kNaive;
+    else if(slam_type=="line")
+        slam=SlamType::kLine;
     else
         slam=SlamType::kDynamic;
+
     cout<<"SlamType::"<<slam_type<<endl;
+
+    ///设置数据集
 
     std::string dataset_type_string;
     fs["dataset_type"]>>dataset_type_string;
     std::transform(dataset_type_string.begin(),dataset_type_string.end(),dataset_type_string.begin(),::tolower);//
+
     if(dataset_type_string=="kitti")
         dataset = DatasetType::kKitti;
     else if(dataset_type_string=="viode")
         dataset = DatasetType::kViode;
     else
         dataset = DatasetType::kViode;
+
     cout<<"dataset:"<<dataset_type_string<<endl;
 
     if(dataset == DatasetType::kViode && (slam == SlamType::kDynamic || Config::slam == SlamType::kNaive)){

@@ -58,30 +58,32 @@ public:
 
     static void RegisterPub(ros::NodeHandle &n);
 
-    static  void PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t);
+    static void PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t);
 
-    static   void PrintStatistics(double t);
+    static void PrintStatistics(double t);
 
-    static   void PubOdometry(const std_msgs::Header &header);
+    static void PubOdometry(const std_msgs::Header &header);
 
-    static   void pubInitialGuess(const std_msgs::Header &header);
+    static void pubInitialGuess(const std_msgs::Header &header);
 
-    static   void PubKeyPoses(const std_msgs::Header &header);
+    static void PubKeyPoses(const std_msgs::Header &header);
 
-    static   void PubCameraPose(const std_msgs::Header &header);
+    static void PubCameraPose(const std_msgs::Header &header);
 
-    static   void PubPointCloud(const std_msgs::Header &header);
+    static void PubPointCloud(const std_msgs::Header &header);
 
-    static   void PubTF(const std_msgs::Header &header);
+    static void PubLines(const std_msgs::Header &header);
 
-    static     void PubKeyframe();
+    static void PubTF(const std_msgs::Header &header);
+
+    static void PubKeyframe();
 
     static void PubInstances(const std_msgs::Header &header);
 
     static void PubPredictBox3D(std::vector<Box3D> &boxes);
 
     static void PubTransform(const Mat3d &R,const Vec3d &P,tf::TransformBroadcaster &br,ros::Time time,
-                      const string &frame_id,const string &child_frame_id);
+                             const string &frame_id,const string &child_frame_id);
 
     static Marker BuildTrajectoryMarker(unsigned int id, std::list<State> &history, State* sliding_window, const cv::Scalar &color,
                                         Marker::_action_type action=Marker::ADD, const string &ns="trajectory" ,int offset=4);

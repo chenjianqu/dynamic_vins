@@ -41,7 +41,7 @@
 #include "vio_parameters.h"
 #include "semantic_feature.h"
 
-#include "estimator/factor/imu_factor.h"
+#include "estimator/imu/imu_factor.h"
 #include "estimator/initial/solve_5pts.h"
 #include "estimator/initial/initial_sfm.h"
 #include "estimator/initial/initial_alignment.h"
@@ -91,11 +91,11 @@ class Estimator
 
 
     InstanceManager im;
-    FeatureManager f_manager;
+    FeatureManager feat_manager;
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;
 
-    SemanticFeature feature_frame;
+    FrontendFeature feature_frame;
 
     int frame;
 
@@ -103,13 +103,16 @@ private:
 
     void SetMarginalizationInfo();
 
-    void ProcessImage(SemanticFeature & image, double header);
+    void ProcessImage(FrontendFeature & image, double header);
     void ProcessIMU(double t, double dt, const Vec3d &linear_acceleration, const Vec3d &angular_velocity);
 
     void SlideWindow();
     void SlideWindowNew();
     void SlideWindowOld();
+
     void Optimization();
+    void OptimizationWithLine();
+
     void Vector2double();
     void Double2vector();
 
@@ -121,10 +124,6 @@ private:
     bool GetIMUInterval(double t0, double t1, vector<pair<double, Vec3d>> &acc_vec,
                         vector<pair<double, Vec3d>> &gyr_vec);
 
-    void OutliersRejection(set<int> &removeIndex);
-    static double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
-                                    Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
-                                    double depth, Vec3d &uvi, Vec3d &uvj);
     void UpdateLatestStates();
     void FastPredictIMU(double t, const Vec3d& linear_acceleration,const Vec3d& angular_velocity);
 

@@ -23,10 +23,9 @@
 
 #include "utils/def.h"
 #include "utils/box3d.h"
+#include "landmark.h"
 
 namespace dynamic_vins{\
-
-
 
 
 template<typename T>
@@ -54,6 +53,14 @@ std::optional<Vec3d> FitBox3DFromPoints(vector<Vec3d> &points,const Vec3d& dims)
 std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& dims);
 
 std::optional<Vec3d> FitBox3DSimple(vector<Vec3d> &points,const Vec3d& dims);
+
+
+void OutliersRejection(std::set<int> &removeIndex,std::list<FeaturePerId>& point_landmarks);
+
+
+double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
+                         Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
+                         double depth, Vec3d &uvi, Vec3d &uvj);
 
 }
 

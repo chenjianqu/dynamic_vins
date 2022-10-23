@@ -18,15 +18,18 @@ namespace dynamic_vins{\
 void ResidualBlockInfo::Evaluate()
 {
     residuals.resize(cost_function->num_residuals());//设置残差的维度
-    std::vector<int> block_sizes = cost_function->parameter_block_sizes();//cost_function连接的各个参数块的大小
+    std::vector<int> block_sizes = cost_function->parameter_block_sizes();//cost_function连接的各个参数块的大小，每个元素表示一个参数块的长度
+    //设置数组的大小
     raw_jacobians = new double *[block_sizes.size()];
     jacobians.resize(block_sizes.size());
 
+    ///设置每个雅可比矩阵的维数，行数为残差的维度，列数为对应参数的纬度
     for (int i = 0; i < static_cast<int>(block_sizes.size()); i++){
         jacobians[i].resize(cost_function->num_residuals(), block_sizes[i]);
         raw_jacobians[i] = jacobians[i].data();
         //dim += block_sizes[i] == 7 ? 6 : block_sizes[i];
     }
+    ///执行雅可比和残差的计算
     cost_function->Evaluate(parameter_blocks.data(), residuals.data(), raw_jacobians);
 
 /*    std::vector<int> tmp_idx(block_sizes.size());
@@ -47,8 +50,8 @@ void ResidualBlockInfo::Evaluate()
     std::cout << saes.eigenvalues() << std::endl;
     ROS_ASSERT(saes.eigenvalues().minCoeff() >= -1e-6);*/
 
-    if (loss_function)
-    {
+    ///根据核函数修正雅可比和残差
+    if (loss_function){
         double residual_scaling_, alpha_sq_norm_;
         double sq_norm, rho[3];
         sq_norm = residuals.squaredNorm();
@@ -307,7 +310,11 @@ void MarginalizationInfo::marginalize()
 
 
 
-
+/**
+ * 获得参数块
+ * @param addr_shift
+ * @return
+ */
 std::vector<double *> MarginalizationInfo::getParameterBlocks(std::unordered_map<long, double *> &addr_shift)
 {
     std::vector<double *> keep_block_addr;
@@ -315,12 +322,13 @@ std::vector<double *> MarginalizationInfo::getParameterBlocks(std::unordered_map
     keep_block_idx.clear();
     keep_block_data.clear();
 
-    for (const auto &it : parameter_block_idx){
-        if (it.second >= m){
-            keep_block_size.push_back(parameter_block_size[it.first]);
-            keep_block_idx.push_back(parameter_block_idx[it.first]);
-            keep_block_data.push_back(parameter_block_data[it.first]);
-            keep_block_addr.push_back(addr_shift[it.first]);
+    ///记录保留下来的参数块、参数数据、等
+    for (const auto &[addr,idx] : parameter_block_idx){
+        if (idx >= m){
+            keep_block_size.push_back(parameter_block_size[addr]);
+            keep_block_idx.push_back(parameter_block_idx[addr]);
+            keep_block_data.push_back(parameter_block_data[addr]);
+            keep_block_addr.push_back(addr_shift[addr]);
         }
     }
     sum_block_size = std::accumulate(std::begin(keep_block_size), std::end(keep_block_size), 0);
@@ -341,8 +349,9 @@ MarginalizationFactor::MarginalizationFactor(MarginalizationInfo* _marginalizati
 
 bool MarginalizationFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {
-    int n = marg_info->n;
-    int m = marg_info->m;
+    int n = marg_info->n;//保留下来的变量维度
+    int m = marg_info->m;//边缘化的变量维度
+
     Eigen::VectorXd dx(n);
     for (int i = 0; i < static_cast<int>(marg_info->keep_block_size.size()); i++){
         int size = marg_info->keep_block_size[i];
@@ -357,6 +366,7 @@ bool MarginalizationFactor::Evaluate(double const *const *parameters, double *re
             dx.segment<3>(idx + 3) = 2.0 * Utility::positify(
                     Eigen::Quaterniond(x0(6), x0(3), x0(4), x0(5)).inverse() *
                     Eigen::Quaterniond(x(6), x(3), x(4), x(5))).vec();
+
             if (!((Eigen::Quaterniond(x0(6), x0(3), x0(4), x0(5)).inverse() *
                 Eigen::Quaterniond(x(6), x(3), x(4), x(5))).w() >= 0))
             {
@@ -367,11 +377,14 @@ bool MarginalizationFactor::Evaluate(double const *const *parameters, double *re
         }
     }
 
+    ///更新先验误差
     Eigen::Map<Eigen::VectorXd>(residuals, n) = marg_info->linearized_residuals + marg_info->linearized_jacobians * dx;
+
     if (jacobians){
         for (int i = 0; i < static_cast<int>(marg_info->keep_block_size.size()); i++){
             if (jacobians[i]){
-                int size = marg_info->keep_block_size[i], local_size = marg_info->localSize(size);
+                int size = marg_info->keep_block_size[i];
+                int local_size = marg_info->localSize(size);
                 int idx = marg_info->keep_block_idx[i] - m;
                 Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> jacobian(jacobians[i], n, size);
                 jacobian.setZero();

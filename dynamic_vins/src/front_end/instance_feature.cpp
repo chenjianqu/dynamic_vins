@@ -19,7 +19,6 @@
 namespace dynamic_vins{\
 
 
-
 /**
  * 计算特征点的像素速度
  */

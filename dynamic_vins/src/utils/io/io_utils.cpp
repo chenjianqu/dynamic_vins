@@ -99,8 +99,8 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
  * @param path
  * @param text
  */
-void WriteTextFile(std::string_view path,std::string_view text){
-    static std::set<std::string_view> path_set;
+void WriteTextFile(const string& path,std::string& text){
+    static std::set<string> path_set;
     ///第一次,清空文件
     if(path_set.find(path)==path_set.end()){
         path_set.insert(path);

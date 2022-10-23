@@ -83,6 +83,7 @@ catkin_package()
 
 
 include_directories(src)
+include_directories(src/line_detector/line_descriptor/include)
 
 aux_source_directory(src/utils utils_sources)
 aux_source_directory(src/utils/dataset dataset_sources)
@@ -97,15 +98,20 @@ aux_source_directory(src/image_process image_process_source)
 aux_source_directory(src/front_end front_end_sources)
 aux_source_directory(src/estimator/initial initial_sources)
 aux_source_directory(src/estimator/factor factor_sources)
+aux_source_directory(src/estimator/imu imu_sources)
 aux_source_directory(src/estimator estimator_sources)
+aux_source_directory(src/line_detector/line_descriptor/src line_descriptor_sources)
+aux_source_directory(src/line_detector line_detector_sources)
 
 message("estimator: ${estimator} ")
 
 add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources}
-        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources}
-        ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
+        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources} ${line_detector_sources} ${line_descriptor_sources}
+        ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${imu_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
-        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
+        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES}
+        /home/chen/ws/dynamic_ws/src/dynamic_vins/src/line_detector/line_descriptor/lib/liblinedesc.so
+        )
 
 add_executable(build_raft src/system/build_raft.cpp src/flow/flow_parameter.cpp ${tensorrt_sources} src/utils/log_utils.cpp)
 target_link_libraries(build_raft ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
@@ -118,7 +124,7 @@ target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIB
 
 
 add_executable(pub_object3d src/system/eval/pub_object3d.cpp  ${utils_sources} ${dataset_sources} ${tensorrt_sources}
-        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source}
+        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources}
         ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
 target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})

@@ -51,7 +51,8 @@ constexpr int kImageQueueSize=100;
 enum class SlamType{
     kRaw,
     kNaive,
-    kDynamic
+    kDynamic,
+    kLine
 };
 
 enum class DatasetType{

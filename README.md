@@ -27,14 +27,31 @@
 
 ## Install
 
-Install `dynamic_vins` from github:
+clone project:
 
 ```shell
 mkdir dynamic_ws/src
 cd dynamic_ws/src
 
 git clone https://github.com/chenjianqu/dynamic_vins.git
+```
 
+
+
+build line_descriptor:
+
+```shell
+cd ./dynamic_vins/src/utils/line_detector/line_descriptor
+mkdir build && cd build
+cmake ..
+make
+```
+
+
+
+build `dynamic_vins` from github:
+
+```shell
 cd ..
 
 catkin_make -j4
@@ -86,6 +103,7 @@ roscore
 
 * launch rviz
 ```shell
+dynamic_vins_root=/home/chen/ws/dynamic_ws
 rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 ```
 
@@ -98,10 +116,10 @@ rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 ```shell
 #VINS
 dynamic_vins_root=/home/chen/ws/dynamic_ws
-config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
-#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
 
 source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file}
 ```

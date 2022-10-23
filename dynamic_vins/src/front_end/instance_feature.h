@@ -32,6 +32,9 @@
 #include "feature_utils.h"
 #include "utils/box3d.h"
 #include "utils/box2d.h"
+#include "line_detector/line.h"
+#include "line_detector/line_descriptor/include/line_descriptor_custom.hpp"
+#include "line_detector/line_detector.h"
 
 namespace dynamic_vins{\
 
@@ -100,6 +103,9 @@ struct InstFeat{
     std::list<std::pair<cv::Point2f,cv::Point2f>> visual_points_pair;
     std::list<std::pair<cv::Point2f,cv::Point2f>> visual_right_points_pair;
     std::list<cv::Point2f> visual_new_points;
+
+    FrameLines::Ptr curr_lines,prev_lines;
+    FrameLines::Ptr curr_lines_right;
 
     int lost_num{0};//无法被跟踪的帧数,超过一定数量该实例将被删除
 

@@ -11,6 +11,7 @@
 #include "vio_util.h"
 
 #include "utils/log_utils.h"
+#include "body.h"
 
 
 namespace dynamic_vins{\
@@ -282,6 +283,76 @@ std::optional<Vec3d> FitBox3DSimple(vector<Vec3d> &points,const Vec3d& dims){
     }
     center_pt /= double(size);
     return center_pt;
+}
+
+
+
+/**
+ * 根据重投影误差判断哪些点需要被剔除
+ * @param removeIndex
+ */
+void OutliersRejection(std::set<int> &removeIndex,std::list<FeaturePerId>& point_landmarks)
+{
+    //return;
+    int feature_index = -1;
+    for (auto &lm : point_landmarks){
+        double err = 0;
+        int errCnt = 0;
+        lm.used_num = lm.feats.size();
+        if (lm.used_num < 4)
+            continue;
+        feature_index ++;
+        int imu_i = lm.start_frame, imu_j = imu_i - 1;
+        Vec3d pts_i = lm.feats[0].point;
+        double depth = lm.depth;
+
+        for (auto &feat : lm.feats){
+            imu_j++;
+            if (imu_i != imu_j){
+                Vec3d pts_j = feat.point;
+                double tmp_error = ReprojectionError(body.Rs[imu_i], body.Ps[imu_i], body.ric[0], body.tic[0],
+                                                     body.Rs[imu_j], body.Ps[imu_j], body.ric[0], body.tic[0],
+                                                     depth, pts_i, pts_j);
+                err += tmp_error;
+                errCnt++;
+            }
+            // need to rewrite projecton factor.........
+            if(cfg::is_stereo && feat.is_stereo){
+                Vec3d pts_j_right = feat.pointRight;
+                if(imu_i != imu_j){
+                    double tmp_error = ReprojectionError(body.Rs[imu_i], body.Ps[imu_i], body.ric[0], body.tic[0],
+                                                         body.Rs[imu_j], body.Ps[imu_j], body.ric[1], body.tic[1],
+                                                         depth, pts_i, pts_j_right);
+                    err += tmp_error;
+                    errCnt++;
+                }
+                else{
+                    double tmp_error = ReprojectionError(body.Rs[imu_i], body.Ps[imu_i], body.ric[0], body.tic[0],
+                                                         body.Rs[imu_j], body.Ps[imu_j], body.ric[1], body.tic[1],
+                                                         depth, pts_i, pts_j_right);
+                    err += tmp_error;
+                    errCnt++;
+                }
+            }
+        }
+        double ave_err = err / errCnt;
+        if(ave_err * kFocalLength > 3)
+            removeIndex.insert(lm.feature_id);
+
+    }
+}
+
+
+
+double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
+                                    Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
+                                    double depth, Vec3d &uvi, Vec3d &uvj){
+    Vec3d pts_w = Ri * (rici * (depth * uvi) + tici) + Pi;
+    Vec3d pts_cj = ricj.transpose() * (Rj.transpose() * (pts_w - Pj) - ticj);
+    Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - uvj.head<2>();
+    double rx = residual.x();
+    double ry = residual.y();
+    return sqrt(rx * rx + ry * ry);
 }
 
 

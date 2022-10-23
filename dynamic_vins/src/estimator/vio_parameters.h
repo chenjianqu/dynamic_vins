@@ -21,11 +21,13 @@ namespace dynamic_vins{\
 constexpr double kDynamicDepthMin=0.1;//动态特征点深度的最小值
 constexpr double kDynamicDepthMax=100;//动态特征点深度的最大值
 
+constexpr int kLineMinObs=5;
 
 enum SizeParameterization{
     kSizePose = 7,
     kSizeSpeedBias = 9,
-    kSizeFeature = 1,
+    kSizePoint = 1,
+    kSizeLine=4,
     kInstFeatSize=500,
     kSpeedSize=6,
     kBoxSize=3

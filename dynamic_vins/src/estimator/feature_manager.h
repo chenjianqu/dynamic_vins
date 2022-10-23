@@ -34,62 +34,11 @@
 #include "utils/def.h"
 #include "utils/parameters.h"
 #include "semantic_feature.h"
+#include "line_landmark.h"
 
 
 namespace dynamic_vins{\
 
-
-class FeaturePerFrame
-{
-  public:
-    FeaturePerFrame(const Eigen::Matrix<double, 7, 1> &_point, double td)
-    {
-        point.x() = _point(0);
-        point.y() = _point(1);
-        point.z() = _point(2);
-        uv.x() = _point(3);
-        uv.y() = _point(4);
-        velocity.x() = _point(5); 
-        velocity.y() = _point(6); 
-        cur_td = td;
-        is_stereo = false;
-    }
-    void rightObservation(const Eigen::Matrix<double, 7, 1> &_point)
-    {
-        pointRight.x() = _point(0);
-        pointRight.y() = _point(1);
-        pointRight.z() = _point(2);
-        uvRight.x() = _point(3);
-        uvRight.y() = _point(4);
-        velocityRight.x() = _point(5); 
-        velocityRight.y() = _point(6); 
-        is_stereo = true;
-    }
-    double cur_td;
-    Vec3d point, pointRight;
-    Vec2d uv, uvRight;
-    Vec2d velocity, velocityRight;
-    bool is_stereo;
-};
-
-class FeaturePerId
-{
-  public:
-    const int feature_id;
-    int start_frame;
-    vector<FeaturePerFrame> feats;
-    int used_num;
-    double depth;
-    int solve_flag; // 0 haven't solve yet; 1 solve succ; 2 solve fail;
-
-    FeaturePerId(int _feature_id, int _start_frame)
-        : feature_id(_feature_id), start_frame(_start_frame),
-          used_num(0), depth(-1.0), solve_flag(0)
-    {
-    }
-
-    int endFrame();
-};
 
 class FeatureManager
 {
@@ -99,28 +48,54 @@ class FeatureManager
     void SetRic(Mat3d _ric[]);
     void ClearState();
     int GetFeatureCount();
-    bool AddFeatureCheckParallax(int frame_count, const FeatureBackground &image, double td);
+
+    bool AddFeatureCheckParallax(int frame_count, const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td);
+    bool AddFeatureCheckParallax(int frame_count, FeatureBackground &image, double td);
+
     vector<pair<Vec3d, Vec3d>> GetCorresponding(int frame_count_l, int frame_count_r);
     //void updateDepth(const VectorXd &x);
     void SetDepth(const Eigen::VectorXd &x);
     void RemoveFailures();
+
     void ClearDepth();
     Eigen::VectorXd GetDepthVector();
+
+    int GetLineFeatureCount();
+
+    Eigen::MatrixXd GetLineOrthVector(Vec3d Ps[], Vec3d tic[], Mat3d ric[]);
+
+    Eigen::MatrixXd GetLineOrthVectorInCamera();
+
+
+    void SetLineOrth(Eigen::MatrixXd x,Vec3d P[], Mat3d R[], Vec3d tic[], Mat3d ric[]);
+
     void triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
-    void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
+
+    static void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
                           Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
-    void initFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
+
+    void TriangulateLine(Vec3d Ps[], Vec3d tic[], Mat3d ric[]);
+
+    void TriangulateLine(double baseline);  // stereo line
+
+    void InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
     static bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
                         vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
     void RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg_P, Mat3d new_R, Vec3d new_P);
     void RemoveBack();
     void RemoveFront(int frame_count);
+
     void RemoveOutlier(std::set<int> &outlierIndex);
 
-    std::list<FeaturePerId> landmarks;
+    void RemoveLineOutlier();
+
+    void RemoveLineOutlier(Vec3d Ps[], Vec3d tic[], Mat3d ric[]);
+
+    std::list<FeaturePerId> point_landmarks;
+    std::list<LineLandmark> line_landmarks;
     int last_track_num;
 
-  private:
+private:
     static double CompensatedParallax2(const FeaturePerId &landmark, int frame_count);
     const Mat3d *Rs;
     Mat3d ric[2];

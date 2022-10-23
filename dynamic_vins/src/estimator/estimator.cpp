@@ -32,31 +32,36 @@
 #include "estimator/factor/projection_two_frame_one_cam_factor.h"
 #include "estimator/factor/projection_two_frame_two_cam_factor.h"
 #include "estimator/factor/projection_one_frame_two_cam_factor.h"
+#include "estimator/factor/line_parameterization.h"
+#include "estimator/factor/line_projection_factor.h"
 
 #include "output.h"
 
 namespace dynamic_vins{\
 
 
-Estimator::Estimator(const string& config_path): f_manager{body.Rs}
+Estimator::Estimator(const string& config_path): feat_manager{body.Rs}
 {
     para::SetParameters(config_path);
 
     ClearState();
-    /*    std::string path_test="/home/chen/slam/expriments/DynamicVINS/FlowTrack/1_vel";
-        DIR* dir= opendir(path_test.c_str());//打开当前目录
-        if(access(path_test.c_str(),F_OK)==-1) //文件夹不存在
-            return;
-        struct dirent *ptr;
-        while((ptr=readdir(dir)) != nullptr){
-            saved_name.insert(ptr->d_name);
-        }*/
+
+    /*std::string path_test="/home/chen/slam/expriments/DynamicVINS/FlowTrack/1_vel";
+    DIR* dir= opendir(path_test.c_str());//打开当前目录
+    if(access(path_test.c_str(),F_OK)==-1) //文件夹不存在
+        return;
+    struct dirent *ptr;
+    while((ptr=readdir(dir)) != nullptr){
+        saved_name.insert(ptr->d_name);
+    }*/
 }
+
 
 Estimator::~Estimator()
 {
     printf("join thread \n");
 }
+
 
 /**
  * 添加残差块
@@ -66,13 +71,13 @@ void Estimator::AddInstanceParameterBlock(ceres::Problem &problem) {
     ///添加位姿顶点和bias顶点
     for (int i = 0; i < frame + 1; i++){
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
-        problem.AddParameterBlock(body.para_Pose[i], kSizePose, local_parameterization);
+        problem.AddParameterBlock(body.para_pose[i], kSizePose, local_parameterization);
         if(cfg::is_use_imu)
-            problem.AddParameterBlock(body.para_SpeedBias[i], kSizeSpeedBias);
+            problem.AddParameterBlock(body.para_speed_bias[i], kSizeSpeedBias);
     }
 
     if(!cfg::is_use_imu)
-        problem.SetParameterBlockConstant(body.para_Pose[0]);
+        problem.SetParameterBlockConstant(body.para_pose[0]);
 
     ///添加外参顶点
     for (int i = 0; i < cfg::kCamNum; i++){
@@ -105,11 +110,12 @@ void Estimator::AddInstanceParameterBlock(ceres::Problem &problem) {
                 continue;
             auto* imu_factor = new IMUFactor(pre_integrations[j]);
             problem.AddResidualBlock(imu_factor, nullptr,
-                                     body.para_Pose[i], body.para_SpeedBias[i], body.para_Pose[j], body.para_SpeedBias[j]);
+                                     body.para_pose[i], body.para_speed_bias[i], body.para_pose[j], body.para_speed_bias[j]);
         }
     }
 
 }
+
 
 
 /**
@@ -120,7 +126,7 @@ void Estimator::AddInstanceParameterBlock(ceres::Problem &problem) {
 int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function) {
     int f_m_cnt = 0;
     int feature_index = -1;
-    for (auto &lm : f_manager.landmarks){
+    for (auto &lm : feat_manager.point_landmarks){
         lm.used_num = lm.feats.size();
         if (lm.used_num < 4)
             continue;
@@ -135,8 +141,8 @@ int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *lo
                 auto *f_td = new ProjectionTwoFrameOneCamFactor(
                         pts_i, pts_j, lm.feats[0].velocity, feat.velocity,
                         lm.feats[0].cur_td, feat.cur_td);
-                problem.AddResidualBlock(f_td, loss_function, body.para_Pose[imu_i], body.para_Pose[imu_j],
-                                         body.para_ex_pose[0], body.para_Feature[feature_index], body.para_Td[0]);
+                problem.AddResidualBlock(f_td, loss_function, body.para_pose[imu_i], body.para_pose[imu_j],
+                                         body.para_ex_pose[0], body.para_point_features[feature_index], body.para_Td[0]);
             }
 
             if(cfg::is_stereo && feat.is_stereo){
@@ -145,15 +151,15 @@ int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *lo
                     auto *f = new ProjectionTwoFrameTwoCamFactor(
                             pts_i, pts_j_right, lm.feats[0].velocity, feat.velocityRight,
                             lm.feats[0].cur_td, feat.cur_td);
-                    problem.AddResidualBlock(f, loss_function, body.para_Pose[imu_i], body.para_Pose[imu_j],
-                                             body.para_ex_pose[0], body.para_ex_pose[1], body.para_Feature[feature_index], body.para_Td[0]);
+                    problem.AddResidualBlock(f, loss_function, body.para_pose[imu_i], body.para_pose[imu_j],
+                                             body.para_ex_pose[0], body.para_ex_pose[1], body.para_point_features[feature_index], body.para_Td[0]);
                 }
                 else{
                     auto *f = new ProjectionOneFrameTwoCamFactor(
                             pts_i, pts_j_right, lm.feats[0].velocity, feat.velocityRight,
                             lm.feats[0].cur_td, feat.cur_td);
                     problem.AddResidualBlock(f, loss_function, body.para_ex_pose[0], body.para_ex_pose[1],
-                                             body.para_Feature[feature_index], body.para_Td[0]);
+                                             body.para_point_features[feature_index], body.para_Td[0]);
                 }
 
             }
@@ -162,6 +168,7 @@ int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *lo
     }
     return f_m_cnt;
 }
+
 
 
 /**
@@ -176,6 +183,7 @@ void Estimator::Optimization()
     ceres::Problem problem;
     ceres::LossFunction *loss_function = new ceres::HuberLoss(1.0);
     //loss_function = new ceres::CauchyLoss(1.0 / kFocalLength);
+
     ///添加残差块
     AddInstanceParameterBlock(problem);
     ///添加动态物体的相关顶点
@@ -185,7 +193,7 @@ void Estimator::Optimization()
     }
 
     ///添加重投影误差
-    int f_m_cnt=AddResidualBlock(problem,loss_function);
+    int f_m_cnt = AddResidualBlock(problem,loss_function);
 
     ///添加动态物体的残差项
     if(cfg::slam == SlamType::kDynamic){
@@ -204,6 +212,7 @@ void Estimator::Optimization()
     //options.use_explicit_schur_complement = true;
     //options.minimizer_progress_to_stdout = true;
     //options.use_nonmonotonic_stebody.Ps = true;
+
     if (margin_flag == MarginFlag::kMarginOld)
         options.max_solver_time_in_seconds = para::kMaxSolverTime * 4.0 / 5.0;
     else
@@ -225,11 +234,9 @@ void Estimator::Optimization()
        // Debugv(insts_manager.PrintInstancePoseInfo(false));
     }
 
-
     Double2vector();
 
     //Debugv("相机位姿 优化后：\n" + LogCurrentPose());
-
     Debugv("optimization | postprocess:{} ms",tt.TocThenTic());
 
     if(frame < kWinSize)
@@ -239,7 +246,91 @@ void Estimator::Optimization()
     SetMarginalizationInfo();
 
     Debugv("optimization | 边缘化:{} ms",tt.TocThenTic());
+
 }
+
+
+
+void Estimator::OptimizationWithLine()
+{
+    TicToc tt;
+
+    Vector2double();
+
+    ceres::Problem problem;
+    ceres::LossFunction *loss_function = new ceres::CauchyLoss(1.0);
+
+    for (int i = 0; i < kWinSize + 1; i++){    // 将窗口内的 p,q 加入优化变量
+        ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
+        problem.AddParameterBlock(body.para_pose[i], kSizePose, local_parameterization);  // p,q
+        problem.SetParameterBlockConstant(body.para_pose[i]);// 固定 pose
+    }
+
+    for (int i = 0; i < cfg::kCamNum; i++) {        // 外参数
+        ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
+        problem.AddParameterBlock(body.para_ex_pose[i], kSizePose, local_parameterization);
+        problem.SetParameterBlockConstant(body.para_ex_pose[i]);// 固定 外参数
+    }
+
+
+    // 所有特征
+    int f_m_cnt = 0;
+    int feature_index = -1;
+    for (auto &landmark : feat_manager.line_landmarks){
+        landmark.used_num = landmark.feats.size();// 已经被多少帧观测到， 这个已经在三角化那个函数里说了
+        // 如果这个特征才被观测到，那就跳过。实际上这里为啥不直接用如果特征没有三角化这个条件。
+        if (!(landmark.used_num >= kLineMinObs && landmark.start_frame < kWinSize - 2 && landmark.is_triangulation))
+            continue;
+        ++feature_index; // 这个变量会记录feature在 para_Feature 里的位置， 将深度存入para_Feature时索引的记录也是用的这种方式
+
+        ///线参数化
+        ceres::LocalParameterization *local_parameterization_line = new LineOrthParameterization();
+        problem.AddParameterBlock(body.para_line_features[feature_index], kSizeLine, local_parameterization_line);  // p,q
+        int imu_i = landmark.start_frame,imu_j = imu_i - 1;
+
+        ///设置线重投影因子
+        for (auto &it_per_frame : landmark.feats){
+            imu_j++;
+            Vector4d obs = it_per_frame.line_obs;     // 在第j帧图像上的观测
+            auto *f = new lineProjectionFactor(obs);     // 特征重投影误差
+            problem.AddResidualBlock(f, loss_function,
+                                     body.para_pose[imu_j],
+                                     body.para_ex_pose[0],
+                                     body.para_line_features[feature_index]);
+            f_m_cnt++;
+        }
+    }
+
+    if(feature_index < 3){
+        return;
+    }
+
+    //设置ceres选项
+    ceres::Solver::Options options;
+    options.linear_solver_type = ceres::DENSE_SCHUR;
+    //options.num_threads = 2;
+    options.trust_region_strategy_type = ceres::DOGLEG;
+    options.max_num_iterations = para::KNumIter;
+    //options.use_explicit_schur_complement = true;
+    //options.minimizer_progress_to_stdout = true;
+    //options.use_nonmonotonic_stebody.Ps = true;
+    if (margin_flag == MarginFlag::kMarginOld)
+        options.max_solver_time_in_seconds = para::kMaxSolverTime * 4.0 / 5.0;
+    else
+        options.max_solver_time_in_seconds = para::kMaxSolverTime;
+
+    ///求解
+    TicToc t_solver;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+
+    Double2vector();
+
+    feat_manager.RemoveLineOutlier();
+}
+
+
+
 
 /**
  * 设置边缘化先验信息,用于下次的优化
@@ -252,16 +343,17 @@ void Estimator::SetMarginalizationInfo()
     if (margin_flag == MarginFlag::kMarginOld)
     {
         auto *marg_info = new MarginalizationInfo();
+
         Vector2double();
 
         ///之前的边缘化信息
         if (last_marg_info && last_marg_info->valid){
             vector<int> drop_set;
             for (size_t i = 0; i < last_marg_para_blocks.size(); i++){
-                if (last_marg_para_blocks[i] == body.para_Pose[0] ||  last_marg_para_blocks[i] == body.para_SpeedBias[0])
+                if (last_marg_para_blocks[i] == body.para_pose[0] || last_marg_para_blocks[i] == body.para_speed_bias[0])
                     drop_set.push_back(i);
             }
-            // construct new marginalization_factor
+            //根据上一时刻的边缘信息构建一个边缘化因子
             auto *marg_factor = new MarginalizationFactor(last_marg_info);
             auto *residual_block_info = new ResidualBlockInfo(
                     marg_factor, nullptr,last_marg_para_blocks,drop_set);
@@ -273,7 +365,7 @@ void Estimator::SetMarginalizationInfo()
                 auto* imu_factor = new IMUFactor(pre_integrations[1]);
                 auto *residual_block_info = new ResidualBlockInfo(
                         imu_factor, nullptr,
-                        vector<double *>{body.para_Pose[0], body.para_SpeedBias[0], body.para_Pose[1], body.para_SpeedBias[1]},
+                        vector<double *>{body.para_pose[0], body.para_speed_bias[0], body.para_pose[1], body.para_speed_bias[1]},
                         vector<int>{0, 1});
                 marg_info->addResidualBlockInfo(residual_block_info);
             }
@@ -281,7 +373,7 @@ void Estimator::SetMarginalizationInfo()
 
         ///将最老帧上的特征点的边缘化信息保留下来
         int feature_index = -1;
-        for (auto &lm : f_manager.landmarks) {
+        for (auto &lm : feat_manager.point_landmarks) {
             lm.used_num = lm.feats.size();
             if (lm.used_num < 4)
                 continue;
@@ -301,8 +393,8 @@ void Estimator::SetMarginalizationInfo()
                             lm.feats[0].cur_td, feat.cur_td);
                     auto *residual_block_info = new ResidualBlockInfo(
                             f_td, loss_function,
-                            vector<double *>{body.para_Pose[imu_i], body.para_Pose[imu_j],
-                                             body.para_ex_pose[0], body.para_Feature[feature_index], body.para_Td[0]},
+                            vector<double *>{body.para_pose[imu_i], body.para_pose[imu_j],
+                                             body.para_ex_pose[0], body.para_point_features[feature_index], body.para_Td[0]},
                                              vector<int>{0, 3});
                     marg_info->addResidualBlockInfo(residual_block_info);
                 }
@@ -314,8 +406,8 @@ void Estimator::SetMarginalizationInfo()
                                 lm.feats[0].cur_td, feat.cur_td);
                         auto *residual_block_info = new ResidualBlockInfo(
                                 f, loss_function,
-                                vector<double *>{body.para_Pose[imu_i], body.para_Pose[imu_j], body.para_ex_pose[0],
-                                                 body.para_ex_pose[1], body.para_Feature[feature_index], body.para_Td[0]},
+                                vector<double *>{body.para_pose[imu_i], body.para_pose[imu_j], body.para_ex_pose[0],
+                                                 body.para_ex_pose[1], body.para_point_features[feature_index], body.para_Td[0]},
                                                  vector<int>{0, 4});
                         marg_info->addResidualBlockInfo(residual_block_info);
                     }
@@ -325,7 +417,7 @@ void Estimator::SetMarginalizationInfo()
                                 lm.feats[0].cur_td, feat.cur_td);
                         auto *residual_block_info = new ResidualBlockInfo(
                                 f, loss_function,
-                                vector<double *>{body.para_ex_pose[0], body.para_ex_pose[1], body.para_Feature[feature_index],
+                                vector<double *>{body.para_ex_pose[0], body.para_ex_pose[1], body.para_point_features[feature_index],
                                                  body.para_Td[0]},
                                 vector<int>{2});
                         marg_info->addResidualBlockInfo(residual_block_info);
@@ -333,6 +425,39 @@ void Estimator::SetMarginalizationInfo()
                 }
             }
         }
+
+        /// Line特征
+        /*int linefeature_index = -1;
+        for (auto &landmark : f_manager.line_landmarks){
+            landmark.used_num = landmark.feats.size(); // 已经被多少帧观测到， 这个已经在三角化那个函数里说了
+            // 如果这个特征才被观测到，那就跳过。实际上这里为啥不直接用如果特征没有三角化这个条件。
+            if (!(landmark.used_num >= kLineMinObs && landmark.start_frame < kWinSize - 2 && landmark.is_triangulation))
+                continue;
+            ++linefeature_index;            // 这个变量会记录feature在 para_Feature 里的位置， 将深度存入para_Feature时索引的记录也是用的这种方式
+
+            int imu_i = landmark.start_frame,imu_j = imu_i - 1;
+            if (imu_i != 0)   // 如果这个特征的初始帧 不对应 要marg掉的最老帧0, 那就不用marg这个特征。即marg掉帧的时候，我们marg掉这帧上三角化的那些点
+                continue;
+
+            for (auto &feat : landmark.feats){
+                imu_j++;
+                std::vector<int> drop_set;
+                if(imu_i == imu_j){
+                    continue;
+                }else{
+                    drop_set = vector<int>{2};      // marg feature
+                }
+
+                Vector4d obs = feat.lineobs; // 在第j帧图像上的观测
+                auto *f = new lineProjectionFactor(obs);     // 特征重投影误差
+                auto *residual_block_info = new ResidualBlockInfo(
+                        f, loss_function,
+                        vector<double *>{body.para_pose[imu_j], body.para_ex_pose[0], body.para_line_features[linefeature_index]},drop_set);
+                        marg_info->addResidualBlockInfo(residual_block_info);
+            }
+        }*/
+
+
 
         TicToc t_pre_margin;
         marg_info->preMarginalize();
@@ -343,17 +468,18 @@ void Estimator::SetMarginalizationInfo()
         marg_info->marginalize();
         Debugv("marginalization {} ms", t_margin.Toc());
 
+        ///设置地址偏移
         std::unordered_map<long, double *> addr_shift;
         for (int i = 1; i <= kWinSize; i++){
-            addr_shift[reinterpret_cast<long>(body.para_Pose[i])] = body.para_Pose[i - 1];
+            addr_shift[reinterpret_cast<long>(body.para_pose[i])] = body.para_pose[i - 1];
             if(cfg::is_use_imu)
-                addr_shift[reinterpret_cast<long>(body.para_SpeedBias[i])] = body.para_SpeedBias[i - 1];
+                addr_shift[reinterpret_cast<long>(body.para_speed_bias[i])] = body.para_speed_bias[i - 1];
         }
-        for (int i = 0; i < cfg::kCamNum; i++){
+        for (int i = 0; i < cfg::kCamNum; i++)
             addr_shift[reinterpret_cast<long>(body.para_ex_pose[i])] = body.para_ex_pose[i];
-        }
         addr_shift[reinterpret_cast<long>(body.para_Td[0])] = body.para_Td[0];
 
+        ///设置keep_block_data
         vector<double *> parameter_blocks = marg_info->getParameterBlocks(addr_shift);
 
         delete last_marg_info;
@@ -363,17 +489,16 @@ void Estimator::SetMarginalizationInfo()
     ///边缘化次新帧
     else
     {
-        if (last_marg_info && std::count(
-                std::begin(last_marg_para_blocks), std::end(last_marg_para_blocks), body.para_Pose[kWinSize - 1]))
-        {
+        if (last_marg_info &&
+        std::count(std::begin(last_marg_para_blocks), std::end(last_marg_para_blocks),body.para_pose[kWinSize - 1])){
             auto *marg_info = new MarginalizationInfo();
             Vector2double();
             ///仅添加先验因子
             if (last_marg_info && last_marg_info->valid){
                 vector<int> drop_set;
                 for (int i = 0; i < static_cast<int>(last_marg_para_blocks.size()); i++){
-                    assert(last_marg_para_blocks[i] != body.para_SpeedBias[kWinSize - 1]);
-                    if (last_marg_para_blocks[i] == body.para_Pose[kWinSize - 1])
+                    assert(last_marg_para_blocks[i] != body.para_speed_bias[kWinSize - 1]);
+                    if (last_marg_para_blocks[i] == body.para_pose[kWinSize - 1])
                         drop_set.push_back(i);
                 }
                 // construct new marginlization_factor
@@ -387,30 +512,32 @@ void Estimator::SetMarginalizationInfo()
             TicToc t_pre_margin;
             Infov("begin marginalization");
             marg_info->preMarginalize();
+
             Infov("end pre marginalization, {} ms", t_pre_margin.Toc());
 
             TicToc t_margin;
             Infov("begin marginalization");
             marg_info->marginalize();
+
             Infov("end marginalization, {} ms", t_margin.Toc());
 
             std::unordered_map<long, double *> addr_shift;
-            for (int i = 0; i <= kWinSize; i++)
-            {
+            for (int i = 0; i <= kWinSize; i++){
                 if (i == kWinSize - 1){
                     continue;
                 }
                 else if (i == kWinSize){
-                    addr_shift[reinterpret_cast<long>(body.para_Pose[i])] = body.para_Pose[i - 1];
+                    addr_shift[reinterpret_cast<long>(body.para_pose[i])] = body.para_pose[i - 1];
                     if(cfg::is_use_imu)
-                        addr_shift[reinterpret_cast<long>(body.para_SpeedBias[i])] = body.para_SpeedBias[i - 1];
+                        addr_shift[reinterpret_cast<long>(body.para_speed_bias[i])] = body.para_speed_bias[i - 1];
                 }
                 else{
-                    addr_shift[reinterpret_cast<long>(body.para_Pose[i])] = body.para_Pose[i];
+                    addr_shift[reinterpret_cast<long>(body.para_pose[i])] = body.para_pose[i];
                     if(cfg::is_use_imu)
-                        addr_shift[reinterpret_cast<long>(body.para_SpeedBias[i])] = body.para_SpeedBias[i];
+                        addr_shift[reinterpret_cast<long>(body.para_speed_bias[i])] = body.para_speed_bias[i];
                 }
             }
+
             for (int i = 0; i < cfg::kCamNum; i++){
                 addr_shift[reinterpret_cast<long>(body.para_ex_pose[i])] = body.para_ex_pose[i];
             }
@@ -420,10 +547,9 @@ void Estimator::SetMarginalizationInfo()
             last_marg_info = marg_info;
             last_marg_para_blocks = parameter_blocks;
         }
+
     }
 }
-
-
 
 
 void Estimator::ClearState()
@@ -474,14 +600,11 @@ void Estimator::ClearState()
     tmp_pre_integration = nullptr;
     last_marg_info = nullptr;
     last_marg_para_blocks.clear();
-    f_manager.ClearState();
+    feat_manager.ClearState();
     failure_occur = false;
 
     process_mutex.unlock();
 }
-
-
-
 
 
 void Estimator::SetParameter()
@@ -492,7 +615,7 @@ void Estimator::SetParameter()
         body.ric[i] = para::RIC[i];
         Infov("SetParameter Extrinsic Cam {}:\n{} \n{}",i,EigenToStr(body.ric[i]),VecToStr(body.tic[i]));
     }
-    f_manager.SetRic(body.ric);
+    feat_manager.SetRic(body.ric);
     ProjectionTwoFrameOneCamFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
     ProjectionTwoFrameTwoCamFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
     ProjectionOneFrameTwoCamFactor::sqrt_info = kFocalLength / 1.5 * Matrix2d::Identity();
@@ -503,6 +626,7 @@ void Estimator::SetParameter()
     Infov("SetParameter Set g:{}", VecToStr(g));
     process_mutex.unlock();
 }
+
 
 void Estimator::ChangeSensorType(int use_imu, int use_stereo)
 {
@@ -688,7 +812,7 @@ bool Estimator::InitialStructure()
     Vec3d T[frame + 1];
     map<int, Vec3d> sfm_tracked_points;
     vector<SFMFeature> sfm_f;
-    for (auto &lm : f_manager.landmarks)
+    for (auto &lm : feat_manager.point_landmarks)
     {
         int imu_j = lm.start_frame - 1;
         SFMFeature tmp_feature;
@@ -788,6 +912,7 @@ bool Estimator::InitialStructure()
 
 }
 
+
 bool Estimator::VisualInitialAlign()
 {
     TicToc t_g;
@@ -842,8 +967,8 @@ bool Estimator::VisualInitialAlign()
     Debugv("g0:{}",VecToStr(g));
     Debugv("my R0 :{}", VecToStr(Utility::R2ypr(body.Rs[0])));
 
-    f_manager.ClearDepth();
-    f_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
+    feat_manager.ClearDepth();
+    feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
 
     return true;
 }
@@ -854,7 +979,7 @@ bool Estimator::RelativePose(Mat3d &relative_R, Vec3d &relative_T, int &l)
     for (int i = 0; i < kWinSize; i++)
     {
         vector<pair<Vec3d, Vec3d>> corres;
-        corres = f_manager.GetCorresponding(i, kWinSize);
+        corres = feat_manager.GetCorresponding(i, kWinSize);
         if (corres.size() > 20)
         {
             double sum_parallax = 0;
@@ -885,10 +1010,23 @@ void Estimator::Vector2double()
 {
     body.SetOptimizeParameters();
 
-    VectorXd dep = f_manager.GetDepthVector();
-    for (int i = 0; i < f_manager.GetFeatureCount(); i++)
-        body.para_Feature[i][0] = dep(i);
+    VectorXd dep = feat_manager.GetDepthVector();
+    for (int i = 0; i < feat_manager.GetFeatureCount(); i++){
+        body.para_point_features[i][0] = dep(i);
+    }
+
+    MatrixXd lineorth = feat_manager.GetLineOrthVector(body.Ps, body.tic, body.ric);
+    for (int i = 0; i < feat_manager.GetLineFeatureCount(); ++i) {
+        body.para_line_features[i][0] = lineorth.row(i)[0];
+        body.para_line_features[i][1] = lineorth.row(i)[1];
+        body.para_line_features[i][2] = lineorth.row(i)[2];
+        body.para_line_features[i][3] = lineorth.row(i)[3];
+        if(i > kNumFeat)
+            std::cerr << " 1000  1000 1000 1000 1000 \n\n";
+    }
+
 }
+
 
 void Estimator::Double2vector()
 {
@@ -903,17 +1041,30 @@ void Estimator::Double2vector()
 
     body.GetOptimizationParameters(origin_R0,origin_P0);
 
-    VectorXd dep = f_manager.GetDepthVector();
-    for (int i = 0; i < f_manager.GetFeatureCount(); i++)
-        dep(i) = body.para_Feature[i][0];
-    f_manager.SetDepth(dep);
+    VectorXd dep = feat_manager.GetDepthVector();
+    for (int i = 0; i < feat_manager.GetFeatureCount(); i++)
+        dep(i) = body.para_point_features[i][0];
+    feat_manager.SetDepth(dep);
+
+    MatrixXd lineorth_vec(feat_manager.GetLineFeatureCount(), 4);
+    for (int i = 0; i < feat_manager.GetLineFeatureCount(); ++i) {
+        Vector4d orth(body.para_line_features[i][0],
+                      body.para_line_features[i][1],
+                      body.para_line_features[i][2],
+                      body.para_line_features[i][3]);
+        lineorth_vec.row(i) = orth;
+    }
+    feat_manager.SetLineOrth(lineorth_vec, body.Ps, body.Rs, body.tic, body.ric);
+
+
 }
+
 
 bool Estimator::FailureDetection()
 {
     return false;
-    if (f_manager.last_track_num < 2){
-        Infov(" little feature %d", f_manager.last_track_num);
+    if (feat_manager.last_track_num < 2){
+        Infov(" little feature %d", feat_manager.last_track_num);
     }
     if (body.Bas[kWinSize].norm() > 2.5){
         Infov(" big IMU acc bias estimation %f", body.Bas[kWinSize].norm());
@@ -956,8 +1107,7 @@ bool Estimator::FailureDetection()
 void Estimator::SlideWindow()
 {
     TicToc t_margin;
-    if (margin_flag == MarginFlag::kMarginOld)
-    {
+    if (margin_flag == MarginFlag::kMarginOld){
         double t_0 = body.headers[0];
         back_R0 = body.Rs[0];
         back_P0 = body.Ps[0];
@@ -1041,10 +1191,11 @@ void Estimator::SlideWindow()
     }
 }
 
+
 void Estimator::SlideWindowNew()
 {
     sum_of_front++;
-    f_manager.RemoveFront(frame);
+    feat_manager.RemoveFront(frame);
 }
 
 void Estimator::SlideWindowOld()
@@ -1059,10 +1210,10 @@ void Estimator::SlideWindowOld()
         R1 = body.Rs[0] * body.ric[0];
         P0 = back_P0 + back_R0 * body.tic[0];
         P1 = body.Ps[0] + body.Rs[0] * body.tic[0];
-        f_manager.RemoveBackShiftDepth(R0, P0, R1, P1);
+        feat_manager.RemoveBackShiftDepth(R0, P0, R1, P1);
     }
     else{
-        f_manager.RemoveBack();
+        feat_manager.RemoveBack();
     }
 }
 
@@ -1080,7 +1231,7 @@ void Estimator::PredictPtsInNextFrame()
     Eigen::Matrix4d  nextT = curT * (prevT.inverse() * curT);
     map<int, Vec3d> predictPts;
 
-    for (auto &lm : f_manager.landmarks){
+    for (auto &lm : feat_manager.point_landmarks){
         if(lm.depth > 0){
             int firstIndex = lm.start_frame;
             int lastIndex = lm.start_frame + lm.feats.size() - 1;
@@ -1098,72 +1249,7 @@ void Estimator::PredictPtsInNextFrame()
     //printf("e output %d predict pts\n",(int)predictPts.size());
 }
 
-double Estimator::ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
-                                    Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
-                                    double depth, Vec3d &uvi, Vec3d &uvj){
-    Vec3d pts_w = Ri * (rici * (depth * uvi) + tici) + Pi;
-    Vec3d pts_cj = ricj.transpose() * (Rj.transpose() * (pts_w - Pj) - ticj);
-    Vector2d residual = (pts_cj / pts_cj.z()).head<2>() - uvj.head<2>();
-    double rx = residual.x();
-    double ry = residual.y();
-    return sqrt(rx * rx + ry * ry);
-}
 
-
-/**
- * 根据重投影误差判断哪些点需要被剔除
- * @param removeIndex
- */
-void Estimator::OutliersRejection(set<int> &removeIndex)
-{
-    //return;
-    int feature_index = -1;
-    for (auto &lm : f_manager.landmarks){
-        double err = 0;
-        int errCnt = 0;
-        lm.used_num = lm.feats.size();
-        if (lm.used_num < 4)
-            continue;
-        feature_index ++;
-        int imu_i = lm.start_frame, imu_j = imu_i - 1;
-        Vec3d pts_i = lm.feats[0].point;
-        double depth = lm.depth;
-
-        for (auto &feat : lm.feats){
-            imu_j++;
-            if (imu_i != imu_j){
-                Vec3d pts_j = feat.point;
-                double tmp_error = ReprojectionError(body.Rs[imu_i], body.Ps[imu_i], body.ric[0], body.tic[0],
-                                                     body.Rs[imu_j], body.Ps[imu_j], body.ric[0], body.tic[0],
-                                                     depth, pts_i, pts_j);
-                err += tmp_error;
-                errCnt++;
-            }
-            // need to rewrite projecton factor.........
-            if(cfg::is_stereo && feat.is_stereo){
-                Vec3d pts_j_right = feat.pointRight;
-                if(imu_i != imu_j){
-                    double tmp_error = ReprojectionError(body.Rs[imu_i], body.Ps[imu_i], body.ric[0], body.tic[0],
-                                                         body.Rs[imu_j], body.Ps[imu_j], body.ric[1], body.tic[1],
-                                                         depth, pts_i, pts_j_right);
-                    err += tmp_error;
-                    errCnt++;
-                }
-                else{
-                    double tmp_error = ReprojectionError(body.Rs[imu_i], body.Ps[imu_i], body.ric[0], body.tic[0],
-                                                         body.Rs[imu_j], body.Ps[imu_j], body.ric[1], body.tic[1],
-                                                         depth, pts_i, pts_j_right);
-                    err += tmp_error;
-                    errCnt++;
-                }
-            }
-        }
-        double ave_err = err / errCnt;
-        if(ave_err * kFocalLength > 3)
-            removeIndex.insert(lm.feature_id);
-
-    }
-}
 
 
 /**
@@ -1221,26 +1307,31 @@ void Estimator::UpdateLatestStates(){
  * @param image
  * @param header
  */
-void Estimator::ProcessImage(SemanticFeature &image, const double header){
+void Estimator::ProcessImage(FrontendFeature &image, const double header){
+    Infov("processImage adding feature: points_size:{},lines_size:{}", image.features.points.size(), image.features.lines.size());
+
     ///添加背景特征点到管理器,并判断视差
-    Infov("processImage Adding feature points number:{}", image.features.size());
-    if (f_manager.AddFeatureCheckParallax(frame, image.features, body.td))
+    bool margin_flag_bool;
+    if(cfg::slam == SlamType::kLine)
+         margin_flag_bool = feat_manager.AddFeatureCheckParallax(frame, image.features, body.td);
+    else
+         margin_flag_bool = feat_manager.AddFeatureCheckParallax(frame, image.features.points, body.td);
+
+    if (margin_flag_bool)
         margin_flag = MarginFlag::kMarginOld;
     else
         margin_flag = MarginFlag::kMarginSecondNew;
 
-    ///添加动态特征点,并创建物体
-    if(cfg::slam == SlamType::kDynamic){
-        im.PushBack(frame, image.instances);
-    }
+    Infov("processImage all feature: points_size:{},lines_size:{}",
+          feat_manager.point_landmarks.size(), feat_manager.line_landmarks.size());
 
     Debugv("processImage margin_flag:{}", margin_flag == MarginFlag::kMarginSecondNew ? "kMarginSecondNew" : "kMarginOld");
-    Debugv("processImage 地图中被观测4次以上的地点的数量: {}", f_manager.GetFeatureCount());
+    Debugv("processImage 地图中被观测4次以上的地点的数量: {}", feat_manager.GetFeatureCount());
 
     body.headers[frame] = header;
 
     ///创建帧,并设置该帧的预积分
-    ImageFrame img_frame(image.features, header);
+    ImageFrame img_frame(image.features.points, header);
     img_frame.pre_integration = tmp_pre_integration;
     all_image_frame.insert({header, img_frame});
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, body.Bas[frame], body.Bgs[frame]};
@@ -1249,7 +1340,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
     if(cfg::is_estimate_ex == 2){
         if (frame != 0){
             Infov("calibrating extrinsic param, rotation movement is needed");
-            auto cor = f_manager.GetCorresponding(frame - 1, frame);
+            auto cor = feat_manager.GetCorresponding(frame - 1, frame);
             Mat3d calib_ric;
             if (initial_ex_rotation.CalibrationExRotation(cor, pre_integrations[frame]->delta_q, calib_ric)){
                 Debugv("initial extrinsic rotation calib success");
@@ -1263,14 +1354,14 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
     ///VINS的初始化
     if (solver_flag == SolverFlag::kInitial){
-        // monocular + IMU initilization
-        if (!cfg::is_stereo && cfg::is_use_imu){
+        if (!cfg::is_stereo && cfg::is_use_imu){ // monocular + IMU initilization
             if (frame == kWinSize){
                 bool result = false;
                 if(cfg::is_estimate_ex != 2 && (header - initial_timestamp) > 0.1){
                     result = InitialStructure();
                     initial_timestamp = header;
                 }
+
                 if(result){
                     Optimization();
                     UpdateLatestStates();
@@ -1284,10 +1375,9 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             }
         }
         // stereo + IMU initilization
-        else if(cfg::is_stereo && cfg::is_use_imu)
-        {
-            f_manager.initFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
-            f_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
+        else if(cfg::is_stereo && cfg::is_use_imu){
+            feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+            feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
             if (frame == kWinSize){
                 map<double, ImageFrame>::iterator frame_it;
                 int i = 0;
@@ -1296,7 +1386,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
                     frame_it->second.T = body.Ps[i];
                     i++;
                 }
-                solveGyroscopeBias(all_image_frame, body.Bgs);
+                SolveGyroscopeBias(all_image_frame, body.Bgs);
                 for (int j = 0; j <= kWinSize; j++)
                     pre_integrations[j]->repropagate(Vec3d::Zero(), body.Bgs[j]);
                 Optimization();
@@ -1306,11 +1396,10 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
                 Infov("Initialization finish!");
             }
         }
-
         // stereo only initilization
         else if(cfg::is_stereo && !cfg::is_use_imu){
-            f_manager.initFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
-            f_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
+            feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+            feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
             Optimization();
             if(frame == kWinSize)
             {
@@ -1332,7 +1421,6 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             body.Bas[frame] = body.Bas[prev_frame];
             body.Bgs[frame] = body.Bgs[prev_frame];
         }
-
     }
     ///VIO的非线性优化, 以及滑动窗口
     else
@@ -1341,21 +1429,37 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
         ///若没有IMU,则需要根据PnP得到当前帧的位姿
         if(!cfg::is_use_imu)
-            f_manager.initFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+            feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+
         ///三角化背景特征点
-        f_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
+        feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
+
+        ///三角化线特征
+        if(cfg::slam == SlamType::kLine){
+            if(cfg::is_stereo){
+                feat_manager.TriangulateLine(cam1->baseline);
+            }
+            else{
+                feat_manager.TriangulateLine(body.Ps, body.tic, body.ric);
+            }
+        }
+
         Infov("processImage background Triangulate:{} ms",tt.TocThenTic());
 
         Debugv("--开始处理动态物体--");
 
         if(cfg::slam == SlamType::kDynamic){
+            ///添加动态特征点,并创建物体
+            im.PushBack(frame, image.instances);
+
+
             im.SetOutputInstInfo();//将输出实例的速度信息
             ///动态物体的位姿递推
             im.PropagatePose();
             ///动态特征点的三角化
             im.Triangulate();
             ///若动态物体未初始化, 则进行初始化
-            im.InitialInstance(image.instances);
+            im.InitialInstance();
             ///初始化速度
             im.InitialInstanceVelocity();
             ///根据重投影误差和对极几何判断物体是运动的还是静态的
@@ -1383,6 +1487,9 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
             Debugv("--完成处理动态物体--");
         }
 
+        if(cfg::slam==SlamType::kLine){
+            //OptimizationWithLine();
+        }
 
         ///VIO窗口的非线性优化
         Optimization();
@@ -1391,8 +1498,11 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
         ///外点剔除
         set<int> removeIndex;
-        OutliersRejection(removeIndex);
-        f_manager.RemoveOutlier(removeIndex);
+        OutliersRejection(removeIndex, feat_manager.point_landmarks);
+
+        feat_manager.RemoveOutlier(removeIndex);
+        feat_manager.RemoveLineOutlier();
+
 
         if (FailureDetection()){
             Warnv("failure detection!");
@@ -1424,7 +1534,7 @@ void Estimator::ProcessImage(SemanticFeature &image, const double header){
 
         Infov("processImage SlideWindow:{} ms", tt.TocThenTic());
 
-        f_manager.RemoveFailures();
+        feat_manager.RemoveFailures();
 
         /// prepare output of VINS
         key_poses.clear();
@@ -1452,13 +1562,11 @@ void Estimator::ProcessMeasurements(){
     double time_sum=0;
     TicToc tt,t_all;
 
-
     while (cfg::ok.load(std::memory_order_seq_cst)){
         if(feature_queue.empty()){
             std::this_thread::sleep_for(2ms);
             continue;
         }
-
         ///获取VIO的处理数据
         auto front_time=feature_queue.front_time();
         if(!front_time)
@@ -1482,9 +1590,10 @@ void Estimator::ProcessMeasurements(){
         //获取前端得到的特征
         feature_frame = *(feature_queue.request_frame());
 
-        Infov("ProcessMeasurements::GetIMUInterval:{} ms",tt.TocThenTic());
-
+        Infov("\n \n \n \n");
         Warnv("----------Time:{} seq:{} ----------", std::to_string(*front_time),feature_frame.seq_id);
+
+        Infov("ProcessMeasurements::GetIMUInterval:{} ms",tt.TocThenTic());
 
         body.seq_id = feature_frame.seq_id;
         body.frame_time = feature_frame.time;
@@ -1493,6 +1602,7 @@ void Estimator::ProcessMeasurements(){
         if(cfg::is_use_imu){
             if(!is_init_first_pose)
                 InitFirstIMUPose(acc_vec);
+
             for(size_t i = 0; i < acc_vec.size(); i++){
                 double dt;
                 if(i == 0)
@@ -1501,16 +1611,12 @@ void Estimator::ProcessMeasurements(){
                     dt = cur_time - acc_vec[i - 1].first;
                 else
                     dt = acc_vec[i].first - acc_vec[i - 1].first;
-
                 ProcessIMU(acc_vec[i].first, dt, acc_vec[i].second, gyr_vec[i].second);
             }
         }
 
         Infov("ProcessMeasurements::ProcessIMU:{} ms",tt.TocThenTic());
-
-
         process_mutex.lock();
-
         Debugv("solver_flag:{}", solver_flag == SolverFlag::kInitial ? "INITIAL" : "NO-LINEAR");
 
         ///进入主函数
@@ -1524,9 +1630,14 @@ void Estimator::ProcessMeasurements(){
 
         Infov("ProcessMeasurements::ProcessImage:{} ms",tt.TocThenTic());
 
-
         ///输出
         SetOutputEgoInfo(body.Rs[kWinSize], body.Ps[kWinSize], body.ric[0], body.tic[0]);
+
+        string log_time="headers: ";
+        for(int i=0;i<=kWinSize;++i){
+            log_time += fmt::format("{}:{} ",i,body.headers[i]);
+        }
+        Debugv(log_time);
 
         Publisher::PrintStatistics(0);
 
@@ -1537,7 +1648,6 @@ void Estimator::ProcessMeasurements(){
         if(cfg::slam == SlamType::kDynamic){
             //printInstanceData(*this);
             Publisher::PubInstances(header);
-
             cv::Mat img_topview = DrawTopView(im);
             ImagePublisher::Pub(img_topview,"top_view");
         }
@@ -1548,6 +1658,10 @@ void Estimator::ProcessMeasurements(){
         Publisher::PubPointCloud(header);
         Publisher::PubKeyframe();
         Publisher::PubTF(header);
+
+        if(cfg::slam==SlamType::kLine){
+            Publisher::PubLines(header);
+        }
 
         //PubPredictBox3D(*this,feature_frame.boxes);
 
@@ -1560,7 +1674,6 @@ void Estimator::ProcessMeasurements(){
 
         Infov("ProcessMeasurements::Output:{} ms",tt.TocThenTic());
 
-
         static unsigned int estimator_cnt=0;
         auto output_msg=fmt::format("cnt:{} ___________estimator process time: {} ms_____________\n",
                                     cnt,t_all.TocThenTic());
@@ -1569,8 +1682,6 @@ void Estimator::ProcessMeasurements(){
     }
 
     Infov("VIO Avg cost:{} ms",time_sum/cnt);
-
-
     Warnv("ProcessMeasurements 线程退出");
 
 }

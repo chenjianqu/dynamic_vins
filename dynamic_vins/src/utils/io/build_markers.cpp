@@ -67,6 +67,37 @@ Marker LineStripMarker(geometry_msgs::Point p[8], unsigned int id, const cv::Sca
 }
 
 
+Marker LineMarker(const Eigen::Vector3d &p1,const Eigen::Vector3d &p2,unsigned int id, const cv::Scalar &color,
+                  double scale, Marker::_action_type action, const string &ns,int offset){
+
+    Marker msg;
+    msg.header.stamp=ros::Time::now();
+    msg.header.frame_id="world";
+    msg.ns=ns;
+    msg.action=action;
+    msg.pose.orientation.w=1.0;
+
+    msg.id=id * kMarkerTypeNumber + offset;
+    msg.type=Marker::LINE_STRIP;//marker的类型
+
+    if(action==Marker::DELETE){
+        return msg;
+    }
+
+    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
+    msg.scale.x=scale;//线宽
+    msg.scale.y=scale;//线宽
+    msg.color = ScalarBgrToColorRGBA(color);
+
+    geometry_msgs::Point pw1 = EigenToGeometryPoint(p1);
+    geometry_msgs::Point pw2 = EigenToGeometryPoint(p2);
+    msg.points.push_back(pw1);
+    msg.points.push_back(pw2);
+
+    return msg;
+}
+
+
 Marker TextMarker(const Eigen::Vector3d &point, unsigned int id, const std::string &text, const cv::Scalar &color,
                   double scale, Marker::_action_type action, const string &ns,int offset){
     Marker msg;
