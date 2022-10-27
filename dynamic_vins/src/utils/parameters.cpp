@@ -40,18 +40,19 @@ Config::Config(const std::string &file_name)
 
     ///设置数据集
 
-    std::string dataset_type_string;
-    fs["dataset_type"]>>dataset_type_string;
-    std::transform(dataset_type_string.begin(),dataset_type_string.end(),dataset_type_string.begin(),::tolower);//
+    fs["dataset_type"]>>dataset_name;
+    std::transform(dataset_name.begin(),dataset_name.end(),dataset_name.begin(),::tolower);//
 
-    if(dataset_type_string=="kitti")
+    if(dataset_name=="kitti")
         dataset = DatasetType::kKitti;
-    else if(dataset_type_string=="viode")
+    else if(dataset_name=="viode")
         dataset = DatasetType::kViode;
+    else if(dataset_name == "euroc")
+        dataset = DatasetType::kEuRoc;
     else
         dataset = DatasetType::kViode;
 
-    cout<<"dataset:"<<dataset_type_string<<endl;
+    cout<<"dataset:"<<dataset_name<<endl;
 
     if(dataset == DatasetType::kViode && (slam == SlamType::kDynamic || Config::slam == SlamType::kNaive)){
         is_input_seg = true;

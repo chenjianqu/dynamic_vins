@@ -13,6 +13,7 @@
 #define DYNAMIC_VINS_LINE_LANDMARK_H
 
 #include "utils/def.h"
+#include "line_detector/line.h"
 
 namespace dynamic_vins{\
 
@@ -74,7 +75,7 @@ public:
     //如：feature_per_frame[0]，存的是ft在start_frame上的观测值; feature_per_frame[1]存的是start_frame+1上的观测
     vector<LineFeature> feats;
 
-    int used_num;
+    unsigned int used_num;
     bool is_outlier{};
     bool is_margin{};
     bool is_triangulation;

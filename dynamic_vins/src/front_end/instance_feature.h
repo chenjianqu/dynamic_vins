@@ -83,6 +83,8 @@ struct InstFeat{
         right_prev_id_pts=right_curr_id_pts;
 
         visual_new_points.clear();
+
+        prev_lines = curr_lines;
     }
 
     unsigned int id{0};

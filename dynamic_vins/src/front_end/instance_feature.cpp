@@ -211,7 +211,7 @@ void InstFeat::TrackRight(SemanticImage &img){
         }
     }
     else{
-        ///TODO
+        std::cerr<<"InstFeat::TrackRight() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
     }
     right_ids = ids;
     ReduceVector(right_points, status);
@@ -247,7 +247,7 @@ void InstFeat::TrackRightGPU(SemanticImage &img,
         }
     }
     else{
-        ///TODO
+        std::cerr<<"InstFeat::TrackRightGPU() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
     }
     right_ids = ids;
     ReduceVector(right_points, status);

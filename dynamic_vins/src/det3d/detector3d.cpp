@@ -51,6 +51,10 @@ std::vector<Box3D::Ptr>  Detector3D::WaitResult(){
             string target_name = PadNumber(image_seq_id,6);//补零
             return Detector3D::ReadBox3D(target_name);
         }
+        else{
+            std::cerr<<"Detector3D::WaitResult() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+            return {};
+        }
     }
     else{
         Criticals("det3d_para::use_offline = false, but not implement");

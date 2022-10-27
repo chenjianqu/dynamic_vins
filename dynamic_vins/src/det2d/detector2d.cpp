@@ -110,7 +110,7 @@ Detector2D::Detector2D(const std::string& config_path)
     ///初始化参数
     det2d_para::SetParameters(config_path);
 
-    if(cfg::slam == SlamType::kRaw || cfg::is_input_seg){
+    if(!(cfg::slam == SlamType::kNaive || cfg::slam==SlamType::kDynamic) || cfg::is_input_seg){
         fmt::print("cfg::slam == SlamType::kRaw || cfg::is_input_seg. So don't need detector\n");
         return;
     }

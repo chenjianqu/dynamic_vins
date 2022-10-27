@@ -253,6 +253,44 @@ double LineReprojectionError( Vec4d obs, Mat3d Rwc, Vec3d twc, Vec6d line_w ) {
 }
 
 
+/**
+ * 获得3D直线的两个端点
+ * @param plucker
+ * @return 是否有效，两个3D点在相机坐标系下的坐标
+ */
+tuple<bool,Vec3d,Vec3d> LineTrimming(const Vec6d &plucker,const Vec4d &line_obs){
+    Vec3d nc = plucker.head(3);
+    Vec3d vc = plucker.tail(3);
+
+    //plucker矩阵
+    Mat4d Lc;
+    Lc << skew_symmetric(nc), vc, -vc.transpose(), 0;
+
+    Vec3d p11 = Vec3d(line_obs(0), line_obs(1), 1.0);
+    Vec3d p21 = Vec3d(line_obs(2), line_obs(3), 1.0);
+    Vec2d ln = ( p11.cross(p21) ).head(2);     // 直线的垂直方向
+    ln = ln / ln.norm();
+
+    Vec3d p12 = Vec3d(p11(0) + ln(0), p11(1) + ln(1), 1.0);  // 直线垂直方向上移动一个单位
+    Vec3d p22 = Vec3d(p21(0) + ln(0), p21(1) + ln(1), 1.0);
+    Vec3d cam = Vec3d( 0, 0, 0 );
+
+    Vec4d pi1 = pi_from_ppp(cam, p11, p12);
+    Vec4d pi2 = pi_from_ppp(cam, p21, p22);
+
+    Vec4d e1 = Lc * pi1;
+    Vec4d e2 = Lc * pi2;
+    e1 = e1/e1(3);
+    e2 = e2/e2(3);
+
+    Vec3d pts_1(e1(0),e1(1),e1(2));//直线在相机坐标系下的端点
+    Vec3d pts_2(e2(0),e2(1),e2(2));
+
+    bool valid = e1[2]>=0 && e2[2]>=0;
+
+    return {valid,pts_1,pts_2};
+}
+
 
 
 }

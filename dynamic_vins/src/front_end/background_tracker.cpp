@@ -167,6 +167,8 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
     bg.box2d->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
 
+    static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+    clahe->apply(img.gray0, img.gray0);
 
     ///线特征的提取和跟踪
     bg.curr_lines = line_detector->Detect(img.gray0);
@@ -186,7 +188,6 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
     bg.curr_lines_right->SetLines();
     bg.curr_lines_right->UndistortedLineEndPoints(cam1);
 
-    bg.prev_lines = bg.curr_lines;
 
     ///跟踪左图像的点特征
     bg.curr_points.clear();
@@ -271,8 +272,14 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
         ///可视化线
         line_detector->VisualizeLine(img_track_, bg.curr_lines);
-        line_detector->VisualizeRightLine(img_track_,bg.curr_lines_right,true);
-
+        if(cfg::dataset==DatasetType::kKitti){
+            line_detector->VisualizeRightLine(img_track_,bg.curr_lines_right,true);
+        }
+        else{
+            line_detector->VisualizeRightLine(img_track_,bg.curr_lines_right,false);
+        }
+        //line_detector->VisualizeLineStereoMatch(img_track_, bg.curr_lines, bg.curr_lines_right);
+        line_detector->VisualizeLineMonoMatch(img_track_,bg.prev_lines,bg.curr_lines);
     }
 
     Infot("TrackImage | DrawTrack right:{} ms", tt.TocThenTic());
@@ -327,7 +334,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
         ///左图像的先特征
         for(Line& l:bg.curr_lines->un_lines){
             std::vector<std::pair<int,Line>> lv;
-            lv.push_back({0,l});
+            lv.emplace_back(0,l);
             lines.insert({l.id,lv});
         }
         ///右图像的线特征
@@ -337,7 +344,6 @@ FeatureBackground FeatureTracker::SetOutputFeats()
 
         fm.lines = lines;
     }
-
 
     return fm;
 }

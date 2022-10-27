@@ -23,6 +23,7 @@
 #include "vio_parameters.h"
 #include "body.h"
 #include "line_detector/line_geometry.h"
+#include "utils/io/io_utils.h"
 
 
 namespace dynamic_vins{\
@@ -364,7 +365,7 @@ void FeatureManager::InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
  * @param tic
  * @param ric
  */
-void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[])
+void FeatureManager::TriangulatePoint(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[])
 {
     for (auto &lm : point_landmarks){
         if (lm.depth > 0)
@@ -417,7 +418,6 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
         if (lm.used_num < 4)
             continue;
 
-        //以下代码好像执行不到
 
         int imu_i = lm.start_frame, imu_j = imu_i - 1;
 
@@ -464,147 +464,23 @@ void FeatureManager::triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic
 }
 
 
-
-void FeatureManager::TriangulateLine(Vec3d Ps[], Vec3d tic[], Mat3d ric[])
+void FeatureManager::TriangulateLineMono()
 {
+    string log_text="TriangulateLineMono:\n";
     for (auto &landmark : line_landmarks){        // 遍历每个特征，对新特征进行三角化
+        log_text += fmt::format("lid:{} obs:{} tri:{}\n",landmark.feature_id,landmark.feats.size(),landmark.is_triangulation);
 
         landmark.used_num = landmark.feats.size();    // 已经有多少帧看到了这个特征
-        if (!(landmark.used_num >= kLineMinObs && landmark.start_frame < kWinSize - 2))   // 看到的帧数少于2， 或者 这个特征最近倒数第二帧才看到， 那都不三角化
+        if (landmark.used_num < kLineMinObs)   // 看到的帧数少于2， 或者 这个特征最近倒数第二帧才看到， 那都不三角化
             continue;
         if (landmark.is_triangulation)       // 如果已经三角化了
             continue;
+        TriangulateOneLine(landmark);
 
-        int imu_i = landmark.start_frame, imu_j = imu_i - 1;
-
-        Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];   // twc = Rwi * tic + twi
-        Mat3d R0 = Rs[imu_i] * ric[0];               // Rwc = Rwi * Ric
-
-        double d = 0, min_cos_theta = 1.0;
-        Vec3d tij;
-        Mat3d Rij;
-        Vec4d obsi,obsj;  // obs from two frame are used to do triangulation
-
-        // plane pi from ith obs in ith camera frame
-        Vec4d pii;
-        Vec3d ni;      // normal vector of plane
-        for (auto &it_per_frame : landmark.feats){   // 遍历所有的观测， 注意 start_frame 也会被遍历
-            imu_j++;
-
-            if(imu_j == imu_i){   // 第一个观测是start frame 上
-                obsi = it_per_frame.line_obs;
-                Vec3d p1( obsi(0), obsi(1), 1 );
-                Vec3d p2( obsi(2), obsi(3), 1 );
-                pii = pi_from_ppp(p1, p2,Vec3d( 0, 0, 0 ));
-                ni = pii.head(3);
-                ni.normalize();
-                continue;
-            }
-
-            // 非start frame(其他帧)上的观测
-            Vec3d t1 = Ps[imu_j] + Rs[imu_j] * tic[0];
-            Mat3d R1 = Rs[imu_j] * ric[0];
-
-            Vec3d t = R0.transpose() * (t1 - t0);   // tij
-            Mat3d R = R0.transpose() * R1;          // Rij
-
-            Vec4d obsj_tmp = it_per_frame.line_obs;
-
-            // plane pi from jth obs in ith camera frame
-            Vec3d p3( obsj_tmp(0), obsj_tmp(1), 1 );
-            Vec3d p4( obsj_tmp(2), obsj_tmp(3), 1 );
-            p3 = R * p3 + t;
-            p4 = R * p4 + t;
-            Vec4d pij = pi_from_ppp(p3, p4,t);
-            Vec3d nj = pij.head(3);
-            nj.normalize();
-
-            double cos_theta = ni.dot(nj);
-            if(cos_theta < min_cos_theta){
-                min_cos_theta = cos_theta;
-                tij = t;
-                Rij = R;
-                obsj = obsj_tmp;
-                d = t.norm();
-            }
-            /*             if( d < t.norm() )  // 选择最远的那俩帧进行三角化
-                         {
-                             d = t.norm();
-                             tij = t;
-                             Rij = R;
-                             obsj = it_per_frame.lineobs;      // 特征的图像坐标
-                         }*/
-
-            }
-
-        // if the distance between two frame is lower than 0.1m or the parallax angle is lower than 15deg , do not triangulate.
-        // if(d < 0.1 || min_cos_theta > 0.998)
-        if(min_cos_theta > 0.998)
-            // if( d < 0.2 )
-            continue;
-
-        // plane pi from jth obs in ith camera frame
-        Vec3d p3( obsj(0), obsj(1), 1 );
-        Vec3d p4( obsj(2), obsj(3), 1 );
-        p3 = Rij * p3 + tij;
-        p4 = Rij * p4 + tij;
-        Vec4d pij = pi_from_ppp(p3, p4,tij);
-
-        Vec6d plk = pipi_plk( pii, pij );
-        Vec3d n = plk.head(3);
-        Vec3d v = plk.tail(3);
-
-        //Vec3d cp = plucker_origin( n, v );
-        //if ( cp(2) < 0 )
-        {
-            //  cp = - cp;
-            //  continue;
-        }
-
-        //Vector6d line;
-        //line.head(3) = cp;
-        //line.tail(3) = v;
-        //it_per_id.line_plucker = line;
-
-        // plk.normalize();
-        landmark.line_plucker = plk;  // plk in camera frame
-        landmark.is_triangulation = true;
-
-        //  used to debug
-        Vec3d pc, nc, vc;
-        nc = landmark.line_plucker.head(3);
-        vc = landmark.line_plucker.tail(3);
-
-        ///对偶的plucker矩阵
-        Mat4d Lc;
-        Lc << skew_symmetric(nc), vc, -vc.transpose(), 0;
-
-        Vec4d obs_startframe = landmark.feats[0].line_obs;   // 第一次观测到这帧
-        Vec3d p11 = Vec3d(obs_startframe(0), obs_startframe(1), 1.0);
-        Vec3d p21 = Vec3d(obs_startframe(2), obs_startframe(3), 1.0);
-        Vec2d ln = ( p11.cross(p21) ).head(2);     // 直线的垂直方向
-        ln = ln / ln.norm();
-
-        Vec3d p12 = Vec3d(p11(0) + ln(0), p11(1) + ln(1), 1.0);  // 直线垂直方向上移动一个单位
-        Vec3d p22 = Vec3d(p21(0) + ln(0), p21(1) + ln(1), 1.0);
-        Vec3d cam = Vec3d( 0, 0, 0 );
-
-        Vec4d pi1 = pi_from_ppp(cam, p11, p12);
-        Vec4d pi2 = pi_from_ppp(cam, p21, p22);
-
-        Vec4d e1 = Lc * pi1;
-        Vec4d e2 = Lc * pi2;
-        e1 = e1/e1(3);
-        e2 = e2/e2(3);
-
-        Vec3d pts_1(e1(0),e1(1),e1(2));
-        Vec3d pts_2(e2(0),e2(1),e2(2));
-
-        Vec3d w_pts_1 =  Rs[imu_i] * (ric[0] * pts_1 + tic[0]) + Ps[imu_i];
-        Vec3d w_pts_2 =  Rs[imu_i] * (ric[0] * pts_2 + tic[0]) + Ps[imu_i];
-        landmark.ptw1 = w_pts_1;
-        landmark.ptw2 = w_pts_2;
     }
+    log_text += "\n\n";
+
+    WriteTextFile(MyLogger::kLogOutputDir + "line_info.txt",log_text);
 
     //    removeLineOutlier(Ps,tic,ric);
 }
@@ -613,9 +489,9 @@ void FeatureManager::TriangulateLine(Vec3d Ps[], Vec3d tic[], Mat3d ric[])
 
 
 /**
- *  @brief  stereo line triangulate
+ *  @brief  stereo line TriangulatePoint
  */
-void FeatureManager::TriangulateLine(double baseline)
+void FeatureManager::TriangulateLineStereo(double baseline)
 {
     for (auto &landmark : line_landmarks) {       // 遍历每个特征，对新特征进行三角化
         landmark.used_num = landmark.feats.size();    // 已经有多少帧看到了这个特征
@@ -633,41 +509,10 @@ void FeatureManager::TriangulateLine(double baseline)
             continue;
         }
 
-        int imu_i = landmark.start_frame;
-        LineFeature feat = landmark.feats.front();
-
-        // plane pi from ith left obs in ith left camera frame
-        Vec3d p1( feat.line_obs(0), feat.line_obs(1), 1 );
-        Vec3d p2( feat.line_obs(2), feat.line_obs(3), 1 );
-        Vec4d pii = pi_from_ppp(p1, p2,Vec3d( 0, 0, 0 ));
-
-        // plane pi from ith right obs in ith left camera frame
-        Vec3d p3( feat.line_obs_right(0) + baseline, feat.line_obs_right(1), 1 );
-        Vec3d p4( feat.line_obs_right(2) + baseline, feat.line_obs_right(3), 1 );
-        Vec4d pij = pi_from_ppp(p3, p4,Vec3d(baseline, 0, 0));
-
-        Vec6d plk = pipi_plk( pii, pij );
-        Vec3d n = plk.head(3);
-        Vec3d v = plk.tail(3);
-
-        //Vec3d cp = plucker_origin( n, v );
-        //if ( cp(2) < 0 )
-        {
-            //  cp = - cp;
-            //  continue;
-        }
-
-        //Vector6d line;
-        //line.head(3) = cp;
-        //line.tail(3) = v;
-        //it_per_id.line_plucker = line;
-
-        // plk.normalize();
-        landmark.line_plucker = plk;  // plk in camera frame
-        landmark.is_triangulation = true;
+        TriangulateOneLineStereo(landmark);
     }
 
-    RemoveLineOutlier();
+    //RemoveLineOutlierByLength();
 }
 
 
@@ -759,8 +604,10 @@ void FeatureManager::SetLineOrth(Eigen::MatrixXd x,Vec3d P[], Mat3d R[], Vec3d t
 
 
 
-
-void FeatureManager::RemoveLineOutlier()
+/**
+ * 根据长度执行直线外点剔除
+ */
+void FeatureManager::RemoveLineOutlierByLength()
 {
     for (auto landmark = line_landmarks.begin(), it_next = line_landmarks.begin();
          landmark != line_landmarks.end(); landmark = it_next)
@@ -768,43 +615,13 @@ void FeatureManager::RemoveLineOutlier()
         it_next++;
         landmark->used_num = landmark->feats.size();
         // TODO: 右目没看到
-        if (landmark->is_triangulation || landmark->used_num < 2)  // 已经三角化了 或者 少于两帧看到 或者 右目没有看到
+        if (!(landmark->used_num >= kLineMinObs && landmark->start_frame < kWinSize - 2 && landmark->is_triangulation))
             continue;
 
-        int imu_i = landmark->start_frame, imu_j = imu_i - 1;
+        const auto &[valid,pts1,pts2] = LineTrimming(landmark->line_plucker,landmark->feats[0].line_obs);
 
-        // 计算初始帧上线段对应的3d端点
-        Vec3d pc, nc, vc;
-        nc = landmark->line_plucker.head(3);
-        vc = landmark->line_plucker.tail(3);
-
-        Mat4d Lc;
-        Lc << skew_symmetric(nc), vc, -vc.transpose(), 0;
-
-        Vec4d obs_startframe = landmark->feats[0].line_obs;   // 第一次观测到这帧
-        Vec3d p11 = Vec3d(obs_startframe(0), obs_startframe(1), 1.0);
-        Vec3d p21 = Vec3d(obs_startframe(2), obs_startframe(3), 1.0);
-        Vec2d ln = ( p11.cross(p21) ).head(2);     // 直线的垂直方向
-        ln = ln / ln.norm();
-
-        Vec3d p12 = Vec3d(p11(0) + ln(0), p11(1) + ln(1), 1.0);  // 直线垂直方向上移动一个单位
-        Vec3d p22 = Vec3d(p21(0) + ln(0), p21(1) + ln(1), 1.0);
-        Vec3d cam = Vec3d( 0, 0, 0 );
-
-        Vec4d pi1 = pi_from_ppp(cam, p11, p12);
-        Vec4d pi2 = pi_from_ppp(cam, p21, p22);
-
-        Vec4d e1 = Lc * pi1;
-        Vec4d e2 = Lc * pi2;
-        e1 = e1/e1(3);
-        e2 = e2/e2(3);
-
-        if(e1(2) < 0 || e2(2) < 0){
-            line_landmarks.erase(landmark);
-            continue;
-        }
-
-        if((e1-e2).norm() > 10){
+        ///直线超过10m，删除
+        if(!valid || (pts1-pts2).norm() > 10){
             line_landmarks.erase(landmark);
             continue;
         }
@@ -818,12 +635,13 @@ void FeatureManager::RemoveLineOutlier()
                 }
         */
 
+
     }
 }
 
 
 
-void FeatureManager::RemoveLineOutlier(Vec3d Ps[], Vec3d tic[], Mat3d ric[])
+void FeatureManager::RemoveLineOutlier()
 {
 
     for (auto landmark = line_landmarks.begin(), it_next = line_landmarks.begin();
@@ -836,86 +654,31 @@ void FeatureManager::RemoveLineOutlier(Vec3d Ps[], Vec3d tic[], Mat3d ric[])
 
         int imu_i = landmark->start_frame, imu_j = imu_i - 1;
 
-        Vec3d twc = Ps[imu_i] + Rs[imu_i] * tic[0];   // twc = Rwi * tic + twi
-        Mat3d Rwc = Rs[imu_i] * ric[0];               // Rwc = Rwi * Ric
+        Vec3d twc = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[0];   // twc = Rwi * tic + twi
+        Mat3d Rwc = body.Rs[imu_i] * body.ric[0];               // Rwc = Rwi * Ric
 
-        // 计算初始帧上线段对应的3d端点
-        Vec3d pc, nc, vc;
-        nc = landmark->line_plucker.head(3);
-        vc = landmark->line_plucker.tail(3);
-
-        //       double  d = nc.norm()/vc.norm();
-        //       if (d > 5.0)
-        {
-            //           std::cerr <<"remove a large distant line \n";
-            //           linefeature.erase(it_per_id);
-            //           continue;
-        }
-
-        Mat4d Lc;
-        Lc << skew_symmetric(nc), vc, -vc.transpose(), 0;
-
-        Vec4d obs_startframe = landmark->feats[0].line_obs;   // 第一次观测到这帧
-        Vec3d p11 = Vec3d(obs_startframe(0), obs_startframe(1), 1.0);
-        Vec3d p21 = Vec3d(obs_startframe(2), obs_startframe(3), 1.0);
-        Vec2d ln = ( p11.cross(p21) ).head(2);     // 直线的垂直方向
-        ln = ln / ln.norm();
-
-        Vec3d p12 = Vec3d(p11(0) + ln(0), p11(1) + ln(1), 1.0);  // 直线垂直方向上移动一个单位
-        Vec3d p22 = Vec3d(p21(0) + ln(0), p21(1) + ln(1), 1.0);
-        Vec3d cam = Vec3d( 0, 0, 0 );
-
-        Vec4d pi1 = pi_from_ppp(cam, p11, p12);
-        Vec4d pi2 = pi_from_ppp(cam, p21, p22);
-
-        Vec4d e1 = Lc * pi1;
-        Vec4d e2 = Lc * pi2;
-        e1 = e1/e1(3);
-        e2 = e2/e2(3);
-
-        if(e1(2) < 0 || e2(2) < 0){
-            line_landmarks.erase(landmark);
-            continue;
-        }
-        if((e1-e2).norm() > 10){
+        const auto &[valid,pts1,pts2] = LineTrimming(landmark->line_plucker,landmark->feats[0].line_obs);
+        if(!valid || (pts1-pts2).norm() > 10){
             line_landmarks.erase(landmark);
             continue;
         }
 
-        /*
-                // 点到直线的距离不能太远啊
-                Vec3d Q = plucker_origin(nc,vc);
-                if(Q.norm() > 5.0)
-                {
-                    linefeature.erase(it_per_id);
-                    continue;
-                }
-        */
         // 并且平均投影误差不能太大啊
         Vec6d line_w = plk_to_pose(landmark->line_plucker, Rwc, twc);  // transfrom to world frame
 
         int i = 0;
         double allerr = 0;
-        Vec3d tij;
-        Mat3d Rij;
-        Vec4d obs;
 
-        for (auto &it_per_frame : landmark->feats) {   // 遍历所有的观测， 注意 start_frame 也会被遍历
+        for (auto &feat : landmark->feats) {   // 遍历所有的观测， 注意 start_frame 也会被遍历
             imu_j++;
-            obs = it_per_frame.line_obs;
-            Vec3d t1 = Ps[imu_j] + Rs[imu_j] * tic[0];
-            Mat3d R1 = Rs[imu_j] * ric[0];
+            Vec3d t1 = body.Ps[imu_j] + body.Rs[imu_j] * body.tic[0];
+            Mat3d R1 = body.Rs[imu_j] * body.ric[0];
 
-            double err =  LineReprojectionError(obs, R1, t1, line_w);
-
-            //            if(err > 0.0000001)
-            //                i++;
-            //            allerr += err;    // 计算平均投影误差
+            double err =  LineReprojectionError(feat.line_obs, R1, t1, line_w);
 
             if(allerr < err)    // 记录最大投影误差，如果最大的投影误差比较大，那就说明有outlier
                 allerr = err;
-            }
-        //        allerr = allerr / i;
+        }
         if (allerr > 3.0 / 500.0){
             line_landmarks.erase(landmark);
         }

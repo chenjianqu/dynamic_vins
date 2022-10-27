@@ -101,6 +101,8 @@ class Estimator
 
 private:
 
+    void InitEstimator(double header);
+
     void SetMarginalizationInfo();
 
     void ProcessImage(FrontendFeature & image, double header);

@@ -69,27 +69,29 @@ class FeatureManager
 
     void SetLineOrth(Eigen::MatrixXd x,Vec3d P[], Mat3d R[], Vec3d tic[], Mat3d ric[]);
 
-    void triangulate(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
+    void TriangulatePoint(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
 
     static void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
                           Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
 
-    void TriangulateLine(Vec3d Ps[], Vec3d tic[], Mat3d ric[]);
+    void TriangulateLineMono();
 
-    void TriangulateLine(double baseline);  // stereo line
+    void TriangulateLineStereo(double baseline);  // stereo line
 
     void InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
-    static bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
-                        vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
+
     void RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg_P, Mat3d new_R, Vec3d new_P);
     void RemoveBack();
     void RemoveFront(int frame_count);
 
     void RemoveOutlier(std::set<int> &outlierIndex);
 
+    void RemoveLineOutlierByLength();
+
     void RemoveLineOutlier();
 
-    void RemoveLineOutlier(Vec3d Ps[], Vec3d tic[], Mat3d ric[]);
+    static bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
+                               vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
 
     std::list<FeaturePerId> point_landmarks;
     std::list<LineLandmark> line_landmarks;

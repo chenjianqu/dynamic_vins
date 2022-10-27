@@ -66,7 +66,7 @@ void InitCamera(const std::string& config_path){
         cout<<"P3:\n"<<calib_map["P3"]<<endl;
     }
     ///从文件中读取相机内参
-    else if(cfg::dataset == DatasetType::kViode){
+    else if(cfg::dataset == DatasetType::kViode || cfg::dataset==DatasetType::kEuRoc){
         auto pn = config_path.find_last_of('/');
         std::string config_dir = config_path.substr(0, pn);
 
@@ -84,6 +84,9 @@ void InitCamera(const std::string& config_path){
             cam1 = std::make_shared<PinHoleCamera>();
             cam1->ReadFromYamlFile(cam1Path);
         }
+    }
+    else{
+        std::cerr<<"InitCamera() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
     }
 
     fs.release();

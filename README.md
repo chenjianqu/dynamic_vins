@@ -119,7 +119,8 @@ dynamic_vins_root=/home/chen/ws/dynamic_ws
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
-config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc/euroc.yaml
 
 source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file}
 ```

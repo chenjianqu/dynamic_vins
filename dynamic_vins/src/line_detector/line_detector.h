@@ -44,9 +44,15 @@ public:
                               std::vector<KeyLine> octave0_1, std::vector<KeyLine>octave0_2,
                               std::vector<bool> good_matches);
 
+    static void VisualizeLineStereoMatch(cv::Mat &img, const FrameLines::Ptr &left_lines, const FrameLines::Ptr &right_lines);
+
+    static void VisualizeLineMonoMatch(cv::Mat &img, const FrameLines::Ptr &prev_lines, const FrameLines::Ptr &curr_lines);
+
     static void VisualizeLine(cv::Mat &img,const FrameLines::Ptr &lines);
 
     static void VisualizeRightLine(cv::Mat &img,const FrameLines::Ptr &lines,bool vertical);
+
+
 
     static void NearbyLineTracking(const std::vector<Line> &forw_lines, const std::vector<Line> &cur_lines,
                                           std::vector<std::pair<int, int> > &lineMatches) ;

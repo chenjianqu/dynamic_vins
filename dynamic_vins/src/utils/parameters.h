@@ -57,7 +57,8 @@ enum class SlamType{
 
 enum class DatasetType{
     kViode,
-    kKitti
+    kKitti,
+    kEuRoc
 };
 
 class Config {
@@ -79,6 +80,7 @@ public:
 
     inline static SlamType slam;
     inline static DatasetType dataset;
+    inline static std::string dataset_name;
     inline static bool is_input_seg; //输入是否有语义分割结果
     inline static bool is_only_frontend;
     inline static bool is_only_imgprocess;

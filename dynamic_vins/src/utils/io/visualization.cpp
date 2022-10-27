@@ -230,6 +230,7 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
            tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
 }
 
+
 void Publisher::PubKeyPoses(const std_msgs::Header &header)
 {
     if (e->key_poses.empty())
@@ -359,6 +360,8 @@ void Publisher::PubTF(const std_msgs::Header &header)
     pub_extrinsic->publish(odometry);
 }
 
+
+
 void Publisher::PubKeyframe()
 {
     // pub camera pose, 2D-3D points of keyframe
@@ -442,6 +445,9 @@ void Publisher::PubLines(const std_msgs::Header &header)
     cv::Scalar color_norm(0.5,0.5,0.5);
 
     for(auto &line:e->feat_manager.line_landmarks){
+        if(!line.is_triangulation){
+            continue;
+        }
         Marker m = LineMarker(line.ptw1,line.ptw2,line.feature_id,color_norm);
         markers.markers.push_back(m);
     }

@@ -24,6 +24,7 @@
 #include "utils/def.h"
 #include "utils/box3d.h"
 #include "landmark.h"
+#include "line_landmark.h"
 
 namespace dynamic_vins{\
 
@@ -61,6 +62,13 @@ void OutliersRejection(std::set<int> &removeIndex,std::list<FeaturePerId>& point
 double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
                          Mat3d &Rj, Vec3d &Pj, Mat3d &ricj, Vec3d &ticj,
                          double depth, Vec3d &uvi, Vec3d &uvj);
+
+
+void TriangulateOneLine(LineLandmark &line);
+
+void TriangulateOneLineStereo(LineLandmark &line);
+
+
 
 }
 

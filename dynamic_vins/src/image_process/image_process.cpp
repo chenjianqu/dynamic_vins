@@ -136,7 +136,7 @@ void ImageProcessor::Run(SemanticImage &img) {
 
     ///实例分割,并设置mask
     tt.Tic();
-    if(cfg::slam != SlamType::kRaw){
+    if(cfg::slam == SlamType::kNaive || cfg::slam == SlamType::kDynamic){
         if(!cfg::is_input_seg){
             detector2d->Launch(img);
 
@@ -153,6 +153,9 @@ void ImageProcessor::Run(SemanticImage &img) {
                 else if(cfg::slam == SlamType::kDynamic)
                     VIODE::SetViodeMask(img);
 
+            }
+            else{
+                std::cerr<<"ImageProcessor::Run()::set_mask not is implemented, as dataset is "<<cfg::dataset_name<<endl;
             }
         }
         Infos("ImageProcess SetMask: {} ms", tt.TocThenTic());

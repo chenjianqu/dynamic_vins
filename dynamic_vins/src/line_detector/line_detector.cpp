@@ -13,6 +13,7 @@
 
 #include <opencv2/core/types.hpp>
 #include "line_detector.h"
+#include "utils/log_utils.h"
 
 using std::vector;
 
@@ -51,12 +52,8 @@ namespace dynamic_vins{
         // lsd_opts.n_bins       = 1024;
         // double min_line_length = 0.125;
         lsd_opts.min_length   = min_line_length*(std::min(image_width,image_height));
-
         lbd_descriptor = cv::line_descriptor::BinaryDescriptor::createBinaryDescriptor();
-
         line_matcher = cv::line_descriptor::BinaryDescriptorMatcher::createBinaryDescriptorMatcher();
-
-
     }
 
 
@@ -96,7 +93,6 @@ namespace dynamic_vins{
 
         /* select best matches */
         std::vector<cv::DMatch> good_matches;
-        std::vector<cv::line_descriptor::KeyLine> good_Keylines;
         for ( int i = 0; i < (int) lsd_matches.size(); i++ ){
             if( lsd_matches[i].distance < 30 ){
                 cv::DMatch mt = lsd_matches[i];
@@ -122,42 +118,40 @@ namespace dynamic_vins{
 
         curr_track_cnt = track_cnt_tmp;
 
-        //visualize_line_match(forwframe_->img.clone(), curframe_->img.clone(), forwframe_->keylsd, curframe_->keylsd, good_matches);
-
         ///将所有的线段划分为成功跟踪和未成功跟踪的线
         vector<cv::line_descriptor::KeyLine> vecLine_tracked, vecLine_new;
         vector<unsigned int> lineID_tracked, lineID_new;
-        cv::Mat DEscr_tracked, Descr_new;
+        cv::Mat descr_tracked, descr_new;
         // 将跟踪的线和没跟踪上的线进行区分
         for (size_t i = 0; i < curr_keylsd.size(); ++i){
             if(curr_line_ids[i] == -1){
                 curr_line_ids[i] = global_line_id++;
                 vecLine_new.push_back(curr_keylsd[i]);
                 lineID_new.push_back(curr_line_ids[i]);
-                Descr_new.push_back(curr_lbd.row( i ) );
+                descr_new.push_back(curr_lbd.row(i ) );
             }
             else{
                 vecLine_tracked.push_back(curr_keylsd[i]);
                 lineID_tracked.push_back(curr_line_ids[i]);
-                DEscr_tracked.push_back(curr_lbd.row( i ) );
+                descr_tracked.push_back(curr_lbd.row(i ) );
             }
         }
 
         ///将未跟踪的线划分为垂线或水平线
-        vector<cv::line_descriptor::KeyLine> h_Line_new, v_Line_new;
+        vector<cv::line_descriptor::KeyLine> h_line_new, v_line_new;
         vector<unsigned int> h_lineID_new,v_lineID_new;
-        cv::Mat h_Descr_new,v_Descr_new;
+        cv::Mat h_descr_new,v_descr_new;
         for (size_t i = 0; i < vecLine_new.size(); ++i){
             if((((vecLine_new[i].angle >= 3.14/4 && vecLine_new[i].angle <= 3*3.14/4)) ||
             (vecLine_new[i].angle <= -3.14/4 && vecLine_new[i].angle >= -3*3.14/4))){
-                h_Line_new.push_back(vecLine_new[i]);
+                h_line_new.push_back(vecLine_new[i]);
                 h_lineID_new.push_back(lineID_new[i]);
-                h_Descr_new.push_back(Descr_new.row( i ));
+                h_descr_new.push_back(descr_new.row(i ));
             }
             else{
-                v_Line_new.push_back(vecLine_new[i]);
+                v_line_new.push_back(vecLine_new[i]);
                 v_lineID_new.push_back(lineID_new[i]);
-                v_Descr_new.push_back(Descr_new.row( i ));
+                v_descr_new.push_back(descr_new.row(i ));
             }
         }
 
@@ -178,37 +172,37 @@ namespace dynamic_vins{
         ///补充水平线的线条
         if( diff_h > 0) {   // 补充线条
             int kkk = 1;
-            if(diff_h > h_Line_new.size())
-                diff_h = h_Line_new.size();
+            if(diff_h > h_line_new.size())
+                diff_h = h_line_new.size();
             else
-                kkk = int(h_Line_new.size()/diff_h);
+                kkk = int(h_line_new.size() / diff_h);
 
             for (int k = 0; k < diff_h; ++k){
-                vecLine_tracked.push_back(h_Line_new[k]);
+                vecLine_tracked.push_back(h_line_new[k]);
                 lineID_tracked.push_back(h_lineID_new[k]);
-                DEscr_tracked.push_back(h_Descr_new.row(k));
+                descr_tracked.push_back(h_descr_new.row(k));
             }
         }
 
         ///补充垂线的线条
         if( diff_v > 0){    // 补充线条
             int kkk = 1;
-            if(diff_v > v_Line_new.size())
-                diff_v = v_Line_new.size();
+            if(diff_v > v_line_new.size())
+                diff_v = v_line_new.size();
             else
-                kkk = int(v_Line_new.size()/diff_v);
+                kkk = int(v_line_new.size() / diff_v);
 
             for (int k = 0; k < diff_v; ++k){
-                vecLine_tracked.push_back(v_Line_new[k]);
+                vecLine_tracked.push_back(v_line_new[k]);
                 lineID_tracked.push_back(v_lineID_new[k]);
-                DEscr_tracked.push_back(v_Descr_new.row(k));
+                descr_tracked.push_back(v_descr_new.row(k));
                 curr_track_cnt.insert({v_lineID_new[k],1});//添加该直线的跟踪次数
             }
         }
 
         curr_keylsd = vecLine_tracked;
         curr_line_ids = lineID_tracked;
-        curr_lbd = DEscr_tracked;
+        curr_lbd = descr_tracked;
     }
 
 
@@ -490,6 +484,75 @@ namespace dynamic_vins{
 
     }
 
+    void LineDetector::VisualizeLineStereoMatch(cv::Mat &img, const FrameLines::Ptr &left_lines, const FrameLines::Ptr &right_lines){
+        std::map<unsigned int,vector<KeyLine>> map_keylsd;
+        int offset_y = img.rows / 2;
+
+        int right_size = right_lines->keylsd.size();
+        for(int i=0;i<right_size;++i){
+            map_keylsd.insert({right_lines->line_ids[i],{}});
+            map_keylsd[right_lines->line_ids[i]].push_back(right_lines->keylsd[i]);
+        }
+        int left_size = left_lines->keylsd.size();
+        for(int i=0;i<left_size;++i){
+            auto it=map_keylsd.find(left_lines->line_ids[i]);
+            if(it!=map_keylsd.end()){
+                it->second.push_back(left_lines->keylsd[i]);
+            }
+        }
+
+        Debugt("LineDetector::VisualizeLineMatch map_keylsd size:{}",map_keylsd.size());
+
+        for(auto &[line_id,vec_line]:map_keylsd){
+            cv::Point left_start = cv::Point(int(vec_line[1].startPointX), int(vec_line[1].startPointY));
+            cv::Point right_start = cv::Point(int(vec_line[0].startPointX), int(vec_line[0].startPointY) + offset_y);
+            cv::line(img, left_start, right_start,cv::Scalar(0,128,0),1 ,8);
+
+            cv::Point left_end = cv::Point(int(vec_line[1].endPointX), int(vec_line[1].endPointY));
+            cv::Point right_end = cv::Point(int(vec_line[0].endPointX), int(vec_line[0].endPointY) + offset_y);
+            cv::line(img, left_end, right_end,cv::Scalar(0,128,0),1 ,8);
+        }
+
+    }
+
+
+    void LineDetector::VisualizeLineMonoMatch(cv::Mat &img, const FrameLines::Ptr &prev_lines, const FrameLines::Ptr &curr_lines){
+        if(!prev_lines || !curr_lines){
+            return;
+        }
+
+        std::map<unsigned int,vector<KeyLine>> map_keylsd;
+
+        int right_size = curr_lines->keylsd.size();
+        for(int i=0;i<right_size;++i){
+            map_keylsd.insert({curr_lines->line_ids[i],{}});
+            map_keylsd[curr_lines->line_ids[i]].push_back(curr_lines->keylsd[i]);
+        }
+        int left_size = prev_lines->keylsd.size();
+        for(int i=0;i<left_size;++i){
+            auto it=map_keylsd.find(prev_lines->line_ids[i]);
+            if(it!=map_keylsd.end()){
+                it->second.push_back(prev_lines->keylsd[i]);
+            }
+        }
+
+        Debugt("LineDetector::VisualizeLineMatch map_keylsd size:{}",map_keylsd.size());
+
+        for(auto &[line_id,vec_line]:map_keylsd){
+            if(vec_line.size()<2){
+                continue;
+            }
+            cv::Point left_start = cv::Point(int(vec_line[1].startPointX), int(vec_line[1].startPointY));
+            cv::Point right_start = cv::Point(int(vec_line[0].startPointX), int(vec_line[0].startPointY));
+            cv::line(img, left_start, right_start,cv::Scalar(0,128,0),1 ,8);
+
+            cv::Point left_end = cv::Point(int(vec_line[1].endPointX), int(vec_line[1].endPointY));
+            cv::Point right_end = cv::Point(int(vec_line[0].endPointX), int(vec_line[0].endPointY));
+            cv::line(img, left_end, right_end,cv::Scalar(0,128,0),1 ,8);
+        }
+
+    }
+
 
     void LineDetector::VisualizeRightLine(cv::Mat &img,const FrameLines::Ptr &lines,bool vertical){
         //static vector<cv::Scalar> colors = getColorMap();
@@ -503,6 +566,26 @@ namespace dynamic_vins{
             for (int k = 0; k < keylsd.size(); ++k) {
                 cv::Point startPoint = cv::Point(int(keylsd[k].startPointX), int(keylsd[k].startPointY)+offset_rows);
                 cv::Point endPoint = cv::Point(int(keylsd[k].endPointX), int(keylsd[k].endPointY)+offset_rows);
+                //int idx = lines->line_ids[k] % 255;
+                //cv::line(img, startPoint, endPoint,colors[idx],2 ,8);
+                if(lines->track_cnt[lines->line_ids[k]] > 1){ //跟踪超过1次
+                    cv::line(img, startPoint, endPoint,cv::Scalar(255,0,0),2 ,8);
+                }
+                else{
+                    cv::line(img, startPoint, endPoint,cv::Scalar(0,0,255),2 ,8);
+                }
+            }
+        }
+        else{
+            int lowest = 0, highest = 255;
+            int range = (highest - lowest) + 1;
+            int offset_cols = img.cols / 2;
+
+            auto &keylsd = lines->keylsd;
+
+            for (int k = 0; k < keylsd.size(); ++k) {
+                cv::Point startPoint = cv::Point(int(keylsd[k].startPointX+offset_cols), int(keylsd[k].startPointY));
+                cv::Point endPoint = cv::Point(int(keylsd[k].endPointX+offset_cols), int(keylsd[k].endPointY));
                 //int idx = lines->line_ids[k] % 255;
                 //cv::line(img, startPoint, endPoint,colors[idx],2 ,8);
                 if(lines->track_cnt[lines->line_ids[k]] > 1){ //跟踪超过1次

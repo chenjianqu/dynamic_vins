@@ -13,6 +13,7 @@
 #include "utils/io/io_parameters.h"
 #include "utils/io/io_utils.h"
 #include "utils/dataset/kitti_utils.h"
+#include "feature_manager.h"
 
 
 namespace dynamic_vins{ \
@@ -157,6 +158,24 @@ string PrintInstancePoseInfo(InstanceManager& im,bool output_lm){
     ///将这些信息保存到文件中
     WriteTextFile(MyLogger::kLogOutputDir + "pose_info.txt",log_text);
 
+    return {};
+}
+
+
+
+string PrintLineInfo(FeatureManager &fm){
+
+    string log_text =fmt::format("--------------PrintInstancePoseInfo : {} --------------\n",body.headers[body.frame]);
+
+    for(auto &line:fm.line_landmarks){
+        if(!line.is_triangulation){
+            continue;
+        }
+        log_text += fmt::format("lid:{},pw1:{},pw2:{}\n",line.feature_id, VecToStr(line.ptw1),VecToStr(line.ptw2));
+    }
+    log_text+="\n \n";
+
+    WriteTextFile(MyLogger::kLogOutputDir + "line_info.txt",log_text);
     return {};
 }
 
@@ -344,6 +363,10 @@ void SaveTrajectory(InstanceManager& im){
             //  Only for results: Float, indicating confidence in detection, needed for p/r curves, higher is better.
             inst.box3d->score<<
             endl;
+        }
+        else{
+            std::cerr<<"SaveTrajectory() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+
         }
 
     }

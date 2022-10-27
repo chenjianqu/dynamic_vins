@@ -250,7 +250,9 @@ void Estimator::Optimization()
 }
 
 
-
+/**
+ * 仅仅优化线特征
+ */
 void Estimator::OptimizationWithLine()
 {
     TicToc tt;
@@ -260,12 +262,12 @@ void Estimator::OptimizationWithLine()
     ceres::Problem problem;
     ceres::LossFunction *loss_function = new ceres::CauchyLoss(1.0);
 
-    for (int i = 0; i < kWinSize + 1; i++){    // 将窗口内的 p,q 加入优化变量
+    ///位姿参数化，但是设置为固定
+    for (int i = 0; i < kWinSize; i++){    // 将窗口内的 p,q 加入优化变量
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(body.para_pose[i], kSizePose, local_parameterization);  // p,q
         problem.SetParameterBlockConstant(body.para_pose[i]);// 固定 pose
     }
-
     for (int i = 0; i < cfg::kCamNum; i++) {        // 外参数
         ceres::LocalParameterization *local_parameterization = new PoseLocalParameterization();
         problem.AddParameterBlock(body.para_ex_pose[i], kSizePose, local_parameterization);
@@ -273,7 +275,7 @@ void Estimator::OptimizationWithLine()
     }
 
 
-    // 所有特征
+    /// 所有特征
     int f_m_cnt = 0;
     int feature_index = -1;
     for (auto &landmark : feat_manager.line_landmarks){
@@ -281,18 +283,17 @@ void Estimator::OptimizationWithLine()
         // 如果这个特征才被观测到，那就跳过。实际上这里为啥不直接用如果特征没有三角化这个条件。
         if (!(landmark.used_num >= kLineMinObs && landmark.start_frame < kWinSize - 2 && landmark.is_triangulation))
             continue;
-        ++feature_index; // 这个变量会记录feature在 para_Feature 里的位置， 将深度存入para_Feature时索引的记录也是用的这种方式
+        ++feature_index;
 
         ///线参数化
-        ceres::LocalParameterization *local_parameterization_line = new LineOrthParameterization();
-        problem.AddParameterBlock(body.para_line_features[feature_index], kSizeLine, local_parameterization_line);  // p,q
+        ceres::LocalParameterization *line_para = new LineOrthParameterization();
+        problem.AddParameterBlock(body.para_line_features[feature_index], kSizeLine, line_para);  // p,q
         int imu_i = landmark.start_frame,imu_j = imu_i - 1;
 
         ///设置线重投影因子
-        for (auto &it_per_frame : landmark.feats){
+        for (auto &feat : landmark.feats){
             imu_j++;
-            Vector4d obs = it_per_frame.line_obs;     // 在第j帧图像上的观测
-            auto *f = new lineProjectionFactor(obs);     // 特征重投影误差
+            auto *f = new lineProjectionFactor(feat.line_obs);     // 特征重投影误差
             problem.AddResidualBlock(f, loss_function,
                                      body.para_pose[imu_j],
                                      body.para_ex_pose[0],
@@ -968,7 +969,7 @@ bool Estimator::VisualInitialAlign()
     Debugv("my R0 :{}", VecToStr(Utility::R2ypr(body.Rs[0])));
 
     feat_manager.ClearDepth();
-    feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
+    feat_manager.TriangulatePoint(frame, body.Ps, body.Rs, body.tic, body.ric);
 
     return true;
 }
@@ -994,7 +995,7 @@ bool Estimator::RelativePose(Mat3d &relative_R, Vec3d &relative_T, int &l)
             average_parallax = 1.0 * sum_parallax / int(corres.size());
             if(average_parallax * 460 > 30 && m_estimator.solveRelativeRT(corres, relative_R, relative_T)){
                 l = i;
-                Debugv("Average_parallax {} choose l {} and newest frame to triangulate the whole structure",
+                Debugv("Average_parallax {} choose l {} and newest frame to TriangulatePoint the whole structure",
                        average_parallax * 460, l);
                 return true;
             }
@@ -1011,16 +1012,18 @@ void Estimator::Vector2double()
     body.SetOptimizeParameters();
 
     VectorXd dep = feat_manager.GetDepthVector();
-    for (int i = 0; i < feat_manager.GetFeatureCount(); i++){
+    int point_size = feat_manager.GetFeatureCount();
+    for (int i = 0; i < point_size; i++){
         body.para_point_features[i][0] = dep(i);
     }
 
-    MatrixXd lineorth = feat_manager.GetLineOrthVector(body.Ps, body.tic, body.ric);
-    for (int i = 0; i < feat_manager.GetLineFeatureCount(); ++i) {
-        body.para_line_features[i][0] = lineorth.row(i)[0];
-        body.para_line_features[i][1] = lineorth.row(i)[1];
-        body.para_line_features[i][2] = lineorth.row(i)[2];
-        body.para_line_features[i][3] = lineorth.row(i)[3];
+    MatrixXd line_orth = feat_manager.GetLineOrthVector(body.Ps, body.tic, body.ric);
+    int line_size = feat_manager.GetLineFeatureCount();
+    for (int i = 0; i < line_size; ++i) {
+        body.para_line_features[i][0] = line_orth.row(i)[0];
+        body.para_line_features[i][1] = line_orth.row(i)[1];
+        body.para_line_features[i][2] = line_orth.row(i)[2];
+        body.para_line_features[i][3] = line_orth.row(i)[3];
         if(i > kNumFeat)
             std::cerr << " 1000  1000 1000 1000 1000 \n\n";
     }
@@ -1042,21 +1045,21 @@ void Estimator::Double2vector()
     body.GetOptimizationParameters(origin_R0,origin_P0);
 
     VectorXd dep = feat_manager.GetDepthVector();
-    for (int i = 0; i < feat_manager.GetFeatureCount(); i++)
+    int point_size = feat_manager.GetFeatureCount();
+    for (int i = 0; i < point_size; i++)
         dep(i) = body.para_point_features[i][0];
     feat_manager.SetDepth(dep);
 
-    MatrixXd lineorth_vec(feat_manager.GetLineFeatureCount(), 4);
-    for (int i = 0; i < feat_manager.GetLineFeatureCount(); ++i) {
-        Vector4d orth(body.para_line_features[i][0],
-                      body.para_line_features[i][1],
-                      body.para_line_features[i][2],
-                      body.para_line_features[i][3]);
-        lineorth_vec.row(i) = orth;
+    int line_size = feat_manager.GetLineFeatureCount();
+    MatrixXd orth_vec(line_size, 4);
+    for (int i = 0; i < line_size; ++i) {
+        orth_vec.row(i) = Vector4d(body.para_line_features[i][0],
+                                   body.para_line_features[i][1],
+                                   body.para_line_features[i][2],
+                                   body.para_line_features[i][3]);
     }
-    feat_manager.SetLineOrth(lineorth_vec, body.Ps, body.Rs, body.tic, body.ric);
 
-
+    feat_manager.SetLineOrth(orth_vec, body.Ps, body.Rs, body.tic, body.ric);
 }
 
 
@@ -1302,6 +1305,95 @@ void Estimator::UpdateLatestStates(){
     propogate_mutex.unlock();
 }
 
+
+void Estimator::InitEstimator(double header){
+
+    ///初始化外参数
+    if(cfg::is_estimate_ex == 2){
+        if (frame != 0){
+            Infov("calibrating extrinsic param, rotation movement is needed");
+            auto cor = feat_manager.GetCorresponding(frame - 1, frame);
+            Mat3d calib_ric;
+            if (initial_ex_rotation.CalibrationExRotation(cor, pre_integrations[frame]->delta_q, calib_ric)){
+                Debugv("initial extrinsic rotation calib success");
+                Debugv("initial extrinsic rotation:\n{}", EigenToStr(calib_ric));
+                body.ric[0] = calib_ric;
+                para::RIC[0] = calib_ric;
+                cfg::is_estimate_ex = 1;
+            }
+        }
+    }
+
+    if (!cfg::is_stereo && cfg::is_use_imu){ // monocular + IMU initilization
+        if (frame == kWinSize){
+            bool result = false;
+            if(cfg::is_estimate_ex != 2 && (header - initial_timestamp) > 0.1){
+                result = InitialStructure();
+                initial_timestamp = header;
+            }
+
+            if(result){
+                Optimization();
+                UpdateLatestStates();
+                solver_flag = SolverFlag::kNonLinear;
+                SlideWindow();
+                Infov("Initialization finish!");
+            }
+            else{
+                SlideWindow();
+            }
+        }
+    }
+    // stereo + IMU initilization
+    else if(cfg::is_stereo && cfg::is_use_imu){
+        feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+        feat_manager.TriangulatePoint(frame, body.Ps, body.Rs, body.tic, body.ric);
+        if (frame == kWinSize){
+            map<double, ImageFrame>::iterator frame_it;
+            int i = 0;
+            for (frame_it = all_image_frame.begin(); frame_it != all_image_frame.end(); frame_it++){
+                frame_it->second.R = body.Rs[i];
+                frame_it->second.T = body.Ps[i];
+                i++;
+            }
+            SolveGyroscopeBias(all_image_frame, body.Bgs);
+            for (int j = 0; j <= kWinSize; j++)
+                pre_integrations[j]->repropagate(Vec3d::Zero(), body.Bgs[j]);
+            Optimization();
+            UpdateLatestStates();
+            solver_flag = SolverFlag::kNonLinear;
+            SlideWindow();
+            Infov("Initialization finish!");
+        }
+    }
+    // stereo only initilization
+    else if(cfg::is_stereo && !cfg::is_use_imu){
+        feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+        feat_manager.TriangulatePoint(frame, body.Ps, body.Rs, body.tic, body.ric);
+        Optimization();
+        if(frame == kWinSize)
+        {
+            Optimization();
+            UpdateLatestStates();
+            solver_flag = SolverFlag::kNonLinear;
+            SlideWindow();
+            Infov("Initialization finish!");
+        }
+    }
+
+    if(frame < kWinSize){
+        frame++;
+        body.frame=frame;
+        int prev_frame = frame - 1;
+        body.Ps[frame] = body.Ps[prev_frame];
+        body.Vs[frame] = body.Vs[prev_frame];
+        body.Rs[frame] = body.Rs[prev_frame];
+        body.Bas[frame] = body.Bas[prev_frame];
+        body.Bgs[frame] = body.Bgs[prev_frame];
+    }
+}
+
+
 /**
  * VIO估计器的主函数
  * @param image
@@ -1336,223 +1428,144 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     all_image_frame.insert({header, img_frame});
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, body.Bas[frame], body.Bgs[frame]};
 
-    ///初始化外参数
-    if(cfg::is_estimate_ex == 2){
-        if (frame != 0){
-            Infov("calibrating extrinsic param, rotation movement is needed");
-            auto cor = feat_manager.GetCorresponding(frame - 1, frame);
-            Mat3d calib_ric;
-            if (initial_ex_rotation.CalibrationExRotation(cor, pre_integrations[frame]->delta_q, calib_ric)){
-                Debugv("initial extrinsic rotation calib success");
-                Debugv("initial extrinsic rotation:\n{}", EigenToStr(calib_ric));
-                body.ric[0] = calib_ric;
-                para::RIC[0] = calib_ric;
-                cfg::is_estimate_ex = 1;
-            }
-        }
-    }
-
     ///VINS的初始化
     if (solver_flag == SolverFlag::kInitial){
-        if (!cfg::is_stereo && cfg::is_use_imu){ // monocular + IMU initilization
-            if (frame == kWinSize){
-                bool result = false;
-                if(cfg::is_estimate_ex != 2 && (header - initial_timestamp) > 0.1){
-                    result = InitialStructure();
-                    initial_timestamp = header;
-                }
-
-                if(result){
-                    Optimization();
-                    UpdateLatestStates();
-                    solver_flag = SolverFlag::kNonLinear;
-                    SlideWindow();
-                    Infov("Initialization finish!");
-                }
-                else{
-                    SlideWindow();
-                }
-            }
-        }
-        // stereo + IMU initilization
-        else if(cfg::is_stereo && cfg::is_use_imu){
-            feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
-            feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
-            if (frame == kWinSize){
-                map<double, ImageFrame>::iterator frame_it;
-                int i = 0;
-                for (frame_it = all_image_frame.begin(); frame_it != all_image_frame.end(); frame_it++){
-                    frame_it->second.R = body.Rs[i];
-                    frame_it->second.T = body.Ps[i];
-                    i++;
-                }
-                SolveGyroscopeBias(all_image_frame, body.Bgs);
-                for (int j = 0; j <= kWinSize; j++)
-                    pre_integrations[j]->repropagate(Vec3d::Zero(), body.Bgs[j]);
-                Optimization();
-                UpdateLatestStates();
-                solver_flag = SolverFlag::kNonLinear;
-                SlideWindow();
-                Infov("Initialization finish!");
-            }
-        }
-        // stereo only initilization
-        else if(cfg::is_stereo && !cfg::is_use_imu){
-            feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
-            feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
-            Optimization();
-            if(frame == kWinSize)
-            {
-                Optimization();
-                UpdateLatestStates();
-                solver_flag = SolverFlag::kNonLinear;
-                SlideWindow();
-                Infov("Initialization finish!");
-            }
-        }
-
-        if(frame < kWinSize){
-            frame++;
-            body.frame=frame;
-            int prev_frame = frame - 1;
-            body.Ps[frame] = body.Ps[prev_frame];
-            body.Vs[frame] = body.Vs[prev_frame];
-            body.Rs[frame] = body.Rs[prev_frame];
-            body.Bas[frame] = body.Bas[prev_frame];
-            body.Bgs[frame] = body.Bgs[prev_frame];
-        }
+        InitEstimator(header);
+        return ;
     }
-    ///VIO的非线性优化, 以及滑动窗口
-    else
-    {
-        TicToc tt;
 
-        ///若没有IMU,则需要根据PnP得到当前帧的位姿
-        if(!cfg::is_use_imu)
-            feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+    TicToc tt;
 
-        ///三角化背景特征点
-        feat_manager.triangulate(frame, body.Ps, body.Rs, body.tic, body.ric);
+    ///若没有IMU,则需要根据PnP得到当前帧的位姿
+    if(!cfg::is_use_imu)
+        feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
 
-        ///三角化线特征
-        if(cfg::slam == SlamType::kLine){
-            if(cfg::is_stereo){
-                feat_manager.TriangulateLine(cam1->baseline);
-            }
-            else{
-                feat_manager.TriangulateLine(body.Ps, body.tic, body.ric);
-            }
-        }
+    ///三角化背景特征点
+    feat_manager.TriangulatePoint(frame, body.Ps, body.Rs, body.tic, body.ric);
 
-        Infov("processImage background Triangulate:{} ms",tt.TocThenTic());
-
-        Debugv("--开始处理动态物体--");
-
-        if(cfg::slam == SlamType::kDynamic){
-            ///添加动态特征点,并创建物体
-            im.PushBack(frame, image.instances);
-
-
-            im.SetOutputInstInfo();//将输出实例的速度信息
-            ///动态物体的位姿递推
-            im.PropagatePose();
-            ///动态特征点的三角化
-            im.Triangulate();
-            ///若动态物体未初始化, 则进行初始化
-            im.InitialInstance();
-            ///初始化速度
-            im.InitialInstanceVelocity();
-            ///根据重投影误差和对极几何判断物体是运动的还是静态的
-            im.SetDynamicOrStatic();
-
-            if(para::is_print_detail){
-                PrintFeaturesInfo(im, true, true);
-            }
-
-            ///单独优化动态物体
-            if(para::is_print_detail){
-                PrintInstancePoseInfo(im, true);
-            }
-            im.Optimization();
-
-            if(para::is_print_detail){
-                PrintInstancePoseInfo(im, true);
-            }
-
-
-            im.OutliersRejection();
-
-            Infov("processImage dynamic Optimization:{} ms",tt.TocThenTic());
-
-            Debugv("--完成处理动态物体--");
-        }
-
-        if(cfg::slam==SlamType::kLine){
-            //OptimizationWithLine();
-        }
-
-        ///VIO窗口的非线性优化
-        Optimization();
-
-        Infov("processImage Optimization:{} ms", tt.TocThenTic());
-
-        ///外点剔除
-        set<int> removeIndex;
-        OutliersRejection(removeIndex, feat_manager.point_landmarks);
-
-        feat_manager.RemoveOutlier(removeIndex);
-        feat_manager.RemoveLineOutlier();
-
-
-        if (FailureDetection()){
-            Warnv("failure detection!");
-            failure_occur = true;
-            ClearState();
-            SetParameter();
-            Warnv("system reboot!");
-            return;
-        }
-
-        Infov("processImage Outliebody.RsRejection:{} ms", tt.TocThenTic());
-
-        ///动态物体的滑动窗口
-        if(cfg::slam == SlamType::kDynamic){
-            im.ManageTriangulatePoint();
-            Debugv("finish ManageTriangulatePoint()");
-            //insts_manager.SetWindowPose();
-            im.SlideWindow(margin_flag);
-        }
-        /// 滑动窗口
-        SlideWindow();
-
-        ///动态物体的外点剔除
-        if(cfg::slam == SlamType::kDynamic){
-            im.OutliersRejection();
-
-             im.DeleteBadLandmarks();
-        }
-
-        Infov("processImage SlideWindow:{} ms", tt.TocThenTic());
-
-        feat_manager.RemoveFailures();
-
-        /// prepare output of VINS
-        key_poses.clear();
-        for (int i = 0; i <= kWinSize; i++)
-            key_poses.push_back(body.Ps[i]);
-
-        last_R = body.Rs[kWinSize];
-        last_P = body.Ps[kWinSize];
-        last_R0 = body.Rs[0];
-        last_P0 = body.Ps[0];
-        UpdateLatestStates();
+    ///三角化线特征
+    if(cfg::slam == SlamType::kLine){
+        //if(cfg::is_stereo){
+        //    feat_manager.TriangulateLineStereo(cam1->baseline);
+        //}
+        //else{
+            feat_manager.TriangulateLineMono();
+        //}
     }
+
+    if(para::is_print_detail && cfg::slam==SlamType::kLine){
+        PrintLineInfo(feat_manager);
+    }
+    Infov("processImage background Triangulate:{} ms",tt.TocThenTic());
+
+    Debugv("--开始处理动态物体--");
+
+    if(cfg::slam == SlamType::kDynamic){
+        ///添加动态特征点,并创建物体
+        im.PushBack(frame, image.instances);
+
+        im.SetOutputInstInfo();//将输出实例的速度信息
+        ///动态物体的位姿递推
+        im.PropagatePose();
+        ///动态特征点的三角化
+        im.Triangulate();
+        ///若动态物体未初始化, 则进行初始化
+        im.InitialInstance();
+        ///初始化速度
+        im.InitialInstanceVelocity();
+        ///根据重投影误差和对极几何判断物体是运动的还是静态的
+        im.SetDynamicOrStatic();
+
+        if(para::is_print_detail){
+            PrintFeaturesInfo(im, true, true);
+        }
+
+        ///单独优化动态物体
+        if(para::is_print_detail){
+            PrintInstancePoseInfo(im, true);
+        }
+        im.Optimization();
+
+        if(para::is_print_detail){
+            PrintInstancePoseInfo(im, true);
+        }
+
+
+        im.OutliersRejection();
+
+        Infov("processImage dynamic Optimization:{} ms",tt.TocThenTic());
+
+        Debugv("--完成处理动态物体--");
+    }
+
+    ///优化直线
+    if(cfg::slam==SlamType::kLine){
+        OptimizationWithLine();
+    }
+
+    ///VIO窗口的非线性优化
+    Optimization();
+
+    Infov("processImage Optimization:{} ms", tt.TocThenTic());
+
+    ///外点剔除
+    set<int> removeIndex;
+    OutliersRejection(removeIndex, feat_manager.point_landmarks);
+
+    feat_manager.RemoveOutlier(removeIndex);
+    feat_manager.RemoveLineOutlier();
+
+
+    if (FailureDetection()){
+        Warnv("failure detection!");
+        failure_occur = true;
+        ClearState();
+        SetParameter();
+        Warnv("system reboot!");
+        return;
+    }
+
+    Infov("processImage Outliebody.RsRejection:{} ms", tt.TocThenTic());
+
+    ///动态物体的滑动窗口
+    if(cfg::slam == SlamType::kDynamic){
+        im.ManageTriangulatePoint();
+        Debugv("finish ManageTriangulatePoint()");
+        //insts_manager.SetWindowPose();
+        im.SlideWindow(margin_flag);
+    }
+
+    /// 滑动窗口
+    SlideWindow();
+
+    ///动态物体的外点剔除
+    if(cfg::slam == SlamType::kDynamic){
+        im.OutliersRejection();
+
+         im.DeleteBadLandmarks();
+    }
+
+    Infov("processImage SlideWindow:{} ms", tt.TocThenTic());
+
+    feat_manager.RemoveFailures();
+
+    /// prepare output of VINS
+    key_poses.clear();
+    for (int i = 0; i <= kWinSize; i++)
+        key_poses.push_back(body.Ps[i]);
+
+    last_R = body.Rs[kWinSize];
+    last_P = body.Ps[kWinSize];
+    last_R0 = body.Rs[0];
+    last_P0 = body.Ps[0];
+    UpdateLatestStates();
 
     if(cfg::slam == SlamType::kDynamic){
         im.SetInstanceCurrentPoint3d();
     }
 
 }
+
 
 /**
  * 滑动窗口状态估计的入口函数

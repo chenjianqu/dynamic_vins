@@ -43,6 +43,8 @@ Vec6d plk_from_pose( Vec6d plk_c, Mat3d Rcw, Vec3d tcw );
 
 double LineReprojectionError( Vec4d obs, Mat3d Rwc, Vec3d twc, Vec6d line_w );
 
+tuple<bool,Vec3d,Vec3d> LineTrimming(const Vec6d &plucker,const Vec4d &line_obs);
+
 
 }
 

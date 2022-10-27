@@ -12,6 +12,7 @@
 
 #include "utils/log_utils.h"
 #include "body.h"
+#include "line_detector/line_geometry.h"
 
 
 namespace dynamic_vins{\
@@ -353,6 +354,188 @@ double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
     double rx = residual.x();
     double ry = residual.y();
     return sqrt(rx * rx + ry * ry);
+}
+
+
+
+void TriangulateOneLine(LineLandmark &line){
+
+    int imu_i = line.start_frame, imu_j = imu_i - 1;
+
+    Vec3d t0 = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[0];   // twc = Rwi * tic + twi
+    Mat3d R0 = body.Rs[imu_i] * body.ric[0];               // Rwc = Rwi * Ric
+
+    double d = 0, min_cos_theta = 1.0;
+    Vec3d tij;
+    Mat3d Rij;
+    Vec4d obsi;//i时刻的观测
+    Vec4d obsj;
+
+    Vec4d pii;//i时刻的观测构建的直线
+    Vec3d ni;//pii的法向量
+
+    ///寻找观测平面夹角最小的两帧
+
+    for (auto &feat : line.feats){   // 遍历所有的观测， 注意 start_frame 也会被遍历
+        imu_j++;
+
+        if(imu_j == imu_i){   // 第一个观测是start frame 上
+            obsi = feat.line_obs;
+            Vec3d p1( obsi(0), obsi(1), 1 );
+            Vec3d p2( obsi(2), obsi(3), 1 );
+            pii = pi_from_ppp(p1, p2,Vec3d( 0, 0, 0 ));//3点构建一个平面
+            ni = pii.head(3);
+            ni.normalize();
+            continue;
+        }
+
+        // 非start frame(其他帧)上的观测
+        Vec3d t1 = body.Ps[imu_j] + body.Rs[imu_j] * body.tic[0];
+        Mat3d R1 = body.Rs[imu_j] * body.ric[0];
+
+        Vec3d t = R0.transpose() * (t1 - t0);   // tij
+        Mat3d R = R0.transpose() * R1;          // Rij
+
+        Vec4d obsj_tmp = feat.line_obs;
+        ///将直线从j时刻变换到i时刻
+        Vec3d p3( obsj_tmp(0), obsj_tmp(1), 1 );
+        Vec3d p4( obsj_tmp(2), obsj_tmp(3), 1 );
+        p3 = R * p3 + t;
+        p4 = R * p4 + t;
+        //构建观测j在i时刻的平面
+        Vec4d pij = pi_from_ppp(p3, p4,t);
+        Vec3d nj = pij.head(3);
+        nj.normalize();
+
+        double cos_theta = ni.dot(nj);
+        if(cos_theta < min_cos_theta){
+            min_cos_theta = cos_theta;
+            tij = t;
+            Rij = R;
+            obsj = obsj_tmp;
+            d = t.norm();
+        }
+        /*             if( d < t.norm() )  // 选择最远的那俩帧进行三角化
+                     {
+                         d = t.norm();
+                         tij = t;
+                         Rij = R;
+                         obsj = it_per_frame.lineobs;      // 特征的图像坐标
+                     }*/
+
+    }
+
+    // if the distance between two frame is lower than 0.1m or the parallax angle is lower than 15deg , do not triangulate.
+    // if(d < 0.1 || min_cos_theta > 0.998)
+    if(min_cos_theta > 0.998)
+        // if( d < 0.2 )
+        return;
+
+    // plane pi from jth obs in ith camera frame
+    Vec3d p3( obsj(0), obsj(1), 1 );
+    Vec3d p4( obsj(2), obsj(3), 1 );
+    p3 = Rij * p3 + tij;
+    p4 = Rij * p4 + tij;
+    Vec4d pij = pi_from_ppp(p3, p4,tij);
+
+    ///根据两个平面，构建PLK坐标
+    Vec6d plk = pipi_plk( pii, pij );
+
+    //Vec3d cp = plucker_origin( n, v );
+    //if ( cp(2) < 0 )
+    {
+        //  cp = - cp;
+        //  continue;
+    }
+
+    //Vector6d line;
+    //line.head(3) = cp;
+    //line.tail(3) = v;
+    //it_per_id.line_plucker = line;
+
+    // plk.normalize();
+
+    ///获得两个3D端点
+    auto [valid,pts_1,pts_2] = LineTrimming(plk,line.feats[0].line_obs);
+
+    ///限制直线的长度
+    if(!valid || (pts_1-pts_2).norm()>10.){
+        return;
+    }
+
+    Vec3d w_pts_1 =  body.Rs[imu_i] * (body.ric[0] * pts_1 + body.tic[0]) + body.Ps[imu_i];
+    Vec3d w_pts_2 =  body.Rs[imu_i] * (body.ric[0] * pts_2 + body.tic[0]) + body.Ps[imu_i];
+
+    line.ptw1 = w_pts_1;
+    line.ptw2 = w_pts_2;
+
+    line.line_plucker = plk;  // plk in camera frame
+    line.is_triangulation = true;
+
+}
+
+
+
+void TriangulateOneLineStereo(LineLandmark &line){
+
+    int imu_i = line.start_frame;
+
+    Vec3d t0 = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[0];   // twc = Rwi * tic + twi
+    Mat3d R0 = body.Rs[imu_i] * body.ric[0];               // Rwc = Rwi * Ric
+
+    // 非start frame(其他帧)上的观测
+    Vec3d t1 = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[1];
+    Mat3d R1 = body.Rs[imu_i] * body.ric[1];
+
+    Vec3d t = R0.transpose() * (t1 - t0);   // tij
+    Mat3d R = R0.transpose() * R1;          // Rij
+
+    const Vec3d& tij = t;
+    const Mat3d& Rij = R;
+
+    double d = 0, min_cos_theta = 1.0;
+
+    Vec4d obsi = line.feats[0].line_obs;//i时刻的观测
+
+    Vec4d pii;//i时刻的观测构建的直线
+    Vec3d ni;//pii的法向量
+
+    Vec3d p1( obsi(0), obsi(1), 1 );
+    Vec3d p2( obsi(2), obsi(3), 1 );
+    pii = pi_from_ppp(p1, p2,Vec3d( 0, 0, 0 ));//3点构建一个平面
+    ni = pii.head(3);
+    ni.normalize();
+
+    Vec4d obsj = line.feats[0].line_obs_right;
+    d = t.norm();
+
+    // plane pi from jth obs in ith camera frame
+    Vec3d p3( obsj(0), obsj(1), 1 );
+    Vec3d p4( obsj(2), obsj(3), 1 );
+    p3 = Rij * p3 + tij;
+    p4 = Rij * p4 + tij;
+    Vec4d pij = pi_from_ppp(p3, p4,tij);
+
+    ///根据两个平面，构建PLK坐标
+    Vec6d plk = pipi_plk( pii, pij );
+
+    auto [valid,pts_1,pts_2] = LineTrimming(plk,line.feats[0].line_obs);
+
+    ///限制直线的长度
+    if(!valid || (pts_1-pts_2).norm()>50){
+        return;
+    }
+
+    Vec3d w_pts_1 =  body.Rs[imu_i] * (body.ric[0] * pts_1 + body.tic[0]) + body.Ps[imu_i];
+    Vec3d w_pts_2 =  body.Rs[imu_i] * (body.ric[0] * pts_2 + body.tic[0]) + body.Ps[imu_i];
+
+    line.ptw1 = w_pts_1;
+    line.ptw2 = w_pts_2;
+
+    // plk.normalize();
+    line.line_plucker = plk;  // plk in camera frame
+    line.is_triangulation = true;
+
 }
 
 

@@ -89,7 +89,7 @@ void ReadCameraToIMU(const std::string& config_path){
 
     }
     ///从文件中读取相机内参
-    else if(cfg::dataset == DatasetType::kViode){
+    else if(cfg::dataset == DatasetType::kViode || cfg::dataset== DatasetType::kEuRoc){
         cv::Mat cv_T;
         fs["body_T_cam0"] >> cv_T;
         Eigen::Matrix4d T;
@@ -104,6 +104,9 @@ void ReadCameraToIMU(const std::string& config_path){
             para::TIC.emplace_back(T.block<3, 1>(0, 3));
         }
 
+    }
+    else{
+        std::cerr<<"ReadCameraToIMU() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
     }
 
     std::string kBasicDir;

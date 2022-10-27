@@ -181,7 +181,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         AddViodeInstances(img);
     }
     else{
-        throw std::runtime_error("have not this dataset type");
+        std::cerr<<"InstFeat::InstsTrack()::MOT not is implemented, as dataset is "<<cfg::dataset_name<<endl;
     }
 
     //将当前帧未观测到的box设置状态

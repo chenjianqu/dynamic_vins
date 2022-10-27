@@ -14,9 +14,15 @@
 #include "utils/def.h"
 #include "estimator_insts.h"
 
+
 namespace dynamic_vins{\
 
+class FeatureManager;
+
+
 string PrintFeaturesInfo(InstanceManager& im, bool output_lm, bool output_stereo);
+
+string PrintLineInfo(FeatureManager &fm);
 
 void SaveTrajectory(InstanceManager& im);
 
