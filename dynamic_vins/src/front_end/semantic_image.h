@@ -66,7 +66,7 @@ struct SemanticImage{
 /**
  * 多线程图像队列
  */
-class ImageQueue{
+class SemanticImageQueue{
 public:
 
     void push_back(SemanticImage& img){

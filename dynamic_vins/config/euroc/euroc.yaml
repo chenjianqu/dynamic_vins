@@ -8,7 +8,7 @@ only_imgprocess: 0  #for debug
 only_frontend: 0  #for debug
 
 dataset_type: "euroc" #support:kitti,viode
-slam_type: "line" #SLAM mode,optional:raw,line
+slam_type: "raw" #SLAM mode,optional:raw,line
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
@@ -23,9 +23,11 @@ plane_constraint: 0 #是否使用平面约束
 image_width: 752
 image_height: 480
 
-cam0_calib: "cam0_pinhole.yaml"
-cam1_calib: "cam1_pinhole.yaml"
+#cam0_calib: "cam0_pinhole.yaml"
+#cam1_calib: "cam1_pinhole.yaml"
 
+cam0_calib: "cam0_mei.yaml"
+cam1_calib: "cam1_mei.yaml"
 
 ######################### Extrinsic ###########################
 #Whether to estimate the extrinsic between the camera and IMU,
@@ -33,7 +35,6 @@ cam1_calib: "cam1_pinhole.yaml"
 #1 means estimated extrinsic with initial value
 #2 means estimated extrinsic, but no initial initial value
 estimate_extrinsic: 0
-
 
 body_T_cam0: !!opencv-matrix
   rows: 4

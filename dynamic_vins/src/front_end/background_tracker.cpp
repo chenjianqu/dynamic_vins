@@ -28,11 +28,30 @@
 namespace dynamic_vins{\
 
 
+
+
+
 FeatureTracker::FeatureTracker(const string& config_path)
 {
     fe_para::SetParameters(config_path);
 
     Debugt("init FeatureTracker");
+
+    vector<string> cam_paths = GetCameraPath(config_path);
+    if(cam_paths.empty()){
+        cerr<<"FeatureTracker() GetCameraPath() not found camera config:"<<config_path<<endl;
+        std::terminate();
+    }
+
+    left_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[0]);
+    if(cfg::is_stereo){
+        if(cam_paths.size()==1){
+            cerr<<"FeatureTracker() GetCameraPath() not found right camera config:"<<config_path<<endl;
+            std::terminate();
+        }
+        right_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[1]);
+    }
+
 
     lk_optical_flow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30);
     lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(
@@ -74,16 +93,21 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 
     //RejectWithF();
     TicToc t_m;
+    //根据跟踪次数进行排序
     SortPoints(bg.curr_points, bg.track_cnt, bg.ids);
-    for(const auto& pt : bg.curr_points) cv::circle(bg.box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
-    TicToc t_t;
+    //设置mask，防止点聚集
+    for(const auto& pt : bg.curr_points)
+        cv::circle(bg.box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
+
     int n_max_cnt = fe_para::kMaxCnt - static_cast<int>(bg.curr_points.size());
     vector<cv::Point2f> n_pts;
-    if (n_max_cnt > 0)
+    if (n_max_cnt > 0){
         cv::goodFeaturesToTrack(cur_img.gray0, n_pts, fe_para::kMaxCnt - bg.curr_points.size(),
                                 0.01, fe_para::kMinDist, bg.box2d->mask_cv);
-    else
+    }
+    else{
         n_pts.clear();
+    }
 
     for (auto &p : n_pts){
         bg.curr_points.push_back(p);
@@ -93,7 +117,7 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 
     Infot("TrackImage | goodFeaturesToTrack:{} ms", tt.TocThenTic());
 
-    bg.UndistortedPts(cam0);
+    bg.UndistortedPts(left_cam);
     bg.PtsVelocity(cur_time-prev_time);
     //bg.curr_un_points = UndistortedPts(bg.curr_points, cam0);
     //bg.pts_velocity = PtsVelocity(bg.ids, bg.curr_un_points, bg.curr_id_pts,bg.prev_id_pts);
@@ -107,8 +131,8 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
         bg.right_un_points.clear();
         bg.right_pts_velocity.clear();
         bg.right_curr_id_pts.clear();
-        if(!bg.curr_points.empty())
-        {
+
+        if(!bg.curr_points.empty()){
             vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, bg.curr_points, bg.right_points);
 
             bg.right_ids = bg.ids;
@@ -124,7 +148,7 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
             */
             //bg.right_un_points = UndistortedPts(bg.right_points, cam1);
             //bg.right_pts_velocity = PtsVelocity(bg.right_ids, bg.right_un_points, bg.right_curr_id_pts, bg.right_prev_id_pts);
-            bg.RightUndistortedPts(cam1);
+            bg.RightUndistortedPts(right_cam);
             bg.RightPtsVelocity(cur_time-prev_time);
         }
         bg.right_prev_id_pts = bg.right_curr_id_pts;
@@ -132,8 +156,10 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
         Infot("TrackImage | flowTrack right:{} ms", tt.TocThenTic());
     }
 
-    if(fe_para::is_show_track)
-        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, prev_left_map);
+    if(fe_para::is_show_track){
+        //DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, prev_left_map);
+        DrawTrack(cur_img.gray0, cur_img.gray1, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
+    }
 
     Infot("TrackImage | DrawTrack right:{} ms", tt.TocThenTic());
 
@@ -142,9 +168,9 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 
     bg.PostProcess();
 
-    prev_left_map.clear();
+    last_id_pts_map.clear();
     for(size_t i = 0; i < bg.curr_points.size(); i++)
-        prev_left_map[bg.ids[i]] = bg.curr_points[i];
+        last_id_pts_map[bg.ids[i]] = bg.curr_points[i];
 
     return SetOutputFeats();
 }
@@ -183,10 +209,10 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
     }
 
     bg.curr_lines->SetLines();
-    bg.curr_lines->UndistortedLineEndPoints(cam0);
+    bg.curr_lines->UndistortedLineEndPoints(left_cam);
 
     bg.curr_lines_right->SetLines();
-    bg.curr_lines_right->UndistortedLineEndPoints(cam1);
+    bg.curr_lines_right->UndistortedLineEndPoints(right_cam);
 
 
     ///跟踪左图像的点特征
@@ -227,7 +253,7 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
     Infot("TrackImage | goodFeaturesToTrack:{} ms", tt.TocThenTic());
 
-    bg.UndistortedPts(cam0);
+    bg.UndistortedPts(left_cam);
     bg.PtsVelocity(cur_time-prev_time);
     //bg.curr_un_points = UndistortedPts(bg.curr_points, cam0);
     //bg.pts_velocity = PtsVelocity(bg.ids, bg.curr_un_points, bg.curr_id_pts,bg.prev_id_pts);
@@ -258,7 +284,7 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
             */
             //bg.right_un_points = UndistortedPts(bg.right_points, cam1);
             //bg.right_pts_velocity = PtsVelocity(bg.right_ids, bg.right_un_points, bg.right_curr_id_pts, bg.right_prev_id_pts);
-            bg.RightUndistortedPts(cam1);
+            bg.RightUndistortedPts(right_cam);
             bg.RightPtsVelocity(cur_time-prev_time);
         }
         bg.right_prev_id_pts = bg.right_curr_id_pts;
@@ -268,18 +294,18 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
     if(fe_para::is_show_track){
         ///可视化点
-        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, prev_left_map);
+        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
 
         ///可视化线
-        line_detector->VisualizeLine(img_track_, bg.curr_lines);
+        line_detector->VisualizeLine(img_vis, bg.curr_lines);
         if(cfg::dataset==DatasetType::kKitti){
-            line_detector->VisualizeRightLine(img_track_,bg.curr_lines_right,true);
+            line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
         }
         else{
-            line_detector->VisualizeRightLine(img_track_,bg.curr_lines_right,false);
+            line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
         }
         //line_detector->VisualizeLineStereoMatch(img_track_, bg.curr_lines, bg.curr_lines_right);
-        line_detector->VisualizeLineMonoMatch(img_track_,bg.prev_lines,bg.curr_lines);
+        line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);
     }
 
     Infot("TrackImage | DrawTrack right:{} ms", tt.TocThenTic());
@@ -289,9 +315,9 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
     bg.PostProcess();
 
-    prev_left_map.clear();
+    last_id_pts_map.clear();
     for(size_t i = 0; i < bg.curr_points.size(); i++)
-        prev_left_map[bg.ids[i]] = bg.curr_points[i];
+        last_id_pts_map[bg.ids[i]] = bg.curr_points[i];
 
     return SetOutputFeats();
 }
@@ -311,6 +337,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
         xyz_uv_velocity << bg.curr_un_points[i].x, bg.curr_un_points[i].y, 1,
         bg.curr_points[i].x, bg.curr_points[i].y,
         bg.pts_velocity[i].x, bg.pts_velocity[i].y;
+
         points[bg.ids[i]].emplace_back(camera_id,  xyz_uv_velocity);
         //Debugt("id:{} cam:{}",ids[i],camera_id);
     }
@@ -322,6 +349,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
             xyz_uv_velocity << bg.right_un_points[i].x, bg.right_un_points[i].y, 1,
             bg.right_points[i].x, bg.right_points[i].y,
             bg.right_pts_velocity[i].x, bg.right_pts_velocity[i].y;
+
             points[bg.right_ids[i]].emplace_back(camera_id,  xyz_uv_velocity);
             //Debugt("id:{} cam:{}",bg.right_ids[i],camera_id);
         }
@@ -392,7 +420,7 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     Infot("trackImageNaive | detect feature:{} ms", tt.TocThenTic());
 
     ///特征点矫正和计算速度
-    bg.UndistortedPts(cam0);
+    bg.UndistortedPts(left_cam);
     bg.PtsVelocity(cur_time-prev_time);
 
     Infot("trackImageNaive | vel&&un:{} ms", tt.TocThenTic());
@@ -400,7 +428,7 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     ///右图像跟踪
     if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !bg.curr_points.empty()){
         bg.TrackRightGPU(img,lk_optical_flow,lk_optical_flow_back);
-        bg.RightUndistortedPts(cam1);
+        bg.RightUndistortedPts(right_cam);
         bg.RightPtsVelocity(cur_time-prev_time);
 
         Debugt("trackImageNaive | bg.right_points.size:{}", bg.right_points.size());
@@ -408,16 +436,16 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     }
 
     if(fe_para::is_show_track)
-        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, prev_left_map);
+        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
 
     prev_img = cur_img;
     prev_time = cur_time;
 
     bg.PostProcess();
 
-    prev_left_map.clear();
+    last_id_pts_map.clear();
     for(size_t i = 0; i < bg.curr_points.size(); i++)
-        prev_left_map[bg.ids[i]] = bg.curr_points[i];
+        last_id_pts_map[bg.ids[i]] = bg.curr_points[i];
 
     return SetOutputFeats();
 }
@@ -502,38 +530,38 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
         cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
         //cv::cuda::cvtColor(mask_gpu,img_show_gpu,CV_GRAY2BGR);
         cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
-        img_show_gpu.download(img_track_);
+        img_show_gpu.download(img_vis);
     }
     else{
-        img_track_ = img.color0;
+        img_vis = img.color0;
     }
 
     if (cfg::is_stereo && !img.color1.empty()){
         if(cfg::dataset == DatasetType::kKitti){
-            cv::vconcat(img_track_, img.color1, img_track_);
+            cv::vconcat(img_vis, img.color1, img_vis);
         }else{
-            cv::hconcat(img_track_, img.color1, img_track_);
+            cv::hconcat(img_vis, img.color1, img_vis);
         }
     }
 
     //cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
     for (size_t j = 0; j < curLeftPts.size(); j++){
         double len = std::min(1.0, 1.0 * bg.track_cnt[j] / 20);
-        cv::circle(img_track_, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
+        cv::circle(img_vis, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
     }
     for (auto & pt : bg.visual_new_points)
-        cv::circle(img_track_, pt, 2, cv::Scalar(255, 255, 255), 2);
+        cv::circle(img_vis, pt, 2, cv::Scalar(255, 255, 255), 2);
     if (cfg::is_stereo && !img.color1.empty() ){
         if(cfg::dataset == DatasetType::kKitti){
             for (auto &rightPt : curRightPts){
                 rightPt.y += (float)img.color0.rows;
-                cv::circle(img_track_, rightPt, 2, cv::Scalar(0, 255, 0), 2);
+                cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
             }
         }
         else{
             for (auto &rightPt : curRightPts){
                 rightPt.x += (float)img.color0.cols;
-                cv::circle(img_track_, rightPt, 2, cv::Scalar(0, 255, 0), 2);
+                cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
             }
         }
     }
@@ -546,6 +574,62 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
     }  */
 
 }
+
+
+void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
+                               vector<unsigned int> &curLeftIds,
+                               vector<cv::Point2f> &curLeftPts,
+                               vector<cv::Point2f> &curRightPts,
+                               map<int, cv::Point2f> &prevLeftPtsMap){
+    //int rows = imLeft.rows;
+    int cols = imLeft.cols;
+    if (!imRight.empty() && cfg::is_stereo)
+        cv::hconcat(imLeft, imRight, img_vis);
+    else
+        img_vis = imLeft.clone();
+    cv::cvtColor(img_vis, img_vis, CV_GRAY2RGB);
+
+    for (size_t j = 0; j < curLeftPts.size(); j++){
+        double len = std::min(1.0, 1.0 * bg.track_cnt[j] / 20);
+        cv::circle(img_vis, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
+    }
+
+    if (!imRight.empty() && cfg::is_stereo)
+    {
+        for (size_t i = 0; i < curRightPts.size(); i++)
+        {
+            cv::Point2f rightPt = curRightPts[i];
+            rightPt.x += cols;
+            cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
+            //cv::Point2f leftPt = curLeftPtsTrackRight[i];
+            //cv::line(imTrack, leftPt, rightPt, cv::Scalar(0, 255, 0), 1, 8, 0);
+        }
+    }
+
+    map<int, cv::Point2f>::iterator mapIt;
+    for (size_t i = 0; i < curLeftIds.size(); i++)
+    {
+        int id = curLeftIds[i];
+        mapIt = prevLeftPtsMap.find(id);
+        if(mapIt != prevLeftPtsMap.end())
+        {
+            cv::arrowedLine(img_vis, curLeftPts[i], mapIt->second, cv::Scalar(0, 255, 0), 1, 8, 0, 0.2);
+        }
+    }
+
+    //draw prediction
+    /*
+    for(size_t i = 0; i < predict_pts_debug.size(); i++)
+    {
+        cv::circle(imTrack, predict_pts_debug[i], 2, cv::Scalar(0, 170, 255), 2);
+    }
+    */
+    //printf("predict pts size %d \n", (int)predict_pts_debug.size());
+
+    //cv::Mat imCur2Compress;
+    //cv::resize(imCur2, imCur2Compress, cv::Size(cols, rows / 2));
+}
+
 
 
 void FeatureTracker::SetPrediction(std::map<int, Eigen::Vector3d> &predictPts)
@@ -602,18 +686,18 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
     Infot("TrackSemanticImage | detect feature:{} ms", tt.TocThenTic());
 
     ///矫正特征点,并计算特征点的速度
-    bg.UndistortedPts(cam0);
+    bg.UndistortedPts(left_cam);
     bg.PtsVelocity(cur_time-prev_time);
 
     ///跟踪右图像
     if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !bg.curr_points.empty()){
         bg.TrackRightGPU(img,lk_optical_flow,lk_optical_flow_back);
 
-        bg.RightUndistortedPts(cam1);
+        bg.RightUndistortedPts(right_cam);
         bg.RightPtsVelocity(cur_time-prev_time);
     }
     if(fe_para::is_show_track)
-        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, prev_left_map);
+        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
 
     /*if(img.seq%10==0){
         string save_name = cfg::kDatasetSequence+"_"+std::to_string(img.seq)+"_bg.png";
@@ -625,9 +709,9 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
 
     bg.PostProcess();
 
-    prev_left_map.clear();
+    last_id_pts_map.clear();
     for(size_t i = 0; i < bg.curr_points.size(); i++)
-        prev_left_map[bg.ids[i]] = bg.curr_points[i];
+        last_id_pts_map[bg.ids[i]] = bg.curr_points[i];
 
     return SetOutputFeats();
 }

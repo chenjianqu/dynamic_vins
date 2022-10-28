@@ -178,13 +178,13 @@ void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2)
  * @param cam
  * @return
  */
-vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts,PinHoleCamera::Ptr &cam)
+vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts,camodocal::CameraPtr &cam)
 {
     vector<cv::Point2f> un_pts;
     for (auto & pt : pts){
         Eigen::Vector2d a(pt.x, pt.y);
         Eigen::Vector3d b;
-        cam->LiftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
         un_pts.emplace_back(b.x() / b.z(), b.y() / b.z());
     }
     return un_pts;
@@ -284,6 +284,7 @@ void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, 
     vector<pair<int, pair<cv::Point2f, int>>> cnt_pts_id;
     for (size_t i = 0; i < cur_pts.size(); i++)
         cnt_pts_id.emplace_back(track_cnt[i], std::make_pair(cur_pts[i], ids[i]));
+    ///根据根据次数进行排序
     sort(cnt_pts_id.begin(), cnt_pts_id.end(),
          [](const pair<int, pair<cv::Point2f, int>> &a, const pair<int, pair<cv::Point2f, int>> &b){
         return a.first > b.first;

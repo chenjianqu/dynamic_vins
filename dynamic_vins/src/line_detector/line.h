@@ -15,6 +15,8 @@
 #include <vector>
 
 #include <opencv2/features2d.hpp>
+#include "camodocal/camera_models/CameraFactory.h"
+
 #include "line_descriptor/include/line_descriptor_custom.hpp"
 #include "utils/camera_model.h"
 
@@ -56,7 +58,7 @@ public:
 
     void SetLines();
 
-    void UndistortedLineEndPoints(PinHoleCamera::Ptr cam);
+    void UndistortedLineEndPoints(camodocal::CameraPtr &cam);
 
 
     int frame_id;

@@ -30,6 +30,8 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
+#include "camodocal/camera_models/CameraFactory.h"
+
 #include "utils/parameters.h"
 #include "feature_manager.h"
 
@@ -39,7 +41,7 @@
 #include "utils/def.h"
 #include "landmark.h"
 #include "vio_parameters.h"
-#include "semantic_feature.h"
+#include "frontend_feature.h"
 
 #include "estimator/imu/imu_factor.h"
 #include "estimator/initial/solve_5pts.h"
@@ -94,6 +96,8 @@ class Estimator
     FeatureManager feat_manager;
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;
+
+    camodocal::CameraPtr left_cam,right_cam;
 
     FrontendFeature feature_frame;
 
@@ -166,7 +170,6 @@ private:
     double prev_time{}, cur_time{};
     bool openExEstimation{};
 
-    Vec3d g;
 
     Mat3d back_R0, last_R, last_R0;
     Vec3d back_P0, last_P, last_P0;

@@ -114,6 +114,10 @@ void ImageProcessor::Run(SemanticImage &img) {
     //if(!img.gray1.empty())
     //    clahe->apply(img.gray1, img.gray1);
 
+    if(cfg::slam==SlamType::kRaw || cfg::slam==SlamType::kRaw){
+        return;
+    }
+
     img.img_tensor = Pipeline::ImageToTensor(img.color0);
 
     //torch::Tensor img_clone = img_tensor.clone();

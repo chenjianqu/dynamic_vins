@@ -22,6 +22,7 @@
 #include "utils/parameters.h"
 #include "utils/io/visualization.h"
 #include "utils/io/io_parameters.h"
+#include "utils/io/io_utils.h"
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/io/dataloader.h"
@@ -30,6 +31,7 @@
 #include "front_end/background_tracker.h"
 #include "front_end/front_end_parameters.h"
 #include "image_process/image_process.h"
+#include "image_process/deeplearning_utils.h"
 
 namespace dynamic_vins{\
 
@@ -45,7 +47,9 @@ InstsFeatManager::Ptr insts_tracker;
 CallBack* callback;
 Dataloader::Ptr dataloader;
 
-ImageQueue image_queue;
+SemanticImageQueue image_queue;
+FeatureQueue feature_queue;
+
 
 
 /**
@@ -65,9 +69,9 @@ void ImageProcess()
             std::this_thread::sleep_for(50ms);
             continue;
         }
-        ///同步获取图像
         Debugs("Start sync");
 
+        ///同步获取图像
         SemanticImage img;
         if(io_para::use_dataloader){
             img = dataloader->LoadStereo();
@@ -78,14 +82,14 @@ void ImageProcess()
 
         std::cout<<"image seq_id:"<<img.seq<<std::endl;
 
+        Warns("----------Time : {} ----------", std::to_string(img.time0));
+        t_all.Tic();
+
         ///结束程序
         if(img.color0.empty()){
             cfg::ok = false;
             break;
         }
-
-        Warns("----------Time : {} ----------", std::to_string(img.time0));
-        t_all.Tic();
 
         if(img.color0.rows!=cfg::kInputHeight || img.color0.cols!=cfg::kInputWidth){
             cerr<<fmt::format("The input image sizes is:{}x{},but config size is:{}x{}",
@@ -93,6 +97,7 @@ void ImageProcess()
             std::terminate();
         }
 
+        ///入口程序
         processor->Run(img);
 
 /*
@@ -145,11 +150,9 @@ void ImageProcess()
         }
 
 
-
     }
 
     Infos("Image Process Avg cost:{} ms",time_sum/cnt);
-
     Warns("ImageProcess 线程退出");
 }
 
@@ -167,6 +170,7 @@ void FeatureTrack()
         if(auto img = image_queue.request_image();img){
             tt.Tic();
             Warnt("----------Time : {} ----------", std::to_string(img->time0));
+
             FrontendFeature frame;
             frame.time = img->time0;
             frame.seq_id = img->seq;
@@ -189,13 +193,12 @@ void FeatureTrack()
                     insts_tracker->DrawInsts(feature_tracker->img_track());
                 }
 
-                /*if(img->seq%10==0){
-                    cv::Mat img_w=img->color0.clone();
-                    string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
-                    insts_tracker->DrawInsts(img_w);
-
-                    cv::imwrite(save_name,img_w);
-                }*/
+                //if(img->seq%10==0){
+                 //   cv::Mat img_w=img->color0.clone();
+                 //   string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
+                //    insts_tracker->DrawInsts(img_w);
+                //    cv::imwrite(save_name,img_w);
+               // }
 
             }
             else if(cfg::slam == SlamType::kNaive){
@@ -207,6 +210,14 @@ void FeatureTrack()
             else{
                 frame.features = feature_tracker->TrackImage(*img);
             }
+
+
+            ///DEBUG
+            //string serialize_path = cfg::kBasicDir + "/data/output/serialization_vins/";
+            //serialize_path += fmt::format("{}.txt",frame.seq_id);
+            //FeatureSerialization(serialize_path,frame.features.points);//序列化
+            //frame.features.points = FeatureDeserialization(serialize_path);//反序列化
+
 
             ///将数据传入到后端
             if(!cfg::is_only_frontend){
@@ -309,6 +320,7 @@ int Run(int argc, char **argv){
         MyLogger::InitLogger(file_name);
         ///初始化相机模型
         InitCamera(file_name);
+        InitDeepLearningUtils(file_name);
         ///初始化局部参数
         coco::SetParameters(file_name);
         if(cfg::dataset == DatasetType::kViode){

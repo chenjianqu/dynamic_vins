@@ -67,22 +67,14 @@ void InitCamera(const std::string& config_path){
     }
     ///从文件中读取相机内参
     else if(cfg::dataset == DatasetType::kViode || cfg::dataset==DatasetType::kEuRoc){
-        auto pn = config_path.find_last_of('/');
-        std::string config_dir = config_path.substr(0, pn);
-
-        std::string cam0_calib;
-        fs["cam0_calib"] >> cam0_calib;
-        std::string cam0Path = config_dir + "/" + cam0_calib;
+        vector<string> cam_path = GetCameraPath(config_path);
 
         cam0 = std::make_shared<PinHoleCamera>();
-        cam0->ReadFromYamlFile(cam0Path);
+        cam0->ReadFromYamlFile(cam_path[0]);
 
         if(cfg::kCamNum>1){
-            std::string cam1Calib;
-            fs["cam1_calib"] >> cam1Calib;
-            std::string cam1Path = config_dir + "/" + cam1Calib;
             cam1 = std::make_shared<PinHoleCamera>();
-            cam1->ReadFromYamlFile(cam1Path);
+            cam1->ReadFromYamlFile(cam_path[1]);
         }
     }
     else{
@@ -189,7 +181,34 @@ void PinHoleCamera::LiftProjective(const Vec2d& p, Vec3d& P) const
 }
 
 
+vector<string> GetCameraPath(const string &config_path){
+    auto pn = config_path.find_last_of('/');
+    std::string config_dir = config_path.substr(0, pn);
 
+    cv::FileStorage fs(config_path, cv::FileStorage::READ);
+
+    if (!fs.isOpened()){
+        return {};
+    }
+
+    vector<string> ans;
+
+    if(!fs["cam0_calib"].isNone()){
+        std::string cam0_calib;
+        fs["cam0_calib"] >> cam0_calib;
+        std::string cam0Path = config_dir + "/" + cam0_calib;
+        ans.push_back(cam0Path);
+
+        if(!fs["cam1_calib"].isNone()){
+            std::string cam1_calib;
+            fs["cam1_calib"] >> cam1_calib;
+            std::string cam1Path = config_dir + "/" + cam1_calib;
+            ans.push_back(cam1Path);
+        }
+    }
+
+    return ans;
+}
 
 
 

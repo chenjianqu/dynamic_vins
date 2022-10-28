@@ -26,6 +26,10 @@
 #include <execinfo.h>
 #include <csignal>
 
+#include "camodocal/camera_models/CameraFactory.h"
+#include "camodocal/camera_models/CataCamera.h"
+#include "camodocal/camera_models/PinholeCamera.h"
+
 #include "utils/def.h"
 #include "utils/parameters.h"
 #include "instance_tracker.h"
@@ -35,10 +39,11 @@
 #include "line_detector/line_detector.h"
 
 
+
+
 namespace dynamic_vins{\
 
-class FeatureTracker
-{
+class FeatureTracker{
 public:
     using Ptr=std::unique_ptr<FeatureTracker>;
     explicit FeatureTracker(const string& config_path);
@@ -48,7 +53,7 @@ public:
     FeatureBackground TrackImageNaive(SemanticImage &img);
     FeatureBackground TrackSemanticImage(SemanticImage &img);
 
-    cv::Mat& img_track(){return img_track_;}
+    cv::Mat& img_track(){return img_vis;}
 
     SemanticImage prev_img, cur_img;
 
@@ -65,10 +70,16 @@ private:
                    vector<cv::Point2f> &curRightPts,
                    std::map<int, cv::Point2f> &prevLeftPts);
 
+    void DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
+                   vector<unsigned int> &curLeftIds,
+                   vector<cv::Point2f> &curLeftPts,
+                   vector<cv::Point2f> &curRightPts,
+                   map<int, cv::Point2f> &prevLeftPtsMap);
 
-    cv::Mat img_track_;
 
-    std::map<int, cv::Point2f> prev_left_map;
+    cv::Mat img_vis;
+
+    std::map<int, cv::Point2f> last_id_pts_map;
     double cur_time{}, prev_time{};
 
     cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow;
@@ -78,6 +89,8 @@ private:
     LineDetector::Ptr line_detector;
 
     InstFeat bg;
+
+    camodocal::CameraPtr left_cam,right_cam;
 };
 
 

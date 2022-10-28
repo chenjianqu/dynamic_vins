@@ -185,9 +185,9 @@ struct LandmarkPoint{
 };
 
 
-class FeaturePerFrame{
+class StaticFeature{
 public:
-    FeaturePerFrame(const Eigen::Matrix<double, 7, 1> &_point, double td)
+    StaticFeature(const Eigen::Matrix<double, 7, 1> &_point, double td)
     {
         point.x() = _point(0);
         point.y() = _point(1);
@@ -201,32 +201,32 @@ public:
     }
     void rightObservation(const Eigen::Matrix<double, 7, 1> &_point)
     {
-        pointRight.x() = _point(0);
-        pointRight.y() = _point(1);
-        pointRight.z() = _point(2);
+        point_right.x() = _point(0);
+        point_right.y() = _point(1);
+        point_right.z() = _point(2);
         uvRight.x() = _point(3);
         uvRight.y() = _point(4);
-        velocityRight.x() = _point(5);
-        velocityRight.y() = _point(6);
+        velocity_right.x() = _point(5);
+        velocity_right.y() = _point(6);
         is_stereo = true;
     }
     double cur_td;
-    Vec3d point, pointRight;
+    Vec3d point, point_right;
     Vec2d uv, uvRight;
-    Vec2d velocity, velocityRight;
+    Vec2d velocity, velocity_right;
     bool is_stereo;
 };
 
-class FeaturePerId{
+class StaticLandmark{
 public:
     const int feature_id;
     int start_frame;
-    vector<FeaturePerFrame> feats;
-    int used_num;
+    vector<StaticFeature> feats;
+    size_t used_num;
     double depth;
     int solve_flag; // 0 haven't solve yet; 1 solve succ; 2 solve fail;
 
-    FeaturePerId(int _feature_id, int _start_frame)
+    StaticLandmark(int _feature_id, int _start_frame)
     : feature_id(_feature_id), start_frame(_start_frame),
     used_num(0), depth(-1.0), solve_flag(0)
     {}

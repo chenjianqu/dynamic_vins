@@ -23,8 +23,12 @@ namespace dynamic_vins{\
 
 
 
-///读取相机到IMU的外参
-void ReadCameraToIMU(const std::string& config_path){
+/**
+ * 读取相机到IMU的外参
+ * @param config_path
+ * @param fx 相机的焦距
+ */
+void ReadCameraToIMU(const std::string& config_path,double fx){
     ///设置为单位矩阵
     if (cfg::is_estimate_ex == 2){
         para::RIC.emplace_back(Eigen::Matrix3d::Identity());
@@ -119,7 +123,7 @@ void ReadCameraToIMU(const std::string& config_path){
 }
 
 
-void VioParameters::SetParameters(const std::string &config_path)
+void VioParameters::SetParameters(const std::string &config_path,double fx)
 {
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){
@@ -156,7 +160,7 @@ void VioParameters::SetParameters(const std::string &config_path)
     fs.release();
 
     ///读取外参
-    ReadCameraToIMU(config_path);
+    ReadCameraToIMU(config_path,fx);
 
 }
 

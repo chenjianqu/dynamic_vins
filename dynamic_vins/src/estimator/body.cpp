@@ -54,7 +54,7 @@ BodyState body;
             para_ex_pose[i][6] = q.w();
         }
 
-        para_Td[0][0] = td;
+        para_td[0][0] = td;
 
     }
 
@@ -124,7 +124,7 @@ BodyState body;
                                           para_ex_pose[i][5]).normalized().toRotationMatrix();
             }
 
-            td = para_Td[0][0];
+            td = para_td[0][0];
         }
     }
 

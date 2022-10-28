@@ -27,13 +27,12 @@ void InstFeat::PtsVelocity(double dt){
     pts_velocity.clear();
     curr_id_pts.clear();
 
-    for (unsigned int i = 0; i < ids.size(); i++){
+    for (size_t i = 0; i < ids.size(); i++){
         curr_id_pts.insert({ids[i], curr_un_points[i]});
     }
 
-    // caculate points velocity
     if (!prev_id_pts.empty()){
-        for (unsigned int i = 0; i < curr_un_points.size(); i++){
+        for (size_t i = 0; i < curr_un_points.size(); i++){
             auto it = prev_id_pts.find( ids[i]);
             if (it != prev_id_pts.end()){
                 double v_x = (curr_un_points[i].x - it->second.x) / dt;
@@ -50,7 +49,6 @@ void InstFeat::PtsVelocity(double dt){
             pts_velocity.emplace_back(0, 0);
         }
     }
-
 
 }
 
@@ -93,18 +91,18 @@ void InstFeat::RightPtsVelocity(double dt){
  * @param cam
  * @return
  */
-void InstFeat::UndistortedPts(PinHoleCamera::Ptr &cam)
+void InstFeat::UndistortedPts(camodocal::CameraPtr  &cam)
 {
     curr_un_points.clear();
     for (auto & pt : curr_points){
-        Eigen::Vector2d a(pt.x, pt.y);
-        Eigen::Vector3d b;
-        cam->LiftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        Vec2d a(pt.x, pt.y);
+        Vec3d b;
+        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
         curr_un_points.emplace_back(b.x() / b.z(), b.y() / b.z());
     }
 }
 
-void InstFeat::UndistortedPoints(PinHoleCamera::Ptr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un)
+void InstFeat::UndistortedPoints(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un)
 {
     point_un.clear();
     for (auto & pt : point_cam){
@@ -113,20 +111,21 @@ void InstFeat::UndistortedPoints(PinHoleCamera::Ptr &cam,vector<cv::Point2f>& po
         //cam->LiftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
         //point_un.emplace_back(b.x() / b.z(), b.y() / b.z());
 
-        float x = (pt.x - cam0->cx) / cam0->fx;
-        float y = (pt.y - cam0->cy) /cam0->fy;
-        point_un.emplace_back(x, y);
+        Vec2d a(pt.x, pt.y);
+        Vec3d b;
+        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        point_un.emplace_back(b.x() / b.z(), b.y() / b.z());
     }
 }
 
 
-void InstFeat::RightUndistortedPts(PinHoleCamera::Ptr &cam)
+void InstFeat::RightUndistortedPts(camodocal::CameraPtr  &cam)
 {
     right_un_points.clear();
     for (auto & pt : right_points){
         Eigen::Vector2d a(pt.x, pt.y);
         Eigen::Vector3d b;
-        cam->LiftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
         right_un_points.emplace_back(b.x() / b.z(), b.y() / b.z());
     }
 }

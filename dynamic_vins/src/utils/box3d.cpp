@@ -19,7 +19,7 @@ using namespace std;
 namespace fs=std::filesystem;
 
 
-Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens)
+Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens,camodocal::CameraPtr &cam)
 {
     ///每行的前3个数字是类别,属性,分数
     int class_id = NuScenes::ConvertNuScenesToKitti(std::stoi(tokens[0]));
@@ -74,7 +74,8 @@ Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens)
 
     for(int i=0;i<8;++i){
         Vec2d p;
-        cam0->ProjectPoint(box3d->corners.col(i),p);//计算3D box投影到图像平面
+        cam->spaceToPlane(box3d->corners.col(i),p);//计算3D box投影到图像平面
+        //cam0->ProjectPoint(box3d->corners.col(i),p);
         box3d->corners_2d.col(i) = p;
     }
 
@@ -94,7 +95,7 @@ Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens)
 
 
 
-Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens)
+Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens,camodocal::CameraPtr &cam)
 {
     /**
      * gt标签的内容
@@ -170,7 +171,8 @@ Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens)
 
     for(int i=0;i<8;++i){
         Vec2d p;
-        cam0->ProjectPoint(box3d->corners.col(i),p);//计算3D box投影到图像平面
+        cam->spaceToPlane(box3d->corners.col(i),p);//计算3D box投影到图像平面
+        //cam0->ProjectPoint(box3d->corners.col(i),p);//计算3D box投影到图像平面
         box3d->corners_2d.col(i) = p;
     }
 
@@ -529,12 +531,12 @@ vector<std::pair<int,int>> Box3D::GetLineVetexPair(){
  * @param cam
  * @return
  */
-Mat28d Box3D::CornersProjectTo2D(PinHoleCamera &cam)
+Mat28d Box3D::CornersProjectTo2D(camodocal::CameraPtr &cam)
 {
     Mat28d corners_2d_tmp;
     for(int i=0;i<8;++i){
         Vec2d p;
-        cam.ProjectPoint(corners.col(i),p);
+        cam->spaceToPlane(corners.col(i),p);
         corners_2d_tmp.col(i) = p;
     }
     return corners_2d_tmp;
@@ -548,7 +550,7 @@ Mat28d Box3D::CornersProjectTo2D(PinHoleCamera &cam)
  * @param color
  * @param cam
  */
-void Box3D::VisCorners2d(cv::Mat &img,const cv::Scalar& color,PinHoleCamera &cam){
+void Box3D::VisCorners2d(cv::Mat &img,const cv::Scalar& color,camodocal::CameraPtr &cam){
     Mat28d corners2d = CornersProjectTo2D(cam);
     vector<std::pair<int,int>> lines = GetLineVetexPair();
 

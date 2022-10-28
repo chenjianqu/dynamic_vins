@@ -8,8 +8,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_SEMANTIC_FEATURE_H
-#define DYNAMIC_VINS_SEMANTIC_FEATURE_H
+#ifndef DYNAMIC_VINS_FRONTEND_FEATURE_H
+#define DYNAMIC_VINS_FRONTEND_FEATURE_H
 
 #include <optional>
 #include <mutex>
@@ -100,7 +100,7 @@ public:
         queue_cond.notify_one();
     }
 
-    std::optional<FrontendFeature> request_frame() {
+    std::optional<FrontendFeature> request() {
         std::unique_lock<std::mutex> lock(queue_mutex);
         if(!queue_cond.wait_for(lock, 30ms, [&]{return !frame_list.empty();}))
             return std::nullopt;
@@ -147,4 +147,4 @@ extern FeatureQueue feature_queue;
 
 }
 
-#endif //DYNAMIC_VINS_SEMANTIC_FEATURE_H
+#endif //DYNAMIC_VINS_FRONTEND_FEATURE_H

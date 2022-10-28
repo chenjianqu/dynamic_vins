@@ -12,7 +12,6 @@
 
 #include <visualization_msgs/MarkerArray.h>
 
-#include "utils/utils.h"
 #include "utils/box3d.h"
 #include "utils/camera_model.h"
 #include "utils/parameters.h"
@@ -64,7 +63,8 @@ public:
      * @param argv
      * @return
      */
-    int PubObject3D(int argc, char **argv)
+
+   /* int PubObject3D(int argc, char **argv)
     {
         const string object3d_root_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_object/0003/";
 
@@ -93,8 +93,9 @@ public:
 
     }
 
+*/
 
-
+/*
 
     [[nodiscard]] std::tuple<Eigen::Matrix3d,Eigen::Vector3d> GetBodyPose(int frame) const{
         double time = frame*0.05;
@@ -363,11 +364,13 @@ public:
                     auto cube_marker = CubeMarker(box->corners,cnt, BgrColor("green"));
                     marker_array.markers.push_back(cube_marker);
 
-                    /*Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
+                    */
+/*Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
                     auto axis_markers = AxisMarker(axis_matrix,cnt);
                     marker_array.markers.push_back(std::get<0>(axis_markers));
                     marker_array.markers.push_back(std::get<1>(axis_markers));
-                    marker_array.markers.push_back(std::get<2>(axis_markers));*/
+                    marker_array.markers.push_back(std::get<2>(axis_markers));*//*
+
                 }
                 cout<<"prediction_boxes:"<<boxes.size()<<endl;
             }
@@ -432,6 +435,7 @@ public:
 
     }
 
+*/
 
 
     void InitGlobalParameters(const string &file_name){
@@ -499,8 +503,10 @@ int main(int argc, char **argv)
 
 
     //return dynamic_vins::PubObject3D(argc,argv);
-    return pub_demo.PubFCOS3D(argc, argv,n);
+    //return pub_demo.PubFCOS3D(argc, argv,n);
     //return dynamic_vins::PubViodeFCOS3D(argc, argv,n);
+
+    return 0;
 }
 
 

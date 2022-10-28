@@ -33,10 +33,9 @@ void SolveGyroscopeBias(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bg
     Vec3d delta_bg;
     A.setZero();
     b.setZero();
-    std::map<double, ImageFrame>::iterator frame_i;
+
     std::map<double, ImageFrame>::iterator frame_j;
-    for (frame_i = all_image_frame.begin(); next(frame_i) != all_image_frame.end(); frame_i++)
-    {
+    for (auto frame_i = all_image_frame.begin(); next(frame_i) != all_image_frame.end(); frame_i++){
         frame_j = next(frame_i);
         Eigen::MatrixXd tmp_A(3, 3);
         tmp_A.setZero();
@@ -49,13 +48,13 @@ void SolveGyroscopeBias(std::map<double, ImageFrame> &all_image_frame, Vec3d* Bg
         b += tmp_A.transpose() * tmp_b;
     }
     delta_bg = A.ldlt().solve(b);
-    ROS_WARN_STREAM("gyroscope bias initial calibration " << delta_bg.transpose());
+
+    Warnv("gyroscope bias initial calibration : {}", VecToStr(delta_bg));
 
     for (int i = 0; i <= kWinSize; i++)
         Bgs[i] += delta_bg;
 
-    for (frame_i = all_image_frame.begin(); next(frame_i) != all_image_frame.end( ); frame_i++)
-    {
+    for (auto frame_i = all_image_frame.begin(); next(frame_i) != all_image_frame.end( ); frame_i++){
         frame_j = next(frame_i);
         frame_j->second.pre_integration->repropagate(Vec3d::Zero(), Bgs[0]);
     }

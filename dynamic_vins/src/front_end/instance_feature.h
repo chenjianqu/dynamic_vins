@@ -27,6 +27,8 @@
 
 #include <torch/torch.h>
 
+#include "camodocal/camera_models/CameraFactory.h"
+
 #include "semantic_image.h"
 #include "utils/parameters.h"
 #include "feature_utils.h"
@@ -40,10 +42,10 @@ namespace dynamic_vins{\
 
 struct InstFeat{
     using Ptr=std::shared_ptr<InstFeat>;
-    InstFeat():color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
+    InstFeat():color(color_rd(random_engine), color_rd(random_engine), color_rd(random_engine))
     {}
 
-    InstFeat(unsigned int id_): id(id_),color(color_rd(randomEngine),color_rd(randomEngine),color_rd(randomEngine))
+    InstFeat(unsigned int id_): id(id_),color(color_rd(random_engine), color_rd(random_engine), color_rd(random_engine))
     {}
 
     void SortPoints();
@@ -56,10 +58,10 @@ struct InstFeat{
     void PtsVelocity(double dt);//计算像素的速度
     void RightPtsVelocity(double dt);
 
-    void UndistortedPts(PinHoleCamera::Ptr &cam);
-    void RightUndistortedPts(PinHoleCamera::Ptr &cam);
+    void UndistortedPts(camodocal::CameraPtr &cam);
+    void RightUndistortedPts(camodocal::CameraPtr &cam);
 
-    void UndistortedPoints(PinHoleCamera::Ptr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un);
+    void UndistortedPoints(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un);
 
 
     ///跟踪图像
@@ -116,7 +118,7 @@ struct InstFeat{
     Box2D::Ptr box2d;
     Box3D::Ptr box3d;
 
-    inline static std::default_random_engine randomEngine;
+    inline static std::default_random_engine random_engine;
     inline static std::uniform_int_distribution<unsigned int> color_rd{0,255};
 
     inline static unsigned long global_id_count{0};//全局特征序号

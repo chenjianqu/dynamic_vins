@@ -20,6 +20,32 @@ namespace dynamic_vins{\
 
 
 /**
+ * 三角化某个点
+ * @param Pose0
+ * @param Pose1
+ * @param point0
+ * @param point1
+ * @return
+ */
+Vec3d TriangulatePoint(const Mat34d &Pose0, const Mat34d &Pose1, const Vec2d &point0, const Vec2d &point1){
+    Mat4d design_matrix = Mat4d::Zero();
+    design_matrix.row(0) = point0[0] * Pose0.row(2) - Pose0.row(0);
+    design_matrix.row(1) = point0[1] * Pose0.row(2) - Pose0.row(1);
+    design_matrix.row(2) = point1[0] * Pose1.row(2) - Pose1.row(0);
+    design_matrix.row(3) = point1[1] * Pose1.row(2) - Pose1.row(1);
+    Vec4d triangulated_point;
+    triangulated_point =
+            design_matrix.jacobiSvd(Eigen::ComputeFullV).matrixV().rightCols<1>();
+
+    return {
+        triangulated_point(0) / triangulated_point(3),
+        triangulated_point(1) / triangulated_point(3),
+        triangulated_point(2) / triangulated_point(3)
+    };
+}
+
+
+/**
  * 特征点的三角化
  * @param Pose0
  * @param Pose1
@@ -292,7 +318,7 @@ std::optional<Vec3d> FitBox3DSimple(vector<Vec3d> &points,const Vec3d& dims){
  * 根据重投影误差判断哪些点需要被剔除
  * @param removeIndex
  */
-void OutliersRejection(std::set<int> &removeIndex,std::list<FeaturePerId>& point_landmarks)
+void OutliersRejection(std::set<int> &removeIndex,std::list<StaticLandmark>& point_landmarks)
 {
     //return;
     int feature_index = -1;
@@ -319,7 +345,7 @@ void OutliersRejection(std::set<int> &removeIndex,std::list<FeaturePerId>& point
             }
             // need to rewrite projecton factor.........
             if(cfg::is_stereo && feat.is_stereo){
-                Vec3d pts_j_right = feat.pointRight;
+                Vec3d pts_j_right = feat.point_right;
                 if(imu_i != imu_j){
                     double tmp_error = ReprojectionError(body.Rs[imu_i], body.Ps[imu_i], body.ric[0], body.tic[0],
                                                          body.Rs[imu_j], body.Ps[imu_j], body.ric[1], body.tic[1],

@@ -33,9 +33,19 @@ InstsFeatManager::InstsFeatManager(const string& config_path)
 
     //orb_matcher_ = cv::DescriptorMatcher::create("BruteForce-Hamming");
 
-    camera_ = std::make_shared<PinHoleCamera>(*cam0);
-    if(cfg::kCamNum>1){
-        right_camera_ = std::make_shared<PinHoleCamera>(*cam1);
+    vector<string> cam_paths = GetCameraPath(config_path);
+    if(cam_paths.empty()){
+        cerr<<"FeatureTracker() GetCameraPath() not found camera config:"<<config_path<<endl;
+        std::terminate();
+    }
+
+    left_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[0]);
+    if(cfg::is_stereo){
+        if(cam_paths.size()==1){
+            cerr<<"FeatureTracker() GetCameraPath() not found right camera config:"<<config_path<<endl;
+            std::terminate();
+        }
+        right_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[1]);
     }
 }
 
@@ -294,8 +304,8 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             if(!inst.is_curr_visible)
                 continue;
             ///去畸变和计算归一化坐标
-            inst.UndistortedPoints(camera_,inst.curr_points,inst.curr_un_points);
-            inst.UndistortedPoints(camera_,inst.extra_points,inst.extra_un_points);
+            inst.UndistortedPoints(left_cam,inst.curr_points,inst.curr_un_points);
+            inst.UndistortedPoints(left_cam,inst.extra_points,inst.extra_un_points);
 
             //inst.UndistortedPts(camera_);
             ///计算特征点的速度
@@ -778,7 +788,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         //画包围框
         if(inst.box3d){
             //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
-            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),*camera_);
+            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),left_cam);
             Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
 
             //Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);

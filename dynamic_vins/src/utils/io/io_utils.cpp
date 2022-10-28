@@ -181,4 +181,56 @@ cv::Scalar BgrColor(const string &color_str,bool is_norm){
 }
 
 
+string Vec7dToStr(const Eigen::Matrix<double, 7, 1> &v){
+    return fmt::format("{} {} {} {} {} {} {}",
+                       v(0,0),v(1,0),v(2,0),v(3,0),
+                       v(4,0),v(5,0),v(6,0));
+}
+
+
+void FeatureSerialization(const string& path,const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &points){
+    std::ofstream fout(path.data(), std::ios::out);
+
+    for(auto &[id,vec_feat] : points){
+        if(vec_feat.size()==1){
+            fout<<fmt::format("0 {} {}",id, Vec7dToStr(vec_feat[0].second))<<endl;
+        }
+        else{
+            fout<<fmt::format("1 {} {} {}",id, Vec7dToStr(vec_feat[0].second),Vec7dToStr(vec_feat[1].second))<<endl;
+        }
+    }
+
+    fout.close();
+}
+
+
+std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>>
+FeatureDeserialization(const string& path){
+    std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> points;
+
+    std::ifstream fin(path.data(), std::ios::in);
+    string line;
+    std::vector<std::string> tokens;
+    Vec7d v;
+    while(getline(fin,line)){
+        tokens.clear();
+        split(line, tokens, " ");
+        int id = std::stoi(tokens[1]);
+
+        v<<std::stod(tokens[2]),std::stod(tokens[3]),std::stod(tokens[4]),
+        std::stod(tokens[5]),std::stod(tokens[6]),std::stod(tokens[7]),std::stod(tokens[8]);
+        points[id].push_back({0,v});
+
+        if(tokens[0]=="1"){//双目观测
+            v<<std::stod(tokens[9]),std::stod(tokens[10]),std::stod(tokens[11]),
+            std::stod(tokens[12]),std::stod(tokens[13]),std::stod(tokens[14]),std::stod(tokens[15]);
+            points[id].push_back({1,v});
+        }
+    }
+    fin.close();
+    return points;
+}
+
+
+
 }

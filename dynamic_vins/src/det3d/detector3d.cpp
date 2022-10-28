@@ -18,9 +18,9 @@
 #include <spdlog/logger.h>
 
 #include "det3d_parameter.h"
-#include "utils/utils.h"
 #include "utils/log_utils.h"
 #include "utils/io/io_utils.h"
+#include "image_process/deeplearning_utils.h"
 
 namespace dynamic_vins{\
 
@@ -78,7 +78,7 @@ std::vector<Box3D::Ptr> Detector3D::ReadBox3dFromTxt(const std::string &txt_path
         if(std::stod(tokens[2]) < score_threshold)
             continue;
 
-        boxes.push_back(Box3D::Box3dFromFCOS3D(tokens));
+        boxes.push_back(Box3D::Box3dFromFCOS3D(tokens,left_cam_dl));
 
         index++;
     }
@@ -116,7 +116,7 @@ vector<Box3D::Ptr> Detector3D::ReadGroundtruthFromKittiTracking(int frame){
         while (getline(fp_gt,line_gt)){ //循环读取每行数据
             vector<string> tokens;
             split(line_gt,tokens," ");
-            Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens);
+            Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens,left_cam_dl);
             int curr_frame = std::stoi(tokens[0]);
             boxes_gt[curr_frame].push_back(box);
         }

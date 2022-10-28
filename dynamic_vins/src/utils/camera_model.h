@@ -55,6 +55,9 @@ inline std::shared_ptr<PinHoleCamera> cam1;
 
 void InitCamera(const std::string& config_path);
 
+vector<string> GetCameraPath(const string &config_path);
+
+
 }
 
 #endif //DYNAMIC_VINS_CAMERA_MODEL_H

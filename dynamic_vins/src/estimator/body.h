@@ -69,6 +69,8 @@ public:
     Vec3d Bas[(kWinSize + 1)];
     Vec3d Bgs[(kWinSize + 1)];
 
+    Vec3d g;
+
     double td{};
     double headers[(kWinSize + 1)]{};
     int frame{};
@@ -79,7 +81,7 @@ public:
     double para_point_features[kNumFeat][kSizePoint]{};
     double para_line_features[kNumFeat][kSizeLine];
     double para_Retrive_Pose[kSizePose]{};
-    double para_Td[1][1]{};
+    double para_td[1][1]{};
     double para_Tr[1][1]{};
 
     double frame_time;

@@ -30,7 +30,7 @@ namespace dynamic_vins{\
 
 
 
-int FeaturePerId::endFrame()
+int StaticLandmark::endFrame()
 {
     return start_frame + feats.size() - 1;
 }
@@ -87,7 +87,7 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const std::map<uns
     long_track_num = 0;
 
     for (auto &[feature_id,feat_vec] : image){ ///遍历每个观测
-        FeaturePerFrame feat(feat_vec[0].second, td);
+        StaticFeature feat(feat_vec[0].second, td);
         assert(feat_vec[0].first == 0);
         if(feat_vec.size() == 2){
             feat.rightObservation(feat_vec[1].second);
@@ -95,7 +95,7 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const std::map<uns
         }
         ///判断当前观测是否存在对应的路标
         if (auto it = find_if(point_landmarks.begin(), point_landmarks.end(),
-                              [feature_id=feature_id](const FeaturePerId &it){
+                              [feature_id=feature_id](const StaticLandmark &it){
             return it.feature_id == feature_id;
         });
         ///未存在路标，创建路标
@@ -248,20 +248,7 @@ Eigen::VectorXd FeatureManager::GetDepthVector()
 }
 
 
-void FeatureManager::TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
-                                      Vec2d &point0, Vec2d &point1, Vec3d &point_3d){
-    Mat4d design_matrix = Mat4d::Zero();
-    design_matrix.row(0) = point0[0] * Pose0.row(2) - Pose0.row(0);
-    design_matrix.row(1) = point0[1] * Pose0.row(2) - Pose0.row(1);
-    design_matrix.row(2) = point1[0] * Pose1.row(2) - Pose1.row(0);
-    design_matrix.row(3) = point1[1] * Pose1.row(2) - Pose1.row(1);
-    Vec4d triangulated_point;
-    triangulated_point =
-            design_matrix.jacobiSvd(Eigen::ComputeFullV).matrixV().rightCols<1>();
-    point_3d(0) = triangulated_point(0) / triangulated_point(3);
-    point_3d(1) = triangulated_point(1) / triangulated_point(3);
-    point_3d(2) = triangulated_point(2) / triangulated_point(3);
-}
+
 
 /**
  * PnP求解
@@ -342,12 +329,11 @@ void FeatureManager::InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
             }
         }
         Debugv("InitFramePoseByPnP pts2D.size:{}", pts2D.size());
+
         ///使用上一帧的位姿作为初值
-        Mat3d RCam;
-        Vec3d PCam;
-        // trans to w_T_cam
-        RCam = Rs[frameCnt - 1] * ric[0];
-        PCam = Rs[frameCnt - 1] * tic[0] + Ps[frameCnt - 1];
+        Mat3d RCam = Rs[frameCnt - 1] * ric[0];
+        Vec3d PCam = Rs[frameCnt - 1] * tic[0] + Ps[frameCnt - 1];
+
         ///求解
         if(SolvePoseByPnP(RCam, PCam, pts2D, pts3D)){
             // trans to w_T_imu
@@ -365,7 +351,7 @@ void FeatureManager::InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
  * @param tic
  * @param ric
  */
-void FeatureManager::TriangulatePoint(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[])
+void FeatureManager::TriangulatePoints()
 {
     for (auto &lm : point_landmarks){
         if (lm.depth > 0)
@@ -377,14 +363,10 @@ void FeatureManager::TriangulatePoint(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3
             Mat34d leftPose = body.GetCamPose34d(imu_i,0);
             Mat34d rightPose = body.GetCamPose34d(imu_i,1);
 
-            Vec2d point0, point1;
-            Vec3d point3d;
-            point0 = lm.feats[0].point.head(2);
-            point1 = lm.feats[0].pointRight.head(2);
-
-            TriangulatePoint(leftPose, rightPose, point0, point1, point3d);
-            Vec3d localPoint;
-            localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
+            Vec2d point0 = lm.feats[0].point.head(2);
+            Vec2d point1 = lm.feats[0].point_right.head(2);
+            Vec3d point3d = TriangulatePoint(leftPose, rightPose, point0, point1);
+            Vec3d localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
             double depth = localPoint.z();
             if (depth > 0)
                 lm.depth = depth;
@@ -399,13 +381,10 @@ void FeatureManager::TriangulatePoint(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3
             imu_i++;
             Mat34d rightPose = body.GetCamPose34d(imu_i,0);
 
-            Vec2d point0, point1;
-            Vec3d point3d;
-            point0 = lm.feats[0].point.head(2);
-            point1 = lm.feats[1].point.head(2);
-            TriangulatePoint(leftPose, rightPose, point0, point1, point3d);
-            Vec3d localPoint;
-            localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
+            Vec2d point0 = lm.feats[0].point.head(2);
+            Vec2d point1 = lm.feats[1].point.head(2);
+            Vec3d point3d = TriangulatePoint(leftPose, rightPose, point0, point1);
+            Vec3d localPoint = leftPose.leftCols<3>() * point3d + leftPose.rightCols<1>();
             double depth = localPoint.z();
             if (depth > 0)
                 lm.depth = depth;
@@ -418,22 +397,22 @@ void FeatureManager::TriangulatePoint(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3
         if (lm.used_num < 4)
             continue;
 
-
         int imu_i = lm.start_frame, imu_j = imu_i - 1;
 
         Eigen::MatrixXd svd_A(2 * lm.feats.size(), 4);
         int svd_idx = 0;
 
-        Mat34d P0;
-        Vec3d t0 = Ps[imu_i] + Rs[imu_i] * tic[0];
+
+        Vec3d t0 = body.Ps[imu_i] + Rs[imu_i] * body.tic[0];
         Mat3d R0 = Rs[imu_i] * ric[0];
+        Mat34d P0;
         P0.leftCols<3>() = Mat3d::Identity();
         P0.rightCols<1>() = Vec3d::Zero();
 
         for (auto &feat : lm.feats){
             imu_j++;
 
-            Vec3d t1 = Ps[imu_j] + Rs[imu_j] * tic[0];
+            Vec3d t1 = body.Ps[imu_j] + Rs[imu_j] * body.tic[0];
             Mat3d R1 = Rs[imu_j] * ric[0];
             Vec3d t = R0.transpose() * (t1 - t0);
             Mat3d R = R0.transpose() * R1;
@@ -904,12 +883,12 @@ void FeatureManager::RemoveFront(int frame_count)
 
 
 
-double FeatureManager::CompensatedParallax2(const FeaturePerId &landmark, int frame_count)
+double FeatureManager::CompensatedParallax2(const StaticLandmark &landmark, int frame_count)
 {
     //check the second last frame is keyframe or not
     //parallax betwwen seconde last frame and third last frame
-    const FeaturePerFrame &frame_i = landmark.feats[frame_count - 2 - landmark.start_frame];
-    const FeaturePerFrame &frame_j = landmark.feats[frame_count - 1 - landmark.start_frame];
+    const StaticFeature &frame_i = landmark.feats[frame_count - 2 - landmark.start_frame];
+    const StaticFeature &frame_j = landmark.feats[frame_count - 1 - landmark.start_frame];
 
     double ans = 0;
     Vec3d p_j = frame_j.point;

@@ -28,15 +28,22 @@ void FrameLines::SetLines() {
 }
 
 
-void FrameLines::UndistortedLineEndPoints(PinHoleCamera::Ptr cam)
+void FrameLines::UndistortedLineEndPoints(camodocal::CameraPtr &cam)
 {
     un_lines = lines;
 
     for (unsigned int i = 0; i < lines.size(); i++){
-        un_lines[i].StartPt.x = (lines[i].StartPt.x - cam->cx) / cam->fx;
-        un_lines[i].StartPt.y = (lines[i].StartPt.y - cam->cy) / cam->fy;
-        un_lines[i].EndPt.x = (lines[i].EndPt.x - cam->cx) / cam->fx;
-        un_lines[i].EndPt.y = (lines[i].EndPt.y - cam->cy) / cam->fy;
+
+        Vec2d a(lines[i].StartPt.x, lines[i].StartPt.y);
+        Vec3d b;
+        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        un_lines[i].StartPt.x = b.x();
+        un_lines[i].StartPt.y = b.y();
+
+        a<<lines[i].EndPt.x,lines[i].EndPt.y;
+        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        un_lines[i].EndPt.x = b.x();
+        un_lines[i].EndPt.y = b.y();
     }
 }
 

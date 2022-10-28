@@ -27,12 +27,14 @@
 
 #include <torch/torch.h>
 
+#include "camodocal/camera_models/CameraFactory.h"
+
 #include "semantic_image.h"
 #include "utils/parameters.h"
 #include "estimator/landmark.h"
 #include "mot/deep_sort.h"
 #include "feature_utils.h"
-#include "estimator/semantic_feature.h"
+#include "estimator/frontend_feature.h"
 #include "utils/box3d.h"
 #include "instance_feature.h"
 
@@ -81,7 +83,7 @@ private:
     std::unordered_map<unsigned int,InstFeat> instances_;
     std::unordered_map<unsigned int,InstEstimatedInfo> estimated_info;
 
-    PinHoleCamera::Ptr camera_,right_camera_;
+    camodocal::CameraPtr left_cam,right_cam;
 
     unsigned int global_frame_id{0};
     cv::Mat mask_background;

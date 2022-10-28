@@ -38,6 +38,8 @@ inline Mat3d hat(T && v){
 
 void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1, Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
 
+Vec3d TriangulatePoint(const Mat34d &Pose0, const Mat34d &Pose1, const Vec2d &point0, const Vec2d &point1);
+
 
 void TriangulateDynamicPoint(Mat34d &Pose0, Mat34d &Pose1,
                              Vec2d &point0, Vec2d &point1, Vec3d &v, Vec3d &a,
@@ -49,6 +51,7 @@ void TriangulateDynamicPoint(const Mat34d &Pose0, const Mat34d &Pose1,
                              const Mat3d &R_woi, const Vec3d &P_woi,
                              Vec3d &point_3d);
 
+
 std::optional<Vec3d> FitBox3DFromPoints(vector<Vec3d> &points,const Vec3d& dims);
 
 std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& dims);
@@ -56,7 +59,7 @@ std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& 
 std::optional<Vec3d> FitBox3DSimple(vector<Vec3d> &points,const Vec3d& dims);
 
 
-void OutliersRejection(std::set<int> &removeIndex,std::list<FeaturePerId>& point_landmarks);
+void OutliersRejection(std::set<int> &removeIndex,std::list<StaticLandmark>& point_landmarks);
 
 
 double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,

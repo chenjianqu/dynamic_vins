@@ -103,7 +103,6 @@ roscore
 
 * launch rviz
 ```shell
-dynamic_vins_root=/home/chen/ws/dynamic_ws
 rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 ```
 

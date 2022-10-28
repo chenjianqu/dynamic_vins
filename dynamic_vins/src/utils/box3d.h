@@ -17,6 +17,8 @@
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
 
+#include "camodocal/camera_models/CameraFactory.h"
+
 #include "utils/def.h"
 #include "utils/camera_model.h"
 
@@ -63,16 +65,16 @@ public:
 
     bool InsideBox(Eigen::Vector3d &point);
 
-    Mat28d CornersProjectTo2D(PinHoleCamera &cam);
+    Mat28d CornersProjectTo2D(camodocal::CameraPtr &cam);
 
     static std::vector<std::pair<int,int>> GetLineVetexPair();
 
-    void VisCorners2d(cv::Mat &img,const cv::Scalar& color,PinHoleCamera &cam);
+    void VisCorners2d(cv::Mat &img,const cv::Scalar& color,camodocal::CameraPtr &cam);
 
     static Mat38d GetCorners(Vec3d &dims,Mat3d &R_xo,Vec3d &P_xo);
 
-    static Box3D::Ptr Box3dFromFCOS3D(vector<string> &tokens);
-    static Box3D::Ptr Box3dFromKittiTracking(vector<string> &tokens);
+    static Box3D::Ptr Box3dFromFCOS3D(vector<string> &tokens,camodocal::CameraPtr &cam);
+    static Box3D::Ptr Box3dFromKittiTracking(vector<string> &tokens,camodocal::CameraPtr &cam);
 
     static VecVector3d GetCoordinateVectorFromCorners(Mat38d &corners);
 

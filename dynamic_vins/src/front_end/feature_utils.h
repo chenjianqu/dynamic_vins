@@ -17,6 +17,9 @@
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
 
+#include "camodocal/camera_models/CameraFactory.h"
+
+
 #include "utils/def.h"
 #include "semantic_image.h"
 #include "utils/camera_model.h"
@@ -106,7 +109,7 @@ inline void SetStatusByMask(vector<uchar> &status,vector<cv::Point2f> &points,cv
 }
 
 
-std::vector<cv::Point2f> UndistortedPts(std::vector<cv::Point2f> &pts, PinHoleCamera::Ptr &cam);
+std::vector<cv::Point2f> UndistortedPts(std::vector<cv::Point2f> &pts, camodocal::CameraPtr &cam);
 
 std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2,
                                     std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2);

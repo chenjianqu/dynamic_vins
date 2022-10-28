@@ -23,7 +23,7 @@
 #include "estimator/vio_util.h"
 #include "instance.h"
 #include "landmark.h"
-#include "semantic_feature.h"
+#include "frontend_feature.h"
 
 
 namespace dynamic_vins{\

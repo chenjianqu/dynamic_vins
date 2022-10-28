@@ -33,7 +33,7 @@
 
 #include "utils/def.h"
 #include "utils/parameters.h"
-#include "semantic_feature.h"
+#include "frontend_feature.h"
 #include "line_landmark.h"
 
 
@@ -69,10 +69,7 @@ class FeatureManager
 
     void SetLineOrth(Eigen::MatrixXd x,Vec3d P[], Mat3d R[], Vec3d tic[], Mat3d ric[]);
 
-    void TriangulatePoint(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
-
-    static void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1,
-                          Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
+    void TriangulatePoints();
 
     void TriangulateLineMono();
 
@@ -93,12 +90,12 @@ class FeatureManager
     static bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
                                vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
 
-    std::list<FeaturePerId> point_landmarks;
+    std::list<StaticLandmark> point_landmarks;
     std::list<LineLandmark> line_landmarks;
     int last_track_num;
 
 private:
-    static double CompensatedParallax2(const FeaturePerId &landmark, int frame_count);
+    static double CompensatedParallax2(const StaticLandmark &landmark, int frame_count);
     const Mat3d *Rs;
     Mat3d ric[2];
 
