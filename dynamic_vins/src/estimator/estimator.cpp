@@ -35,7 +35,7 @@
 #include "estimator/factor/line_parameterization.h"
 #include "estimator/factor/line_projection_factor.h"
 
-#include "output.h"
+#include "utils/io/output.h"
 
 namespace dynamic_vins{\
 
@@ -1686,9 +1686,12 @@ void Estimator::ProcessMeasurements(){
 
         process_mutex.unlock();
 
-        ///保存所有物体在当前帧的位姿
+        ///轨迹保存
+        SaveBodyTrajectory(header);
+
+        //保存所有物体在当前帧的位姿
         if(cfg::slam == SLAM::kDynamic){
-            SaveTrajectory(im);
+            SaveInstancesTrajectory(im);
         }
 
         Infov("ProcessMeasurements::Output:{} ms",tt.TocThenTic());

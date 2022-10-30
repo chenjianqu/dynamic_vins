@@ -13,7 +13,7 @@
 #include "utils/io/io_parameters.h"
 #include "utils/io_utils.h"
 #include "utils/dataset/kitti_utils.h"
-#include "feature_manager.h"
+#include "estimator/feature_manager.h"
 
 
 namespace dynamic_vins{ \
@@ -177,11 +177,59 @@ string PrintLineInfo(FeatureManager &fm){
 }
 
 
+void SaveBodyTrajectory(const std_msgs::Header &header){
+
+
+    static bool is_first_run=true;
+    if(is_first_run){
+        is_first_run=false;
+        //清空
+        std::ofstream fout(io_para::kVinsResultPath, std::ios::out);
+        fout.close();
+    }
+
+    std::ofstream foutC(io_para::kVinsResultPath, std::ios::app);
+    foutC.setf(std::ios::fixed, std::ios::floatfield);
+
+    Quaterniond tmp_Q (body.Rs[kWinSize]);
+
+    /*
+    foutC.precision(0);
+    foutC << header.stamp.toSec() * 1e9 << ",";
+    foutC.precision(5);
+    foutC << e.Ps[kWindowSize].x() << ","
+          << e.Ps[kWindowSize].y() << ","
+          << e.Ps[kWindowSize].z() << ","
+          << tmp_Q.w() << ","
+          << tmp_Q.x() << ","
+          << tmp_Q.y() << ","
+          << tmp_Q.z() << ","
+          << e.Vs[kWindowSize].x() << ","
+          << e.Vs[kWindowSize].y() << ","
+          << e.Vs[kWindowSize].z() << endl;
+        */
+    foutC << header.stamp << " "
+    << body.Ps[kWinSize].x() << " "
+    << body.Ps[kWinSize].y() << " "
+    << body.Ps[kWinSize].z() << " "
+    <<tmp_Q.x()<<" "
+    <<tmp_Q.y()<<" "
+    <<tmp_Q.z()<<" "
+    <<tmp_Q.w()<<endl;
+    foutC.close();
+
+    Eigen::Vector3d tmp_T = body.Ps[kWinSize];
+    printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(),
+           tmp_T.x(), tmp_T.y(), tmp_T.z(),
+           tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
+}
+
+
 
 /**
  * 保存所有物体在当前帧的位姿
  */
-void SaveTrajectory(InstanceManager& im){
+void SaveInstancesTrajectory(InstanceManager& im){
     if(cfg::slam != SLAM::kDynamic){
         return;
     }
@@ -220,7 +268,7 @@ void SaveTrajectory(InstanceManager& im){
 
     std::ofstream fout_mot(object_tracking_path, std::ios::out | std::ios::app);//追加写入
 
-    string log_text="InstanceManager::SaveTrajectory()\n";
+    string log_text="InstanceManager::SaveInstancesTrajectory()\n";
 
     for(auto &[inst_id,inst] : im.instances){
         if(!inst.is_curr_visible)
@@ -362,7 +410,7 @@ void SaveTrajectory(InstanceManager& im){
             endl;
         }
         else{
-            std::cerr<<"SaveTrajectory() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+            std::cerr<<"SaveInstancesTrajectory() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
 
         }
 

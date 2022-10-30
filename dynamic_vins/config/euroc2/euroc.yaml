@@ -8,7 +8,7 @@ only_imgprocess: 0  #for debug
 only_frontend: 0  #for debug
 
 dataset_type: "euroc" #support:kitti,viode
-slam_type: "line" #SLAM mode,optional:raw,line
+slam_type: "raw" #SLAM mode,optional:raw,line
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 

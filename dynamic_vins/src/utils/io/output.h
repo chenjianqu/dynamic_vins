@@ -12,7 +12,7 @@
 #define DYNAMIC_VINS_OUTPUT_H
 
 #include "utils/def.h"
-#include "estimator_insts.h"
+#include "estimator/estimator_insts.h"
 
 
 namespace dynamic_vins{\
@@ -24,7 +24,9 @@ string PrintFeaturesInfo(InstanceManager& im, bool output_lm, bool output_stereo
 
 string PrintLineInfo(FeatureManager &fm);
 
-void SaveTrajectory(InstanceManager& im);
+void SaveInstancesTrajectory(InstanceManager& im);
+
+void SaveBodyTrajectory(const std_msgs::Header &header);
 
 string PrintInstancePoseInfo(InstanceManager& im,bool output_lm);
 

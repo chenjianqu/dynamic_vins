@@ -186,48 +186,6 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
     path.header.frame_id = "world";
     path.poses.push_back(pose_stamped);
     pub_path->publish(path);
-
-    static bool is_first_run=true;
-    if(is_first_run){
-        is_first_run=false;
-        //清空
-        std::ofstream fout(io_para::kVinsResultPath, std::ios::out);
-        fout.close();
-    }
-
-
-    // write result to file
-    ofstream foutC(io_para::kVinsResultPath, ios::app);
-    foutC.setf(ios::fixed, ios::floatfield);
-    /*
-    foutC.precision(0);
-    foutC << header.stamp.toSec() * 1e9 << ",";
-    foutC.precision(5);
-    foutC << e.Ps[kWindowSize].x() << ","
-          << e.Ps[kWindowSize].y() << ","
-          << e.Ps[kWindowSize].z() << ","
-          << tmp_Q.w() << ","
-          << tmp_Q.x() << ","
-          << tmp_Q.y() << ","
-          << tmp_Q.z() << ","
-          << e.Vs[kWindowSize].x() << ","
-          << e.Vs[kWindowSize].y() << ","
-          << e.Vs[kWindowSize].z() << endl;
-        */
-    foutC << header.stamp << " "
-    << body.Ps[kWinSize].x() << " "
-    << body.Ps[kWinSize].y() << " "
-    << body.Ps[kWinSize].z() << " "
-    <<tmp_Q.x()<<" "
-    <<tmp_Q.y()<<" "
-    <<tmp_Q.z()<<" "
-    <<tmp_Q.w()<<endl;
-    foutC.close();
-
-    Eigen::Vector3d tmp_T = body.Ps[kWinSize];
-    printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(),
-           tmp_T.x(), tmp_T.y(), tmp_T.z(),
-           tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
 }
 
 

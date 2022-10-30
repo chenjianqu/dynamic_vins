@@ -81,6 +81,7 @@ class Estimator
         R_bc_out=R_bc;
         P_bc_out=P_bc;
     }
+
     std::tuple<Mat3d,Vec3d,Mat3d,Vec3d> GetOutputEgoInfo(){
         std::unique_lock<std::mutex> lk(out_pose_mutex);
         return {R_out,P_out,R_bc_out,P_bc_out};

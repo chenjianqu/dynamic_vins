@@ -330,7 +330,8 @@ bool lineProjectionFactor_incamera::Evaluate(double const *const *parameters, do
             Eigen::Matrix<double, 6, 6> jaco_Lc_pose;
             jaco_Lc_pose.setZero();
             jaco_Lc_pose.block(0,0,3,3) = - skew_symmetric(Rwbi * dbi);   // Lc_t
-            jaco_Lc_pose.block(0,3,3,3) = -Rwbi * skew_symmetric( nbi) - skew_symmetric(twbi) * Rwbi * skew_symmetric(dbi);  // Lc_theta
+            jaco_Lc_pose.block(0,3,3,3) =
+                    -Rwbi * skew_symmetric( nbi) - skew_symmetric(twbi) * Rwbi * skew_symmetric(dbi);  // Lc_theta
             jaco_Lc_pose.block(3,3,3,3) = -Rwbi * skew_symmetric(dbi);
 
             //jaco_Lc_pose = invTbc * invTwbj * jaco_Lc_pose;
@@ -373,7 +374,8 @@ bool lineProjectionFactor_incamera::Evaluate(double const *const *parameters, do
             Vec3d dci = line_ci.tail(3);
             Eigen::Matrix<double, 6, 6> jaco_Lc_ex;
             jaco_Lc_ex.setZero();
-            jaco_Lc_ex.block(0,0,3,3) = -Rbc.transpose() * Rbjbi * skew_symmetric( Rbc * dci) + Rbc.transpose() * skew_symmetric(Rbjbi * Rbc * dci);   // Lc_t
+            jaco_Lc_ex.block(0,0,3,3) = -Rbc.transpose() * Rbjbi * skew_symmetric( Rbc * dci)
+                    + Rbc.transpose() * skew_symmetric(Rbjbi * Rbc * dci);   // Lc_t
             Mat3d tmp = skew_symmetric(tcjci) * Rcjci;
             jaco_Lc_ex.block(0,3,3,3) = -Rcjci * skew_symmetric(nci) + skew_symmetric(Rcjci * nci)
                     -tmp * skew_symmetric(dci) + skew_symmetric(tmp * dci);    // Lc_theta

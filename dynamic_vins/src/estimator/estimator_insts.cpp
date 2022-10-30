@@ -22,7 +22,7 @@
 #include "estimator/factor/box_factor.h"
 #include "utils/io/io_parameters.h"
 #include "utils/io_utils.h"
-#include "output.h"
+#include "utils/io/output.h"
 #include "utils/camera_model.h"
 
 

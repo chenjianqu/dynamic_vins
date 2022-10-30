@@ -1,16 +1,16 @@
 
 
 
-## Evaluate
+# Evaluate
 
 
 
 
 
 
-### Evaluate ego-motion with EVO
+## Evaluate ego-motion with EVO
 
-#### Install EVO
+### Install EVO
 
 ```shell
 export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
@@ -22,7 +22,7 @@ pip install evo --upgrade --no-binary evo
 
 
 
-#### Evaluate Kitti-Tracking ego-motion
+### Evaluate Kitti-Tracking ego-motion
 
 * Evaluate
 
@@ -52,7 +52,7 @@ evo_traj tum ${save_path}/${sequence}.txt -p
 
 
 
-#### Evaluate VIODE ego-motion
+### Evaluate VIODE ego-motion
 
 * Prepare VIODE ground-truth trajectory
 
@@ -105,7 +105,71 @@ evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${se
 
 
 
-### Evaluate object trajectory with EVO
+### Evaluate EuRoc ego-motion
+
+* Prepare EuRoc dataset ground-truth
+
+```shell
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+evo_traj euroc --help
+
+dataset_dir=/home/chen/datasets/Euroc
+sequence=MH_01_easy
+
+raw_gt_path=${dataset_dir}/${sequence}/mav0/state_groundtruth_estimate0/data.csv
+save_gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion/${sequence}.txt
+
+mkdir ${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion
+
+evo_traj euroc ${raw_gt_path} --save_as_tum #得到data.tum文件
+
+mv ./data.tum ${save_gt_path} #移动文件
+```
+
+
+
+* Visualize Trajectory
+
+```shell
+gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
+
+evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt --ref=${gt_path}/${sequence}.txt --align -p
+```
+
+
+
+* Evaluate
+
+```shell
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
+
+sequence=MH_01_easy
+
+evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Evaluate object trajectory with EVO
 
 
 
@@ -140,7 +204,7 @@ evo_traj tum ${estimate_path} --ref=${ref_path} -p
 
 
 
-### Evaluate mot with KITTI devkit_tracking
+## Evaluate mot with KITTI devkit_tracking
 
 
 
@@ -180,7 +244,7 @@ source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking.sh 
 
 
 
-### Evaluate mot with TrackEval
+## Evaluate MOT with TrackEval
 
 #### Install TrackEval
 
@@ -270,7 +334,7 @@ the output path is `${TrackEval}/data/trackers/kitti/kitti_mots_val `.
 
 
 
-### Evaluate mot with KITTI devkit_object
+## Evaluate MOT with KITTI devkit_object
 
 #### Intall devkit_object
 
