@@ -23,7 +23,7 @@
 #include "vio_parameters.h"
 #include "body.h"
 #include "line_detector/line_geometry.h"
-#include "utils/io/io_utils.h"
+#include "utils/io_utils.h"
 
 
 namespace dynamic_vins{\

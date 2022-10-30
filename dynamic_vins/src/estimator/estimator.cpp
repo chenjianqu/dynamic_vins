@@ -42,35 +42,7 @@ namespace dynamic_vins{\
 
 Estimator::Estimator(const string& config_path): feat_manager{body.Rs}
 {
-    vector<string> cam_paths = GetCameraPath(config_path);
-    if(cam_paths.empty()){
-        cerr<<"FeatureTracker() GetCameraPath() not found camera config:"<<config_path<<endl;
-        std::terminate();
-    }
-
-    left_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[0]);
-    if(cfg::is_stereo){
-        if(cam_paths.size()==1){
-            cerr<<"FeatureTracker() GetCameraPath() not found right camera config:"<<config_path<<endl;
-            std::terminate();
-        }
-        right_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[1]);
-    }
-
-    /*
-    parameterVec.resize(parameterCount());
-    parameterVec.at(0) = mParameters.k1();
-    parameterVec.at(1) = mParameters.k2();
-    parameterVec.at(2) = mParameters.p1();
-    parameterVec.at(3) = mParameters.p2();
-    parameterVec.at(4) = mParameters.fx();
-    parameterVec.at(5) = mParameters.fy();
-    parameterVec.at(6) = mParameters.cx();
-    parameterVec.at(7) = mParameters.cy();
-     */
-    vector<double> cam_parameters;
-    left_cam->writeParameters(cam_parameters);
-    para::SetParameters(config_path,cam_parameters[4]);
+    para::SetParameters(config_path);
 
     ClearState();
 
@@ -218,7 +190,7 @@ void Estimator::Optimization()
     ///添加残差块
     AddInstanceParameterBlock(problem);
     ///添加动态物体的相关顶点
-    if(cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kDynamic){
         //Debugv(insts_manager.PrintInstancePoseInfo(false));
         im.AddInstanceParameterBlock(problem);
     }
@@ -227,7 +199,7 @@ void Estimator::Optimization()
     int f_m_cnt = AddResidualBlock(problem,loss_function);
 
     ///添加动态物体的残差项
-    if(cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kDynamic){
         im.AddResidualBlockForJointOpt(problem, loss_function);
     }
 
@@ -259,7 +231,7 @@ void Estimator::Optimization()
 
     //string msg="相机位姿 优化前：\n" + LogCurrentPose();
 
-    if(cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kDynamic){
         im.GetOptimizationParameters();
        // Debugv(insts_manager.PrintInstancePoseInfo(false));
     }
@@ -1046,7 +1018,7 @@ void Estimator::Vector2double()
         body.para_point_features[i][0] = dep(i);
     }
 
-    if(cfg::slam == SlamType::kLine){
+    if(cfg::slam == SLAM::kLine){
         MatrixXd line_orth = feat_manager.GetLineOrthVector(body.Ps, body.tic, body.ric);
         int line_size = feat_manager.GetLineFeatureCount();
         for (int i = 0; i < line_size; ++i) {
@@ -1080,7 +1052,7 @@ void Estimator::Double2vector()
         dep(i) = body.para_point_features[i][0];
     feat_manager.SetDepth(dep);
 
-    if(cfg::slam == SlamType::kLine){
+    if(cfg::slam == SLAM::kLine){
         int line_size = feat_manager.GetLineFeatureCount();
         MatrixXd orth_vec(line_size, 4);
         for (int i = 0; i < line_size; ++i) {
@@ -1439,7 +1411,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
 
     ///添加背景特征点到管理器,并判断视差
     bool margin_flag_bool;
-    if(cfg::slam == SlamType::kLine)
+    if(cfg::slam == SLAM::kLine)
          margin_flag_bool = feat_manager.AddFeatureCheckParallax(frame, image.features, body.td);
     else
          margin_flag_bool = feat_manager.AddFeatureCheckParallax(frame, image.features.points, body.td);
@@ -1480,7 +1452,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     feat_manager.TriangulatePoints();
 
     ///三角化线特征
-    if(cfg::slam == SlamType::kLine){
+    if(cfg::slam == SLAM::kLine){
         //if(cfg::is_stereo){
         //    feat_manager.TriangulateLineStereo(cam1->baseline);
         //}
@@ -1489,13 +1461,13 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         //}
     }
 
-    if(para::is_print_detail && cfg::slam==SlamType::kLine){
+    if(para::is_print_detail && cfg::slam == SLAM::kLine){
         PrintLineInfo(feat_manager);
     }
     Infov("processImage background Triangulate:{} ms",tt.TocThenTic());
     Debugv("--开始处理动态物体--");
 
-    if(cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kDynamic){
         ///添加动态特征点,并创建物体
         im.PushBack(frame, image.instances);
 
@@ -1533,7 +1505,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     }
 
     ///优化直线
-    if(cfg::slam==SlamType::kLine){
+    if(cfg::slam == SLAM::kLine){
         OptimizationWithLine();
     }
 
@@ -1562,7 +1534,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     Infov("processImage Outliebody.RsRejection:{} ms", tt.TocThenTic());
 
     ///动态物体的滑动窗口
-    if(cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kDynamic){
         im.ManageTriangulatePoint();
         Debugv("finish ManageTriangulatePoint()");
         //insts_manager.SetWindowPose();
@@ -1573,7 +1545,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     SlideWindow();
 
     ///动态物体的外点剔除
-    if(cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kDynamic){
         im.OutliersRejection();
 
          im.DeleteBadLandmarks();
@@ -1594,7 +1566,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     last_P0 = body.Ps[0];
     UpdateLatestStates();
 
-    if(cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kDynamic){
         im.SetInstanceCurrentPoint3d();
     }
 
@@ -1692,7 +1664,7 @@ void Estimator::ProcessMeasurements(){
         header.frame_id = "world";
         header.stamp = ros::Time(feature_frame.time);
 
-        if(cfg::slam == SlamType::kDynamic){
+        if(cfg::slam == SLAM::kDynamic){
             //printInstanceData(*this);
             Publisher::PubInstances(header);
             cv::Mat img_topview = DrawTopView(im);
@@ -1706,7 +1678,7 @@ void Estimator::ProcessMeasurements(){
         Publisher::PubKeyframe();
         Publisher::PubTF(header);
 
-        if(cfg::slam==SlamType::kLine){
+        if(cfg::slam == SLAM::kLine){
             Publisher::PubLines(header);
         }
 
@@ -1715,7 +1687,7 @@ void Estimator::ProcessMeasurements(){
         process_mutex.unlock();
 
         ///保存所有物体在当前帧的位姿
-        if(cfg::slam == SlamType::kDynamic){
+        if(cfg::slam == SLAM::kDynamic){
             SaveTrajectory(im);
         }
 

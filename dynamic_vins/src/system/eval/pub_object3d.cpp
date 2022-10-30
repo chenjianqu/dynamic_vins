@@ -16,7 +16,7 @@
 #include "utils/camera_model.h"
 #include "utils/parameters.h"
 #include "utils/io/io_parameters.h"
-#include "utils/io/io_utils.h"
+#include "utils/io_utils.h"
 #include "utils/io/visualization.h"
 #include "utils/io/build_markers.h"
 #include "utils/io/dataloader.h"

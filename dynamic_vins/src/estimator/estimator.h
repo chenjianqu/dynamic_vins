@@ -97,7 +97,6 @@ class Estimator
     MotionEstimator m_estimator;
     InitialEXRotation initial_ex_rotation;
 
-    camodocal::CameraPtr left_cam,right_cam;
 
     FrontendFeature feature_frame;
 

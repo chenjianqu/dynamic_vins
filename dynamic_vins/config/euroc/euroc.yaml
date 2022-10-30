@@ -7,7 +7,7 @@ num_of_cam: 2
 only_imgprocess: 0  #for debug
 only_frontend: 0  #for debug
 
-dataset_type: "euroc" #support:kitti,viode
+dataset_type: "euroc" #support:kitti,viode,euroc
 slam_type: "raw" #SLAM mode,optional:raw,line
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
@@ -122,16 +122,13 @@ log_output_path: "data/log/"
 print_detail: 0
 
 ####################### Visualization Parameters ########################
-visual_inst_duration: 120  #duration of marker display
+visual_inst_duration: 200  #duration of marker display
 
 pub_groundtruth_box: 0
 pub_predict_box: 0
 pub_object_axis: 1
 pub_object_trajectory: 1
 
-####################### Dynamic Parameters ########################
-instance_init_min_num: 4
-instance_static_err_threshold: 10.0
 
 ######################### Bounding box ########################
 use_det3d: 0

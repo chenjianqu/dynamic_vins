@@ -15,7 +15,7 @@
 #include "flow_parameter.h"
 #include "utils/log_utils.h"
 #include "utils/parameters.h"
-#include "utils/io/io_utils.h"
+#include "utils/io_utils.h"
 
 namespace dynamic_vins{\
 

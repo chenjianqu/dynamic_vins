@@ -32,21 +32,6 @@ InstsFeatManager::InstsFeatManager(const string& config_path)
     mot_tracker = std::make_unique<DeepSORT>(config_path,orig_dim);
 
     //orb_matcher_ = cv::DescriptorMatcher::create("BruteForce-Hamming");
-
-    vector<string> cam_paths = GetCameraPath(config_path);
-    if(cam_paths.empty()){
-        cerr<<"FeatureTracker() GetCameraPath() not found camera config:"<<config_path<<endl;
-        std::terminate();
-    }
-
-    left_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[0]);
-    if(cfg::is_stereo){
-        if(cam_paths.size()==1){
-            cerr<<"FeatureTracker() GetCameraPath() not found right camera config:"<<config_path<<endl;
-            std::terminate();
-        }
-        right_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[1]);
-    }
 }
 
 
@@ -304,8 +289,8 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             if(!inst.is_curr_visible)
                 continue;
             ///去畸变和计算归一化坐标
-            inst.UndistortedPoints(left_cam,inst.curr_points,inst.curr_un_points);
-            inst.UndistortedPoints(left_cam,inst.extra_points,inst.extra_un_points);
+            inst.UndistortedPoints(cam_t.cam0,inst.curr_points,inst.curr_un_points);
+            inst.UndistortedPoints(cam_t.cam0,inst.extra_points,inst.extra_un_points);
 
             //inst.UndistortedPts(camera_);
             ///计算特征点的速度
@@ -743,7 +728,7 @@ vector<uchar> InstsFeatManager::RejectWithF(InstFeat &inst, int col, int row) co
  */
 void InstsFeatManager::DrawInsts(cv::Mat& img)
 {
-    if(cfg::slam != SlamType::kDynamic)
+    if(cfg::slam != SLAM::kDynamic)
         return;
 
 
@@ -788,7 +773,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         //画包围框
         if(inst.box3d){
             //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
-            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),left_cam);
+            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);
             Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
 
             //Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);

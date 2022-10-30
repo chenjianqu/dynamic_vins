@@ -83,8 +83,6 @@ private:
     std::unordered_map<unsigned int,InstFeat> instances_;
     std::unordered_map<unsigned int,InstEstimatedInfo> estimated_info;
 
-    camodocal::CameraPtr left_cam,right_cam;
-
     unsigned int global_frame_id{0};
     cv::Mat mask_background;
     cv::cuda::GpuMat mask_background_gpu;

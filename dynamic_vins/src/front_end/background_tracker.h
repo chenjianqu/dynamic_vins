@@ -68,18 +68,18 @@ private:
                    vector<unsigned int> &curLeftIds,
                    vector<cv::Point2f> &curLeftPts,
                    vector<cv::Point2f> &curRightPts,
-                   std::map<int, cv::Point2f> &prevLeftPts);
+                   std::map<unsigned int, cv::Point2f> &prevLeftPts);
 
     void DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
                    vector<unsigned int> &curLeftIds,
                    vector<cv::Point2f> &curLeftPts,
                    vector<cv::Point2f> &curRightPts,
-                   map<int, cv::Point2f> &prevLeftPtsMap);
+                   map<unsigned int, cv::Point2f> &prevLeftPtsMap);
 
 
     cv::Mat img_vis;
 
-    std::map<int, cv::Point2f> last_id_pts_map;
+    std::map<unsigned int, cv::Point2f> last_id_pts_map;
     double cur_time{}, prev_time{};
 
     cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow;
@@ -89,8 +89,6 @@ private:
     LineDetector::Ptr line_detector;
 
     InstFeat bg;
-
-    camodocal::CameraPtr left_cam,right_cam;
 };
 
 

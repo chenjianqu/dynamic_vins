@@ -22,7 +22,8 @@
 #include "utils/parameters.h"
 #include "utils/io/visualization.h"
 #include "utils/io/io_parameters.h"
-#include "utils/io/io_utils.h"
+#include "utils/io_utils.h"
+#include "utils/io/feature_serialization.h"
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/io/dataloader.h"
@@ -176,17 +177,15 @@ void FeatureTrack()
             frame.seq_id = img->seq;
 
             ///前端跟踪
-            if(cfg::slam == SlamType::kDynamic){
+            if(cfg::slam == SLAM::kDynamic){
                 insts_tracker->SetEstimatedInstancesInfo(estimator->im.GetOutputInstInfo());
                 TicToc t_i;
-                //开启另一个线程检测动态特征点
+                ///开启另一个线程检测动态特征点
                 std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
-
+                ///执行背景区域跟踪
                 frame.features  = feature_tracker->TrackSemanticImage(*img);
-
                 t_inst_track.join();
                 frame.instances = insts_tracker->Output();
-
                 Infot("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.TocThenTic());
 
                 if(fe_para::is_show_track){
@@ -201,10 +200,10 @@ void FeatureTrack()
                // }
 
             }
-            else if(cfg::slam == SlamType::kNaive){
+            else if(cfg::slam == SLAM::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
             }
-            else if(cfg::slam == SlamType::kLine){
+            else if(cfg::slam == SLAM::kLine){
                 frame.features = feature_tracker->TrackImageLine(*img);
             }
             else{
@@ -213,11 +212,14 @@ void FeatureTrack()
 
 
             ///DEBUG
-            //string serialize_path = cfg::kBasicDir + "/data/output/serialization_vins/";
-            //serialize_path += fmt::format("{}.txt",frame.seq_id);
-            //FeatureSerialization(serialize_path,frame.features.points);//序列化
-            //frame.features.points = FeatureDeserialization(serialize_path);//反序列化
+            string serialize_path = cfg::kBasicDir + "/data/output/serialization/";
+            //serialize_path += fmt::format("{}_point.txt",frame.seq_id);
+            //SerializePointFeature(serialize_path,frame.features.points);//序列化
+            //frame.features.points = DeserializePointFeature(serialize_path);//反序列化
 
+            //serialize_path += fmt::format("{}_line.txt",frame.seq_id);
+            //SerializeLineFeature(serialize_path,frame.features.lines);//序列化
+            //frame.features.lines = DeserializeLineFeature(serialize_path);//反序列化
 
             ///将数据传入到后端
             if(!cfg::is_only_frontend){
@@ -320,7 +322,6 @@ int Run(int argc, char **argv){
         MyLogger::InitLogger(file_name);
         ///初始化相机模型
         InitCamera(file_name);
-        InitDeepLearningUtils(file_name);
         ///初始化局部参数
         coco::SetParameters(file_name);
         if(cfg::dataset == DatasetType::kViode){

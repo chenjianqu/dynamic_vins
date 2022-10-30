@@ -22,7 +22,8 @@ find_package(catkin REQUIRED COMPONENTS
     tf
     cv_bridge
     image_transport
-        camera_models)
+    camera_models
+	)
 
 include_directories(${catkin_INCLUDE_DIRS})
 
@@ -107,7 +108,7 @@ aux_source_directory(src/line_detector line_detector_sources)
 message("estimator: ${estimator} ")
 
 add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources}
-        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources} ${line_detector_sources} ${line_descriptor_sources}
+        ${det2d_sources} ${det3d_sources} ${image_process_source} ${stereo_sources} ${line_detector_sources} ${line_descriptor_sources} ${io_sources}
         ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${imu_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES}

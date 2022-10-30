@@ -11,11 +11,6 @@
 
 namespace dynamic_vins{\
 
-void InitDeepLearningUtils(const string& config_path);
-
-
-extern camodocal::CameraPtr left_cam_dl;
-extern camodocal::CameraPtr right_cam_dl;
 
 }
 

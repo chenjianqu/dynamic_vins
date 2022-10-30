@@ -28,7 +28,7 @@ namespace dynamic_vins{\
  * @param config_path
  * @param fx 相机的焦距
  */
-void ReadCameraToIMU(const std::string& config_path,double fx){
+void ReadCameraToIMU(const std::string& config_path){
     ///设置为单位矩阵
     if (cfg::is_estimate_ex == 2){
         para::RIC.emplace_back(Eigen::Matrix3d::Identity());
@@ -60,7 +60,7 @@ void ReadCameraToIMU(const std::string& config_path,double fx){
         //将点从IMU坐标系变换到相机坐标系0的变换矩阵
         Mat4d T_imu_c0 =calib_map["Tr_imu_velo"] * calib_map["Tr_velo_cam"];
 
-        double baseline_2 = calib_map["P2"](0,3) / (- cam0->fx);//如 baseline_2=4.485728000000e+01 / (-7.215377000000e+02) =−0.062169004
+        double baseline_2 = calib_map["P2"](0,3) / (cam_v.fx0);//如 baseline_2=4.485728000000e+01 / (-7.215377000000e+02) =−0.062169004
 
         Mat4d T_c0_c2 = Mat4d::Identity();
         T_c0_c2(0,3) = -baseline_2;
@@ -85,8 +85,9 @@ void ReadCameraToIMU(const std::string& config_path,double fx){
         para::TIC.emplace_back(Vec3d::Zero());
 
         if(cfg::kCamNum == 2){
-            double baseline_3 = calib_map["P3"](0,3) / (- cam1->fx); //如 baseline_2=-3.395242000000e+02 / (-7.215377000000e+02) = 0.470556424
+            double baseline_3 = calib_map["P3"](0,3) / (cam_v.fx1); //如 baseline_2=-3.395242000000e+02 / (-7.215377000000e+02) = 0.470556424
             double baseline = baseline_3-baseline_2;//0.5
+            cam_v.baseline = baseline;
             para::RIC.emplace_back(Mat3d::Identity());
             para::TIC.emplace_back(Vec3d(baseline,0,0));
         }
@@ -96,22 +97,31 @@ void ReadCameraToIMU(const std::string& config_path,double fx){
     else if(cfg::dataset == DatasetType::kViode || cfg::dataset== DatasetType::kEuRoc){
         cv::Mat cv_T;
         fs["body_T_cam0"] >> cv_T;
-        Eigen::Matrix4d T;
-        cv::cv2eigen(cv_T, T);
-        para::RIC.emplace_back(T.block<3, 3>(0, 0));
-        para::TIC.emplace_back(T.block<3, 1>(0, 3));
+        Eigen::Matrix4d body_T_cam0;
+        cv::cv2eigen(cv_T, body_T_cam0);
+        para::RIC.emplace_back(body_T_cam0.block<3, 3>(0, 0));
+        para::TIC.emplace_back(body_T_cam0.block<3, 1>(0, 3));
 
         if(cfg::kCamNum == 2){
+            Eigen::Matrix4d body_T_cam1;
             fs["body_T_cam1"] >> cv_T;
-            cv::cv2eigen(cv_T, T);
-            para::RIC.emplace_back(T.block<3, 3>(0, 0));
-            para::TIC.emplace_back(T.block<3, 1>(0, 3));
+            cv::cv2eigen(cv_T, body_T_cam1);
+            para::RIC.emplace_back(body_T_cam1.block<3, 3>(0, 0));
+            para::TIC.emplace_back(body_T_cam1.block<3, 1>(0, 3));
+
+            ///计算baseline
+            Eigen::Matrix4d cam0_T_cam1 = body_T_cam0.inverse() * body_T_cam1;
+            cam_v.baseline = std::abs(cam0_T_cam1(0,3));
+            Debugv("ReadCameraToIMU() cam0_T_cam1:{}", EigenToStr(cam0_T_cam1));
         }
 
     }
     else{
         std::cerr<<"ReadCameraToIMU() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
     }
+
+    Debugv("ReadCameraToIMU() baseline:{}", cam_v.baseline);
+
 
     std::string kBasicDir;
     fs["basic_dir"] >> kBasicDir;
@@ -123,7 +133,7 @@ void ReadCameraToIMU(const std::string& config_path,double fx){
 }
 
 
-void VioParameters::SetParameters(const std::string &config_path,double fx)
+void VioParameters::SetParameters(const std::string &config_path)
 {
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){
@@ -149,8 +159,10 @@ void VioParameters::SetParameters(const std::string &config_path,double fx)
 
     TD = fs["td"];
 
-    kInstanceStaticErrThreshold = fs["instance_static_err_threshold"];
-    kInstanceInitMinNum = fs["instance_init_min_num"];
+    if(cfg::slam == SLAM::kDynamic){
+        kInstanceStaticErrThreshold = fs["instance_static_err_threshold"];
+        kInstanceInitMinNum = fs["instance_init_min_num"];
+    }
 
     if(!fs["print_detail"].isNone()){
         fs["print_detail"]>>is_print_detail;
@@ -160,7 +172,7 @@ void VioParameters::SetParameters(const std::string &config_path,double fx)
     fs.release();
 
     ///读取外参
-    ReadCameraToIMU(config_path,fx);
+    ReadCameraToIMU(config_path);
 
 }
 

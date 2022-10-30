@@ -16,12 +16,14 @@
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
 
+#include "camodocal/camera_models/CameraFactory.h"
+
 #include "utils/def.h"
 
 namespace dynamic_vins{\
 
 
-class PinHoleCamera{
+/*class PinHoleCamera{
 public:
     using Ptr=std::shared_ptr<PinHoleCamera>;
     PinHoleCamera(){}
@@ -46,16 +48,42 @@ public:
     float k1,k2,p1,p2;//畸变矫正
     float inv_k11,inv_k22,inv_k13,inv_k23;//用于反投影
     std::string camera_name;
+};*/
+
+
+//inline std::shared_ptr<PinHoleCamera> cam0;
+//inline std::shared_ptr<PinHoleCamera> cam1;
+
+using CamModelType=camodocal::Camera::ModelType;
+
+
+class CameraInfo{
+public:
+
+    camodocal::CameraPtr cam0,cam1;
+    //左相机内参和畸变系数
+    cv::Mat K0,D0;
+    //左相机去畸变映射矩阵
+    cv::Mat left_undist_map1, left_undist_map2;
+    cv::Mat K1,D1;
+    cv::Mat right_undist_map1, right_undist_map2;
+    float fx0,fy0,cx0,cy0;//相机内参
+    float fx1,fy1,cx1,cy1;
+    float baseline;
+
+    CamModelType model_type;
 };
 
-
-inline std::shared_ptr<PinHoleCamera> cam0;
-inline std::shared_ptr<PinHoleCamera> cam1;
-
+extern CameraInfo cam_s;//用于segmentation线程的相机
+extern CameraInfo cam_t;//用于tracking线程的相机
+extern CameraInfo cam_v;//用于VIO线程的相机
 
 void InitCamera(const std::string& config_path);
 
 vector<string> GetCameraPath(const string &config_path);
+
+template<typename T> string CvMatToStr(const cv::Mat &m);
+
 
 
 }

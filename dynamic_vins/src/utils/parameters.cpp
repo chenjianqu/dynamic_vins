@@ -28,13 +28,13 @@ Config::Config(const std::string &file_name)
     string slam_type;
     fs["slam_type"]>>slam_type;
     if(slam_type=="raw")
-        slam=SlamType::kRaw;
+        slam=SLAM::kRaw;
     else if(slam_type=="naive")
-        slam=SlamType::kNaive;
+        slam=SLAM::kNaive;
     else if(slam_type=="line")
-        slam=SlamType::kLine;
+        slam=SLAM::kLine;
     else
-        slam=SlamType::kDynamic;
+        slam=SLAM::kDynamic;
 
     cout<<"SlamType::"<<slam_type<<endl;
 
@@ -54,7 +54,7 @@ Config::Config(const std::string &file_name)
 
     cout<<"dataset:"<<dataset_name<<endl;
 
-    if(dataset == DatasetType::kViode && (slam == SlamType::kDynamic || Config::slam == SlamType::kNaive)){
+    if(dataset == DatasetType::kViode && (slam == SLAM::kDynamic || Config::slam == SLAM::kNaive)){
         is_input_seg = true;
     }
     else{

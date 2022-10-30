@@ -22,7 +22,7 @@
 #include <fstream>
 #include <string>
 
-#include "utils/io/io_utils.h"
+#include "utils/io_utils.h"
 #include "utils/io/build_markers.h"
 #include "estimator/estimator_insts.h"
 #include "det3d/detector3d.h"

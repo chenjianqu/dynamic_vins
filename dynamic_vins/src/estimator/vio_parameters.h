@@ -87,7 +87,7 @@ public:
     inline static bool is_print_detail{false};
 
 
-    static void SetParameters(const std::string &config_path,double fx);
+    static void SetParameters(const std::string &config_path);
 };
 
 using para = VioParameters;

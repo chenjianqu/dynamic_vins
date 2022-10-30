@@ -21,8 +21,9 @@
 #include "estimator/factor/speed_factor.h"
 #include "estimator/factor/box_factor.h"
 #include "utils/io/io_parameters.h"
-#include "utils/io/io_utils.h"
+#include "utils/io_utils.h"
 #include "output.h"
+#include "utils/camera_model.h"
 
 
 namespace dynamic_vins{\
@@ -245,13 +246,14 @@ void InstanceManager::Triangulate()
         int stereo_triangle_succeed=0,stereo_triangle_failed=0;
         int mono_triangle_succeed=0,mono_triangle_failed=0;
 
+
         for(auto &lm : inst.landmarks){
             if(lm.bad)
                 continue;
             ///根据视差计算额外点的三角化和深度
             if(lm.front()->is_extra && lm.depth<=0){
                 if(lm.front()->disp > 0){
-                    float depth = cam1->DepthFromDisparity(lm.front()->disp);
+                    float depth =cam_v.fx0 * cam_v.baseline / lm.front()->disp;
                     if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
                         lm.front()->is_triangulated = true;
                         lm.depth = depth;
@@ -305,7 +307,7 @@ void InstanceManager::Triangulate()
                 ///根据视差三角化
                 else{
                     if(feat->disp > 0){
-                        float depth = cam1->DepthFromDisparity(feat->disp);
+                        float depth = cam_v.fx0* cam_v.baseline / feat->disp;
                         if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
                             feat->is_triangulated = true;
                             feat->p_w = body.CamToWorld(feat->point*depth,feat->frame);

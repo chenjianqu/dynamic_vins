@@ -104,12 +104,6 @@ cv::Scalar BgrColor(const string &color_str,bool is_norm=true);
 
 
 
-void FeatureSerialization(const string& path,const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &points);
-
-
-std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>>
-FeatureDeserialization(const string& path);
-
 }
 
 

@@ -5,6 +5,7 @@
 #include "image_process.h"
 
 #include "utils/dataset/viode_utils.h"
+#include "deeplearning_utils.h"
 
 namespace dynamic_vins{ \
 
@@ -98,15 +99,24 @@ void ImageProcessor::Run(SemanticImage &img) {
 
     TicToc tt;
 
-    ///rgb to gray
-    tt.Tic();
-    if(img.gray0.empty()){
-        img.SetGrayImageGpu();
-    }
-    else{
-        img.SetColorImageGpu();
+    if(cfg::is_undistort_input){
+        ///去畸变
+        //由于需要检测直线，因此对整张图像去畸变
+        cv::Mat un_image0,un_image1;
+        cv::remap(img.color0, un_image0, cam_s.left_undist_map1, cam_s.left_undist_map2, CV_INTER_LINEAR);
+
+        img.color0 = un_image0;
+        if(cfg::is_stereo){
+            cv::remap(img.color1, un_image1, cam_s.right_undist_map1, cam_s.right_undist_map2, CV_INTER_LINEAR);
+            img.color1 = un_image1;
+        }
     }
 
+
+
+    ///rgb to gray
+    tt.Tic();
+    img.SetGrayImageGpu();
 
     ///均衡化
     //static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
@@ -114,7 +124,7 @@ void ImageProcessor::Run(SemanticImage &img) {
     //if(!img.gray1.empty())
     //    clahe->apply(img.gray1, img.gray1);
 
-    if(cfg::slam==SlamType::kRaw || cfg::slam==SlamType::kRaw){
+    if(cfg::slam == SLAM::kRaw || cfg::slam == SLAM::kRaw){
         return;
     }
 
@@ -129,7 +139,7 @@ void ImageProcessor::Run(SemanticImage &img) {
     }
 
     ///启动3D目标检测线程
-    if(cfg::slam == SlamType::kDynamic && cfg::use_det3d){
+    if(cfg::slam == SLAM::kDynamic && cfg::use_det3d){
         detector3d->Launch(img);
     }
 
@@ -140,21 +150,21 @@ void ImageProcessor::Run(SemanticImage &img) {
 
     ///实例分割,并设置mask
     tt.Tic();
-    if(cfg::slam == SlamType::kNaive || cfg::slam == SlamType::kDynamic){
+    if(cfg::slam == SLAM::kNaive || cfg::slam == SLAM::kDynamic){
         if(!cfg::is_input_seg){
             detector2d->Launch(img);
 
-            if(cfg::slam == SlamType::kNaive)
+            if(cfg::slam == SLAM::kNaive)
                 img.SetBackgroundMask();
-            else if(cfg::slam == SlamType::kDynamic)
+            else if(cfg::slam == SLAM::kDynamic)
                 img.SetMask();
         }
         else{
             if(cfg::dataset == DatasetType::kViode){
 
-                if(cfg::slam == SlamType::kNaive)
+                if(cfg::slam == SLAM::kNaive)
                     VIODE::SetViodeMaskSimple(img);
-                else if(cfg::slam == SlamType::kDynamic)
+                else if(cfg::slam == SLAM::kDynamic)
                     VIODE::SetViodeMask(img);
 
             }
@@ -190,7 +200,7 @@ void ImageProcessor::Run(SemanticImage &img) {
     img.disp = stereo_matcher->WaitResult();
 
     ///读取离线检测的3D包围框
-    if(cfg::slam == SlamType::kDynamic && cfg::use_det3d){
+    if(cfg::slam == SLAM::kDynamic && cfg::use_det3d){
         img.boxes3d = detector3d->WaitResult();
     }
 

@@ -11,15 +11,12 @@
 #include "output.h"
 
 #include "utils/io/io_parameters.h"
-#include "utils/io/io_utils.h"
+#include "utils/io_utils.h"
 #include "utils/dataset/kitti_utils.h"
 #include "feature_manager.h"
 
 
 namespace dynamic_vins{ \
-
-
-
 
 
 
@@ -185,7 +182,7 @@ string PrintLineInfo(FeatureManager &fm){
  * 保存所有物体在当前帧的位姿
  */
 void SaveTrajectory(InstanceManager& im){
-    if(cfg::slam != SlamType::kDynamic){
+    if(cfg::slam != SLAM::kDynamic){
         return;
     }
 

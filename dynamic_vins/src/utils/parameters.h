@@ -48,7 +48,7 @@ constexpr double kDelay=0.005;
 constexpr int kImageQueueSize=100;
 
 
-enum class SlamType{
+enum class SLAM{
     kRaw,
     kNaive,
     kDynamic,
@@ -78,12 +78,14 @@ public:
 
     inline static int kInputHeight,kInputWidth,kInputChannel=3;
 
-    inline static SlamType slam;
+    inline static SLAM slam;
     inline static DatasetType dataset;
     inline static std::string dataset_name;
     inline static bool is_input_seg; //输入是否有语义分割结果
     inline static bool is_only_frontend;
     inline static bool is_only_imgprocess;
+
+    inline static bool is_undistort_input{false};//是否对整个图像进行去畸变
 
     inline static int is_estimate_ex;
     inline static int is_estimate_td;

@@ -35,23 +35,7 @@ FeatureTracker::FeatureTracker(const string& config_path)
 {
     fe_para::SetParameters(config_path);
 
-    Debugt("init FeatureTracker");
-
-    vector<string> cam_paths = GetCameraPath(config_path);
-    if(cam_paths.empty()){
-        cerr<<"FeatureTracker() GetCameraPath() not found camera config:"<<config_path<<endl;
-        std::terminate();
-    }
-
-    left_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[0]);
-    if(cfg::is_stereo){
-        if(cam_paths.size()==1){
-            cerr<<"FeatureTracker() GetCameraPath() not found right camera config:"<<config_path<<endl;
-            std::terminate();
-        }
-        right_cam = camodocal::CameraFactory::instance()->generateCameraFromYamlFile(cam_paths[1]);
-    }
-
+    Debugv("init FeatureTracker");
 
     lk_optical_flow = cv::cuda::SparsePyrLKOpticalFlow::create(cv::Size(21, 21), 3, 30);
     lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(
@@ -117,7 +101,7 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 
     Infot("TrackImage | goodFeaturesToTrack:{} ms", tt.TocThenTic());
 
-    bg.UndistortedPts(left_cam);
+    bg.UndistortedPts(cam_t.cam0);
     bg.PtsVelocity(cur_time-prev_time);
     //bg.curr_un_points = UndistortedPts(bg.curr_points, cam0);
     //bg.pts_velocity = PtsVelocity(bg.ids, bg.curr_un_points, bg.curr_id_pts,bg.prev_id_pts);
@@ -148,7 +132,7 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
             */
             //bg.right_un_points = UndistortedPts(bg.right_points, cam1);
             //bg.right_pts_velocity = PtsVelocity(bg.right_ids, bg.right_un_points, bg.right_curr_id_pts, bg.right_prev_id_pts);
-            bg.RightUndistortedPts(right_cam);
+            bg.RightUndistortedPts(cam_t.cam1);
             bg.RightPtsVelocity(cur_time-prev_time);
         }
         bg.right_prev_id_pts = bg.right_curr_id_pts;
@@ -178,8 +162,6 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 
 
 
-
-
 /**
  * 不对动态物体进行任何处理,而直接将所有的特征点当作静态区域,跟踪点线特征
  * @param img
@@ -193,9 +175,6 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
     bg.box2d->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
 
-    static cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
-    clahe->apply(img.gray0, img.gray0);
-
     ///线特征的提取和跟踪
     bg.curr_lines = line_detector->Detect(img.gray0);
     Debugt("TrackImageLine | detect new lines size:{}",bg.curr_lines->keylsd.size());
@@ -203,16 +182,18 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
     line_detector->TrackLeftLine(bg.prev_lines, bg.curr_lines);
     Debugt("TrackImageLine | track lines size:{}",bg.curr_lines->keylsd.size());
 
+    bg.curr_lines->SetLines();
+    bg.curr_lines->UndistortedLineEndPoints(cam_t.cam0);
+
     if(cfg::is_stereo){
         bg.curr_lines_right = line_detector->Detect(img.gray1);
         line_detector->TrackRightLine(bg.curr_lines,bg.curr_lines_right);
+
+        bg.curr_lines_right->SetLines();
+        bg.curr_lines_right->UndistortedLineEndPoints(cam_t.cam1);
     }
 
-    bg.curr_lines->SetLines();
-    bg.curr_lines->UndistortedLineEndPoints(left_cam);
 
-    bg.curr_lines_right->SetLines();
-    bg.curr_lines_right->UndistortedLineEndPoints(right_cam);
 
 
     ///跟踪左图像的点特征
@@ -253,7 +234,7 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
     Infot("TrackImage | goodFeaturesToTrack:{} ms", tt.TocThenTic());
 
-    bg.UndistortedPts(left_cam);
+    bg.UndistortedPts(cam_t.cam0);
     bg.PtsVelocity(cur_time-prev_time);
     //bg.curr_un_points = UndistortedPts(bg.curr_points, cam0);
     //bg.pts_velocity = PtsVelocity(bg.ids, bg.curr_un_points, bg.curr_id_pts,bg.prev_id_pts);
@@ -284,7 +265,7 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
             */
             //bg.right_un_points = UndistortedPts(bg.right_points, cam1);
             //bg.right_pts_velocity = PtsVelocity(bg.right_ids, bg.right_un_points, bg.right_curr_id_pts, bg.right_prev_id_pts);
-            bg.RightUndistortedPts(right_cam);
+            bg.RightUndistortedPts(cam_t.cam1);
             bg.RightPtsVelocity(cur_time-prev_time);
         }
         bg.right_prev_id_pts = bg.right_curr_id_pts;
@@ -292,21 +273,25 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
         Infot("TrackImage | flowTrack right:{} ms", tt.TocThenTic());
     }
 
-    if(fe_para::is_show_track){
-        ///可视化点
-        DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
+       if(fe_para::is_show_track){
+            ///可视化点
+            DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
 
-        ///可视化线
-        line_detector->VisualizeLine(img_vis, bg.curr_lines);
-        if(cfg::dataset==DatasetType::kKitti){
-            line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
+            ///可视化线
+            line_detector->VisualizeLine(img_vis, bg.curr_lines);
+            if(cfg::is_stereo){
+                if(cfg::dataset==DatasetType::kKitti){
+                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
+                }
+                else{
+                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
+                }
+            }
+
+            //line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right);
+            if(bg.prev_lines)
+                line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);
         }
-        else{
-            line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
-        }
-        //line_detector->VisualizeLineStereoMatch(img_track_, bg.curr_lines, bg.curr_lines_right);
-        line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);
-    }
 
     Infot("TrackImage | DrawTrack right:{} ms", tt.TocThenTic());
 
@@ -357,7 +342,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
 
     fm.points = points;
 
-    if(cfg::slam == SlamType::kLine){
+    if(cfg::slam == SLAM::kLine){
         std::map<unsigned int, std::vector<std::pair<int,Line>>> lines;
         ///左图像的先特征
         for(Line& l:bg.curr_lines->un_lines){
@@ -365,9 +350,11 @@ FeatureBackground FeatureTracker::SetOutputFeats()
             lv.emplace_back(0,l);
             lines.insert({l.id,lv});
         }
-        ///右图像的线特征
-        for(Line& l:bg.curr_lines_right->un_lines){
-            lines[l.id].push_back({1,l});
+        if(cfg::is_stereo ){
+            ///右图像的线特征
+            for(Line& l:bg.curr_lines_right->un_lines){
+                lines[l.id].push_back({1,l});
+            }
         }
 
         fm.lines = lines;
@@ -420,7 +407,7 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     Infot("trackImageNaive | detect feature:{} ms", tt.TocThenTic());
 
     ///特征点矫正和计算速度
-    bg.UndistortedPts(left_cam);
+    bg.UndistortedPts(cam_t.cam0);
     bg.PtsVelocity(cur_time-prev_time);
 
     Infot("trackImageNaive | vel&&un:{} ms", tt.TocThenTic());
@@ -428,7 +415,7 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     ///右图像跟踪
     if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !bg.curr_points.empty()){
         bg.TrackRightGPU(img,lk_optical_flow,lk_optical_flow_back);
-        bg.RightUndistortedPts(right_cam);
+        bg.RightUndistortedPts(cam_t.cam1);
         bg.RightPtsVelocity(cur_time-prev_time);
 
         Debugt("trackImageNaive | bg.right_points.size:{}", bg.right_points.size());
@@ -524,7 +511,7 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
                                vector<unsigned int> &curLeftIds,
                                vector<cv::Point2f> &curLeftPts,
                                vector<cv::Point2f> &curRightPts,
-                               std::map<int, cv::Point2f> &prevLeftPts){
+                               std::map<unsigned int, cv::Point2f> &prevLeftPts){
     if(!img.inv_merge_mask_gpu.empty()){
         cv::cuda::GpuMat img_show_gpu;
         cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
@@ -580,7 +567,7 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
                                vector<unsigned int> &curLeftIds,
                                vector<cv::Point2f> &curLeftPts,
                                vector<cv::Point2f> &curRightPts,
-                               map<int, cv::Point2f> &prevLeftPtsMap){
+                               map<unsigned int, cv::Point2f> &prevLeftPtsMap){
     //int rows = imLeft.rows;
     int cols = imLeft.cols;
     if (!imRight.empty() && cfg::is_stereo)
@@ -606,10 +593,10 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
         }
     }
 
-    map<int, cv::Point2f>::iterator mapIt;
+    map<unsigned int, cv::Point2f>::iterator mapIt;
     for (size_t i = 0; i < curLeftIds.size(); i++)
     {
-        int id = curLeftIds[i];
+        unsigned int id = curLeftIds[i];
         mapIt = prevLeftPtsMap.find(id);
         if(mapIt != prevLeftPtsMap.end())
         {
@@ -686,14 +673,14 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
     Infot("TrackSemanticImage | detect feature:{} ms", tt.TocThenTic());
 
     ///矫正特征点,并计算特征点的速度
-    bg.UndistortedPts(left_cam);
+    bg.UndistortedPts(cam_t.cam0);
     bg.PtsVelocity(cur_time-prev_time);
 
     ///跟踪右图像
     if(cfg::is_stereo && (!cur_img.gray1.empty() || !cur_img.gray1_gpu.empty()) && !bg.curr_points.empty()){
         bg.TrackRightGPU(img,lk_optical_flow,lk_optical_flow_back);
 
-        bg.RightUndistortedPts(right_cam);
+        bg.RightUndistortedPts(cam_t.cam1);
         bg.RightPtsVelocity(cur_time-prev_time);
     }
     if(fe_para::is_show_track)
