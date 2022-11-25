@@ -24,16 +24,42 @@ pip install evo --upgrade --no-binary evo
 
 ### Evaluate Kitti-Tracking ego-motion
 
-* Evaluate
+#### Manually
+
+* Prepare ground-truth
+
+```shell
+#project_root
+sequence=0004
+
+dataset_root=/home/chen/datasets/kitti/tracking
+
+####Convert KITTI's oxts data to TUM format pose
+oxts_path=${dataset_root}/data_tracking_oxts/training/oxts/
+save_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/
+
+# shellcheck disable=SC2039
+source ${dynamic_vins_root}/devel/setup.bash
+rosrun dynamic_vins_eval save_oxts ${oxts_path}/${sequence}.txt ${save_path}/${sequence}.txt
+```
+
+
+
+* Evaluation
 
 ```shell
 export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
 conda activate py36
 
-estimate_dir=data/exp/2022-6-7/kitti_tracking_naive/
 sequence=0004
 
-source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_kitti_tracking_traj.sh ${estimate_dir} ${sequence} 
+gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
+
+
+evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt \
+&& evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part \
+&& evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
 ```
 
 
@@ -49,6 +75,32 @@ evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt -p
 save_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/
 evo_traj tum ${save_path}/${sequence}.txt -p
 ```
+
+
+
+
+
+
+
+#### Use shell script
+
+* Evaluate
+
+```shell
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+estimate_dir=data/exp/2022-6-7/kitti_tracking_naive/
+sequence=0004
+
+source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_kitti_tracking_traj.sh ${estimate_dir} ${sequence} 
+```
+
+
+
+
+
+
 
 
 

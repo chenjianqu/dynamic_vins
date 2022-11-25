@@ -87,6 +87,7 @@ Marker LineMarker(const Eigen::Vector3d &p1,const Eigen::Vector3d &p2,unsigned i
     msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()表示一直持续
     msg.scale.x=scale;//线宽
     msg.scale.y=scale;//线宽
+    msg.scale.z=scale;//线宽
     msg.color = ScalarBgrToColorRGBA(color);
 
     geometry_msgs::Point pw1 = EigenToGeometryPoint(p1);

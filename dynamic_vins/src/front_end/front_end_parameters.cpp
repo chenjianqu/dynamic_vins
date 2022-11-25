@@ -34,6 +34,10 @@ void FrontendParemater::SetParameters(const std::string &config_path)
     is_show_track = fs["show_track"];
     is_flow_back = fs["flow_back"];
 
+    fs["use_mask_morphology"] >> use_mask_morphology;
+
+    fs["mask_morphology_size"] >> kMaskMorphologySize;
+
     fs.release();
 
 }

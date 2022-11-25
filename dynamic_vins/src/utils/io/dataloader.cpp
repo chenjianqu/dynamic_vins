@@ -162,26 +162,36 @@ void ImageViewer::Delay(int period){
 }
 
 
-void ImageViewer::ImageShow(cv::Mat &img,int period){
+void ImageViewer::ImageShow(cv::Mat &img,int period, int delay_frames){
     int delta_t =(int) tt.TocThenTic();
     int wait_time = period - delta_t;
     wait_time = std::max(wait_time,1);
 
-    bool pause=false;
-    do{
-        cv::imshow("ImageViewer",img);
-        int key = cv::waitKey(wait_time);
-        if(key ==' '){
-            pause = !pause;
-        }
-        else if(key== 27){ //ESC
-            cfg::ok=false;
-            ros::shutdown();
-            pause=false;
-        }
-        wait_time=period;
+    img_queue.push(img);//使用队列存储图片
 
-    } while (pause);
+    if(img_queue.size()>delay_frames){
+        img = img_queue.front();
+        img_queue.pop();
+
+        bool pause=false;
+        do{
+            cv::imshow("ImageViewer",img);
+            int key = cv::waitKey(wait_time);
+            if(key ==' '){
+                pause = !pause;
+            }
+            else if(key== 27){ //ESC
+                cfg::ok=false;
+                ros::shutdown();
+                pause=false;
+            }
+            wait_time=period;
+
+        } while (pause);
+
+    }
+
+
 
 }
 

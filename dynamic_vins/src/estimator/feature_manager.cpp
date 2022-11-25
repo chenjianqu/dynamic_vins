@@ -248,58 +248,6 @@ Eigen::VectorXd FeatureManager::GetDepthVector()
 }
 
 
-
-
-/**
- * PnP求解
- * @param R
- * @param P
- * @param pts2D
- * @param pts3D
- * @return
- */
-bool FeatureManager::SolvePoseByPnP(Mat3d &R, Vec3d &P,
-                                    vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D){
-    Mat3d R_initial;
-    Vec3d P_initial;
-
-    // w_T_cam ---> cam_T_w
-    R_initial = R.inverse();
-    P_initial = -(R_initial * P);
-
-    if (int(pts2D.size()) < 4){
-        printf("feature tracking not enough, please slowly move you device! \n");
-        return false;
-    }
-    //计算初值
-    cv::Mat r, rvec, t, D, tmp_r;
-    cv::eigen2cv(R_initial, tmp_r);
-    cv::Rodrigues(tmp_r, rvec);
-    cv::eigen2cv(P_initial, t);
-    cv::Mat K = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
-    //调用OpenCV函数求解
-    bool pnp_succ;
-    pnp_succ = cv::solvePnP(pts3D, pts2D, K, D, rvec, t, true);
-    //pnp_succ = solvePnPRansac(pts3D, pts2D, K, D, rvec, t, true, 100, 8.0 / focalLength, 0.99, inliers);
-
-    if(!pnp_succ){
-        printf("pnp failed ! \n");
-        return false;
-    }
-
-    cv::Rodrigues(rvec, r);
-    Eigen::MatrixXd R_pnp;
-    cv::cv2eigen(r, R_pnp);
-    Eigen::MatrixXd T_pnp;
-    cv::cv2eigen(t, T_pnp);
-
-    // cam_T_w ---> w_T_cam
-    R = R_pnp.transpose();
-    P = R * (-T_pnp);
-    return true;
-}
-
-
 /**
  * 使用PnP求解得到当前帧的位姿
  * @param frameCnt
@@ -308,7 +256,7 @@ bool FeatureManager::SolvePoseByPnP(Mat3d &R, Vec3d &P,
  * @param tic
  * @param ric
  */
-void FeatureManager::InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[])
+void FeatureManager::InitFramePoseByPnP(int frameCnt)
 {
     if(frameCnt > 0){
         ///构建3D-2D匹配对
@@ -318,8 +266,8 @@ void FeatureManager::InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
             if (lm.depth > 0){
                 int index = frameCnt - lm.start_frame;
                 if((int)lm.feats.size() >= index + 1){
-                    Vec3d ptsInCam = ric[0] * (lm.feats[0].point * lm.depth) + tic[0];
-                    Vec3d ptsInWorld = Rs[lm.start_frame] * ptsInCam + Ps[lm.start_frame];
+                    Vec3d ptsInCam = ric[0] * (lm.feats[0].point * lm.depth) + body.tic[0];
+                    Vec3d ptsInWorld = Rs[lm.start_frame] * ptsInCam + body.Ps[lm.start_frame];
 
                     cv::Point3f point3d(ptsInWorld.x(), ptsInWorld.y(), ptsInWorld.z());
                     cv::Point2f point2d(lm.feats[index].point.x(), lm.feats[index].point.y());
@@ -332,13 +280,13 @@ void FeatureManager::InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Ve
 
         ///使用上一帧的位姿作为初值
         Mat3d RCam = Rs[frameCnt - 1] * ric[0];
-        Vec3d PCam = Rs[frameCnt - 1] * tic[0] + Ps[frameCnt - 1];
+        Vec3d PCam = Rs[frameCnt - 1] * body.tic[0] + body.Ps[frameCnt - 1];
 
         ///求解
         if(SolvePoseByPnP(RCam, PCam, pts2D, pts3D)){
             // trans to w_T_imu
-            Rs[frameCnt] = RCam * ric[0].transpose();
-            Ps[frameCnt] = -RCam * ric[0].transpose() * tic[0] + PCam;
+            body.Rs[frameCnt] = RCam * body.ric[0].transpose();
+            body.Ps[frameCnt] = -RCam * body.ric[0].transpose() * body.tic[0] + PCam;
         }
     }
 }
@@ -450,7 +398,7 @@ void FeatureManager::TriangulateLineMono()
         log_text += fmt::format("lid:{} obs:{} tri:{}\n",landmark.feature_id,landmark.feats.size(),landmark.is_triangulation);
 
         landmark.used_num = landmark.feats.size();    // 已经有多少帧看到了这个特征
-        if (landmark.used_num < kLineMinObs)   // 看到的帧数少于2， 或者 这个特征最近倒数第二帧才看到， 那都不三角化
+        if (landmark.used_num < para::kLineMinObs)   // 看到的帧数少于2， 或者 这个特征最近倒数第二帧才看到， 那都不三角化
             continue;
         if (landmark.is_triangulation)       // 如果已经三角化了
             continue;
@@ -474,7 +422,7 @@ void FeatureManager::TriangulateLineStereo(double baseline)
 {
     for (auto &landmark : line_landmarks) {       // 遍历每个特征，对新特征进行三角化
         landmark.used_num = landmark.feats.size();    // 已经有多少帧看到了这个特征
-        if (landmark.is_triangulation)  // 已经三角化了 或者 少于两帧看到 或者 右目没有看到
+        if (landmark.is_triangulation || landmark.used_num < para::kLineMinObs)  // 已经三角化了 或者 少于两帧看到 或者 右目没有看到
             continue;
         //查看是否存在双目观测
         /*bool is_stereo=false;
@@ -502,7 +450,7 @@ int FeatureManager::GetLineFeatureCount()
     int cnt = 0;
     for (auto &it : line_landmarks){
         it.used_num = it.feats.size();
-        if (it.used_num >= kLineMinObs   && it.start_frame < kWinSize - 2 && it.is_triangulation)
+        if (it.used_num >= para::kLineMinObs   && it.start_frame < kWinSize - 2 && it.is_triangulation)
             cnt++;
     }
     return cnt;
@@ -516,7 +464,7 @@ Eigen::MatrixXd FeatureManager::GetLineOrthVectorInCamera()
     for (auto &it_per_id : line_landmarks)
     {
         it_per_id.used_num = it_per_id.feats.size();
-        if (!(it_per_id.used_num >= kLineMinObs && it_per_id.start_frame < kWinSize - 2 && it_per_id.is_triangulation))
+        if (!(it_per_id.used_num >= para::kLineMinObs && it_per_id.start_frame < kWinSize - 2 && it_per_id.is_triangulation))
             continue;
 
         lineorth_vec.row(++feature_index) = plk_to_orth(it_per_id.line_plucker);
@@ -526,21 +474,21 @@ Eigen::MatrixXd FeatureManager::GetLineOrthVectorInCamera()
 }
 
 
-Eigen::MatrixXd FeatureManager::GetLineOrthVector(Vec3d Ps[], Vec3d tic[], Mat3d ric[])
+Eigen::MatrixXd FeatureManager::GetLineOrthVector()
 {
     Eigen::MatrixXd lineorth_vec(GetLineFeatureCount(),4);
     int feature_index = -1;
-    for (auto &it_per_id : line_landmarks){
-        it_per_id.used_num = it_per_id.feats.size();
-        if (!(it_per_id.used_num >= kLineMinObs && it_per_id.start_frame < kWinSize - 2 && it_per_id.is_triangulation))
+    for (auto &landmark : line_landmarks){
+        landmark.used_num = landmark.feats.size();
+        if (!(landmark.used_num >= para::kLineMinObs && landmark.start_frame < kWinSize - 2 && landmark.is_triangulation))
             continue;
 
-        int imu_i = it_per_id.start_frame;
+        int imu_i = landmark.start_frame;
 
-        Eigen::Vector3d twc = Ps[imu_i] + Rs[imu_i] * tic[0];   // twc = Rwi * tic + twi
-        Eigen::Matrix3d Rwc = Rs[imu_i] * ric[0];               // Rwc = Rwi * Ric
+        Eigen::Vector3d twc = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[0];   // twc = Rwi * tic + twi
+        Eigen::Matrix3d Rwc = body.Rs[imu_i] * body.ric[0];               // Rwc = Rwi * Ric
 
-        Vec6d line_w = plk_to_pose(it_per_id.line_plucker, Rwc, twc);  // transfrom to world frame
+        Vec6d line_w = plk_to_pose(landmark.line_plucker, Rwc, twc);  // transfrom to world frame
         // line_w.normalize();
         lineorth_vec.row(++feature_index) = plk_to_orth(line_w);
         //lineorth_vec.row(++feature_index) = plk_to_orth(it_per_id.line_plucker);
@@ -550,24 +498,24 @@ Eigen::MatrixXd FeatureManager::GetLineOrthVector(Vec3d Ps[], Vec3d tic[], Mat3d
 
 
 
-void FeatureManager::SetLineOrth(Eigen::MatrixXd x,Vec3d P[], Mat3d R[], Vec3d tic[], Mat3d ric[])
+void FeatureManager::SetLineOrth(Eigen::MatrixXd &x)
 {
     int feature_index = -1;
-    for (auto &it_per_id : line_landmarks)
+    for (auto &landmark : line_landmarks)
     {
-        it_per_id.used_num = it_per_id.feats.size();
-        if (!(it_per_id.used_num >= kLineMinObs  && it_per_id.start_frame < kWinSize - 2 && it_per_id.is_triangulation))
+        landmark.used_num = landmark.feats.size();
+        if (!(landmark.used_num >= para::kLineMinObs  && landmark.start_frame < kWinSize - 2 && landmark.is_triangulation))
             continue;
 
         Vec4d line_orth_w = x.row(++feature_index);
         Vec6d line_w = orth_to_plk(line_orth_w);
 
-        int imu_i = it_per_id.start_frame;
+        int imu_i = landmark.start_frame;
 
-        Eigen::Vector3d twc = P[imu_i] + R[imu_i] * tic[0];   // twc = Rwi * tic + twi
-        Eigen::Matrix3d Rwc = R[imu_i] * ric[0];               // Rwc = Rwi * Ric
+        Eigen::Vector3d twc = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[0];   // twc = Rwi * tic + twi
+        Eigen::Matrix3d Rwc = body.Rs[imu_i] * ric[0];               // Rwc = Rwi * Ric
 
-        it_per_id.line_plucker = plk_from_pose(line_w, Rwc, twc); // transfrom to camera frame
+        landmark.line_plucker = plk_from_pose(line_w, Rwc, twc); // transfrom to camera frame
         //it_per_id.line_plucker = line_w; // transfrom to camera frame
 
         /*
@@ -594,7 +542,7 @@ void FeatureManager::RemoveLineOutlierByLength()
         it_next++;
         landmark->used_num = landmark->feats.size();
         // TODO: 右目没看到
-        if (!(landmark->used_num >= kLineMinObs && landmark->start_frame < kWinSize - 2 && landmark->is_triangulation))
+        if (!(landmark->used_num >= para::kLineMinObs && landmark->start_frame < kWinSize - 2 && landmark->is_triangulation))
             continue;
 
         const auto &[valid,pts1,pts2] = LineTrimming(landmark->line_plucker,landmark->feats[0].line_obs);
@@ -628,7 +576,7 @@ void FeatureManager::RemoveLineOutlier()
     {
         it_next++;
         landmark->used_num = landmark->feats.size();
-        if (!(landmark->used_num >= kLineMinObs && landmark->start_frame < kWinSize - 2 && landmark->is_triangulation))
+        if (!(landmark->used_num >= para::kLineMinObs && landmark->start_frame < kWinSize - 2 && landmark->is_triangulation))
             continue;
 
         int imu_i = landmark->start_frame, imu_j = imu_i - 1;
@@ -882,41 +830,6 @@ void FeatureManager::RemoveFront(int frame_count)
 }
 
 
-
-double FeatureManager::CompensatedParallax2(const StaticLandmark &landmark, int frame_count)
-{
-    //check the second last frame is keyframe or not
-    //parallax betwwen seconde last frame and third last frame
-    const StaticFeature &frame_i = landmark.feats[frame_count - 2 - landmark.start_frame];
-    const StaticFeature &frame_j = landmark.feats[frame_count - 1 - landmark.start_frame];
-
-    double ans = 0;
-    Vec3d p_j = frame_j.point;
-
-    double u_j = p_j(0);
-    double v_j = p_j(1);
-
-    Vec3d p_i = frame_i.point;
-    Vec3d p_i_comp;
-
-    //int r_i = frame_count - 2;
-    //int r_j = frame_count - 1;
-    //p_i_comp = ric[camera_id_j].transpose() * Rs[r_j].transpose() * Rs[r_i] * ric[camera_id_i] * p_i;
-    p_i_comp = p_i;
-    double dep_i = p_i(2);
-    double u_i = p_i(0) / dep_i;
-    double v_i = p_i(1) / dep_i;
-    double du = u_i - u_j, dv = v_i - v_j;
-
-    double dep_i_comp = p_i_comp(2);
-    double u_i_comp = p_i_comp(0) / dep_i_comp;
-    double v_i_comp = p_i_comp(1) / dep_i_comp;
-    double du_comp = u_i_comp - u_j, dv_comp = v_i_comp - v_j;
-
-    ans = std::max(ans, sqrt(std::min(du * du + dv * dv, du_comp * du_comp + dv_comp * dv_comp)));
-
-    return ans;
-}
 
 
 }

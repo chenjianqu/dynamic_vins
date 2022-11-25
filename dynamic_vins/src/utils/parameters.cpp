@@ -31,8 +31,6 @@ Config::Config(const std::string &file_name)
         slam=SLAM::kRaw;
     else if(slam_type=="naive")
         slam=SLAM::kNaive;
-    else if(slam_type=="line")
-        slam=SLAM::kLine;
     else
         slam=SLAM::kDynamic;
 
@@ -77,7 +75,7 @@ Config::Config(const std::string &file_name)
     }
 
     is_use_imu = fs["imu"];
-    cout << "USE_IMU:" << is_use_imu << endl;
+    cout << "is_use_imu:" << is_use_imu << endl;
 
     if(!is_use_imu){
         is_estimate_ex = 0;
@@ -99,11 +97,20 @@ Config::Config(const std::string &file_name)
             cout<<"is_estimate_td = 0. Synchronized sensors"<<endl;
     }
 
-    fs["use_dense_flow"] >> use_dense_flow;
-    cout<<"use_dense_flow: "<<use_dense_flow<<endl;
-    if(use_dense_flow){
-        fs["use_background_flow"]>>use_background_flow;
+    fs["use_line"] >> use_line;
+    cout << "is_use_line:" << use_line << endl;
+
+    fs["undistort_input"] >> is_undistort_input;
+    cout<<"is_undistort_input: "<<is_undistort_input<<endl;
+
+    if(!fs["use_dense_flow"].isNone()){
+        fs["use_dense_flow"] >> use_dense_flow;
+        cout<<"use_dense_flow: "<<use_dense_flow<<endl;
+        if(use_dense_flow){
+            fs["use_background_flow"]>>use_background_flow;
+        }
     }
+
 
     fs["only_imgprocess"]>>is_only_imgprocess;
     cout<<"is_only_imgprocess: "<<is_only_imgprocess<<endl;
@@ -114,8 +121,14 @@ Config::Config(const std::string &file_name)
     fs["plane_constraint"] >> use_plane_constraint;
     cout<<"plane_constraint: "<<use_plane_constraint<<endl;
 
-    fs["use_det3d"] >> use_det3d;
-    cout<<"use_det3d: "<<use_det3d<<endl;
+    if(slam==SLAM::kDynamic){
+        if(fs["use_det3d"].isNone()){
+            throw std::runtime_error("Config::Config(() fs[\"use_det3d\"].isNone()");
+        }
+        fs["use_det3d"] >> use_det3d;
+        cout<<"use_det3d: "<<use_det3d<<endl;
+    }
+
 
     fs["basic_dir"] >> kBasicDir;
     cout<<"basic_dir: "<<kBasicDir<<endl;

@@ -75,7 +75,7 @@ std::vector<Box3D::Ptr> Detector3D::ReadBox3dFromTxt(const std::string &txt_path
         vector<string> tokens;
         split(line,tokens," ");
 
-        if(std::stod(tokens[2]) < score_threshold)
+        if(std::stod(tokens[1]) < score_threshold)
             continue;
 
         boxes.push_back(Box3D::Box3dFromFCOS3D(tokens,cam_s.cam0));

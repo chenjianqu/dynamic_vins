@@ -64,7 +64,7 @@ public:
      * @return
      */
 
-   /* int PubObject3D(int argc, char **argv)
+    int PubObject3D(int argc, char **argv)
     {
         const string object3d_root_path="/home/chen/ws/dynamic_ws/src/dynamic_vins/data/ground_truth/kitti_tracking_object/0003/";
 
@@ -82,7 +82,7 @@ public:
                     continue;
                 }
 
-                Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens);
+                Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens,cam_s.cam0);
 
 
                 index++;
@@ -93,11 +93,13 @@ public:
 
     }
 
-*/
 
-/*
-
-    [[nodiscard]] std::tuple<Eigen::Matrix3d,Eigen::Vector3d> GetBodyPose(int frame) const{
+    /**
+     * 获取对应时刻的位姿
+     * @param frame
+     * @return (是否成功，旋转矩阵，平移向量)
+     */
+    [[nodiscard]] std::tuple<bool,Eigen::Matrix3d,Eigen::Vector3d> GetBodyPose(int frame) const{
         double time = frame*0.05;
 
         static std::unordered_map<string,vector<string>> cam_pose;
@@ -112,7 +114,7 @@ public:
         auto it_find = cam_pose.find(std::to_string(time));
         if(it_find == cam_pose.end()){
             cerr<<"Can not find cam pose at time:"<<std::to_string(time)<<endl;
-            return {Eigen::Matrix3d::Identity(),Eigen::Vector3d::Zero()};
+            return {false,Eigen::Matrix3d::Identity(),Eigen::Vector3d::Zero()};
         }
         auto &tokens_cam = it_find->second;
         Eigen::Vector3d t_wc(std::stod(tokens_cam[1]),std::stod(tokens_cam[2]),std::stod(tokens_cam[3]));
@@ -123,7 +125,7 @@ public:
         q_wc.normalize();
         Eigen::Matrix3d R_wc = q_wc.toRotationMatrix();
 
-        return {R_wc,t_wc};
+        return {true,R_wc,t_wc};
     }
 
 
@@ -139,9 +141,9 @@ public:
         while (getline(fp,line)){ //循环读取每行数据
             vector<string> tokens;
             split(line,tokens," ");
-            if(std::stod(tokens[2]) < det3d_para::kDet3dScoreThreshold)
+            if(std::stod(tokens[1]) < det3d_para::kDet3dScoreThreshold)
                 continue;
-            Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens);
+            Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens,cam_s.cam0);
             boxes.push_back(box);
         }
         fp.close();
@@ -176,9 +178,9 @@ public:
             while (getline(fp,line)){ //循环读取每行数据
                 vector<string> tokens;
                 split(line,tokens," ");
-                //if(std::stod(tokens[2]) < det3d_para::kDet3dScoreThreshold)
+                //if(std::stod(tokens[1]) < det3d_para::kDet3dScoreThreshold)
                 //    continue;
-                Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens);
+                Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens,cam_s.cam0);
                 boxes.push_back(box);
                 //cout<<line<<endl;
             }
@@ -199,7 +201,7 @@ public:
             int cnt=0;
             for(auto &box : boxes){
                 cnt++;
-                box->VisCorners2d(img,cv::Scalar(255,255,255),*cam0);
+                box->VisCorners2d(img,cv::Scalar(255,255,255),cam_s.cam0);
                 auto cube_marker = CubeMarker(box->corners,cnt,BgrColor("blue"));
                 marker_array.markers.push_back(cube_marker);
 
@@ -243,6 +245,7 @@ public:
     [[nodiscard]] vector<Box3D::Ptr> ReadPredictBox(int frame) const{
         string name = PadNumber(frame,6);
         string file_path = object3d_root_path+name+".txt";
+        cout<<"predict boxes path:"<<file_path<<endl;
         std::ifstream fp(file_path);
         if(!fp.is_open()){
             {};
@@ -254,9 +257,9 @@ public:
         while (getline(fp,line)){ //循环读取每行数据
             vector<string> tokens;
             split(line,tokens," ");
-            if(std::stod(tokens[2]) < det3d_para::kDet3dScoreThreshold)
+            if(std::stod(tokens[1]) < det3d_para::kDet3dScoreThreshold)
                 continue;
-            Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens);
+            Box3D::Ptr box = Box3D::Box3dFromFCOS3D(tokens,cam_s.cam0);
             boxes.push_back(box);
         }
         fp.close();
@@ -280,7 +283,7 @@ public:
             while (getline(fp_gt,line_gt)){ //循环读取每行数据
                 vector<string> tokens;
                 split(line_gt,tokens," ");
-                Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens);
+                Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens,cam_s.cam0);
                 int curr_frame = std::stoi(tokens[0]);
                 boxes_gt[curr_frame].push_back(box);
             }
@@ -312,7 +315,7 @@ public:
             while (getline(fp_gt,line_gt)){ //循环读取每行数据
                 vector<string> tokens;
                 split(line_gt,tokens," ");
-                Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens);
+                Box3D::Ptr box = Box3D::Box3dFromKittiTracking(tokens,cam_s.cam0);
                 int curr_frame = std::stoi(tokens[0]);
                 boxes_gt[curr_frame].push_back(box);
             }
@@ -350,7 +353,7 @@ public:
 
             MarkerArray marker_array;
 
-            auto [R_wc,t_wc] = GetBodyPose(index);
+            auto [success,R_wc,t_wc] = GetBodyPose(index);
 
             Publisher::PubTransform(R_wc,t_wc,transform_broadcaster,ros::Time::now(),"world","body");
 
@@ -360,22 +363,21 @@ public:
                 vector<Box3D::Ptr> boxes = ReadPredictBox(index);
                 for(auto &box : boxes){
                     cnt++;
-                    box->VisCorners2d(img,cv::Scalar(255,255,255),*cam0);
+                    box->VisCorners2d(img,cv::Scalar(255,255,255),cam_s.cam0);
                     auto cube_marker = CubeMarker(box->corners,cnt, BgrColor("green"));
                     marker_array.markers.push_back(cube_marker);
 
-                    */
-/*Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
+                    Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
                     auto axis_markers = AxisMarker(axis_matrix,cnt);
                     marker_array.markers.push_back(std::get<0>(axis_markers));
                     marker_array.markers.push_back(std::get<1>(axis_markers));
-                    marker_array.markers.push_back(std::get<2>(axis_markers));*//*
+                    marker_array.markers.push_back(std::get<2>(axis_markers));
 
                 }
                 cout<<"prediction_boxes:"<<boxes.size()<<endl;
             }
 
-            if(mode.find("estimation")!=string::npos){
+            if(mode.find("estimation")!=string::npos && success){
                 ///可视化估计的框
                 vector<Box3D::Ptr> boxes_est = ReadEstimateBox(index);
                 for(auto &box : boxes_est){
@@ -393,13 +395,13 @@ public:
                     auto textMarker = TextMarker(center_pt, cnt, to_string(box->id), BgrColor("blue"), 1.2);
                     marker_array.markers.push_back(textMarker);
 
-                    box->VisCorners2d(img, BgrColor("white",false),*cam0);
+                    box->VisCorners2d(img, BgrColor("white",false),cam_s.cam0);
                 }
                 cout<<"estimation_boxes:"<<boxes_est.size()<<endl;
             }
 
 
-            if(mode.find("gt")!=string::npos){
+            if(mode.find("gt")!=string::npos && success){
                 ///可视化gt框
                 vector<Box3D::Ptr> boxes_gt = ReadGroundtruthBox(index);
                 for(auto &box : boxes_gt){
@@ -435,7 +437,7 @@ public:
 
     }
 
-*/
+
 
 
     void InitGlobalParameters(const string &file_name){
@@ -450,7 +452,7 @@ public:
         det3d_para::SetParameters(file_name);
 
 
-        object3d_root_path=det3d_para::kDet3dPreprocessPath+cfg::kDatasetSequence+"/";
+        object3d_root_path=det3d_para::kDet3dPreprocessPath;
         tracking_gt_path=det3d_para::kGroundTruthPath;
         tracking_estimation_path= io_para::kOutputFolder + cfg::kDatasetSequence+".txt";
         camera_pose_file = io_para::kVinsResultPath;
@@ -500,13 +502,11 @@ int main(int argc, char **argv)
     std::cout<<"InitGlobalParameters finished"<<std::endl;
 
 
-
-
     //return dynamic_vins::PubObject3D(argc,argv);
-    //return pub_demo.PubFCOS3D(argc, argv,n);
+    return pub_demo.PubFCOS3D(argc, argv,n);
     //return dynamic_vins::PubViodeFCOS3D(argc, argv,n);
 
-    return 0;
+    //return 0;
 }
 
 

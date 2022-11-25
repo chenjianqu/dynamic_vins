@@ -12,8 +12,10 @@ namespace dynamic_vins{ \
 
 ImageProcessor::ImageProcessor(const std::string &config_file){
     detector2d.reset(new Detector2D(config_file));
-    detector3d.reset(new Detector3D(config_file));
-    flow_estimator = std::make_unique<FlowEstimator>(config_file);
+    if(cfg::use_det3d){
+        detector3d.reset(new Detector3D(config_file));
+    }
+    //flow_estimator = std::make_unique<FlowEstimator>(config_file);
     stereo_matcher = std::make_shared<MyStereoMatcher>(config_file);
 }
 
@@ -112,8 +114,6 @@ void ImageProcessor::Run(SemanticImage &img) {
         }
     }
 
-
-
     ///rgb to gray
     tt.Tic();
     img.SetGrayImageGpu();
@@ -135,7 +135,7 @@ void ImageProcessor::Run(SemanticImage &img) {
 
     ///启动光流估计线程
     if(cfg::use_dense_flow){
-        flow_estimator->Launch(img);
+        //flow_estimator->Launch(img);
     }
 
     ///启动3D目标检测线程
@@ -161,12 +161,10 @@ void ImageProcessor::Run(SemanticImage &img) {
         }
         else{
             if(cfg::dataset == DatasetType::kViode){
-
                 if(cfg::slam == SLAM::kNaive)
                     VIODE::SetViodeMaskSimple(img);
                 else if(cfg::slam == SLAM::kDynamic)
                     VIODE::SetViodeMask(img);
-
             }
             else{
                 std::cerr<<"ImageProcessor::Run()::set_mask not is implemented, as dataset is "<<cfg::dataset_name<<endl;
@@ -190,10 +188,10 @@ void ImageProcessor::Run(SemanticImage &img) {
 
     ///获得光流估计
     if(cfg::use_dense_flow){
-        img.flow= flow_estimator->WaitResult();
-        if(!img.flow.data){
-            img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
-        }
+        //img.flow= flow_estimator->WaitResult();
+        //if(!img.flow.data){
+        img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
+        //}
     }
 
     ///双目立体匹配得到深度
@@ -217,7 +215,6 @@ void ImageProcessor::Run(SemanticImage &img) {
                     (*it)->class_name=="Tram"){
                 boxes.emplace_back(*it);
             }
-
         }
 
         img.boxes2d = boxes;

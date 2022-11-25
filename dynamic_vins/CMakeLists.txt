@@ -94,7 +94,7 @@ aux_source_directory(src/utils/io io_sources)
 aux_source_directory(src/det2d det2d_sources)
 aux_source_directory(src/det3d det3d_sources)
 aux_source_directory(src/mot mot_sources)
-aux_source_directory(src/flow flow_sources)
+#aux_source_directory(src/flow flow_sources)
 aux_source_directory(src/stereo stereo_sources)
 aux_source_directory(src/image_process image_process_source)
 aux_source_directory(src/front_end front_end_sources)
@@ -109,7 +109,7 @@ message("estimator: ${estimator} ")
 
 add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources}
         ${det2d_sources} ${det3d_sources} ${image_process_source} ${stereo_sources} ${line_detector_sources} ${line_descriptor_sources} ${io_sources}
-        ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${imu_sources} ${estimator_sources})
+        ${mot_sources}  ${front_end_sources} ${initial_sources}  ${factor_sources} ${imu_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES}
         /home/chen/ws/dynamic_ws/src/dynamic_vins/src/line_detector/line_descriptor/lib/liblinedesc.so
@@ -125,8 +125,22 @@ target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIB
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
 
-#add_executable(pub_object3d src/system/eval/pub_object3d.cpp  ${utils_sources} ${dataset_sources} ${tensorrt_sources}
-#        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources}
-#        ${mot_sources} ${flow_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
-#target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
-#        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
+add_executable(pub_object3d src/system/eval/pub_object3d.cpp  ${utils_sources} ${dataset_sources} ${tensorrt_sources}
+        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources}  ${line_detector_sources} ${line_descriptor_sources}
+		${mot_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
+target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
+        ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
+
+
+add_executable(corners_detection src/system/exp_tools/corners_detections.cpp)
+target_link_libraries(corners_detection ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
+
+
+add_executable(lk_flow src/system/exp_tools/lk_flow.cpp)
+target_link_libraries(lk_flow ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
+
+
+add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp ${line_detector_sources} ${line_descriptor_sources})
+target_link_libraries(line_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}
+		/home/chen/ws/dynamic_ws/src/dynamic_vins/src/line_detector/line_descriptor/lib/liblinedesc.so)
+

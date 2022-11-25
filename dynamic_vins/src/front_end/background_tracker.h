@@ -64,6 +64,8 @@ private:
     void ShowUndistortion(const string &name);
     void RejectWithF();
 
+    void TrackLine(cv::Mat gray0, cv::Mat gray1,cv::Mat mask);
+
     void DrawTrack(const SemanticImage &img,
                    vector<unsigned int> &curLeftIds,
                    vector<cv::Point2f> &curLeftPts,

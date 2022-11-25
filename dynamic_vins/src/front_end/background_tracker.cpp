@@ -161,6 +161,36 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
 
 
 
+/**
+ * 直线检测和跟踪
+ * @param gray0
+ * @param gray1
+ */
+void FeatureTracker::TrackLine(cv::Mat gray0, cv::Mat gray1,cv::Mat mask){
+    ///线特征的提取和跟踪
+    Debugt("TrackLine | start");
+    bg.curr_lines = line_detector->Detect(gray0,mask);
+    Debugt("TrackLine | detect new lines size:{}",bg.curr_lines->keylsd.size());
+
+    line_detector->TrackLeftLine(bg.prev_lines, bg.curr_lines);
+    Debugt("TrackLine | track lines size:{}",bg.curr_lines->keylsd.size());
+
+    bg.curr_lines->SetLines();
+    bg.curr_lines->UndistortedLineEndPoints(cam_t.cam0);
+
+    if(cfg::is_stereo){
+        Debugt("TrackLine | start track right image");
+
+        bg.curr_lines_right = line_detector->Detect(gray1);
+        line_detector->TrackRightLine(bg.curr_lines,bg.curr_lines_right);
+
+        bg.curr_lines_right->SetLines();
+        bg.curr_lines_right->UndistortedLineEndPoints(cam_t.cam1);
+    }
+    Debugt("TrackLine | finished");
+}
+
+
 
 /**
  * 不对动态物体进行任何处理,而直接将所有的特征点当作静态区域,跟踪点线特征
@@ -175,26 +205,12 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 
     bg.box2d->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
 
-    ///线特征的提取和跟踪
-    bg.curr_lines = line_detector->Detect(img.gray0);
-    Debugt("TrackImageLine | detect new lines size:{}",bg.curr_lines->keylsd.size());
-
-    line_detector->TrackLeftLine(bg.prev_lines, bg.curr_lines);
-    Debugt("TrackImageLine | track lines size:{}",bg.curr_lines->keylsd.size());
-
-    bg.curr_lines->SetLines();
-    bg.curr_lines->UndistortedLineEndPoints(cam_t.cam0);
-
-    if(cfg::is_stereo){
-        bg.curr_lines_right = line_detector->Detect(img.gray1);
-        line_detector->TrackRightLine(bg.curr_lines,bg.curr_lines_right);
-
-        bg.curr_lines_right->SetLines();
-        bg.curr_lines_right->UndistortedLineEndPoints(cam_t.cam1);
+    std::thread line_thread;
+    if(cfg::use_line){
+        cv::Mat line_gray0 = img.gray0.clone();
+        cv::Mat line_gray1 = img.gray1.clone();
+        line_thread = std::thread(&FeatureTracker::TrackLine, this, line_gray0, line_gray1,cv::Mat());
     }
-
-
-
 
     ///跟踪左图像的点特征
     bg.curr_points.clear();
@@ -276,22 +292,40 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
        if(fe_para::is_show_track){
             ///可视化点
             DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
+       }
 
-            ///可视化线
-            line_detector->VisualizeLine(img_vis, bg.curr_lines);
-            if(cfg::is_stereo){
-                if(cfg::dataset==DatasetType::kKitti){
-                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
-                }
-                else{
-                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
-                }
-            }
 
-            //line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right);
-            if(bg.prev_lines)
-                line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);
-        }
+       if(cfg::use_line){
+           line_thread.join();
+
+           if(fe_para::is_show_track){
+
+               //if(bg.prev_lines)
+               //    line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines); //前后帧直线可视化
+
+               ///可视化线
+               line_detector->VisualizeLine(img_vis, bg.curr_lines);
+               if(cfg::is_stereo){
+                   if(cfg::dataset==DatasetType::kKitti){
+                       line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
+                   }
+                   else{
+                       line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
+                   }
+
+
+                   if(cfg::dataset==DatasetType::kKitti){
+                       line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,true);
+                   }
+                   else{
+                       line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,false);
+                   }
+               }
+
+
+
+           }
+       }
 
     Infot("TrackImage | DrawTrack right:{} ms", tt.TocThenTic());
 
@@ -342,7 +376,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
 
     fm.points = points;
 
-    if(cfg::slam == SLAM::kLine){
+    if(cfg::use_line){
         std::map<unsigned int, std::vector<std::pair<int,Line>>> lines;
         ///左图像的先特征
         for(Line& l:bg.curr_lines->un_lines){
@@ -381,9 +415,9 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     Debugt("TrackImageNaive | input mask:{}", DimsToStr(img.inv_merge_mask_gpu.size()));
 
     ///形态学运算
-    if(cur_img.exist_inst){
+    if(cur_img.exist_inst && fe_para::use_mask_morphology){
         static auto erode_kernel = cv::getStructuringElement(
-                cv::MORPH_RECT,cv::Size(15,15),cv::Point(-1,-1));
+                cv::MORPH_RECT, cv::Size(fe_para::kMaskMorphologySize, fe_para::kMaskMorphologySize), cv::Point(-1, -1));
         static auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
         erode_filter->apply(img.inv_merge_mask_gpu,img.inv_merge_mask_gpu);
         img.inv_merge_mask_gpu.download(img.inv_merge_mask);
@@ -393,6 +427,17 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
         bg.box2d->mask_cv = cur_img.inv_merge_mask.clone();
     else
         bg.box2d->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
+
+
+    std::thread line_thread;
+    if(cfg::use_line){
+        cv::Mat line_mask = bg.box2d->mask_cv.clone();
+        cv::Mat line_gray0 = img.gray0.clone();
+        cv::Mat line_gray1 = img.gray1.clone();
+        line_thread = std::thread(&FeatureTracker::TrackLine, this, line_gray0, line_gray1,line_mask);
+        //line_thread.join();
+        //TrackLine(line_gray0,line_gray1,cv::Mat());
+    }
 
     ///特征点跟踪
     bg.TrackLeftGPU(img,prev_img,lk_optical_flow,lk_optical_flow_back);
@@ -424,6 +469,34 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
 
     if(fe_para::is_show_track)
         DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
+
+    if(cfg::use_line){
+        line_thread.join();
+
+        //if(bg.prev_lines)
+        //    line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);
+
+        if(fe_para::is_show_track){
+            ///可视化线
+            line_detector->VisualizeLine(img_vis, bg.curr_lines);
+            if(cfg::is_stereo){
+                if(cfg::dataset==DatasetType::kKitti){
+                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
+                }
+                else{
+                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
+                }
+            }
+
+            if(cfg::dataset==DatasetType::kKitti){
+                line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,true);
+            }
+            else{
+                line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,false);
+            }
+
+        }
+    }
 
     prev_img = cur_img;
     prev_time = cur_time;
@@ -512,6 +585,7 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
                                vector<cv::Point2f> &curLeftPts,
                                vector<cv::Point2f> &curRightPts,
                                std::map<unsigned int, cv::Point2f> &prevLeftPts){
+
     if(!img.inv_merge_mask_gpu.empty()){
         cv::cuda::GpuMat img_show_gpu;
         cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
@@ -531,13 +605,18 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
         }
     }
 
+    ///DEBUG
+    return;
+
     //cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
     for (size_t j = 0; j < curLeftPts.size(); j++){
         double len = std::min(1.0, 1.0 * bg.track_cnt[j] / 20);
         cv::circle(img_vis, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
     }
+
     for (auto & pt : bg.visual_new_points)
         cv::circle(img_vis, pt, 2, cv::Scalar(255, 255, 255), 2);
+
     if (cfg::is_stereo && !img.color1.empty() ){
         if(cfg::dataset == DatasetType::kKitti){
             for (auto &rightPt : curRightPts){
@@ -570,10 +649,18 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
                                map<unsigned int, cv::Point2f> &prevLeftPtsMap){
     //int rows = imLeft.rows;
     int cols = imLeft.cols;
-    if (!imRight.empty() && cfg::is_stereo)
-        cv::hconcat(imLeft, imRight, img_vis);
-    else
+    if (!imRight.empty() && cfg::is_stereo){
+        if(cfg::dataset == DatasetType::kKitti){
+            cv::vconcat(imLeft, imRight, img_vis);
+        }else{
+            cv::hconcat(imLeft, imRight, img_vis);
+        }
+    }
+    else{
         img_vis = imLeft.clone();
+    }
+
+
     cv::cvtColor(img_vis, img_vis, CV_GRAY2RGB);
 
     for (size_t j = 0; j < curLeftPts.size(); j++){
@@ -581,17 +668,21 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
         cv::circle(img_vis, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
     }
 
-    if (!imRight.empty() && cfg::is_stereo)
-    {
-        for (size_t i = 0; i < curRightPts.size(); i++)
-        {
-            cv::Point2f rightPt = curRightPts[i];
-            rightPt.x += cols;
-            cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
-            //cv::Point2f leftPt = curLeftPtsTrackRight[i];
-            //cv::line(imTrack, leftPt, rightPt, cv::Scalar(0, 255, 0), 1, 8, 0);
+    if (cfg::is_stereo && !imRight.empty() ){
+        if(cfg::dataset == DatasetType::kKitti){
+            for (auto &rightPt : curRightPts){
+                rightPt.y += (float)imLeft.rows;
+                cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
+            }
+        }
+        else{
+            for (auto &rightPt : curRightPts){
+                rightPt.x += (float)imLeft.cols;
+                cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
+            }
         }
     }
+
 
     map<unsigned int, cv::Point2f>::iterator mapIt;
     for (size_t i = 0; i < curLeftIds.size(); i++)
@@ -652,8 +743,8 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
     cur_img = img;
 
     ///形态学运算
-    if(img.exist_inst){
-        ErodeMaskGpu(cur_img.inv_merge_mask_gpu, cur_img.inv_merge_mask_gpu);
+    if(img.exist_inst && fe_para::use_mask_morphology){
+        ErodeMaskGpu(cur_img.inv_merge_mask_gpu, cur_img.inv_merge_mask_gpu,fe_para::kMaskMorphologySize);
         cur_img.inv_merge_mask_gpu.download(cur_img.inv_merge_mask);
     }
 

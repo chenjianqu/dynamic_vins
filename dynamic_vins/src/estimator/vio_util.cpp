@@ -566,4 +566,98 @@ void TriangulateOneLineStereo(LineLandmark &line){
 
 
 
+
+
+
+/**
+ * PnP求解
+ * @param R
+ * @param P
+ * @param pts2D
+ * @param pts3D
+ * @return
+ */
+bool SolvePoseByPnP(Mat3d &R, Vec3d &P,
+                    vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D){
+    Mat3d R_initial;
+    Vec3d P_initial;
+
+    // w_T_cam ---> cam_T_w
+    R_initial = R.inverse();
+    P_initial = -(R_initial * P);
+
+    if (int(pts2D.size()) < 4){
+        printf("feature tracking not enough, please slowly move you device! \n");
+        return false;
+    }
+    //计算初值
+    cv::Mat r, rvec, t, D, tmp_r;
+    cv::eigen2cv(R_initial, tmp_r);
+    cv::Rodrigues(tmp_r, rvec);
+    cv::eigen2cv(P_initial, t);
+    cv::Mat K = (cv::Mat_<double>(3, 3) << 1, 0, 0, 0, 1, 0, 0, 0, 1);
+    //调用OpenCV函数求解
+    bool pnp_succ;
+    pnp_succ = cv::solvePnP(pts3D, pts2D, K, D, rvec, t, true);
+    //pnp_succ = solvePnPRansac(pts3D, pts2D, K, D, rvec, t, true, 100, 8.0 / focalLength, 0.99, inliers);
+
+    if(!pnp_succ){
+        printf("pnp failed ! \n");
+        return false;
+    }
+
+    cv::Rodrigues(rvec, r);
+    Eigen::MatrixXd R_pnp;
+    cv::cv2eigen(r, R_pnp);
+    Eigen::MatrixXd T_pnp;
+    cv::cv2eigen(t, T_pnp);
+
+    // cam_T_w ---> w_T_cam
+    R = R_pnp.transpose();
+    P = R * (-T_pnp);
+    return true;
+}
+
+
+
+
+
+double CompensatedParallax2(const StaticLandmark &landmark, int frame_count)
+{
+    //check the second last frame is keyframe or not
+    //parallax betwwen seconde last frame and third last frame
+    const StaticFeature &frame_i = landmark.feats[frame_count - 2 - landmark.start_frame];
+    const StaticFeature &frame_j = landmark.feats[frame_count - 1 - landmark.start_frame];
+
+    double ans = 0;
+    Vec3d p_j = frame_j.point;
+
+    double u_j = p_j(0);
+    double v_j = p_j(1);
+
+    Vec3d p_i = frame_i.point;
+    Vec3d p_i_comp;
+
+    //int r_i = frame_count - 2;
+    //int r_j = frame_count - 1;
+    //p_i_comp = ric[camera_id_j].transpose() * Rs[r_j].transpose() * Rs[r_i] * ric[camera_id_i] * p_i;
+    p_i_comp = p_i;
+    double dep_i = p_i(2);
+    double u_i = p_i(0) / dep_i;
+    double v_i = p_i(1) / dep_i;
+    double du = u_i - u_j, dv = v_i - v_j;
+
+    double dep_i_comp = p_i_comp(2);
+    double u_i_comp = p_i_comp(0) / dep_i_comp;
+    double v_i_comp = p_i_comp(1) / dep_i_comp;
+    double du_comp = u_i_comp - u_j, dv_comp = v_i_comp - v_j;
+
+    ans = std::max(ans, sqrt(std::min(du * du + dv * dv, du_comp * du_comp + dv_comp * dv_comp)));
+
+    return ans;
+}
+
+
+
+
 }

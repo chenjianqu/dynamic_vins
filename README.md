@@ -90,12 +90,6 @@ ${clion_Path}/bin/cmake/linux/bin/cmake --build ${dynamic_vins_root}/src/dynamic
 
 ## Demo
 
-
-
-### Run
-
-#### ROS Prepare
-
 * launch ros core
 ```shell
 roscore
@@ -108,25 +102,18 @@ rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 
 
 
-#### Launch dynamic_vins
-
-
+* launch dynamic_vins
 
 ```shell
-#VINS
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
-#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
-#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc/euroc.yaml
-config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc2/euroc.yaml
+config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking_raw_line.yaml
+#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc2/euroc.yaml
 
 source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file}
 ```
-
-
-
-#### Pub dataset
 
 
 
@@ -134,10 +121,13 @@ source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vin
 
 ```shell
 #viode
-rosbag play /home/chen/datasets/VIODE/bag/city_day/0_none.bag
+rosbag play /home/chen/datasets/VIODE/bag/city_night/0_none.bag
 
 #kitti
 rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
+
+#euroc
+rosbag play /home/chen/datasets/Euroc/MH_01_easy.bag
 ```
 
 
@@ -157,8 +147,6 @@ rosrun kitti_pub kitti_pub /home/chen/datasets/kitti/tracking/data_tracking_imag
 
 
 
-#### Others
-
 * Shutdown DynamicVINS with ROS
 
 ```shell
@@ -173,41 +161,13 @@ rostopic pub -1 /vins_terminal std_msgs/Bool -- '1'
 
 ## Visualization
 
-### Visualize 3D box
-
-* Visualize GT 3D box
-
-```shell
-dataset_root_path=/home/chen/datasets/kitti/tracking/
-
-seq=0018
-
-tracking_result=${dataset_root_path}/data_tracking_label_2/training/label_02/${seq}.txt
-image_dir=${dataset_root_path}/data_tracking_image_2/training/image_02/${seq}/
-
-rosrun dynamic_vins_eval visualize_3d_box ${tracking_result} ${image_dir}
-```
-
-
-
-* Visualize estimate 3D box
-
-```shell
-dataset_root_path=/home/chen/datasets/kitti/tracking/
-
-seq=0018
-
-tracking_result=${dynamic_vins_root}/src/dynamic_vins/data/output/${seq}.txt
-image_dir=${dataset_root_path}/data_tracking_image_2/training/image_02/${seq}/
-
-rosrun dynamic_vins_eval visualize_3d_box ${tracking_result} ${image_dir}
-```
+see [visualization.md](./dynamic_vins/docs/visualization.md) .
 
 
 
 ## Evaluation
 
-see `evaluate.md` .
+see [evaluate.md](./dynamic_vins/docs/evaluate.md) .
 
 
 

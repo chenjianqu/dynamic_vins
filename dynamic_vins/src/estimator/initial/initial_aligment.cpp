@@ -112,7 +112,7 @@ void RefineGravity(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Eige
             tmp_A.block<3, 2>(0, 6) = frame_i->second.R.transpose() * dt * dt / 2 * Mat3d::Identity() * lxly;
             tmp_A.block<3, 1>(0, 8) = frame_i->second.R.transpose() * (frame_j->second.T - frame_i->second.T) / 100.0;     
             tmp_b.block<3, 1>(0, 0) = frame_j->second.pre_integration->delta_p +
-                    frame_i->second.R.transpose() * frame_j->second.R * para::TIC[0] - para::TIC[0] -
+                    frame_i->second.R.transpose() * frame_j->second.R * T_IC[0] - T_IC[0] -
                     frame_i->second.R.transpose() * dt * dt / 2 * g0;
 
             tmp_A.block<3, 3>(3, 0) = -Mat3d::Identity();
@@ -176,7 +176,7 @@ bool LinearAlignment(std::map<double, ImageFrame> &all_image_frame, Vec3d &g, Ei
         tmp_A.block<3, 3>(0, 6) = frame_i->second.R.transpose() * dt * dt / 2 * Mat3d::Identity();
         tmp_A.block<3, 1>(0, 9) = frame_i->second.R.transpose() * (frame_j->second.T - frame_i->second.T) / 100.0;     
         tmp_b.block<3, 1>(0, 0) = frame_j->second.pre_integration->delta_p +
-                frame_i->second.R.transpose() * frame_j->second.R * para::TIC[0] - para::TIC[0];
+                frame_i->second.R.transpose() * frame_j->second.R * T_IC[0] - T_IC[0];
         //cout << "delta_p   " << frame_j->second.pre_integration->delta_p.transpose() << endl;
         tmp_A.block<3, 3>(3, 0) = -Mat3d::Identity();
         tmp_A.block<3, 3>(3, 3) = frame_i->second.R.transpose() * frame_j->second.R;

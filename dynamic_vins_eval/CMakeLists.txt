@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
         std_msgs
         cv_bridge
         image_transport
+        camera_models
         )
 
 find_package(Eigen3 REQUIRED)
@@ -52,6 +53,9 @@ target_link_libraries(save_oxts ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(visualize_3d_box src/visualize_3d_box.cpp src/call_back.cpp)
 target_link_libraries(visualize_3d_box ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
+#add_executable(visualize_predict src/visualize_predict_3d_boxes.cpp src/call_back.cpp src/dy_utils.cpp src/box3d.cpp)
+#target_link_libraries(visualize_predict ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(convert_tracking_to_object src/convert_tracking_to_object.cpp)
 target_link_libraries(convert_tracking_to_object ${catkin_LIBRARIES} ${OpenCV_LIBS})

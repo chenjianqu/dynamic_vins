@@ -18,7 +18,7 @@
 
 #include "camodocal/camera_models/CameraFactory.h"
 
-#include "utils/def.h"
+#include "def.h"
 
 namespace dynamic_vins{\
 

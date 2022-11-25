@@ -49,7 +49,6 @@ CallBack* callback;
 Dataloader::Ptr dataloader;
 
 SemanticImageQueue image_queue;
-FeatureQueue feature_queue;
 
 
 
@@ -65,6 +64,9 @@ void ImageProcess()
 
     while(cfg::ok.load(std::memory_order_seq_cst))
     {
+
+
+
         if(image_queue.size() >= kImageQueueSize){
             cerr<<"ImageProcess image_queue.size() >= kImageQueueSize,blocked"<<endl;
             std::this_thread::sleep_for(50ms);
@@ -80,6 +82,9 @@ void ImageProcess()
         else{
             img = callback->SyncProcess();
         }
+
+
+
 
         std::cout<<"image seq_id:"<<img.seq<<std::endl;
 
@@ -126,12 +131,13 @@ void ImageProcess()
             cv::Mat img_show;
             if(!img.inv_merge_mask.empty()){
                 cv::cvtColor(img.inv_merge_mask,img_show,CV_GRAY2BGR);
-                cv::scaleAdd(img.color0,0.5,img_show,img_show);
+
+                cv::scaleAdd(img_show,0.8,img.color0,img_show);
             }
             else{
                 img_show = cv::Mat(cv::Size(img.color0.cols,img.color0.rows),CV_8UC3,cv::Scalar(255,255,255));
             }
-            cv::resize(img_show,img_show,cv::Size(),0.5,0.5);
+            //cv::resize(img_show,img_show,cv::Size(),0.5,0.5);
 
             /*if(flow_tensor.defined()){
                cv::Mat show = VisualFlow(flow_tensor);
@@ -139,17 +145,25 @@ void ImageProcess()
                cv::waitKey(1);
             }*/
 
-            viewer.ImageShow(img_show,io_para::kImageDatasetPeriod);
+            viewer.ImageShow(img_show,io_para::kImageDatasetPeriod,1);
         }
         else{
             viewer.Delay(io_para::kImageDatasetPeriod);
         }
 
+
+        ///TODO DEBUG
+        if(img.seq==5){
+            //while(true){
+            //    std::this_thread::sleep_for(10ms);
+            //}
+        }
+
+
         ///将结果存放到消息队列中
         if(!cfg::is_only_imgprocess){
             image_queue.push_back(img);
         }
-
 
     }
 
@@ -198,16 +212,17 @@ void FeatureTrack()
                 //    insts_tracker->DrawInsts(img_w);
                 //    cv::imwrite(save_name,img_w);
                // }
-
             }
             else if(cfg::slam == SLAM::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
             }
-            else if(cfg::slam == SLAM::kLine){
-                frame.features = feature_tracker->TrackImageLine(*img);
-            }
             else{
-                frame.features = feature_tracker->TrackImage(*img);
+                if(cfg::use_line){
+                    frame.features = feature_tracker->TrackImageLine(*img);
+                }
+                else{
+                    frame.features = feature_tracker->TrackImage(*img);
+                }
             }
 
 
@@ -333,7 +348,9 @@ int Run(int argc, char **argv){
         processor.reset(new ImageProcessor(file_name));
 
         feature_tracker = std::make_unique<FeatureTracker>(file_name);
-        insts_tracker.reset(new InstsFeatManager(file_name));
+        if(cfg::slam==SLAM::kDynamic){
+            insts_tracker.reset(new InstsFeatManager(file_name));
+        }
     }
     catch(std::runtime_error &e){
         cerr<<e.what()<<endl;

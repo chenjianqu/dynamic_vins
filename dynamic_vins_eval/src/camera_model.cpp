@@ -479,8 +479,8 @@ void InitOneCamera(const std::string& config_path,CameraInfo &cam){
     }
 
     ///设置是否对输入图像进行去畸变处理
-    if(cfg::use_line && cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false){
-        throw std::runtime_error("InitOneCamera() cfg::use_line==true && cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false");
+    if(cfg::slam==SLAM::kLine && cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false){
+        throw std::runtime_error("InitOneCamera() cfg::slam==SLAM::kLine && cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false");
     }
 
     ///获取去畸变的映射矩阵

@@ -39,6 +39,9 @@
 
 namespace dynamic_vins{\
 
+FeatureQueue feature_queue;
+
+
 
 Estimator::Estimator(const string& config_path): feat_manager{body.Rs}
 {
@@ -122,7 +125,7 @@ int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *lo
         }
     }
 
-
+    ///点的重投影误差
     int f_m_cnt = 0;
     int feature_index = -1;
     for (auto &lm : feat_manager.point_landmarks){
@@ -169,8 +172,48 @@ int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *lo
             f_m_cnt++;
         }
     }
+
     return f_m_cnt;
 }
+
+
+
+/**
+ * 添加线重投影残差
+ * @param problem
+ * @param loss_function
+ * @return
+ */
+int Estimator::AddLineResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function){
+    if(!cfg::use_line){
+        return 0;
+    }
+    ///线投影误差
+    int f_m_cnt=0;
+    int feature_index = -1;
+    for (auto &landmark : feat_manager.line_landmarks){
+        landmark.used_num = landmark.feats.size();// 已经被多少帧观测到
+        if (!(landmark.used_num >= para::kLineMinObs && landmark.start_frame < kWinSize - 2 && landmark.is_triangulation))
+            continue;
+        ++feature_index;
+        //线参数化
+        ceres::LocalParameterization *line_para = new LineOrthParameterization();
+        problem.AddParameterBlock(body.para_line_features[feature_index], kSizeLine, line_para);  // p,q
+        int imu_i = landmark.start_frame,imu_j = imu_i - 1;
+        //设置线重投影因子
+        for (auto &feat : landmark.feats){
+            imu_j++;
+            auto *f = new lineProjectionFactor(feat.line_obs);     // 特征重投影误差
+            problem.AddResidualBlock(f, loss_function,
+                                     body.para_pose[imu_j],
+                                     body.para_ex_pose[0],
+                                     body.para_line_features[feature_index]);
+            f_m_cnt++;
+        }
+    }
+    return f_m_cnt;
+}
+
 
 
 
@@ -197,6 +240,12 @@ void Estimator::Optimization()
 
     ///添加重投影误差
     int f_m_cnt = AddResidualBlock(problem,loss_function);
+    Debugv("点特征 重投影残差的数量 {}",f_m_cnt);
+
+    if(cfg::use_line){
+        f_m_cnt = AddLineResidualBlock(problem,loss_function);
+        Debugv("线特征 重投影残差的数量 {}",f_m_cnt);
+    }
 
     ///添加动态物体的残差项
     if(cfg::slam == SLAM::kDynamic){
@@ -255,7 +304,7 @@ void Estimator::Optimization()
 /**
  * 仅仅优化线特征
  */
-void Estimator::OptimizationWithLine()
+void Estimator::OptimizationWithOnlyLine()
 {
     TicToc tt;
 
@@ -276,37 +325,12 @@ void Estimator::OptimizationWithLine()
         problem.SetParameterBlockConstant(body.para_ex_pose[i]);// 固定 外参数
     }
 
-
     /// 所有特征
-    int f_m_cnt = 0;
-    int feature_index = -1;
-    for (auto &landmark : feat_manager.line_landmarks){
-        landmark.used_num = landmark.feats.size();// 已经被多少帧观测到， 这个已经在三角化那个函数里说了
-        // 如果这个特征才被观测到，那就跳过。实际上这里为啥不直接用如果特征没有三角化这个条件。
-        if (!(landmark.used_num >= kLineMinObs && landmark.start_frame < kWinSize - 2 && landmark.is_triangulation))
-            continue;
-        ++feature_index;
+    AddLineResidualBlock(problem,loss_function);
 
-        ///线参数化
-        ceres::LocalParameterization *line_para = new LineOrthParameterization();
-        problem.AddParameterBlock(body.para_line_features[feature_index], kSizeLine, line_para);  // p,q
-        int imu_i = landmark.start_frame,imu_j = imu_i - 1;
-
-        ///设置线重投影因子
-        for (auto &feat : landmark.feats){
-            imu_j++;
-            auto *f = new lineProjectionFactor(feat.line_obs);     // 特征重投影误差
-            problem.AddResidualBlock(f, loss_function,
-                                     body.para_pose[imu_j],
-                                     body.para_ex_pose[0],
-                                     body.para_line_features[feature_index]);
-            f_m_cnt++;
-        }
-    }
-
-    if(feature_index < 3){
-        return;
-    }
+    //if(feature_index < 3){
+    //    return;
+    //}
 
     //设置ceres选项
     ceres::Solver::Options options;
@@ -367,8 +391,8 @@ void Estimator::SetMarginalizationInfo()
                 auto* imu_factor = new IMUFactor(pre_integrations[1]);
                 auto *residual_block_info = new ResidualBlockInfo(
                         imu_factor, nullptr,
-                        vector<double *>{body.para_pose[0], body.para_speed_bias[0], body.para_pose[1], body.para_speed_bias[1]},
-                        vector<int>{0, 1});
+                        vector<double *>{body.para_pose[0], body.para_speed_bias[0],
+                                         body.para_pose[1], body.para_speed_bias[1]},vector<int>{0, 1});
                 marg_info->addResidualBlockInfo(residual_block_info);
             }
         }
@@ -419,7 +443,8 @@ void Estimator::SetMarginalizationInfo()
                                 lm.feats[0].cur_td, feat.cur_td);
                         auto *residual_block_info = new ResidualBlockInfo(
                                 f, loss_function,
-                                vector<double *>{body.para_ex_pose[0], body.para_ex_pose[1], body.para_point_features[feature_index],body.para_td[0]},
+                                vector<double *>{body.para_ex_pose[0], body.para_ex_pose[1],
+                                                 body.para_point_features[feature_index],body.para_td[0]},
                                 vector<int>{2});
                         marg_info->addResidualBlockInfo(residual_block_info);
                     }
@@ -612,8 +637,8 @@ void Estimator::SetParameter()
 {
     process_mutex.lock();
     for (int i = 0; i < cfg::kCamNum; i++){
-        body.tic[i] = para::TIC[i];
-        body.ric[i] = para::RIC[i];
+        body.tic[i] = T_IC[i];
+        body.ric[i] = R_IC[i];
         Infov("SetParameter Extrinsic Cam {}:\n{} \n{}",i,EigenToStr(body.ric[i]),VecToStr(body.tic[i]));
     }
     feat_manager.SetRic(body.ric);
@@ -784,37 +809,34 @@ void Estimator::ProcessIMU(double t, double dt, const Vec3d &linear_acceleration
 bool Estimator::InitialStructure()
 {
     TicToc t_sfm;
-    //check imu observibility
+
+    ///check imu observibility
     {
         map<double, ImageFrame>::iterator frame_it;
         Vec3d sum_g;
-        for (frame_it = all_image_frame.begin(), frame_it++; frame_it != all_image_frame.end(); frame_it++)
-        {
+        for (frame_it = all_image_frame.begin(), frame_it++; frame_it != all_image_frame.end(); frame_it++){
             double dt = frame_it->second.pre_integration->sum_dt;
             Vec3d tmp_g = frame_it->second.pre_integration->delta_v / dt;
             sum_g += tmp_g;
         }
-        Vec3d aver_g;
-        aver_g = sum_g * 1.0 / ((int)all_image_frame.size() - 1);
+        Vec3d aver_g = sum_g * 1.0 / ((int)all_image_frame.size() - 1);
         double var = 0;
-        for (frame_it = all_image_frame.begin(), frame_it++; frame_it != all_image_frame.end(); frame_it++)
-        {
+        for (frame_it = all_image_frame.begin(), frame_it++; frame_it != all_image_frame.end(); frame_it++){
             double dt = frame_it->second.pre_integration->sum_dt;
             Vec3d tmp_g = frame_it->second.pre_integration->delta_v / dt;
             var += (tmp_g - aver_g).transpose() * (tmp_g - aver_g);
-            //cout << "frame g " << tmp_g.transpose() << endl;
         }
         var = sqrt(var / ((int)all_image_frame.size() - 1));
-        //Warnv("IMU variation %f!", var);
-        if(var < 0.25) Warnv("IMU excitation not enouth!");
+        if(var < 0.25)
+            Warnv("IMU excitation not enouth!");
     }
-    // global sfm
+
+    /// global sfm
     Quaterniond Q[frame + 1];
     Vec3d T[frame + 1];
     map<int, Vec3d> sfm_tracked_points;
     vector<SFMFeature> sfm_f;
-    for (auto &lm : feat_manager.point_landmarks)
-    {
+    for (auto &lm : feat_manager.point_landmarks){
         int imu_j = lm.start_frame - 1;
         SFMFeature tmp_feature;
         tmp_feature.state = false;
@@ -826,6 +848,7 @@ bool Estimator::InitialStructure()
         }
         sfm_f.push_back(tmp_feature);
     }
+
     Mat3d relative_R;
     Vec3d relative_T;
     int l;
@@ -833,6 +856,7 @@ bool Estimator::InitialStructure()
         Warnv("Not enough features or parallax; Move device around");
         return false;
     }
+
     GlobalSFM sfm;
     if(!sfm.construct(frame + 1, Q, T, l,
                       relative_R, relative_T,
@@ -851,7 +875,7 @@ bool Estimator::InitialStructure()
         cv::Mat r, rvec, t, D, tmp_r;
         if((frame_it->first) == body.headers[i]){
             frame_it->second.is_key_frame = true;
-            frame_it->second.R = Q[i].toRotationMatrix() * para::RIC[0].transpose();
+            frame_it->second.R = Q[i].toRotationMatrix() * R_IC[0].transpose();
             frame_it->second.T = T[i];
             i++;
             continue;
@@ -900,9 +924,10 @@ bool Estimator::InitialStructure()
         MatrixXd T_pnp;
         cv::cv2eigen(t, T_pnp);
         T_pnp = R_pnp * (-T_pnp);
-        frame_it->second.R = R_pnp * para::RIC[0].transpose();
+        frame_it->second.R = R_pnp * R_IC[0].transpose();
         frame_it->second.T = T_pnp;
     }
+
     if (VisualInitialAlign()){
         return true;
     }
@@ -926,8 +951,7 @@ bool Estimator::VisualInitialAlign()
     }
 
     // change state
-    for (int i = 0; i <= frame; i++)
-    {
+    for (int i = 0; i <= frame; i++){
         Mat3d Ri = all_image_frame[body.headers[i]].R;
         Vec3d Pi = all_image_frame[body.headers[i]].T;
         body.Ps[i] = Pi;
@@ -936,18 +960,16 @@ bool Estimator::VisualInitialAlign()
     }
 
     double s = (x.tail<1>())(0);
-    for (int i = 0; i <= kWinSize; i++)
-    {
+    for (int i = 0; i <= kWinSize; i++){
         pre_integrations[i]->repropagate(Vec3d::Zero(), body.Bgs[i]);
     }
+
     for (int i = frame; i >= 0; i--)
-        body.Ps[i] = s * body.Ps[i] - body.Rs[i] * para::TIC[0] - (s * body.Ps[0] - body.Rs[0] * para::TIC[0]);
+        body.Ps[i] = s * body.Ps[i] - body.Rs[i] * T_IC[0] - (s * body.Ps[0] - body.Rs[0] * T_IC[0]);
+
     int kv = -1;
-    map<double, ImageFrame>::iterator frame_i;
-    for (frame_i = all_image_frame.begin(); frame_i != all_image_frame.end(); frame_i++)
-    {
-        if(frame_i->second.is_key_frame)
-        {
+    for (auto frame_i = all_image_frame.begin(); frame_i != all_image_frame.end(); frame_i++){
+        if(frame_i->second.is_key_frame){
             kv++;
             body.Vs[kv] = frame_i->second.R * x.segment<3>(kv * 3);
         }
@@ -959,8 +981,7 @@ bool Estimator::VisualInitialAlign()
     body.g = R0 * body.g;
     //Mat3d rot_diff = R0 * body.Rs[0].transpose();
     Mat3d rot_diff = R0;
-    for (int i = 0; i <= frame; i++)
-    {
+    for (int i = 0; i <= frame; i++){
         body.Ps[i] = rot_diff * body.Ps[i];
         body.Rs[i] = rot_diff * body.Rs[i];
         body.Vs[i] = rot_diff * body.Vs[i];
@@ -974,15 +995,14 @@ bool Estimator::VisualInitialAlign()
     return true;
 }
 
+
 bool Estimator::RelativePose(Mat3d &relative_R, Vec3d &relative_T, int &l)
 {
     // find previous frame which contians enough correspondance and parallex with newest frame
-    for (int i = 0; i < kWinSize; i++)
-    {
+    for (int i = 0; i < kWinSize; i++){
         vector<pair<Vec3d, Vec3d>> corres;
         corres = feat_manager.GetCorresponding(i, kWinSize);
-        if (corres.size() > 20)
-        {
+        if (corres.size() > 20){
             double sum_parallax = 0;
             double average_parallax;
             for (auto & corre : corres){
@@ -1018,16 +1038,14 @@ void Estimator::Vector2double()
         body.para_point_features[i][0] = dep(i);
     }
 
-    if(cfg::slam == SLAM::kLine){
-        MatrixXd line_orth = feat_manager.GetLineOrthVector(body.Ps, body.tic, body.ric);
+    if(cfg::use_line){
+        MatrixXd line_orth = feat_manager.GetLineOrthVector();
         int line_size = feat_manager.GetLineFeatureCount();
         for (int i = 0; i < line_size; ++i) {
             body.para_line_features[i][0] = line_orth.row(i)[0];
             body.para_line_features[i][1] = line_orth.row(i)[1];
             body.para_line_features[i][2] = line_orth.row(i)[2];
             body.para_line_features[i][3] = line_orth.row(i)[3];
-            if(i > kNumFeat)
-                std::cerr << " 1000  1000 1000 1000 1000 \n\n";
         }
     }
 }
@@ -1052,7 +1070,7 @@ void Estimator::Double2vector()
         dep(i) = body.para_point_features[i][0];
     feat_manager.SetDepth(dep);
 
-    if(cfg::slam == SLAM::kLine){
+    if(cfg::use_line){
         int line_size = feat_manager.GetLineFeatureCount();
         MatrixXd orth_vec(line_size, 4);
         for (int i = 0; i < line_size; ++i) {
@@ -1061,7 +1079,7 @@ void Estimator::Double2vector()
                                        body.para_line_features[i][2],
                                        body.para_line_features[i][3]);
         }
-        feat_manager.SetLineOrth(orth_vec, body.Ps, body.Rs, body.tic, body.ric);
+        feat_manager.SetLineOrth(orth_vec);
     }
 
 
@@ -1323,7 +1341,7 @@ void Estimator::InitEstimator(double header){
                 Debugv("initial extrinsic rotation calib success");
                 Debugv("initial extrinsic rotation:\n{}", EigenToStr(calib_ric));
                 body.ric[0] = calib_ric;
-                para::RIC[0] = calib_ric;
+                R_IC[0] = calib_ric;
                 cfg::is_estimate_ex = 1;
             }
         }
@@ -1351,12 +1369,11 @@ void Estimator::InitEstimator(double header){
     }
     // stereo + IMU initilization
     else if(cfg::is_stereo && cfg::is_use_imu){
-        feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+        feat_manager.InitFramePoseByPnP(frame);
         feat_manager.TriangulatePoints();
         if (frame == kWinSize){
-            map<double, ImageFrame>::iterator frame_it;
             int i = 0;
-            for (frame_it = all_image_frame.begin(); frame_it != all_image_frame.end(); frame_it++){
+            for (auto frame_it = all_image_frame.begin(); frame_it != all_image_frame.end(); frame_it++){
                 frame_it->second.R = body.Rs[i];
                 frame_it->second.T = body.Ps[i];
                 i++;
@@ -1373,11 +1390,10 @@ void Estimator::InitEstimator(double header){
     }
     // stereo only initilization
     else if(cfg::is_stereo && !cfg::is_use_imu){
-        feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+        feat_manager.InitFramePoseByPnP(frame);
         feat_manager.TriangulatePoints();
         Optimization();
-        if(frame == kWinSize)
-        {
+        if(frame == kWinSize){
             Optimization();
             UpdateLatestStates();
             solver_flag = SolverFlag::kNonLinear;
@@ -1407,11 +1423,12 @@ void Estimator::InitEstimator(double header){
 void Estimator::ProcessImage(FrontendFeature &image, const double header){
     TicToc tt;
 
-    Infov("processImage adding feature: points_size:{},lines_size:{}", image.features.points.size(), image.features.lines.size());
+    Infov("processImage adding feature: points_size:{},lines_size:{}",
+          image.features.points.size(), image.features.lines.size());
 
     ///添加背景特征点到管理器,并判断视差
     bool margin_flag_bool;
-    if(cfg::slam == SLAM::kLine)
+    if(cfg::use_line)
          margin_flag_bool = feat_manager.AddFeatureCheckParallax(frame, image.features, body.td);
     else
          margin_flag_bool = feat_manager.AddFeatureCheckParallax(frame, image.features.points, body.td);
@@ -1446,22 +1463,22 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
 
     ///若没有IMU,则需要根据PnP得到当前帧的位姿
     if(!cfg::is_use_imu)
-        feat_manager.InitFramePoseByPnP(frame, body.Ps, body.Rs, body.tic, body.ric);
+        feat_manager.InitFramePoseByPnP(frame);
 
     ///三角化背景特征点
     feat_manager.TriangulatePoints();
 
     ///三角化线特征
-    if(cfg::slam == SLAM::kLine){
-        //if(cfg::is_stereo){
-        //    feat_manager.TriangulateLineStereo(cam1->baseline);
-        //}
+    if(cfg::use_line){
+        if(cfg::is_stereo){
+            //feat_manager.TriangulateLineStereo(cam_v.baseline);
+        }
         //else{
             feat_manager.TriangulateLineMono();
         //}
     }
 
-    if(para::is_print_detail && cfg::slam == SLAM::kLine){
+    if(para::is_print_detail && cfg::use_line){
         PrintLineInfo(feat_manager);
     }
     Infov("processImage background Triangulate:{} ms",tt.TocThenTic());
@@ -1505,8 +1522,8 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     }
 
     ///优化直线
-    if(cfg::slam == SLAM::kLine){
-        OptimizationWithLine();
+    if(cfg::use_line){
+        OptimizationWithOnlyLine();
     }
 
     ///VIO窗口的非线性优化
@@ -1651,7 +1668,6 @@ void Estimator::ProcessMeasurements(){
 
         ///输出
         SetOutputEgoInfo(body.Rs[kWinSize], body.Ps[kWinSize], body.ric[0], body.tic[0]);
-
         string log_time="headers: ";
         for(int i=0;i<=kWinSize;++i){
             log_time += fmt::format("{}:{} ",i,body.headers[i]);
@@ -1678,7 +1694,7 @@ void Estimator::ProcessMeasurements(){
         Publisher::PubKeyframe();
         Publisher::PubTF(header);
 
-        if(cfg::slam == SLAM::kLine){
+        if(cfg::use_line){
             Publisher::PubLines(header);
         }
 

@@ -56,12 +56,25 @@ namespace dynamic_vins{
         line_matcher = cv::line_descriptor::BinaryDescriptorMatcher::createBinaryDescriptorMatcher();
     }
 
-
-
     FrameLines::Ptr LineDetector::Detect(cv::Mat &img,const cv::Mat &mask) {
         std::vector<cv::line_descriptor::KeyLine> lsd_temp;
+        lsd_detector->detect(img,lsd_temp,2, 1, lsd_opts,cv::Mat());
+        //string log_text;
+        //for(cv::line_descriptor::KeyLine &line:lsd_temp){
+        //    log_text+= fmt::format("start:({},{}) end:({},{}) \n",line.startPointX,line.startPointY,line.endPointX,line.endPointY);
+        //}
+        //Debugt(log_text);
 
-        lsd_detector->detect(img,lsd_temp,2, 1, lsd_opts,mask);
+        ///根据mask剔除线段
+        if(!mask.empty()){
+            std::vector<cv::line_descriptor::KeyLine> background_lines;
+            for(cv::line_descriptor::KeyLine &line:lsd_temp){
+                //if(mask.at<uchar>(line.getStartPoint())>0.5 && mask.at<uchar>(line.getEndPoint())>0.5){
+                    background_lines.push_back(line);
+                //}
+            }
+            lsd_temp = background_lines;
+        }
 
         cv::Mat lsd_descr_temp;
         lbd_descriptor->compute( img, lsd_temp, lsd_descr_temp);
@@ -69,9 +82,17 @@ namespace dynamic_vins{
         FrameLines::Ptr lines = std::make_shared<FrameLines>();
 
         for ( int i = 0; i < (int) lsd_temp.size(); i++ ){
-            if( lsd_temp[i].octave == 0 && lsd_temp[i].lineLength >= 60){
-                lines->keylsd.push_back( lsd_temp[i]);
-                lines->lbd_descr.push_back( lsd_descr_temp.row(i) );
+            if( lsd_temp[i].octave == 0 && lsd_temp[i].lineLength >= 60 ){
+                if(!mask.empty()){
+                    if(mask.at<uchar>(lsd_temp[i].getStartPoint())>0.5 && mask.at<uchar>(lsd_temp[i].getEndPoint())>0.5){ ///根据mask剔除
+                        lines->keylsd.push_back( lsd_temp[i]);
+                        lines->lbd_descr.push_back( lsd_descr_temp.row(i) );
+                    }
+                }
+                else{
+                    lines->keylsd.push_back( lsd_temp[i]);
+                    lines->lbd_descr.push_back( lsd_descr_temp.row(i) );
+                }
             }
         }
 
@@ -484,9 +505,8 @@ namespace dynamic_vins{
 
     }
 
-    void LineDetector::VisualizeLineStereoMatch(cv::Mat &img, const FrameLines::Ptr &left_lines, const FrameLines::Ptr &right_lines){
+    void LineDetector::VisualizeLineStereoMatch(cv::Mat &img, const FrameLines::Ptr &left_lines, const FrameLines::Ptr &right_lines,bool vertical){
         std::map<unsigned int,vector<KeyLine>> map_keylsd;
-        int offset_y = img.rows / 2;
 
         int right_size = right_lines->keylsd.size();
         for(int i=0;i<right_size;++i){
@@ -503,14 +523,29 @@ namespace dynamic_vins{
 
         Debugt("LineDetector::VisualizeLineMatch map_keylsd size:{}",map_keylsd.size());
 
-        for(auto &[line_id,vec_line]:map_keylsd){
-            cv::Point left_start = cv::Point(int(vec_line[1].startPointX), int(vec_line[1].startPointY));
-            cv::Point right_start = cv::Point(int(vec_line[0].startPointX), int(vec_line[0].startPointY) + offset_y);
-            cv::line(img, left_start, right_start,cv::Scalar(0,128,0),1 ,8);
+        if(vertical){
+            int offset_y = img.rows / 2;
+            for(auto &[line_id,vec_line]:map_keylsd){
+                cv::Point left_start = cv::Point(int(vec_line[1].startPointX), int(vec_line[1].startPointY));
+                cv::Point right_start = cv::Point(int(vec_line[0].startPointX), int(vec_line[0].startPointY) + offset_y);
+                cv::line(img, left_start, right_start,cv::Scalar(0,128,0),1 ,8);
 
-            cv::Point left_end = cv::Point(int(vec_line[1].endPointX), int(vec_line[1].endPointY));
-            cv::Point right_end = cv::Point(int(vec_line[0].endPointX), int(vec_line[0].endPointY) + offset_y);
-            cv::line(img, left_end, right_end,cv::Scalar(0,128,0),1 ,8);
+                cv::Point left_end = cv::Point(int(vec_line[1].endPointX), int(vec_line[1].endPointY));
+                cv::Point right_end = cv::Point(int(vec_line[0].endPointX), int(vec_line[0].endPointY) + offset_y);
+                cv::line(img, left_end, right_end,cv::Scalar(0,128,0),1 ,8);
+            }
+        }
+        else{
+            int offset_x = img.cols / 2;
+            for(auto &[line_id,vec_line]:map_keylsd){
+                cv::Point left_start = cv::Point(int(vec_line[1].startPointX), int(vec_line[1].startPointY));
+                cv::Point right_start = cv::Point(int(vec_line[0].startPointX)+ offset_x, int(vec_line[0].startPointY) );
+                cv::line(img, left_start, right_start,cv::Scalar(0,128,0),1 ,8);
+
+                cv::Point left_end = cv::Point(int(vec_line[1].endPointX), int(vec_line[1].endPointY));
+                cv::Point right_end = cv::Point(int(vec_line[0].endPointX)+ offset_x, int(vec_line[0].endPointY) );
+                cv::line(img, left_end, right_end,cv::Scalar(0,128,0),1 ,8);
+            }
         }
 
     }
@@ -544,11 +579,13 @@ namespace dynamic_vins{
             }
             cv::Point left_start = cv::Point(int(vec_line[1].startPointX), int(vec_line[1].startPointY));
             cv::Point right_start = cv::Point(int(vec_line[0].startPointX), int(vec_line[0].startPointY));
-            cv::line(img, left_start, right_start,cv::Scalar(0,128,0),1 ,8);
+            cv::line(img, left_start, right_start,cv::Scalar(0,255,0),1 ,8);
 
             cv::Point left_end = cv::Point(int(vec_line[1].endPointX), int(vec_line[1].endPointY));
             cv::Point right_end = cv::Point(int(vec_line[0].endPointX), int(vec_line[0].endPointY));
-            cv::line(img, left_end, right_end,cv::Scalar(0,128,0),1 ,8);
+            cv::line(img, left_end, right_end,cv::Scalar(0,200,0),1 ,8);
+
+            cv::line(img, left_start, left_end,cv::Scalar(0,200,0),2 ,8);
         }
 
     }

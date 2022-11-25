@@ -5,10 +5,12 @@ imu: 1 #enable imu or not
 num_of_cam: 2
 
 only_imgprocess: 0  #for debug
-only_frontend: 0  #for debug
+only_frontend: 1  #for debug
 
 dataset_type: "euroc" #support:kitti,viode
-slam_type: "raw" #SLAM mode,optional:raw,line
+slam_type: "raw" #SLAM mode,optional:raw
+
+use_line: 1 #line feature
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
@@ -17,6 +19,7 @@ dataset_sequence: "MH_01_easy"
 
 plane_constraint: 0 #是否使用平面约束
 
+undistort_input: 1 #是否对输入进行矫正
 
 ####################### Camera Parameters ########################
 
@@ -82,6 +85,8 @@ flow_back: 1            # perform forward and backward optical flow to improve f
 
 min_dynamic_dist: 5 #检测动态特征点时每个点之间的最小距离
 max_dynamic_cnt: 50 #前端中每个动态物体上最多同时跟踪的特征数量
+
+line_min_obs: 3 #直线进行三角化的最少观测次数
 
 ####################### VIO Parameters ########################
 

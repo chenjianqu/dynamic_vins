@@ -19,29 +19,22 @@ using namespace std;
 namespace fs=std::filesystem;
 
 
-
-/**
- * 从PGD的预测结果中构建3D框
- * @param tokens 预测结果的每一行
- * @param cam 相机
- * @return
- */
 Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens,camodocal::CameraPtr &cam)
 {
-    ///每行的前3个数字是类别,分数
+    ///每行的前3个数字是类别,属性,分数
     int class_id = NuScenes::ConvertNuScenesToKitti(std::stoi(tokens[0]));
     string class_name = kitti::GetKittiName(class_id) ;
-    //int attribution_id = std::stoi(tokens[1]);
-    double score = std::stod(tokens[1]);
+    int attribution_id = std::stoi(tokens[1]);
+    double score = std::stod(tokens[2]);
     //score=1.;
 
-    Box3D::Ptr box3d = std::make_shared<Box3D>(class_id,class_name,0,score);
+    Box3D::Ptr box3d = std::make_shared<Box3D>(class_id,class_name,attribution_id,score);
 
 
-    ///2-4个数字是物体包围框底部的中心
-    box3d->bottom_center<<std::stod(tokens[2]),std::stod(tokens[3]),std::stod(tokens[4]);
-    ///5-7数字是物体在x,y,z轴上的大小. 表示将物体旋转到yaw=0时(包围框的坐标系与相机坐标系对齐),物体在各轴上的大小
-    box3d->dims<<std::stod(tokens[5]),std::stod(tokens[6]),std::stod(tokens[7]);
+    ///3-5个数字是物体包围框底部的中心
+    box3d->bottom_center<<std::stod(tokens[3]),std::stod(tokens[4]),std::stod(tokens[5]);
+    ///6-8数字是物体在x,y,z轴上的大小. 表示将物体旋转到yaw=0时(包围框的坐标系与相机坐标系对齐),物体在各轴上的大小
+    box3d->dims<<std::stod(tokens[6]),std::stod(tokens[7]),std::stod(tokens[8]);
 
     //cout<<fmt::format("class_id:{} type:{} \n{}",class_id,class_name,EigenToStr(box3d->corners))<<endl;
 
@@ -60,8 +53,8 @@ Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens,camodocal::CameraPtr &c
     The yaw is 0 at the positive direction of x axis, and decreases from
     the positive direction of x to the positive direction of z.
      */
-    ///8是,yaw角(绕着y轴,因为y轴是垂直向下的)
-    double yaw=std::stod(tokens[8]);
+    ///9个yaw角(绕着y轴,因为y轴是垂直向下的)
+    double yaw=std::stod(tokens[9]);
     //将yaw角限制到[-2pi,0]范围
     while(yaw>0){
         yaw -= (2*M_PI);

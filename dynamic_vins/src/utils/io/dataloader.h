@@ -114,10 +114,11 @@ public:
         tt.Tic();
     }
 
-    void ImageShow(cv::Mat &img,int period);
+    void ImageShow(cv::Mat &img,int period, int delay_frames=0);
 
     void Delay(int period);
 
+    std::queue<cv::Mat> img_queue;
 
     TicToc tt;
 };

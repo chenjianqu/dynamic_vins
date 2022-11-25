@@ -62,12 +62,12 @@ class FeatureManager
 
     int GetLineFeatureCount();
 
-    Eigen::MatrixXd GetLineOrthVector(Vec3d Ps[], Vec3d tic[], Mat3d ric[]);
+    Eigen::MatrixXd GetLineOrthVector();
 
     Eigen::MatrixXd GetLineOrthVectorInCamera();
 
 
-    void SetLineOrth(Eigen::MatrixXd x,Vec3d P[], Mat3d R[], Vec3d tic[], Mat3d ric[]);
+    void SetLineOrth(Eigen::MatrixXd &x);
 
     void TriangulatePoints();
 
@@ -75,7 +75,7 @@ class FeatureManager
 
     void TriangulateLineStereo(double baseline);  // stereo line
 
-    void InitFramePoseByPnP(int frameCnt, Vec3d Ps[], Mat3d Rs[], Vec3d tic[], Mat3d ric[]);
+    void InitFramePoseByPnP(int frameCnt);
 
     void RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg_P, Mat3d new_R, Vec3d new_P);
     void RemoveBack();
@@ -87,15 +87,12 @@ class FeatureManager
 
     void RemoveLineOutlier();
 
-    static bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
-                               vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
 
     std::list<StaticLandmark> point_landmarks;
     std::list<LineLandmark> line_landmarks;
     int last_track_num;
 
 private:
-    static double CompensatedParallax2(const StaticLandmark &landmark, int frame_count);
     const Mat3d *Rs;
     Mat3d ric[2];
 

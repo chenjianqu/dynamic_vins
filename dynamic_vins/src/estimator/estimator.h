@@ -117,7 +117,7 @@ private:
     void SlideWindowOld();
 
     void Optimization();
-    void OptimizationWithLine();
+    void OptimizationWithOnlyLine();
 
     void Vector2double();
     void Double2vector();
@@ -136,7 +136,10 @@ private:
     void InitFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
 
     void AddInstanceParameterBlock(ceres::Problem &problem);
+
     int AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
+
+    int AddLineResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
 
     bool IMUAvailable(double t){

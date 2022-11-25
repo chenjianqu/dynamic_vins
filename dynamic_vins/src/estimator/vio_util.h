@@ -72,6 +72,11 @@ void TriangulateOneLine(LineLandmark &line);
 void TriangulateOneLineStereo(LineLandmark &line);
 
 
+bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
+                           vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
+
+double CompensatedParallax2(const StaticLandmark &landmark, int frame_count);
+
 
 }
 

@@ -25,6 +25,10 @@ public:
     inline static int is_show_track;//是否显示光流跟踪的结果
     inline static int is_flow_back; //是否反向计算光流，判断之前光流跟踪的特征点的质量
 
+    inline static bool use_mask_morphology = true; //是否对mask进行形态学运算
+
+    inline static int kMaskMorphologySize = 10; //形态学核大小
+
     inline static int kInputHeight,kInputWidth,kInputChannel=3;
 
 

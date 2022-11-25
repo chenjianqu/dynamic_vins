@@ -52,7 +52,6 @@ enum class SLAM{
     kRaw,
     kNaive,
     kDynamic,
-    kLine
 };
 
 enum class DatasetType{
@@ -84,6 +83,8 @@ public:
     inline static bool is_input_seg; //输入是否有语义分割结果
     inline static bool is_only_frontend;
     inline static bool is_only_imgprocess;
+
+    inline static bool use_line;
 
     inline static bool is_undistort_input{false};//是否对整个图像进行去畸变
 
