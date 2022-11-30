@@ -18,7 +18,7 @@ namespace dynamic_vins{\
 /**
  * 根据实例分割结果,设置每个实例的mask和背景mask
  */
-void SemanticImage::SetMask(){
+void SemanticImage::SetMaskAndRoi(){
     exist_inst = !boxes2d.empty();
     if(!exist_inst){
         Warns("Can not detect any object in picture");
@@ -45,17 +45,19 @@ void SemanticImage::SetMask(){
     Debugs("SetMaskGpu merge_mask_gpu:({},{}) type:{}", merge_mask_gpu.rows, merge_mask_gpu.cols, merge_mask_gpu.type());
     Debugs("SetMaskGpu inv_merge_mask_gpu:({},{}) type:{}", inv_merge_mask_gpu.rows, inv_merge_mask_gpu.cols,inv_merge_mask_gpu.type());*/
 
+    ///计算每个物体单独的mask
     for(int i=0; i < (int)boxes2d.size(); ++i){
         auto inst_mask_tensor = mask_tensor[i];
         //boxes2d[i]->mask_tensor = inst_mask_tensor;
-        boxes2d[i]->mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1,
-                                               (inst_mask_tensor * 255).to(torch::kUInt8).data_ptr()).clone();
-        boxes2d[i]->mask_gpu.download(boxes2d[i]->mask_cv);
-        ///cal center
-        /*auto inds=inst_mask_tensor.nonzero();
-        auto center_inds = inds.sum(0) / inds.sizes()[0];
-        boxes2d[i]->mask_center=cv::Point2f(center_inds.index({1}).item().toFloat(),
-                                           center_inds.index({0}).item().toFloat());*/
+        auto full_mask = cv::cuda::GpuMat(mask_size, CV_8UC1,
+                                     (inst_mask_tensor * 255).to(torch::kUInt8).data_ptr()).clone();
+
+        boxes2d[i]->roi = std::make_shared<InstRoi>();
+        boxes2d[i]->roi->mask_gpu = full_mask(boxes2d[i]->rect);//裁切
+        boxes2d[i]->roi->mask_gpu.download(boxes2d[i]->roi->mask_cv);
+
+        boxes2d[i]->roi->roi_gpu = gray0_gpu(boxes2d[i]->rect);//裁切
+        boxes2d[i]->roi->roi_gpu.download(boxes2d[i]->roi->roi_gray);
     }
     Debugs("SemanticImage::SetMask() finished");
 
@@ -129,9 +131,6 @@ void SemanticImage::SetColorImageGpu(){
         cv::cuda::cvtColor(gray1_gpu, color1_gpu, CV_GRAY2BGR);
     }
 }
-
-
-
 
 
 

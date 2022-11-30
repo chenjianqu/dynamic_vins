@@ -76,6 +76,7 @@ void MyLogger::InitLogger(const std::string &config_path){
     MyLogger::vio_logger = spdlog::basic_logger_mt("estimator", path);
     MyLogger::vio_logger->set_level(MyLogger::GetLogLevel(log_level));
     MyLogger::vio_logger->flush_on(MyLogger::GetLogLevel(flush_level));
+    MyLogger::vio_logger->set_pattern("[%H:%M:%S.%e][%t,%L] %v");//打印格式，[时间][线程ID,日志级别] 日志内容
     std::cout<<"estimator_log path:"<<path<<std::endl;
 
     path = kLogOutputDir+"log_t.txt";
@@ -85,6 +86,7 @@ void MyLogger::InitLogger(const std::string &config_path){
     MyLogger::tk_logger = spdlog::basic_logger_mt("tracker", path);
     MyLogger::tk_logger->set_level(MyLogger::GetLogLevel(log_level));
     MyLogger::tk_logger->flush_on(MyLogger::GetLogLevel(flush_level));
+    MyLogger::tk_logger->set_pattern("[%H:%M:%S.%e][%t,%L] %v");
     std::cout<<"tracker_log path:"<<path<<std::endl;
 
     path = kLogOutputDir+"log_s.txt";
@@ -94,6 +96,7 @@ void MyLogger::InitLogger(const std::string &config_path){
     MyLogger::sg_logger = spdlog::basic_logger_mt("segmentor", path);
     MyLogger::sg_logger->set_level(MyLogger::GetLogLevel(log_level));
     MyLogger::sg_logger->flush_on(MyLogger::GetLogLevel(flush_level));
+    MyLogger::sg_logger->set_pattern("[%H:%M:%S.%e][%t,%L] %v");
     std::cout<<"segmentor_log path:"<<path<<std::endl;
 
     fs.release();

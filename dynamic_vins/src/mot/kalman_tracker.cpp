@@ -74,7 +74,8 @@ void KalmanTracker::update(cv::Rect2f stateMat) {
 
     if (_state == TrackState::Tentative && hits > mot_para::kTrackingNInit ) {
         _state = TrackState::Confirmed;
-        _id = count++;
+        _id = global_instances_id;
+        global_instances_id++;
     }
 
     // measurement

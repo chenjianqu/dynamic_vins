@@ -137,7 +137,7 @@ void ImageProcess()
             else{
                 img_show = cv::Mat(cv::Size(img.color0.cols,img.color0.rows),CV_8UC3,cv::Scalar(255,255,255));
             }
-            //cv::resize(img_show,img_show,cv::Size(),0.5,0.5);
+            cv::resize(img_show,img_show,cv::Size(),0.4,0.4);
 
             /*if(flow_tensor.defined()){
                cv::Mat show = VisualFlow(flow_tensor);
@@ -196,9 +196,12 @@ void FeatureTrack()
                 TicToc t_i;
                 ///开启另一个线程检测动态特征点
                 std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
+
                 ///执行背景区域跟踪
                 frame.features  = feature_tracker->TrackSemanticImage(*img);
+
                 t_inst_track.join();
+
                 frame.instances = insts_tracker->Output();
                 Infot("TrackSemanticImage 动态检测线程总时间:{} ms", t_i.TocThenTic());
 

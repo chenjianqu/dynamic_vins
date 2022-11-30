@@ -42,16 +42,18 @@ namespace dynamic_vins{\
 
 struct InstFeat{
     using Ptr=std::shared_ptr<InstFeat>;
-    InstFeat():color(color_rd(random_engine), color_rd(random_engine), color_rd(random_engine))
+    InstFeat():color(color_rd(random_engine), color_rd(random_engine), color_rd(random_engine)),
+    roi(std::make_shared<InstRoi>())
     {}
 
-    InstFeat(unsigned int id_): id(id_),color(color_rd(random_engine), color_rd(random_engine), color_rd(random_engine))
+    InstFeat(unsigned int id_): id(id_),color(color_rd(random_engine), color_rd(random_engine), color_rd(random_engine)),
+    roi(std::make_shared<InstRoi>())
     {}
 
     void SortPoints();
 
     ///检测特征点
-    void DetectNewFeature(SemanticImage &img,bool use_gpu,const cv::Mat &mask = cv::Mat());
+    void DetectNewFeature(SemanticImage &img,bool use_gpu,int min_dist = 20,const cv::Mat &mask = cv::Mat());
 
     void RemoveOutliers(std::set<unsigned int> &removePtsIds);
 
@@ -62,13 +64,15 @@ struct InstFeat{
     void RightUndistortedPts(camodocal::CameraPtr &cam);
 
     void UndistortedPoints(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un);
+    void UndistortedPointsWithAddOffset(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un);
 
 
     ///跟踪图像
-    void TrackLeft(SemanticImage &img,SemanticImage &prev_img,bool dense_flow=cfg::use_dense_flow);
+    void TrackLeft(cv::Mat &curr_img,cv::Mat &last_img,const cv::Mat &mask=cv::Mat());
     void TrackLeftGPU(SemanticImage &img,SemanticImage &prev_img,
                       cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
-                      cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward);
+                      cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward,
+                      const cv::Mat &mask=cv::Mat());
 
     void TrackRight(SemanticImage &img);
     void TrackRightGPU(SemanticImage &img,
@@ -87,9 +91,12 @@ struct InstFeat{
         visual_new_points.clear();
 
         prev_lines = curr_lines;
+
+        roi->prev_roi_gpu = roi->roi_gpu;
+        roi->prev_roi_gray = roi->roi_gray;
     }
 
-    unsigned int id{0};
+    unsigned int id{1};
     cv::Scalar color;
 
     vector<unsigned int> ids, right_ids;
@@ -118,10 +125,12 @@ struct InstFeat{
     Box2D::Ptr box2d;
     Box3D::Ptr box3d;
 
+    InstRoi::Ptr roi;//动态物体的ROI
+
     inline static std::default_random_engine random_engine;
     inline static std::uniform_int_distribution<unsigned int> color_rd{0,255};
 
-    inline static unsigned long global_id_count{0};//全局特征序号
+    inline static unsigned long global_id_count{1};//全局特征序号
 
     vector<cv::Point2f> extra_points;
     vector<cv::Point2f> extra_un_points;

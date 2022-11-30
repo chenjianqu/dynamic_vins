@@ -44,13 +44,14 @@ public:
 
     [[nodiscard]] int id() const { return _id; }
 
+    [[nodiscard]] int get_time_since_update(){ return time_since_update;}
 
     static constexpr int STATE_DIM = 7;
     static constexpr int MEASURE_DIM = 4;
 
 private:
 
-    inline static int count=0;
+    inline static int global_instances_id=1;
 
     TrackState _state = TrackState::Tentative;
 

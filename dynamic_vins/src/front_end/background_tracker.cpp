@@ -41,9 +41,8 @@ FeatureTracker::FeatureTracker(const string& config_path)
     lk_optical_flow_back = cv::cuda::SparsePyrLKOpticalFlow::create(
             cv::Size(21, 21), 3, 30, true);
 
-    bg.id = -1;//表示相机
+    bg.id = 0;//表示相机
     bg.box2d = std::make_shared<Box2D>();
-
     line_detector = std::make_shared<LineDetector>(config_path);
 }
 
@@ -60,11 +59,11 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
     cur_time = img.time0;
     cur_img = img;
 
-    bg.box2d->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
+    bg.roi->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
 
     bg.curr_points.clear();
     if (!bg.last_points.empty()){
-        vector<uchar> status = FeatureTrackByLK(prev_img.gray0, img.gray0, bg.last_points, bg.curr_points);
+        vector<uchar> status = FeatureTrackByLK(prev_img.gray0, img.gray0, bg.last_points, bg.curr_points,fe_para::is_flow_back);
         ReduceVector(bg.last_points, status);
         ReduceVector(bg.curr_points, status);
         ReduceVector(bg.ids, status);
@@ -81,13 +80,13 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
     SortPoints(bg.curr_points, bg.track_cnt, bg.ids);
     //设置mask，防止点聚集
     for(const auto& pt : bg.curr_points)
-        cv::circle(bg.box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
+        cv::circle(bg.roi->mask_cv, pt, fe_para::kMinDist, 0, -1);
 
     int n_max_cnt = fe_para::kMaxCnt - static_cast<int>(bg.curr_points.size());
     vector<cv::Point2f> n_pts;
     if (n_max_cnt > 0){
         cv::goodFeaturesToTrack(cur_img.gray0, n_pts, fe_para::kMaxCnt - bg.curr_points.size(),
-                                0.01, fe_para::kMinDist, bg.box2d->mask_cv);
+                                0.01, fe_para::kMinDist, bg.roi->mask_cv);
     }
     else{
         n_pts.clear();
@@ -117,7 +116,7 @@ FeatureBackground FeatureTracker::TrackImage(SemanticImage &img)
         bg.right_curr_id_pts.clear();
 
         if(!bg.curr_points.empty()){
-            vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, bg.curr_points, bg.right_points);
+            vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, bg.curr_points, bg.right_points,fe_para::is_flow_back);
 
             bg.right_ids = bg.ids;
             ReduceVector(bg.right_points, status);
@@ -203,7 +202,7 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
     cur_time = img.time0;
     cur_img = img;
 
-    bg.box2d->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
+    bg.roi->mask_cv = cv::Mat(cur_img.gray0.rows,cur_img.gray0.cols,CV_8UC1,cv::Scalar(255));
 
     std::thread line_thread;
     if(cfg::use_line){
@@ -215,7 +214,7 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
     ///跟踪左图像的点特征
     bg.curr_points.clear();
     if (!bg.last_points.empty()){
-        vector<uchar> status = FeatureTrackByLK(prev_img.gray0, img.gray0, bg.last_points, bg.curr_points);
+        vector<uchar> status = FeatureTrackByLK(prev_img.gray0, img.gray0, bg.last_points, bg.curr_points,fe_para::is_flow_back);
         ReduceVector(bg.last_points, status);
         ReduceVector(bg.curr_points, status);
         ReduceVector(bg.ids, status);
@@ -232,13 +231,13 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
     TicToc t_m;
     SortPoints(bg.curr_points, bg.track_cnt, bg.ids);
     for(const auto& pt : bg.curr_points)
-        cv::circle(bg.box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
+        cv::circle(bg.roi->mask_cv, pt, fe_para::kMinDist, 0, -1);
     TicToc t_t;
     int n_max_cnt = fe_para::kMaxCnt - static_cast<int>(bg.curr_points.size());
     vector<cv::Point2f> n_pts;
     if (n_max_cnt > 0)
         cv::goodFeaturesToTrack(cur_img.gray0, n_pts, fe_para::kMaxCnt - bg.curr_points.size(),
-                                0.01, fe_para::kMinDist, bg.box2d->mask_cv);
+                                0.01, fe_para::kMinDist, bg.roi->mask_cv);
     else
         n_pts.clear();
 
@@ -266,7 +265,7 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
         bg.right_curr_id_pts.clear();
         if(!bg.curr_points.empty())
         {
-            vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, bg.curr_points, bg.right_points);
+            vector<uchar> status= FeatureTrackByLK(cur_img.gray0, cur_img.gray1, bg.curr_points, bg.right_points,fe_para::is_flow_back);
 
             bg.right_ids = bg.ids;
             ReduceVector(bg.right_points, status);
@@ -376,7 +375,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
 
     fm.points = points;
 
-    if(cfg::use_line){
+    if(cfg::use_line && bg.curr_lines){
         std::map<unsigned int, std::vector<std::pair<int,Line>>> lines;
         ///左图像的先特征
         for(Line& l:bg.curr_lines->un_lines){
@@ -384,7 +383,7 @@ FeatureBackground FeatureTracker::SetOutputFeats()
             lv.emplace_back(0,l);
             lines.insert({l.id,lv});
         }
-        if(cfg::is_stereo ){
+        if(cfg::is_stereo && bg.curr_lines_right){
             ///右图像的线特征
             for(Line& l:bg.curr_lines_right->un_lines){
                 lines[l.id].push_back({1,l});
@@ -424,14 +423,13 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     }
 
     if(cur_img.exist_inst)
-        bg.box2d->mask_cv = cur_img.inv_merge_mask.clone();
+        bg.roi->mask_cv = cur_img.inv_merge_mask.clone();
     else
-        bg.box2d->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
-
+        bg.roi->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
 
     std::thread line_thread;
     if(cfg::use_line){
-        cv::Mat line_mask = bg.box2d->mask_cv.clone();
+        cv::Mat line_mask = bg.roi->mask_cv.clone();
         cv::Mat line_gray0 = img.gray0.clone();
         cv::Mat line_gray1 = img.gray1.clone();
         line_thread = std::thread(&FeatureTracker::TrackLine, this, line_gray0, line_gray1,line_mask);
@@ -448,7 +446,7 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     ///特征点检测
     //bg.SortPoints();
 
-    bg.DetectNewFeature(img,true);
+    bg.DetectNewFeature(img,true,fe_para::kMinDist,bg.roi->mask_cv);
     Infot("trackImageNaive | detect feature:{} ms", tt.TocThenTic());
 
     ///特征点矫正和计算速度
@@ -473,8 +471,10 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     if(cfg::use_line){
         line_thread.join();
 
-        //if(bg.prev_lines)
-        //    line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);
+        /*
+         //可视化线匹配
+         if(bg.prev_lines)
+            line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);*/
 
         if(fe_para::is_show_track){
             ///可视化线
@@ -488,12 +488,14 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
                 }
             }
 
+            /*
+            //可视化双目线匹配
             if(cfg::dataset==DatasetType::kKitti){
                 line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,true);
             }
             else{
                 line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,false);
-            }
+            }*/
 
         }
     }
@@ -586,10 +588,17 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
                                vector<cv::Point2f> &curRightPts,
                                std::map<unsigned int, cv::Point2f> &prevLeftPts){
 
-    if(!img.inv_merge_mask_gpu.empty()){
+    if(cfg::slam==SLAM::kNaive && !img.inv_merge_mask_gpu.empty()){
         cv::cuda::GpuMat img_show_gpu;
         cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
         //cv::cuda::cvtColor(mask_gpu,img_show_gpu,CV_GRAY2BGR);
+        cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
+        img_show_gpu.download(img_vis);
+    }
+    else if(cfg::slam==SLAM::kDynamic && !img.inv_merge_mask_gpu.empty()){
+        cv::cuda::GpuMat img_show_gpu;
+        cv::cuda::bitwise_not(img.inv_merge_mask_gpu,img_show_gpu);//二值化反转
+        cv::cuda::cvtColor(img_show_gpu,img_show_gpu,CV_GRAY2BGR);
         cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
         img_show_gpu.download(img_vis);
     }
@@ -605,8 +614,8 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
         }
     }
 
-    ///DEBUG
-    return;
+    //DEBUG
+    //return;
 
     //cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
     for (size_t j = 0; j < curLeftPts.size(); j++){
@@ -683,14 +692,11 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
         }
     }
 
-
     map<unsigned int, cv::Point2f>::iterator mapIt;
-    for (size_t i = 0; i < curLeftIds.size(); i++)
-    {
+    for (size_t i = 0; i < curLeftIds.size(); i++){
         unsigned int id = curLeftIds[i];
         mapIt = prevLeftPtsMap.find(id);
-        if(mapIt != prevLeftPtsMap.end())
-        {
+        if(mapIt != prevLeftPtsMap.end()){
             cv::arrowedLine(img_vis, curLeftPts[i], mapIt->second, cv::Scalar(0, 255, 0), 1, 8, 0, 0.2);
         }
     }
@@ -749,18 +755,18 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
     }
 
     if(cur_img.exist_inst)
-        bg.box2d->mask_cv = cur_img.inv_merge_mask.clone();
+        bg.roi->mask_cv = cur_img.inv_merge_mask.clone();
     else
-        bg.box2d->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
+        bg.roi->mask_cv = cv::Mat(cur_img.color0.rows,cur_img.color0.cols,CV_8UC1,cv::Scalar(255));
 
     ///特征点跟踪
-    bg.TrackLeft(img,prev_img,cfg::use_background_flow);
+    bg.TrackLeft(img.gray0,prev_img.gray0,bg.roi->mask_cv);
 
     //RejectWithF();
 
     ///检测新的特征点
     //bg.SortPoints();
-    bg.DetectNewFeature(img,false);
+    bg.DetectNewFeature(img,false,fe_para::kMinDist,bg.roi->mask_cv);
     Infot("TrackSemanticImage | detect feature:{} ms", tt.TocThenTic());
 
     ///矫正特征点,并计算特征点的速度
@@ -773,9 +779,12 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
 
         bg.RightUndistortedPts(cam_t.cam1);
         bg.RightPtsVelocity(cur_time-prev_time);
+        Debugt("TrackSemanticImage | track right finished");
     }
-    if(fe_para::is_show_track)
+
+    if(fe_para::is_show_track){
         DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
+    }
 
     /*if(img.seq%10==0){
         string save_name = cfg::kDatasetSequence+"_"+std::to_string(img.seq)+"_bg.png";

@@ -133,10 +133,10 @@ void ImageProcessor::Run(SemanticImage &img) {
     //torch::Tensor img_clone = img_tensor.clone();
     //torch::Tensor img_tensor = Pipeline::ImageToTensor(img.color0_gpu);
 
-    ///启动光流估计线程
-    if(cfg::use_dense_flow){
+    //启动光流估计线程
+    //if(cfg::use_dense_flow){
         //flow_estimator->Launch(img);
-    }
+    //}
 
     ///启动3D目标检测线程
     if(cfg::slam == SLAM::kDynamic && cfg::use_det3d){
@@ -156,15 +156,16 @@ void ImageProcessor::Run(SemanticImage &img) {
 
             if(cfg::slam == SLAM::kNaive)
                 img.SetBackgroundMask();
-            else if(cfg::slam == SLAM::kDynamic)
-                img.SetMask();
+            else if(cfg::slam == SLAM::kDynamic){
+                img.SetMaskAndRoi();
+            }
         }
         else{
             if(cfg::dataset == DatasetType::kViode){
                 if(cfg::slam == SLAM::kNaive)
                     VIODE::SetViodeMaskSimple(img);
                 else if(cfg::slam == SLAM::kDynamic)
-                    VIODE::SetViodeMask(img);
+                    VIODE::SetViodeMaskAndRoi(img);
             }
             else{
                 std::cerr<<"ImageProcessor::Run()::set_mask not is implemented, as dataset is "<<cfg::dataset_name<<endl;
@@ -181,18 +182,19 @@ void ImageProcessor::Run(SemanticImage &img) {
 
     }
 
+
     //log
     //for(auto &inst : img.insts_info)
     //    Debugs("img.insts_info id:{} min_pt:({},{}),max_pt:({},{})",
     //    inst.id,inst.min_pt.x,inst.min_pt.y,inst.max_pt.x,inst.max_pt.y);
 
-    ///获得光流估计
-    if(cfg::use_dense_flow){
+     //获得光流估计
+     //if(cfg::use_dense_flow){
         //img.flow= flow_estimator->WaitResult();
         //if(!img.flow.data){
-        img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
+        //img.flow = cv::Mat(img.color0.size(),CV_32FC2,cv::Scalar_<float>(0,0));
         //}
-    }
+    //}
 
     ///双目立体匹配得到深度
     img.disp = stereo_matcher->WaitResult();

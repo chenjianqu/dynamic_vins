@@ -68,12 +68,6 @@ vector<Box2D::Ptr> BuildBoxes2D(torch::Tensor &seg_label,torch::Tensor &cate_lab
         cv::Point2f max_pt(max_xy[1].item().toInt(),max_xy[0].item().toInt());
         cv::Point2f min_pt(min_xy[1].item().toInt(),min_xy[0].item().toInt());
 
-        if(max_pt.y - min_pt.y < height_threshold){
-            //删除对应的mask
-            ///TODO
-            continue;
-        }
-
         Box2D::Ptr inst = std::make_shared<Box2D>();
         inst->id = i;
 

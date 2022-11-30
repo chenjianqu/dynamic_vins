@@ -47,6 +47,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
         inst_pair.second.is_curr_visible=false;
     }
 
+    //如果没有输入动态输入，则返回
     if( input_insts.empty()){
         return;
     }
@@ -63,9 +64,9 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                                     VecToStr(inst_feat.box3d->center_pt), inst_feat.box3d->yaw, inst_feat.box3d->score);
         }
 
-        ///创建物体
+
         auto inst_iter = instances.find(instance_id);
-        if(inst_iter == instances.end()){
+        if(inst_iter == instances.end()){///创建物体
             Instance new_inst(frame, instance_id);
             auto [it,is_insert] = instances.insert({instance_id, new_inst});
             it->second.color = inst_feat.color;
@@ -111,9 +112,9 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                 feat_ptr->td = body.td;
                 auto it = std::find_if(landmarks.begin(),landmarks.end(),
                                        [id=feat_id](const LandmarkPoint &it){ return it.id == id;});
-                //若路标不存在，则创建路标
-                if (it ==landmarks.end()){
-                    landmarks.emplace_back(feat_id);//创建Landmarks
+
+                if (it ==landmarks.end()){//若路标不存在，则创建路标
+                    landmarks.emplace_back(feat_id);
                     it = std::prev(landmarks.end());
                 }
                 it->feats.push_back(feat_ptr);//添加第一个观测
@@ -246,24 +247,25 @@ void InstanceManager::Triangulate()
         int stereo_triangle_succeed=0,stereo_triangle_failed=0;
         int mono_triangle_succeed=0,mono_triangle_failed=0;
 
-
         for(auto &lm : inst.landmarks){
             if(lm.bad)
                 continue;
+
             ///根据视差计算额外点的三角化和深度
             if(lm.front()->is_extra && lm.depth<=0){
                 if(lm.front()->disp > 0){
-                    float depth =cam_v.fx0 * cam_v.baseline / lm.front()->disp;
+                    float depth =cam_v.fx0 * cam_v.baseline / lm.front()->disp;//根据视差计算深度
                     if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
-                        lm.front()->is_triangulated = true;
-                        lm.depth = depth;
                         lm.front()->p_w = body.CamToWorld(lm.front()->point*depth,frame);
+                        lm.depth = depth;
+                        lm.front()->is_triangulated = true;
+
                         //log_inst_text += fmt::format("un:{} d:{} pw:{} \n",VecToStr(lm.front()->point),
                         //                             depth,VecToStr(lm.front()->p_w));
                         extra_triangle_succeed++;
                     }
-                    else{
-                        log_inst_text += fmt::format("un bad:{} d:{} \n",VecToStr(lm.front()->point), depth);
+                    else{//深度值无效
+                        //log_inst_text += fmt::format("un bad:{} d:{} \n",VecToStr(lm.front()->point), depth);
                         lm.bad=true;
                         extra_triangle_failed++;
                     }
@@ -271,6 +273,7 @@ void InstanceManager::Triangulate()
                 continue;//extra点只有一个观测
             }
 
+            ///三角化
             for(auto it=lm.feats.begin(),it_next=it;it!=lm.feats.end();it=it_next){
                 it_next++;
                 auto &feat = *it;
@@ -294,8 +297,7 @@ void InstanceManager::Triangulate()
                         feat->p_w = point3d_w;
                         stereo_triangle_succeed++;
                         if(lm.depth <=0 ){//这里的情况更加复杂一些,只有当该路标点未初始化时,才会进行初始化
-                            //清空该点之前的观测
-                            lm.erase(lm.feats.begin(),it);
+                            lm.erase(lm.feats.begin(),it);//清空该点之前的观测
                             lm.depth = depth;
                         }
                     }
@@ -421,54 +423,32 @@ void InstanceManager::InitialInstance(){
             continue;
 
         ///寻找当前帧三角化的路标点
-        vector<Vec3d> points3d_cam;
+        vector<Vec3d> points3d;
         for(auto &lm : inst.landmarks){
             if(lm.bad)
                 continue;
-
             auto &back_p = lm.feats.back();
             if(back_p->frame == frame && back_p->is_triangulated){
-                points3d_cam.emplace_back(body.WorldToCam(back_p->p_w,frame));
+                points3d.push_back(back_p->p_w);
             }
         }
 
-        if(points3d_cam.size() <= para::kInstanceInitMinNum){ //路标数量太少了
-            log_text += fmt::format("inst:{} have not enough features,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
+        if(points3d.size() <= para::kInstanceInitMinNum){ //路标数量太少了
+            log_text += fmt::format("inst:{} have not enough features,points3d_cam.size():{}\n",inst.id,points3d.size());
             continue;
         }
 
         State init_state;
         ///根据3d box初始化物体
         if(cfg::use_det3d){
-            //未检测到box3d
-            if(!inst.boxes3d[frame]){
+            if(!inst.boxes3d[frame]){//未检测到box3d
                 log_text += fmt::format("inst:{} have enough features,but not associate box3d\n",inst.id);
                 continue;
             }
 
+            ///设置边界框的大小
             inst.box3d->dims = inst.boxes3d[frame]->dims;
 
-            //auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
-            auto init_cam_pt = FitBox3DFromCameraFrame(points3d_cam,inst.box3d->dims);
-            if(init_cam_pt){
-                init_state.P = body.CamToWorld(*init_cam_pt,frame);
-            }
-            else{
-                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
-                init_state.P.setZero();
-                for(auto &p:points3d_cam){
-                    init_state.P += p;
-                }
-                init_state.P /= points3d_cam.size();
-            }
-            /*if(cfg::use_plane_constraint){
-                if(cfg::is_use_imu){
-                    init_state.P.z()=0;
-                }
-                else{
-                    init_state.P.y()=0;
-                }
-            }*/
             ///根据box初始化物体的位姿和包围框
             /*
             //将包围框的8个顶点转换到世界坐标系下
@@ -477,22 +457,55 @@ void InstanceManager::InitialInstance(){
                 corner_sum +=  cam_to_world( inst.boxes3d[frame]->corners.col(i));
             }
             init_state.P = corner_sum/8.;*/
-
             //init_state.R = Box3D::GetCoordinateRotationFromCorners(corners);//在box中构建坐标系
             init_state.R = body.Rs[frame] * body.ric[0] * inst.boxes3d[frame]->R_cioi();//设置包围框的旋转为初始旋转
+
+            //将点转换到物体旋转坐标系下
+            vector<Vec3d> points_rotation(points3d.size());
+            for(int i=0;i<points3d.size();++i){
+                points_rotation[i] = init_state.R * points3d[i];
+            }
+
+            ///Ransac获得绝对位置
+            //auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
+            //auto init_cam_pt = FitBox3DFromCameraFrame(points_rotation,inst.box3d->dims);
+            auto init_cam_pt = FitBox3DWithRANSAC(points_rotation,inst.box3d->dims);
+            if(init_cam_pt){
+                init_state.P = *init_cam_pt;
+            }
+            else{
+                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d.size());
+                init_state.P.setZero();
+                for(auto &p:points3d){
+                    init_state.P += p;
+                }
+                init_state.P /= points3d.size();
+            }
+
+            /*if(cfg::use_plane_constraint){
+                if(cfg::is_use_imu){
+                    init_state.P.z()=0;
+                }
+                else{
+                    init_state.P.y()=0;
+                }
+            }*/
+
+
         }
         ///无3D框初始化物体
         else{
             inst.box3d->dims = Vec3d(2,4,1.5);
 
             //auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
-            auto init_cam_pt = FitBox3DFromCameraFrame(points3d_cam,inst.box3d->dims);
+            auto init_cam_pt = FitBox3DFromCameraFrame(points3d,inst.box3d->dims);
 
             if(!init_cam_pt){
-                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d_cam.size());
+                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d.size());
                 continue;
             }
-            init_state.P = body.CamToWorld(*init_cam_pt,frame);
+            //init_state.P = body.CamToWorld(*init_cam_pt,frame);
+            init_state.P = *init_cam_pt;
             init_state.R.setIdentity();
         }
 
@@ -510,7 +523,7 @@ void InstanceManager::InitialInstance(){
         inst.history_vel.clear();
 
         log_text += fmt::format("Initialized id:{},type:{},cnt:{},初始位姿:P:{},R:{} 初始box:{}\n",
-                                inst.id, inst.box3d->class_name,points3d_cam.size(), VecToStr(init_state.P),
+                                inst.id, inst.box3d->class_name,points3d.size(), VecToStr(init_state.P),
                                 VecToStr(init_state.R.eulerAngles(2,1,0)),
                                 VecToStr(inst.box3d->dims));
 

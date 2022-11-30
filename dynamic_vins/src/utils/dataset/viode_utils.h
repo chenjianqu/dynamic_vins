@@ -64,7 +64,8 @@ public:
 
     static void SetViodeMaskSimple(SemanticImage &img);
 
-    static void SetViodeMask(SemanticImage &img);
+
+    static void SetViodeMaskAndRoi(SemanticImage &img);
 
     static std::unordered_map<unsigned int,int> ReadViodeRgbIds(const string &rgb_to_label_file);
 
@@ -73,6 +74,22 @@ public:
 
     inline static std::unordered_map<unsigned int,int> ViodeKeyToIndex;
     inline static std::set<int> ViodeDynamicIndex;
+
+private:
+    struct InstanceSimple{
+        InstanceSimple()=default;
+        InstanceSimple(int row_start_, int row_end_, int col_start_, int col_end_):
+        row_start(row_start_),row_end(row_end_),col_start(col_start_),col_end(col_end_){
+            mask=cv::Mat(row_end-row_start,col_end-col_start,CV_8UC1,cv::Scalar(0));
+        }
+        cv::Mat mask;
+        size_t num_pixel{0};
+        int row_start{},row_end{},col_start{},col_end{};
+        int row_min,row_max,col_min,col_max;
+    };
+
+    static cv::Mat BuildViodeMask(SemanticImage &img,std::unordered_map<unsigned int,InstanceSimple> &insts);
+
 };
 
 

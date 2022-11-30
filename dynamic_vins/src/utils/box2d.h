@@ -19,6 +19,19 @@
 
 namespace dynamic_vins{\
 
+struct InstRoi
+{
+    using Ptr=std::shared_ptr<InstRoi>;
+
+    cv::Mat mask_cv;//物体的mask
+    cv::cuda::GpuMat mask_gpu;
+    cv::Mat roi_gray;//物体的灰度图像
+    cv::cuda::GpuMat roi_gpu;
+
+    cv::Mat prev_roi_gray;//上一时刻的物体的灰度图像
+    cv::cuda::GpuMat prev_roi_gpu;
+};
+
 struct Box2D{
     using Ptr=std::shared_ptr<Box2D>;
 
@@ -38,8 +51,7 @@ struct Box2D{
 
     cv::Point2f mask_center;
 
-    cv::Mat mask_cv;
-    cv::cuda::GpuMat mask_gpu;
+    InstRoi::Ptr roi;
 };
 
 }

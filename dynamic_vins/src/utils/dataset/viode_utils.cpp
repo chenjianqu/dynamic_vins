@@ -70,32 +70,18 @@ void VIODE::SetViodeMaskSimple(SemanticImage &img)
 
 
 /**
- * 根据VIODE数据集的seg图像，设置背景掩码img.merge_mask、img.merge_mask_gpu 和 物体掩码img.inv_merge_mask_gpu、img.inv_merge_mask_gpu
- * 以及对每个物体，设置其背景mask，并进行形态学滤波
+ * 从VIODE图像中构建Mask
  * @param img
+ * @param insts
+ * @return
  */
-void VIODE::SetViodeMask(SemanticImage &img)
-{
-    struct InstanceSimple{
-        InstanceSimple()=default;
-        InstanceSimple(int row_start_, int row_end_, int col_start_, int col_end_):
-        row_start(row_start_),row_end(row_end_),col_start(col_start_),col_end(col_end_){
-            mask=cv::Mat(row_end-row_start,col_end-col_start,CV_8UC1,cv::Scalar(0));
-        }
-        cv::Mat mask;
-        size_t num_pixel{0};
-        int row_start{},row_end{},col_start{},col_end{};
-        int row_min,row_max,col_min,col_max;
-    };
-
+cv::Mat VIODE::BuildViodeMask(SemanticImage &img,std::unordered_map<unsigned int,InstanceSimple> &insts){
     static TicToc tt;
     int img_row=img.seg0.rows;
     int img_col=img.seg0.cols;
     cv::Mat merge_mask = cv::Mat(img_row, img_col, CV_8UC1, cv::Scalar(0));
 
     tt.Tic();
-    std::unordered_map<unsigned int,InstanceSimple> insts;
-
 
     auto calBlock=[&merge_mask,&img](int row_start,int row_end,int col_start,int col_end,
             std::unordered_map<unsigned int,InstanceSimple> *blockInsts){
@@ -151,7 +137,7 @@ void VIODE::SetViodeMask(SemanticImage &img)
         block_thread1.join();
         block_thread2.join();
         block_thread3.join();
-        Debugs("SetViodeMask calBlock :{} ms", tt.TocThenTic());
+        Debugs("SetViodeMaskAndRoi calBlock :{} ms", tt.TocThenTic());
 
         std::unordered_multimap<unsigned int,InstanceSimple> insts_all;//线程结果合并
         insts_all.insert(insts1->begin(),insts1->end());
@@ -177,34 +163,52 @@ void VIODE::SetViodeMask(SemanticImage &img)
         calBlock(0, img_row, 0, img_col, & insts);
     }
 
-    Debugs("SetViodeMask merge :{} ms", tt.TocThenTic());
-    Debugs("SetViodeMask detect num:{}",insts.size());
+    Debugs("SetViodeMaskAndRoi merge :{} ms", tt.TocThenTic());
+    Debugs("SetViodeMaskAndRoi detect num:{}",insts.size());
+
+    return merge_mask;
+}
+
+
+/**
+ * 根据VIODE数据集的seg图像，设置背景掩码img.merge_mask、img.merge_mask_gpu 和 物体掩码img.inv_merge_mask_gpu、img.inv_merge_mask_gpu
+ * 以及对每个物体，设置其背景mask，并进行形态学滤波
+ * @param img
+ */
+void VIODE::SetViodeMaskAndRoi(SemanticImage &img)
+{
+    std::unordered_map<unsigned int,InstanceSimple> insts;
+
+    cv::Mat merge_mask = BuildViodeMask(img,insts);
 
     ///构建InstanceInfo
     for(auto &[key,inst] : insts){
         Box2D::Ptr info=std::make_shared<Box2D>();
         info->id = key;
         info->track_id=key;
-        Debugs("SetViodeMask id:{}", key);
-        info->mask_gpu.upload(inst.mask);
-        ErodeMaskGpu(info->mask_gpu, info->mask_gpu);
-        info->mask_gpu.download(info->mask_cv);
+        Debugs("SetViodeMaskAndRoi id:{}", key);
         info->min_pt = cv::Point2f(inst.col_min,inst.row_min);
         info->max_pt = cv::Point2f(inst.col_max,inst.row_max);
+        info->rect = cv::Rect(info->min_pt,info->max_pt);
+
+        info->roi = std::make_shared<InstRoi>();
+        info->roi->mask_cv = inst.mask(info->rect);//裁切
+        info->roi->mask_gpu.upload(info->roi->mask_cv);
+        info->roi->roi_gpu = img.gray0_gpu(info->rect);//裁切
+        info->roi->roi_gpu.download(info->roi->roi_gray);
+
         img.boxes2d.push_back(info);
-        Debugs("SetViodeMask max_pt:(c{},r{}), min_pt:(c{},r{})", inst.col_min,inst.row_min, inst.col_max,inst.row_max);
+
+        Debugs("SetViodeMaskAndRoi max_pt:(c{},r{}), min_pt:(c{},r{})", inst.col_min,inst.row_min, inst.col_max,inst.row_max);
     }
+
 
     img.exist_inst = !img.boxes2d.empty();
 
-    Debugs("SetViodeMask erode time:{} ms", tt.TocThenTic());
     img.merge_mask = merge_mask;
     img.merge_mask_gpu.upload(merge_mask);
     cv::cuda::bitwise_not(img.merge_mask_gpu,img.inv_merge_mask_gpu);
     img.inv_merge_mask_gpu.download(img.inv_merge_mask);
-
-    Debugs("SetViodeMask set gpu :{} ms", tt.TocThenTic());
-
 
 }
 

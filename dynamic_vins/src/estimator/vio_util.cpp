@@ -198,6 +198,75 @@ std::optional<Vec3d> FitBox3DFromObjectFrame(vector<Vec3d> &points,const Vec3d& 
 
 
 
+
+
+/**
+* 使用RANSAC拟合包围框,根据距离的远近删除点
+* @param points 相机坐标系下的3D点
+* @param dims 包围框的长度
+* @return
+*/
+std::optional<Vec3d> FitBox3DWithRANSAC(vector<Vec3d> &points,const Vec3d& dims)
+{
+    if(points.empty()){
+        return {};
+    }
+    int size = points.size();
+
+    vector<Vec3d> points_rest(size);
+    Vec3d best_center = Vec3d::Zero();
+    int best_inlines = 10;
+    ///计算初始值
+    for(int i=0;i<points.size();++i){
+        best_center+= points[i];
+        points_rest[i] = points[i].cwiseAbs();
+    }
+    best_center /= (double)size;
+
+    Vec3d box = dims/2;
+
+    string log_text = "FitBox3DWithRANSAC: \n";
+
+    std::random_device rd;
+    vector<int> random_indices(size);
+    std::iota(random_indices.begin(),random_indices.end(),0);
+
+    int batch_size = std::min(10,size);
+
+    for(int iter=0;iter<20;++iter){
+        ///选择其中的10个点计算中心
+        std::shuffle(random_indices.begin(),random_indices.end(),rd);
+        Vec3d center=Vec3d::Zero();
+        for(int i=0;i<batch_size;++i){
+            center += points_rest[random_indices[i]];
+        }
+        center /= (double)batch_size;
+
+        int inliers=0;
+
+        ///判断落在边界框内的点的数量
+        for(int i=0;i<size;++i){
+            if(points_rest[i].x() <= box.x() ||
+            points_rest[i].y() <= box.y() ||
+            points_rest[i].z() <= box.z()){
+                inliers++;
+            }
+        }
+
+        if(inliers > best_inlines){
+            best_inlines = inliers;
+            best_center = center;
+        }
+
+    }
+
+    return best_center;
+}
+
+
+
+
+
 /**
  * 使用RANSAC拟合包围框,根据距离的远近删除点
  * @param points 相机坐标系下的3D点
@@ -206,11 +275,11 @@ std::optional<Vec3d> FitBox3DFromObjectFrame(vector<Vec3d> &points,const Vec3d& 
  */
 std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& dims)
 {
-    Vec3d center_pt = Vec3d::Zero();
     if(points.empty()){
         return {};
     }
     std::list<Vec3d> points_rest;
+    Vec3d center_pt = Vec3d::Zero();
     ///计算初始值
     for(auto &p:points){
         center_pt+=p;

@@ -111,12 +111,25 @@ void InstFeat::UndistortedPoints(camodocal::CameraPtr &cam,vector<cv::Point2f>& 
         //cam->LiftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
         //point_un.emplace_back(b.x() / b.z(), b.y() / b.z());
 
-        Vec2d a(pt.x, pt.y);
+        Vec2d a(pt.x , pt.y );
         Vec3d b;
         cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
         point_un.emplace_back(b.x() / b.z(), b.y() / b.z());
     }
 }
+
+
+void InstFeat::UndistortedPointsWithAddOffset(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un)
+{
+    point_un.clear();
+    for (auto & pt : point_cam){
+        Vec2d a(pt.x + box2d->rect.tl().x, pt.y + box2d->rect.tl().y);///加上偏置
+        Vec3d b;
+        cam->liftProjective(a, b);//将特征点反投影到归一化平面，并去畸变
+        point_un.emplace_back(b.x() / b.z(), b.y() / b.z());
+    }
+}
+
 
 
 void InstFeat::RightUndistortedPts(camodocal::CameraPtr  &cam)
@@ -131,25 +144,35 @@ void InstFeat::RightUndistortedPts(camodocal::CameraPtr  &cam)
 }
 
 
-void InstFeat::TrackLeft(SemanticImage &img,SemanticImage &prev_img,bool dense_flow){
+void InstFeat::TrackLeft(cv::Mat &curr_img,cv::Mat &last_img,const cv::Mat &mask){
     if(last_points.empty())
         return;
     curr_points.clear();
     //Debugt("inst:{} last_points:{} mask({}x{},type:{})",  id, last_points.size(), mask_img.rows, mask_img.cols, mask_img.type());
     //光流跟踪
     vector<uchar> status;
-    if(dense_flow){
-        status = FeatureTrackByDenseFlow(img.flow,last_points, curr_points);
-    }
-    else{
-        status = FeatureTrackByLK(prev_img.gray0,img.gray0,last_points,curr_points);
-    }
-    if(!box2d->mask_cv.empty()){
+    //if(dense_flow){
+    //    status = FeatureTrackByDenseFlow(img.flow,last_points, curr_points);
+    //}
+    //else{
+    status = FeatureTrackByLK(last_img,curr_img,last_points,curr_points,fe_para::is_flow_back);
+    //}
+    if(!mask.empty()){
         for(size_t i=0;i<status.size();++i){
-            if(status[i] && box2d->mask_cv.at<uchar>(curr_points[i]) == 0)
+            if(status[i] && mask.at<uchar>(curr_points[i]) == 0)
                 status[i]=0;
         }
     }
+
+    /*///TODO DEBUG
+    if(id>0){
+        string log_text="InstFeat::TrackLeft\n";
+        for(int i=0;i<curr_points.size();++i){
+            log_text += fmt::format("({},{}) -> ({},{})\n",last_points[i].x,last_points[i].y,curr_points[i].x,curr_points[i].y);
+        }
+        Debugt(log_text);
+    }*/
+
     //删除跟踪失败的点
     ReduceVector(curr_points, status);
     ReduceVector(ids, status);
@@ -163,7 +186,8 @@ void InstFeat::TrackLeft(SemanticImage &img,SemanticImage &prev_img,bool dense_f
 
 void InstFeat::TrackLeftGPU(SemanticImage &img,SemanticImage &prev_img,
                   cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
-                  cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward){
+                  cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward,
+                  const cv::Mat &mask){
     if(last_points.empty())
         return;
     curr_points.clear();
@@ -176,12 +200,13 @@ void InstFeat::TrackLeftGPU(SemanticImage &img,SemanticImage &prev_img,
     }
 
     vector<uchar> status = FeatureTrackByLKGpu(lk_forward, lk_backward,
-                                               prev_img.gray0_gpu,
-                                               img.gray0_gpu,last_points, curr_points);
+                                               prev_img.gray0_gpu,img.gray0_gpu,
+                                               last_points, curr_points,
+                                               fe_para::is_flow_back);
 
-    if(!box2d->mask_cv.empty()){
+    if(!mask.empty()){
         for(size_t i=0;i<status.size();++i){
-            if(status[i] && box2d->mask_cv.at<uchar>(curr_points[i]) == 0)
+            if(status[i] && mask.at<uchar>(curr_points[i]) == 0)
                 status[i]=0;
         }
     }
@@ -202,7 +227,7 @@ void InstFeat::TrackRight(SemanticImage &img){
         return;
     right_points.clear();
 
-    auto status= FeatureTrackByLK(img.gray0,img.gray1,curr_points,right_points);
+    auto status= FeatureTrackByLK(img.gray0,img.gray1,curr_points,right_points,fe_para::is_flow_back);
     if(cfg::dataset == DatasetType::kViode){
         for(size_t i=0;i<status.size();++i){
             if(status[i] && VIODE::PixelToKey(right_points[i], img.seg1) != id )
@@ -216,6 +241,7 @@ void InstFeat::TrackRight(SemanticImage &img){
     ReduceVector(right_points, status);
     ReduceVector(right_ids, status);
 }
+
 
 void InstFeat::TrackRightGPU(SemanticImage &img,
                    cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
@@ -237,7 +263,8 @@ void InstFeat::TrackRightGPU(SemanticImage &img,
 
     vector<uchar> status = FeatureTrackByLKGpu(lk_forward, lk_backward,
                                                img.gray0_gpu,
-                                               img.gray1_gpu,curr_points, right_points);
+                                               img.gray1_gpu,curr_points, right_points,
+                                               fe_para::is_flow_back);
 
     if(cfg::dataset == DatasetType::kViode && id != -1){//id=-1时表示背景
         for(size_t i=0;i<status.size();++i){
@@ -290,7 +317,7 @@ void InstFeat::SortPoints()
  * @param img
  * @param use_gpu
  */
-void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,const cv::Mat &mask){
+void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,int min_dist,const cv::Mat &mask){
     int n_max_cnt = fe_para::kMaxCnt - (int)curr_points.size();
     if ( n_max_cnt < 10){
         return;
@@ -298,25 +325,17 @@ void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,const cv::Mat &m
     Debugt("DetectNewFeature | id:{} n_max_cnt:{}",id, n_max_cnt);
 
     /// 设置mask
-
     cv::Mat mask_detect;
-    if(mask.empty()){
-        if(box2d->mask_cv.empty()){
-            if(img.exist_inst)
-                box2d->mask_cv = img.inv_merge_mask.clone();
-            else
-                box2d->mask_cv = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC1,cv::Scalar(255));
-        }
-
-        for(const auto& pt : curr_points){
-            cv::circle(box2d->mask_cv, pt, fe_para::kMinDist, 0, -1);
-        }
-
-        mask_detect =box2d-> mask_cv;
+    if(!mask.empty()){
+        mask_detect = mask.clone();
     }
     else{
-        mask_detect = mask;
+        mask_detect = cv::Mat(img.color0.rows,img.color0.cols,CV_8UC1,cv::Scalar(255));
     }
+    for(const auto& pt : curr_points){
+        cv::circle(mask_detect, pt, min_dist, 0, -1);
+    }
+
 
 
     ///特征检测
@@ -325,10 +344,9 @@ void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,const cv::Mat &m
         if(img.gray0_gpu.empty()){
             img.gray0_gpu.upload(img.gray0);
         }
-
         cv::cuda::GpuMat mask_detect_gpu(mask_detect);
 
-        n_pts = DetectShiTomasiCornersGpu(n_max_cnt, img.gray0_gpu, mask_detect_gpu);
+        n_pts = DetectShiTomasiCornersGpu(n_max_cnt, img.gray0_gpu, mask_detect_gpu,min_dist);
     }
     else{
         cv::goodFeaturesToTrack(img.gray0, n_pts, n_max_cnt, 0.01,

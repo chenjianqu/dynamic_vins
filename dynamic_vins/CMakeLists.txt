@@ -115,12 +115,12 @@ target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_L
         /home/chen/ws/dynamic_ws/src/dynamic_vins/src/line_detector/line_descriptor/lib/liblinedesc.so
         )
 
-add_executable(build_raft src/system/build_raft.cpp src/flow/flow_parameter.cpp ${tensorrt_sources} src/utils/log_utils.cpp)
+add_executable(build_raft src/system/build_tools/build_raft.cpp src/flow/flow_parameter.cpp ${tensorrt_sources} src/utils/log_utils.cpp)
 target_link_libraries(build_raft ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
 
-add_executable(build_solo src/system/build_solo.cpp ${tensorrt_sources} src/utils/log_utils.cpp src/det2d/det2d_parameter.cpp)
+add_executable(build_solo src/system/build_tools/build_solo.cpp ${tensorrt_sources} src/utils/log_utils.cpp src/det2d/det2d_parameter.cpp)
 target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
@@ -138,6 +138,18 @@ target_link_libraries(corners_detection ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spd
 
 add_executable(lk_flow src/system/exp_tools/lk_flow.cpp)
 target_link_libraries(lk_flow ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
+
+add_executable(instance_lk_flow src/system/exp_tools/instance_lk_flow.cpp)
+target_link_libraries(instance_lk_flow ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
+
+aux_source_directory(src/utils/orb orb_sources)
+
+add_executable(orb_demo src/system/exp_tools/orb_demo.cpp ${orb_sources})
+target_link_libraries(orb_demo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
+
+
+add_executable(ransac_test src/system/exp_tools/ransac_test.cpp)
+target_link_libraries(ransac_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
 
 
 add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp ${line_detector_sources} ${line_descriptor_sources})

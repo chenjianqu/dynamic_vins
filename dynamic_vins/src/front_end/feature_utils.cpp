@@ -31,7 +31,8 @@ using Tensor = torch::Tensor;
  * @param pts2
  * @return
  */
-std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2)
+std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2,
+                                    bool flow_back)
 {
     std::vector<uchar> status;
     std::vector<float> err;
@@ -72,7 +73,8 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
 std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
                                        const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
                                        const cv::cuda::GpuMat &img_prev, const cv::cuda::GpuMat &img_next,
-                                       std::vector<cv::Point2f> &pts_prev, std::vector<cv::Point2f> &pts_next){
+                                       std::vector<cv::Point2f> &pts_prev, std::vector<cv::Point2f> &pts_next,
+                                       bool flow_back){
     if(img_prev.empty() || img_next.empty() || pts_prev.empty()){
         std::string msg="flowTrack() input wrong, received at least one of parameter are empty";
         Errort(msg);
@@ -99,7 +101,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
     Debugt("flowTrackGpu forward success:{}", forward_success);
 
     //反向光流计算 判断之前光流跟踪的特征点的质量
-    if(fe_para::is_flow_back){
+    if(flow_back){
         cv::cuda::GpuMat d_reverse_status;
         cv::cuda::GpuMat d_reverse_pts = d_prevPts;
         lkOpticalFlowBack->calc(img_next,img_prev,d_nextPts,d_reverse_pts,d_reverse_status);
@@ -303,9 +305,10 @@ void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, 
 }
 
 
-std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask)
+std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img,
+                                                   const cv::cuda::GpuMat &mask,int min_dist)
 {
-    auto detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, detect_num, 0.01, fe_para::kMinDist);
+    auto detector = cv::cuda::createGoodFeaturesToTrackDetector(CV_8UC1, detect_num, 0.01, min_dist);
     cv::cuda::GpuMat d_new_pts;
     detector->detect(img,d_new_pts,mask);
     std::vector<cv::Point2f> points;

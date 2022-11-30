@@ -30,13 +30,15 @@ namespace dynamic_vins{\
 struct SemanticImage{
     SemanticImage()= default;
 
-    void SetMask();
+    void SetMaskAndRoi();
     void SetBackgroundMask();
 
     void SetGrayImage();
     void SetGrayImageGpu();
     void SetColorImage();
     void SetColorImageGpu();
+
+    void CropInstanceGray();
 
     cv::Mat color0,seg0,color1,seg1;
     cv::cuda::GpuMat color0_gpu,color1_gpu;

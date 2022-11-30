@@ -1433,10 +1433,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     else
          margin_flag_bool = feat_manager.AddFeatureCheckParallax(frame, image.features.points, body.td);
 
-    if (margin_flag_bool)
-        margin_flag = MarginFlag::kMarginOld;
-    else
-        margin_flag = MarginFlag::kMarginSecondNew;
+    margin_flag = margin_flag_bool? MarginFlag::kMarginOld : MarginFlag::kMarginSecondNew;
 
     Infov("processImage all feature: points_size:{},lines_size:{}",
           feat_manager.point_landmarks.size(), feat_manager.line_landmarks.size());
@@ -1447,7 +1444,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
 
     ///创建帧,并设置该帧的预积分
     ImageFrame img_frame(image.features.points, header);
-    img_frame.pre_integration = tmp_pre_integration;
+    img_frame.pre_integration = tmp_pre_integration;//用于初始化
     all_image_frame.insert({header, img_frame});
     tmp_pre_integration = new IntegrationBase{acc_0, gyr_0, body.Bas[frame], body.Bgs[frame]};
 
@@ -1487,8 +1484,8 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     if(cfg::slam == SLAM::kDynamic){
         ///添加动态特征点,并创建物体
         im.PushBack(frame, image.instances);
-
-        im.SetOutputInstInfo();//将输出实例的速度信息
+        ///将输出实例的速度信息
+        im.SetOutputInstInfo();
         ///动态物体的位姿递推
         im.PropagatePose();
         ///动态特征点的三角化

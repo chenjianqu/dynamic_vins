@@ -92,16 +92,29 @@ inline void Status2GpuMat(const std::vector<uchar>& vec, cv::cuda::GpuMat& d_mat
 void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2);
 
 /**
- * 对mask进行10x10的腐蚀运算
+ * 对mask进行腐蚀运算
  * @param in
  * @param out
  */
-inline void ErodeMaskGpu(cv::cuda::GpuMat &in, cv::cuda::GpuMat &out,int kernel_size=10){
+inline void ErodeMaskGpu(cv::cuda::GpuMat &in, cv::cuda::GpuMat &out,int kernel_size=5){
     auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,
                                                   cv::Size(kernel_size,kernel_size),cv::Point(-1,-1));
     auto erode_filter = cv::cuda::createMorphologyFilter(cv::MORPH_ERODE,CV_8UC1,erode_kernel);
     erode_filter->apply(in,out);
 }
+
+/**
+ * 对mask进行腐蚀运算
+ * @param in
+ * @param out
+ */
+inline void ErodeMask(cv::Mat &in, cv::Mat &out,int kernel_size=5){
+    auto erode_kernel = cv::getStructuringElement(cv::MORPH_RECT,
+                                                  cv::Size(kernel_size,kernel_size),cv::Point(-1,-1));
+    cv::erode(in,out,erode_kernel);
+}
+
+
 
 
 inline void SetStatusByMask(vector<uchar> &status,vector<cv::Point2f> &points,cv::Mat &mask){
@@ -112,12 +125,13 @@ inline void SetStatusByMask(vector<uchar> &status,vector<cv::Point2f> &points,cv
 std::vector<cv::Point2f> UndistortedPts(std::vector<cv::Point2f> &pts, camodocal::CameraPtr &cam);
 
 std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2,
-                                    std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2);
+                                    std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2,bool flow_back=true);
 
 std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
                                        const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
                                        const cv::cuda::GpuMat &img_prev,const cv::cuda::GpuMat &img_next,
-                                       std::vector<cv::Point2f> &pts_prev,std::vector<cv::Point2f> &pts_next);
+                                       std::vector<cv::Point2f> &pts_prev,std::vector<cv::Point2f> &pts_next,
+                                       bool flow_back=true);
 
 std::vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
                                            std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2);
@@ -129,7 +143,7 @@ std::vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
  * @param mask
  * @return
  */
-std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask);
+std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask,int min_dist=10);
 
 
 

@@ -129,6 +129,10 @@ public:
     std::vector<Box2D::Ptr> visible_tracks_info() {
         std::vector<Box2D::Ptr> ret;
         for (auto &t : data) {
+            if(t.kalman.get_time_since_update()>0){ //若当前无观测，则跳过
+                continue;
+            }
+
             auto bbox = t.kalman.rect();
             /*if (t.kalman.state() == TrackState::Confirmed &&
                 img_box.contains(bbox.tl()) && img_box.contains(bbox.br())) {

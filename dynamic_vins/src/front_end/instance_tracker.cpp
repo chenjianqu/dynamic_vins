@@ -148,6 +148,16 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
 }
 
 
+tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2){
+    int rows = std::max(img1.rows,img2.rows);
+    int cols = std::max(img1.cols,img2.cols);
+    cv::Mat img1_padded,img2_padded;
+    cv::copyMakeBorder(img1,img1_padded,0,rows-img1.rows,0,cols-img1.cols,cv::BORDER_CONSTANT,cv::Scalar(0));
+    cv::copyMakeBorder(img2,img2_padded,0,rows-img2.rows,0,cols-img2.cols,cv::BORDER_CONSTANT,cv::Scalar(0));
+    return {img1_padded,img2_padded};
+}
+
+
 
 /**
  * 跟踪动态物体
@@ -168,7 +178,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     }
 
     ///MOT
-
     if(cfg::dataset == DatasetType::kKitti){
         AddInstancesByTracking(img);
     }
@@ -201,96 +210,102 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
     if(is_exist_inst_){
         ///形态学运算
-        //ErodeMaskGpu(img.merge_mask_gpu, img.merge_mask_gpu);
+        ErodeMaskGpu(img.merge_mask_gpu, img.merge_mask_gpu);
         img.merge_mask_gpu.download(img.merge_mask);
 
         ///对每个目标进行光流跟踪
         ExecInst([&](unsigned int key, InstFeat& inst){
             if(inst.is_curr_visible){
-                inst.TrackLeft(img,prev_img);
+
+                if(inst.roi->prev_roi_gray.empty()){
+                    Debugt("prev_roi_gray.empty()==true id:{}",inst.id);
+                }
+                if(inst.last_points.empty()){
+                    Debugt("inst.last_points.empty()==true id:{}",inst.id);
+                }
+
+                if(inst.roi->prev_roi_gray.empty() || inst.last_points.empty()){
+                    return;
+                }
+                ///对两张图像进行padding，使得两张图像大小一致
+                auto [prev_roi_gray_padded,roi_gray_padded] = InstanceImagePadding(inst.roi->prev_roi_gray,
+                                                                      inst.roi->roi_gray);
+
+                ///DEBUG
+                /*{
+                    if(img.seq>8 && img.seq<=15){
+                        cv::Mat merge;
+                        cv::vconcat(prev_roi_gray_padded,roi_gray_padded,merge);
+                        const string save_gray_path = fmt::format("/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/single_instances/{}_{}_gray.png",img.seq,inst.id);
+                        cv::imwrite(save_gray_path,inst.roi->prev_roi_gray);
+                        const string save_mask_path = fmt::format("/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/single_instances/{}_{}_mask.png",img.seq,inst.id);
+                        cv::imwrite(save_mask_path,inst.roi->mask_cv);
+                    }
+                }*/
+
+                //inst.TrackLeft(roi_gray_padded,prev_roi_gray_padded,inst.box2d->roi->mask_cv);
+                inst.TrackLeft(roi_gray_padded,prev_roi_gray_padded);
+
+                Debugt("instsTrack id:{} curr_size:{}",inst.id,inst.curr_points.size());
             }
         });
+
         Infot("instsTrack flowTrack:{} ms", tic_toc.TocThenTic());
 
-
-        ///添加新的特征点前的准备
-        int max_new_detect=0;
+        ///角点检测
         ExecInst([&](unsigned int key, InstFeat& inst){
-            if( inst.curr_points.size()>= fe_para::kMaxDynamicCnt)return;
-            max_new_detect += (fe_para::kMaxDynamicCnt - (int)inst.curr_points.size());
-        });
-        if(max_new_detect > 0){
-            mask_background = img.merge_mask;
-            ExecInst([&](unsigned int key, InstFeat& inst){
-                if(inst.curr_points.size() < fe_para::kMaxDynamicCnt){
-                    inst.visual_points_pair.clear();
-                    inst.visual_right_points_pair.clear();
-                    inst.visual_new_points.clear();
-                    for(size_t i=0;i<inst.curr_points.size();++i){
-                        inst.visual_points_pair.emplace_back(inst.last_points[i],inst.curr_points[i]);//用于可视化
-                        cv::circle(mask_background, inst.curr_points[i], fe_para::kMinDynamicDist, 0, -1);//设置mask
-                    }
-                }
-            });
-            Infot("instsTrack prepare detect:{} ms", tic_toc.TocThenTic());
+            if( inst.curr_points.size()>= fe_para::kMaxDynamicCnt) return;
+            int max_new_detect = (fe_para::kMaxDynamicCnt - (int)inst.curr_points.size());
+            inst.visual_points_pair.clear();
+            inst.visual_right_points_pair.clear();
+            inst.visual_new_points.clear();
 
+            ErodeMask(inst.roi->mask_cv,inst.roi->mask_cv,5);
+
+            cv::Mat inst_mask = inst.roi->mask_cv.clone();
+            for(size_t i=0;i<inst.curr_points.size();++i){
+                inst.visual_points_pair.emplace_back(inst.last_points[i],inst.curr_points[i]);//用于可视化
+                cv::circle(inst_mask, inst.curr_points[i], fe_para::kMinDynamicDist, 0, -1);//设置mask
+            }
 
             ///添加新的特征点
             vector<cv::Point2f> new_pts;
+            cv::goodFeaturesToTrack(inst.roi->roi_gray, new_pts, max_new_detect, 0.01,
+                                    fe_para::kMinDynamicDist, inst_mask);
 
-            if(cfg::use_dense_flow){
-                new_pts = DetectRegularCorners(max_new_detect,mask_background,5);
-            }
-            else{
-                mask_background_gpu.upload(mask_background);
-                new_pts = DetectShiTomasiCornersGpu(max_new_detect, img.gray0_gpu, mask_background_gpu);
+            for(auto &pt:new_pts){
+                inst.curr_points.emplace_back(pt);
+                inst.ids.emplace_back(InstFeat::global_id_count++);
+                inst.visual_new_points.emplace_back(pt);
+                inst.track_cnt.push_back(1);
             }
 
-            Debugt("instsTrack actually detect num:{}", new_pts.size());
-            for(auto &pt : new_pts){
-                for(auto &[key,inst] : instances_){
-                    if(inst.lost_num>0 || inst.curr_points.size()>fe_para::kMaxDynamicCnt)
-                        continue;
-                    if(!inst.is_curr_visible)
-                        continue;
+            Debugt("instsTrack id:{} add corners:{}",inst.id,inst.visual_new_points.size());
 
-                    if(inst.box2d->mask_cv.at<uchar>(pt) >= 1){
-                        inst.curr_points.emplace_back(pt);
-                        inst.ids.emplace_back(InstFeat::global_id_count++);
-                        inst.visual_new_points.emplace_back(pt);
-                        inst.track_cnt.push_back(1);
-                        break;
-                    }
-                }
-            }
-            Infot("instsTrack detectNewFeaturesGPU:{} ms", tic_toc.TocThenTic());
 
             ///若某个实例的点太少,则采用密集采样的方法得到点
-            for(auto& [key,inst] : instances_){
-                if(!inst.is_curr_visible)
-                    continue;
-                int inst_size=inst.curr_points.size();
-
-                for(int i=0;i<inst_size;++i){
-                    cv::circle(inst.box2d->mask_cv,inst.curr_points[i],2,cv::Scalar(0),-1);
-                }
-                int detect_num = std::max(20,50-inst_size);
-                auto new_ex_pts = DetectRegularCorners(detect_num,inst.box2d->mask_cv,2);
-                for(auto &pt:new_ex_pts){
-                    inst.extra_points.emplace_back(pt);
-                    inst.extra_ids.emplace_back(InstFeat::global_id_count++);
-                    inst.visual_new_points.emplace_back(pt);
-                    inst.track_cnt.push_back(1);
-                }
+            int inst_size=inst.curr_points.size();
+            for(int i=0;i<inst_size;++i){
+                cv::circle(inst.roi->mask_cv,inst.curr_points[i],2,cv::Scalar(0),-1);
             }
-        }
+            int detect_num = std::max(50,100-inst_size);
+            auto new_ex_pts = DetectRegularCorners(detect_num,inst.roi->mask_cv,2);
+            for(auto &pt:new_ex_pts){
+                inst.extra_points.emplace_back(pt);
+                inst.extra_ids.emplace_back(InstFeat::global_id_count++);
+                //inst.visual_new_points.emplace_back(pt);
+                //inst.track_cnt.push_back(1);
+            }
+
+        });
+
 
         for(auto& [key,inst] : instances_){
             if(!inst.is_curr_visible)
                 continue;
             ///去畸变和计算归一化坐标
-            inst.UndistortedPoints(cam_t.cam0,inst.curr_points,inst.curr_un_points);
-            inst.UndistortedPoints(cam_t.cam0,inst.extra_points,inst.extra_un_points);
+            inst.UndistortedPointsWithAddOffset(cam_t.cam0,inst.curr_points,inst.curr_un_points);
+            inst.UndistortedPointsWithAddOffset(cam_t.cam0,inst.extra_points,inst.extra_un_points);
 
             //inst.UndistortedPts(camera_);
             ///计算特征点的速度
@@ -441,21 +456,22 @@ void InstsFeatManager::AddViodeInstances(SemanticImage &img)
     cv::Mat seg = img.seg0;
 
     Debugt("addViodeInstancesBySegImg merge insts");
-    for(auto &inst_info : img.boxes2d){
-        auto key = inst_info->track_id;
+    for(auto &det_box : img.boxes2d){
+        auto key = det_box->track_id;
         if(instances_.count(key) == 0){
             InstFeat instanceFeature(key);
             instances_.insert({key, instanceFeature});
         }
         auto &inst = instances_[key];
-        inst.box2d = inst_info;
+        inst.box2d = det_box;
+
+        inst.roi->mask_cv = det_box->roi->mask_cv;
+        inst.roi->mask_gpu = det_box->roi->mask_gpu;
+        inst.roi->roi_gray = det_box->roi->roi_gray;
+        inst.roi->roi_gpu = det_box->roi->roi_gpu;
 
         //inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->);
         inst.is_curr_visible=true;
-
-        Debugt("inst:{} mask_img:({}x{}) local_mask:({}x{})", key,
-               inst.box2d->mask_cv.rows,inst.box2d->mask_cv.cols,
-               inst.box2d->mask_cv.rows, inst.box2d->mask_cv.cols);
     }
 
 }
@@ -671,7 +687,7 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
     auto trks = mot_tracker->update(img.boxes2d, img.color0);
 
 
-    string log_text="AddInstancesByTracking:\n";
+    string log_text="MOT AddInstancesByTracking:\n";
 
     for(auto &det_box : trks){
         unsigned int id=det_box->track_id;
@@ -679,6 +695,7 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
         if(it == instances_.end()){
             InstFeat inst_feat(id);
             inst_feat.box2d = det_box;
+            inst_feat.roi = det_box->roi;
             inst_feat.is_curr_visible=true;
             instances_.insert({id, inst_feat});
             log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, det_box->class_name,
@@ -687,6 +704,11 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
         }
         else{
             it->second.box2d = det_box;
+            it->second.roi->mask_cv = det_box->roi->mask_cv;
+            it->second.roi->mask_gpu = det_box->roi->mask_gpu;
+            it->second.roi->roi_gray = det_box->roi->roi_gray;
+            it->second.roi->roi_gpu = det_box->roi->roi_gpu;
+
             it->second.is_curr_visible=true;
 
             log_text += fmt::format("Update inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",
@@ -696,7 +718,6 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
     }
 
     Debugt(log_text);
-
 }
 
 
@@ -731,22 +752,38 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
     if(cfg::slam != SLAM::kDynamic)
         return;
 
-
-
     for(const auto &[id,inst]: instances_){
         if(inst.lost_num>0 || !inst.is_curr_visible)
             continue;
 
-        cv::rectangle(img,inst.box2d->min_pt,inst.box2d->max_pt,inst.color,2);
+        ///绘制2D边界框
+        //cv::rectangle(img,inst.box2d->min_pt,inst.box2d->max_pt,inst.color,2);
 
+        ///绘制新的点
+        for(const auto &pt : inst.visual_new_points){
+            cv::circle(img, cv::Point2f(pt.x+inst.box2d->rect.tl().x,pt.y+inst.box2d->rect.tl().y),
+                       2, cv::Scalar(255,0,0), -1);
+        }
+
+        ///绘制额外点
+        //for(const auto &pt:inst.extra_points){
+        //    cv::circle(img, cv::Point2f(pt.x+inst.box2d->rect.tl().x,pt.y+inst.box2d->rect.tl().y),
+        //               2, cv::Scalar(0,0,255), -1);
+        //}
+
+        ///绘制光流
+        //cv::Scalar arrowed_color = inst.color*1.5;
         for(const auto &[pt1,pt2] : inst.visual_points_pair){
             //cv::circle(img, pt1, 2, cv::Scalar(255, 255, 255), 2);//上一帧的点
-            cv::circle(img, pt2, 2, inst.color, -1);//当前帧的点
-            cv::arrowedLine(img, pt2, pt1, inst.color, 1, 8, 0, 0.2);
+            //cv::arrowedLine(img, pt1, pt2, cv::Scalar(255, 255, 255), 1, 8, 0, 0.15);
+            cv::circle(img, cv::Point2f(pt2.x+inst.box2d->rect.tl().x,pt2.y+inst.box2d->rect.tl().y),
+                       3, cv::Scalar(0,0,0), -1);
+            cv::circle(img, cv::Point2f(pt2.x+inst.box2d->rect.tl().x,pt2.y+inst.box2d->rect.tl().y),
+                       2, inst.color, -1);//当前帧的点
+
         }
-        for(const auto &pt : inst.visual_new_points){
-            cv::circle(img, pt, 3, cv::Scalar(255,255,255), -1);
-        }
+
+
 
         /*if(vel_map_.count(inst.id)!=0){
             auto anchor=inst.feats_center_pt;
@@ -755,6 +792,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
             cv::putText(img, fmt::format("v:{:.2f} m/s",v_abs),anchor,cv::FONT_HERSHEY_SIMPLEX,1.0,inst.color,2);
         }*/
 
+        ///绘制右相机点
         if(cfg::dataset == DatasetType::kKitti){
             float rows_offset = img.rows /2.;
             for(auto pt : inst.right_points){
@@ -770,11 +808,12 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
             }
         }
 
-        //画包围框
+        ///绘制检测的3D边界框
         if(inst.box3d){
             //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
-            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);
-            Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
+
+            //inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);//绘制投影3D-2D框
+            //Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
 
             //Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);
             //Vec2d avg_corner=Vec2d::Zero();
@@ -790,6 +829,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         //std::string label=fmt::format("{}-{}",id,inst.curr_points.size() - inst.visual_new_points.size());
         std::string label=fmt::format("{}",id);
         //cv::putText(img, label, inst.box_center_pt, cv::FONT_HERSHEY_SIMPLEX, 1.0, inst.color, 2);
+
         DrawText(img, label, inst.color, inst.box2d->center_pt(), 1.0, 2, false);
 
     }
