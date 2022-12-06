@@ -150,6 +150,8 @@ public:
     vector<Eigen::Vector3d> point3d_curr;
     std::list<LandmarkPoint> landmarks;
 
+    vector<Vec3d> points_extra[kSizePose];
+
     unsigned int id{0};
 
     cv::Scalar color;

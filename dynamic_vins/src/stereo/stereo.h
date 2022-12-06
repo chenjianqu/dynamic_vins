@@ -19,7 +19,7 @@ class MyStereoMatcher{
 public:
     using Ptr=std::shared_ptr<MyStereoMatcher>;
 
-    MyStereoMatcher(const std::string &config_path);
+    MyStereoMatcher(const std::string &config_path,const std::string &seq_name);
 
     void Launch(int seq);
 

@@ -13,7 +13,9 @@
 #include <algorithm>
 #include <filesystem>
 
- #include "utils/def.h"
+#include <pcl/filters/radius_outlier_removal.h>
+
+#include "utils/def.h"
 #include "vio_parameters.h"
 
 #include "estimator/factor/pose_local_parameterization.h"
@@ -28,6 +30,31 @@
 
 namespace dynamic_vins{\
 
+
+vector<Vec3d> ProcessExtraPoint(const vector<Vec3d> &points){
+    PointCloud::Ptr stereo_pc(new PointCloud);
+    for(auto &p_cam : points){
+        Vec3d p_w = body.CamToWorld(p_cam,body.frame);
+        PointT p;
+        p.x = p_w.x();
+        p.y = p_w.y();
+        p.z = p_w.z();
+        stereo_pc->points.push_back(p);
+    }
+    PointCloud::Ptr stereo_pc_filtered(new PointCloud);
+    pcl::RadiusOutlierRemoval<PointT> radius_filter;
+    radius_filter.setInputCloud(stereo_pc);
+    radius_filter.setRadiusSearch(1);
+    radius_filter.setMinNeighborsInRadius(10);//一米内至少有10个点
+    radius_filter.filter(*stereo_pc_filtered);
+
+    int size = stereo_pc_filtered->size();
+    vector<Vec3d> outputs(size);
+    for(int i=0;i<size;++i){
+        outputs[i] << stereo_pc_filtered->points[i].x,stereo_pc_filtered->points[i].y,stereo_pc_filtered->points[i].z;
+    }
+    return outputs;
+}
 
 
 /**
@@ -87,6 +114,9 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                 lm.feats.push_back(feat_ptr);//添加第一个观测
                 it->second.landmarks.push_back(lm);
             }
+
+            it->second.points_extra[body.frame]=ProcessExtraPoint(inst_feat.points);
+
             log_text += fmt::format("PushBack | Create Instance:{}\n", instance_id);
         }
         else{ ///将特征添加到物体中
@@ -120,6 +150,9 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                 it->feats.push_back(feat_ptr);//添加第一个观测
             }
 
+            inst_iter->second.points_extra[body.frame]=ProcessExtraPoint(inst_feat.points);
+
+
         }
     }
 
@@ -141,6 +174,9 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
     log_text += fmt::format("tracking_number:{}\n", tracking_num);
     Debugv(log_text);
 }
+
+
+
 
 
 
@@ -273,6 +309,9 @@ void InstanceManager::Triangulate()
                 continue;//extra点只有一个观测
             }
 
+            ///TODO DEBUG
+            continue;
+
             ///三角化
             for(auto it=lm.feats.begin(),it_next=it;it!=lm.feats.end();it=it_next){
                 it_next++;
@@ -330,6 +369,9 @@ void InstanceManager::Triangulate()
             }
 
         }
+
+        ///TODO DEBUG
+        continue;
 
         ///多视角三角化
 
@@ -411,6 +453,9 @@ void InstanceManager::Triangulate()
 * 进行物体的位姿初始化
 */
 void InstanceManager::InitialInstance(){
+
+    ///DEBUG
+    //return;
 
     string log_text="InstanceManager::InitialInstance \n";
 

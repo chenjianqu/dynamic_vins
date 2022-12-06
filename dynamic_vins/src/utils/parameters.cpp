@@ -16,12 +16,14 @@
 namespace dynamic_vins{\
 
 
-Config::Config(const std::string &file_name)
+Config::Config(const std::string &file_name,const std::string &seq_name)
 {
     cv::FileStorage fs(file_name, cv::FileStorage::READ);
     if(!fs.isOpened()){
         throw std::runtime_error(fmt::format("ERROR: Wrong path to settings:{}\n",file_name));
     }
+
+    kDatasetSequence = seq_name;
 
     ///设置slam模式
 
@@ -47,6 +49,8 @@ Config::Config(const std::string &file_name)
         dataset = DatasetType::kViode;
     else if(dataset_name == "euroc")
         dataset = DatasetType::kEuRoc;
+    else if(dataset_name == "custom")
+        dataset = DatasetType::kCustom;
     else
         dataset = DatasetType::kViode;
 
@@ -60,8 +64,7 @@ Config::Config(const std::string &file_name)
     }
     cout << "is_input_seg:" << is_input_seg << endl;
 
-    fs["dataset_sequence"]>>kDatasetSequence;
-    cout << "dataset_sequence:" << kDatasetSequence << endl;
+    is_vertical_draw = dataset == DatasetType::kKitti || dataset == DatasetType::kCustom;
 
     kInputHeight = fs["image_height"];
     kInputWidth = fs["image_width"];

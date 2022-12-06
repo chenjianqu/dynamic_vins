@@ -14,7 +14,7 @@
 
 namespace dynamic_vins{\
 
-void IOParameter::SetParameters(const std::string &config_path)
+void IOParameter::SetParameters(const std::string &config_path,const std::string &seq_name)
 {
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){
@@ -32,9 +32,28 @@ void IOParameter::SetParameters(const std::string &config_path)
 
     kOutputFolder = kBasicDir+"data/output/";
 
-    kVinsResultPath = kOutputFolder + cfg::kDatasetSequence + "_ego-motion.txt";
+    string mode_string;
+    if(cfg::slam==SLAM::kRaw){
+        mode_string="raw";
+    }
+    else if(cfg::slam==SLAM::kNaive){
+        mode_string="naive";
+    }
+    else if(cfg::slam==SLAM::kDynamic){
+        mode_string="dynamic";
+    }
+    else{
+        mode_string = "notdef";
+    }
 
-    kObjectResultPath = kOutputFolder +cfg::kDatasetSequence+"_object.txt";
+    if(cfg::use_line){
+        kVinsResultPath = kOutputFolder + seq_name + "_" + mode_string +  "_LinePoint_Odometry.txt";
+    }
+    else{
+        kVinsResultPath = kOutputFolder + seq_name + "_" + mode_string +  "_PointOnly_Odometry.txt";
+    }
+
+    kObjectResultPath = kOutputFolder +seq_name+ "_" + mode_string +"_Object.txt";
 
     fs["use_dataloader"]>>use_dataloader;
     if(use_dataloader){
@@ -44,13 +63,11 @@ void IOParameter::SetParameters(const std::string &config_path)
             std::terminate();
         }
 
-        std::string kDatasetSequence;
-        fs["dataset_sequence"]>>kDatasetSequence;
         fs["image_dataset_left"] >> kImageDatasetLeft;
-        kImageDatasetLeft = kImageDatasetLeft+kDatasetSequence+"/";
+        kImageDatasetLeft = kImageDatasetLeft+seq_name+"/";
 
         fs["image_dataset_right"]>>kImageDatasetRight;
-        kImageDatasetRight = kImageDatasetRight+kDatasetSequence+"/";
+        kImageDatasetRight = kImageDatasetRight+seq_name+"/";
 
         fs["image_dataset_period"] >> kImageDatasetPeriod;
     }

@@ -16,7 +16,7 @@
 
 namespace dynamic_vins{\
 
-void FlowParameter::SetParameters(const std::string &config_path)
+void FlowParameter::SetParameters(const std::string &config_path,const std::string &seq_name)
 {
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){
@@ -46,10 +46,8 @@ void FlowParameter::SetParameters(const std::string &config_path)
             std::terminate();
         }
 
-        std::string kDatasetSequence;
-        fs["dataset_sequence"]>>kDatasetSequence;
         fs["flow_offline_path"] >> kFlowOfflinePath;
-        kFlowOfflinePath = kFlowOfflinePath+kDatasetSequence+"/";
+        kFlowOfflinePath = kFlowOfflinePath+seq_name+"/";
     }
 
 

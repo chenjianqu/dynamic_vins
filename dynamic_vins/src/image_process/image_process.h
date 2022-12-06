@@ -20,7 +20,7 @@ class ImageProcessor{
 public:
     using Ptr=std::shared_ptr<ImageProcessor>;
 
-    explicit ImageProcessor(const std::string &config_file);
+    explicit ImageProcessor(const std::string &config_file,const std::string &seq_name);
 
     static std::vector<Box3D::Ptr> BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes3d,std::vector<Box2D::Ptr> &boxes2d);
 

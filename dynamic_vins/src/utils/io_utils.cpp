@@ -53,8 +53,8 @@ vector<fs::path> GetDirectoryFileNames(const string &path){
  */
 bool CheckIsDir(const string &dir) {
     if (! std::filesystem::exists(dir)) {
-        cout<<dir<<" not exists. Please check."<<endl;
-        return false;
+        cout<<"CheckIsDir() "<<dir<<" not exists. Please check."<<endl;
+        throw std::runtime_error(dir+" not exists. Please check.");
     }
     std::filesystem::directory_entry entry(dir);
     if (entry.is_directory())

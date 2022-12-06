@@ -168,6 +168,8 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     TicToc tic_toc;
     curr_time=img.time0;
 
+    curr_img = img;
+
     for(auto &[inst_id,inst]:instances_){
         inst.is_curr_visible=false;
         inst.box2d.reset();
@@ -186,6 +188,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     }
     else{
         std::cerr<<"InstFeat::InstsTrack()::MOT not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+        throw std::runtime_error("InstFeat::InstsTrack()::MOT not is implemented");
     }
 
     //将当前帧未观测到的box设置状态
@@ -284,7 +287,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
 
             ///若某个实例的点太少,则采用密集采样的方法得到点
-            int inst_size=inst.curr_points.size();
+            /*int inst_size=inst.curr_points.size();
             for(int i=0;i<inst_size;++i){
                 cv::circle(inst.roi->mask_cv,inst.curr_points[i],2,cv::Scalar(0),-1);
             }
@@ -295,7 +298,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 inst.extra_ids.emplace_back(InstFeat::global_id_count++);
                 //inst.visual_new_points.emplace_back(pt);
                 //inst.track_cnt.push_back(1);
-            }
+            }*/
 
         });
 
@@ -391,6 +394,33 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
         features_map.color = inst.color;
         features_map.box2d = inst.box2d;
         features_map.box3d = inst.box3d;
+
+        ///构建双目点云
+        int rows=inst.roi->roi_gray.rows;
+        int cols=inst.roi->roi_gray.cols;
+        vector<Vec3d> pts3d;
+        for(int i=0;i<rows;i+=2){
+            for(int j=0;j<cols;j+=2){
+                if(inst.roi->mask_cv.at<uchar>(i,j)<=0.5){
+                    continue;
+                }
+                int r=i+inst.box2d->rect.tl().y;
+                int c=j+inst.box2d->rect.tl().x;
+                float disparity = curr_img.disp.at<float>(r,c);
+                if(disparity<=0){
+                    continue;
+                }
+                float depth = cam_s.fx0 * cam_s.baseline / disparity;//根据视差计算深度
+                float x_3d = (c- cam_s.cx0)*depth/cam_s.fx0;
+                float y_3d = (r-cam_s.cy0)*depth/cam_s.fy0;
+                pts3d.emplace_back(x_3d,y_3d,depth);
+                //if(i==j){
+                //    cout<<cam_s.fx0<<" "<<cam_s.baseline<<" "<<disparity<<endl;
+                //}
+            }
+        }
+        features_map.points = pts3d;
+
 
         for(int i=0;i<(int)inst.curr_un_points.size();++i){
             FeaturePoint::Ptr feat=std::make_shared<FeaturePoint>();
@@ -793,7 +823,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         }*/
 
         ///绘制右相机点
-        if(cfg::dataset == DatasetType::kKitti){
+        if(cfg::is_vertical_draw){
             float rows_offset = img.rows /2.;
             for(auto pt : inst.right_points){
                 pt.y+= rows_offset;

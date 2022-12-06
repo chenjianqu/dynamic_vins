@@ -53,6 +53,7 @@ add_definitions(${PCL_DEFINITIONS})
 set(PCL_LIB
         /usr/lib/x86_64-linux-gnu/libpcl_common.so
         /usr/lib/x86_64-linux-gnu/libpcl_io.so
+        /usr/lib/x86_64-linux-gnu/libpcl_filters.so
         /usr/lib/x86_64-linux-gnu/libpcl_visualization.so
         )
 
@@ -90,6 +91,7 @@ include_directories(src/line_detector/line_descriptor/include)
 aux_source_directory(src/utils utils_sources)
 aux_source_directory(src/utils/dataset dataset_sources)
 aux_source_directory(src/utils/tensorrt tensorrt_sources)
+aux_source_directory(src/utils/test test_sources)
 aux_source_directory(src/utils/io io_sources)
 aux_source_directory(src/det2d det2d_sources)
 aux_source_directory(src/det3d det3d_sources)
@@ -107,7 +109,7 @@ aux_source_directory(src/line_detector line_detector_sources)
 
 message("estimator: ${estimator} ")
 
-add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources}
+add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources} ${test_sources}
         ${det2d_sources} ${det3d_sources} ${image_process_source} ${stereo_sources} ${line_detector_sources} ${line_descriptor_sources} ${io_sources}
         ${mot_sources}  ${front_end_sources} ${initial_sources}  ${factor_sources} ${imu_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
@@ -150,6 +152,11 @@ target_link_libraries(orb_demo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRA
 
 add_executable(ransac_test src/system/exp_tools/ransac_test.cpp)
 target_link_libraries(ransac_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
+
+
+add_executable(stereo_test src/system/exp_tools/stereo_test.cpp src/utils/io_utils.cpp)
+target_link_libraries(stereo_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
+
 
 
 add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp ${line_detector_sources} ${line_descriptor_sources})

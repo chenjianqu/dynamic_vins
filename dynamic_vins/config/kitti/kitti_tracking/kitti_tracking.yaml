@@ -14,16 +14,13 @@ use_line: 1 #line feature
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
-#the input sequence id
-dataset_sequence: "0004"
-
 plane_constraint: 1 #是否使用平面约束
 
 undistort_input: 0 #是否对输入进行矫正
 
 ####################### Camera Parameters ########################
 
-kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/0004.txt" #相机内参
+kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/" #相机内参
 
 #kitti tracking seq:18
 #image_width: 1238

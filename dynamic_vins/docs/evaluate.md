@@ -106,7 +106,7 @@ source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_kitti_tracking_traj.sh
 
 ### Evaluate VIODE ego-motion
 
-* Prepare VIODE ground-truth trajectory
+* Generate VIODE ground-truth trajectory
 
 ```shell
 cd dynamic_ws
@@ -130,8 +130,13 @@ rosbag play ${viode_dir}/${sequence}.bag
 * Visualize Trajectory
 
 ```shell
-gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/
-estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-6-7/kitti_tracking_dynamic/
+export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+conda activate py36
+
+gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/viode_egomotion/
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-05/viode_odometry/point_line/raw
+
+sequence=city_day_0_none
 
 evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt --ref=${gt_path}/${sequence}.txt --align -p
 ```
@@ -145,11 +150,14 @@ export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
 conda activate py36
 
 gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/viode_egomotion/
-estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-6-7/viode_raw/
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-05/viode_odometry/
 
 sequence=city_day_0_none
+mode=raw
+use_line=LinePoint
 
-evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
+file_name=${estimate_path}/${sequence}_${mode}_${use_line}_Odometry.txt
+evo_ape tum --align  ${file_name} ${gt_path}/${sequence}.txt && evo_rpe tum --align  ${file_name} ${gt_path}/${sequence}.txt -r trans_part && evo_rpe tum --align  ${file_name} ${gt_path}/${sequence}.txt -r rot_part
 
 ```
 

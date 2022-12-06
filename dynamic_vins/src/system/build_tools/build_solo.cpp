@@ -19,12 +19,13 @@ namespace dv = dynamic_vins;
 
 int main(int argc,char** argv)
 {
-    if(argc != 2){
-        cerr<<"please intput: 参数文件"<<endl;
+    if(argc != 3){
+        cerr<<"please intput: ${cfg_file} ${seq_name}"<<endl;
         return 1;
     }
     string config_file = argv[1];
-    dv::det2d_para::SetParameters(config_file);
+    string seq_name = argv[2];
+    dv::det2d_para::SetParameters(config_file,seq_name);
     return dv::BuildTensorRT(dv::det2d_para::kDetectorOnnxPath,dv::det2d_para::kDetectorSerializePath);
 }
 

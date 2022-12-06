@@ -24,7 +24,7 @@ public:
     inline static std::string kStereoPreprocessPath;
     inline static std::string kDatasetSequence;
 
-    static void SetParameters(const std::string &config_path);
+    static void SetParameters(const std::string &config_path,const std::string &seq_name);
 };
 
 using stereo_para=StereoParameter;

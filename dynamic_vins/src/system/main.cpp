@@ -33,6 +33,7 @@
 #include "front_end/front_end_parameters.h"
 #include "image_process/image_process.h"
 #include "image_process/deeplearning_utils.h"
+#include "utils/test/stereo_test.h"
 
 namespace dynamic_vins{\
 
@@ -62,10 +63,7 @@ void ImageProcess()
     TicToc t_all;
     ImageViewer viewer;
 
-    while(cfg::ok.load(std::memory_order_seq_cst))
-    {
-
-
+    while(cfg::ok.load(std::memory_order_seq_cst)){
 
         if(image_queue.size() >= kImageQueueSize){
             cerr<<"ImageProcess image_queue.size() >= kImageQueueSize,blocked"<<endl;
@@ -159,11 +157,12 @@ void ImageProcess()
             //}
         }
 
-
         ///将结果存放到消息队列中
         if(!cfg::is_only_imgprocess){
             image_queue.push_back(img);
         }
+
+
 
     }
 
@@ -229,8 +228,8 @@ void FeatureTrack()
             }
 
 
-            ///DEBUG
-            string serialize_path = cfg::kBasicDir + "/data/output/serialization/";
+            ///TODO DEBUG
+            //string serialize_path = cfg::kBasicDir + "/data/output/serialization/";
             //serialize_path += fmt::format("{}_point.txt",frame.seq_id);
             //SerializePointFeature(serialize_path,frame.features.points);//序列化
             //frame.features.points = DeserializePointFeature(serialize_path);//反序列化
@@ -332,23 +331,31 @@ int Run(int argc, char **argv){
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
     string file_name = argv[1];
-    cout<<fmt::format("cfg_file:{}",argv[1])<<endl;
+    cout<<fmt::format("cfg_file:{}",file_name)<<endl;
+
+    string seq_name = argv[2];
+    cout<<fmt::format("seq_name:{}",seq_name)<<endl;
 
     try{
-        cfg cfg(file_name);
+        cfg cfg(file_name,seq_name);
         ///初始化logger
         MyLogger::InitLogger(file_name);
         ///初始化相机模型
-        InitCamera(file_name);
+        cout<<"start init camera"<<endl;
+        InitCamera(file_name,seq_name);
         ///初始化局部参数
+        cout<<"start init dataset parameters"<<endl;
         coco::SetParameters(file_name);
         if(cfg::dataset == DatasetType::kViode){
             VIODE::SetParameters(file_name);
         }
-        io_para::SetParameters(file_name);
+        cout<<"start init io"<<endl;
+        io_para::SetParameters(file_name,seq_name);
+
+        cout<<"start init three threads"<<endl;
 
         estimator.reset(new Estimator(file_name));
-        processor.reset(new ImageProcessor(file_name));
+        processor.reset(new ImageProcessor(file_name,seq_name));
 
         feature_tracker = std::make_unique<FeatureTracker>(file_name);
         if(cfg::slam==SLAM::kDynamic){
@@ -361,6 +368,9 @@ int Run(int argc, char **argv){
     }
 
     estimator->SetParameter();
+
+    cout<<"init completed"<<endl;
+
 
     ros::Subscriber sub_imu,sub_img0,sub_img1;
     ros::Subscriber sub_seg0,sub_seg1;
@@ -428,8 +438,8 @@ int Run(int argc, char **argv){
 
 int main(int argc, char **argv)
 {
-    if(argc != 2){
-        std::cerr<<"please input: rosrun vins vins_node [cfg file]"<< std::endl;
+    if(argc != 3){
+        std::cerr<<"please input: rosrun vins vins_node [cfg file] [seq_name]"<< std::endl;
         return 1;
     }
 

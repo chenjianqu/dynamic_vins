@@ -18,9 +18,10 @@
  *******************************************************/
 
 
-
 #include <dirent.h>
 #include <cstdio>
+
+#include <pcl/filters/radius_outlier_removal.h>
 
 #include "estimator.h"
 #include "utils/io/visualization.h"
@@ -1489,9 +1490,9 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         ///动态物体的位姿递推
         im.PropagatePose();
         ///动态特征点的三角化
-        im.Triangulate();
+        //im.Triangulate();
         ///若动态物体未初始化, 则进行初始化
-        im.InitialInstance();
+        //im.InitialInstance();
         ///初始化速度
         im.InitialInstanceVelocity();
         ///根据重投影误差和对极几何判断物体是运动的还是静态的
@@ -1591,6 +1592,9 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
  * 滑动窗口状态估计的入口函数
  */
 void Estimator::ProcessMeasurements(){
+
+    pcl::RadiusOutlierRemoval<PointT> radius_filter;
+
     int cnt=0;
     double time_sum=0;
     TicToc tt,t_all;

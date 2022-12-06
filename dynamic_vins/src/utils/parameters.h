@@ -57,7 +57,8 @@ enum class SLAM{
 enum class DatasetType{
     kViode,
     kKitti,
-    kEuRoc
+    kEuRoc,
+    kCustom
 };
 
 class Config {
@@ -65,7 +66,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     using Ptr=std::shared_ptr<Config>;
 
-    explicit Config(const std::string &file_name);
+    explicit Config(const std::string &file_name,const std::string &seq_name);
 
     inline static std::string kExCalibResultPath;
 
@@ -99,6 +100,8 @@ public:
 
     inline static bool use_plane_constraint{false};
     inline static bool use_det3d{false};
+
+    inline static bool is_vertical_draw{false};
 
     inline static std::atomic_bool ok{true};
 

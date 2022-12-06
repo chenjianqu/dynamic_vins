@@ -87,7 +87,7 @@ private:
     cv::Mat mask_background;
     cv::cuda::GpuMat mask_background_gpu;
 
-    SemanticImage prev_img;
+    SemanticImage prev_img,curr_img;
     bool is_exist_inst_{false};
 
     double curr_time{},last_time{};

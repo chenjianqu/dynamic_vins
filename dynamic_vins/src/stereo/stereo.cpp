@@ -18,10 +18,8 @@
 
 namespace dynamic_vins{ \
 
-MyStereoMatcher::MyStereoMatcher(const std::string &config_path) {
-    stereo_para::SetParameters(config_path);
-
-
+MyStereoMatcher::MyStereoMatcher(const std::string &config_path,const std::string &seq_name) {
+    stereo_para::SetParameters(config_path,seq_name);
 }
 
 

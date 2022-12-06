@@ -264,7 +264,7 @@ std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& 
     string log_text = "FitBox3DFromCameraFrame: \n";
 
     ///最多迭代10次
-    for(int iter=0;iter<10;++iter){
+    for(int iter=0;iter<20;++iter){
         //计算每个点到中心的距离
         vector<tuple<double,Vec3d>> points_with_dist;
         for(auto &p : points_rest){
@@ -312,7 +312,7 @@ std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr = EigenToPCL(points);
         Pub(*point_cloud_ptr,"/dynamic_vins/instance_point_cloud");
         PubCube(center_pt,dims);
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(5000ms);
 
         cout<<center_pt.transpose()<<endl;
 
@@ -393,7 +393,7 @@ std::optional<Vec3d> FitBox3DWithRANSAC(vector<Vec3d> &points,const Vec3d& dims)
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr point_cloud_ptr = EigenToPCL(points);
         Pub(*point_cloud_ptr,"/dynamic_vins/instance_point_cloud");
         PubCube(center,dims);
-        std::this_thread::sleep_for(1000ms);
+        std::this_thread::sleep_for(5000ms);
 
         cout<<center.transpose()<<endl;
     }
@@ -428,7 +428,11 @@ int Run(int argc, char **argv){
         Vec3d noise;
         if(i%4==0){
             noise<<distribution(engine),distribution(engine)+5,distribution(engine)/2.;
-        }else{
+        }
+        else if(i%4==1){
+            noise<<distribution(engine)+3,distribution(engine),distribution(engine)/2.;
+        }
+        else{
             noise<<distribution(engine),distribution(engine),distribution(engine)/4.;
         }
         points[i]= target + noise;

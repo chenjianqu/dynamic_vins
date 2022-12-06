@@ -31,7 +31,7 @@ namespace dynamic_vins{\
 class Detector2D {
 public:
     using Ptr = std::shared_ptr<Detector2D>;
-    explicit Detector2D(const std::string& config_path);
+    Detector2D(const std::string& config_path,const std::string& seq_name);
 
     void VisualizeResult(cv::Mat &input, cv::Mat &mask, std::vector<Box2D::Ptr> &insts);
     void Launch(SemanticImage &img);

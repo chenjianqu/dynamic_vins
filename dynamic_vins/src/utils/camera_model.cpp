@@ -202,7 +202,7 @@ bool PinHoleCamera::ReadFromYamlFile(const std::string& filename)
  * @param config_path
  * @param fx 相机的焦距
  */
-void ReadExtrinsicParameters(const std::string& config_path){
+void ReadExtrinsicParameters(const std::string& config_path,const std::string& seq_name,CameraInfo &cam){
     ///设置为单位矩阵
     if (cfg::is_estimate_ex == 2){
         R_IC.emplace_back(Eigen::Matrix3d::Identity());
@@ -229,6 +229,7 @@ void ReadExtrinsicParameters(const std::string& config_path){
         }
         string kitti_calib_path;
         fs["kitti_calib_path"] >> kitti_calib_path;
+        kitti_calib_path += seq_name+".txt";
         auto calib_map = kitti::ReadCalibFile(kitti_calib_path);
 
         //将点从IMU坐标系变换到相机坐标系0的变换矩阵
@@ -261,14 +262,14 @@ void ReadExtrinsicParameters(const std::string& config_path){
         if(cfg::kCamNum == 2){
             double baseline_3 = calib_map["P3"](0,3) / calib_map["P3"](0,0); //如 baseline_2=-3.395242000000e+02 / (-7.215377000000e+02) = 0.470556424
             double baseline = baseline_3-baseline_2;//0.5
-            cam_v.baseline = std::abs(baseline);
+            cam.baseline = std::abs(baseline);
             R_IC.emplace_back(Mat3d::Identity());
-            T_IC.emplace_back(Vec3d(cam_v.baseline,0,0));
+            T_IC.emplace_back(Vec3d(cam.baseline,0,0));
         }
 
     }
     ///从文件中读取相机内参
-    else if(cfg::dataset == DatasetType::kViode || cfg::dataset== DatasetType::kEuRoc){
+    else if(cfg::dataset == DatasetType::kViode || cfg::dataset== DatasetType::kEuRoc || cfg::dataset==DatasetType::kCustom){
         cv::Mat cv_T;
         fs["body_T_cam0"] >> cv_T;
         Eigen::Matrix4d body_T_cam0;
@@ -285,16 +286,17 @@ void ReadExtrinsicParameters(const std::string& config_path){
 
             ///计算baseline
             Eigen::Matrix4d cam0_T_cam1 = body_T_cam0.inverse() * body_T_cam1;
-            cam_v.baseline = std::abs(cam0_T_cam1(0,3));
+            cam.baseline = std::abs(cam0_T_cam1(0,3));
             Debugv("ReadExtrinsicParameters() cam0_T_cam1:{}", EigenToStr(cam0_T_cam1));
         }
 
     }
     else{
         std::cerr<<"ReadExtrinsicParameters() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+        std::terminate();
     }
 
-    Debugv("ReadExtrinsicParameters() baseline:{}", cam_v.baseline);
+    Debugv("ReadExtrinsicParameters() baseline:{}", cam.baseline);
 
 
     std::string kBasicDir;
@@ -384,7 +386,7 @@ void SetCameraIntrinsicByK(CameraInfo &cam){
 
 
 
-void InitCameraByConfig(const std::string& config_path,CameraInfo &cam){
+void InitCameraByConfig(const std::string& config_path,const std::string& seq_name,CameraInfo &cam){
     vector<string> cam_paths = GetCameraPath(config_path);
 
     if(!cam_paths.empty()){
@@ -407,6 +409,7 @@ void InitCameraByConfig(const std::string& config_path,CameraInfo &cam){
                 std::terminate();
             }
             fs["kitti_calib_path"] >> kitti_calib_path;
+            kitti_calib_path += seq_name+".txt";
 
             int image_width,image_height;
             fs["image_width"] >> image_width;
@@ -447,9 +450,9 @@ void InitCameraByConfig(const std::string& config_path,CameraInfo &cam){
  * @param config_path
  * @param cam
  */
-void InitOneCamera(const std::string& config_path,CameraInfo &cam){
+void InitOneCamera(const std::string& config_path,const std::string& seq_name,CameraInfo &cam){
 
-    InitCameraByConfig(config_path,cam);
+    InitCameraByConfig(config_path,seq_name,cam);
 
     cam.model_type = cam.cam0->modelType();
 
@@ -537,16 +540,18 @@ void InitOneCamera(const std::string& config_path,CameraInfo &cam){
 }
 
 
-void InitCamera(const std::string& config_path){
+void InitCamera(const std::string& config_path,const std::string& seq_name){
     ///初始化内参
-    InitOneCamera(config_path,cam_s);
+    InitOneCamera(config_path,seq_name,cam_s);
     //InitOneCamera(config_path,cam_t);
     //InitOneCamera(config_path,cam_v);
+
+    ///初始化外参
+    ReadExtrinsicParameters(config_path,seq_name,cam_s);
+
     cam_t = cam_s;
     cam_v = cam_s;
 
-    ///初始化外参
-    ReadExtrinsicParameters(config_path);
 }
 
 

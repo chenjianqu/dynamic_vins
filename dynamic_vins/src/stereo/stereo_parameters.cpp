@@ -18,16 +18,16 @@ namespace dynamic_vins{\
 
 
 
-void StereoParameter::SetParameters(const std::string &config_path)
+void StereoParameter::SetParameters(const std::string &config_path,const std::string &seq_name)
 {
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){
         throw std::runtime_error(std::string("ERROR: Wrong path to settings:" + config_path));
     }
 
-    fs["stereo_preprocess_path"] >> kStereoPreprocessPath;
+    kDatasetSequence = seq_name;
 
-    fs["dataset_sequence"]>>kDatasetSequence;
+    fs["stereo_preprocess_path"] >> kStereoPreprocessPath;
 
 
     fs.release();

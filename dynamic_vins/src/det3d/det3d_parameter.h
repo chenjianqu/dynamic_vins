@@ -26,7 +26,7 @@ public:
 
     inline static bool use_offline;
 
-    static void SetParameters(const std::string &config_path);
+    static void SetParameters(const std::string &config_path,const std::string &seq_name);
 };
 
 using det3d_para=Det3dParameter;

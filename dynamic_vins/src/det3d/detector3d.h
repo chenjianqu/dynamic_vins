@@ -22,7 +22,7 @@ namespace dynamic_vins{\
 class Detector3D{
 public:
     using Ptr=std::shared_ptr<Detector3D>;
-    explicit Detector3D(const std::string& config_path);
+    explicit Detector3D(const std::string& config_path,const std::string& seq_name);
 
     void Launch(SemanticImage &img);
 

@@ -4,10 +4,6 @@
 
 
 
-
-
-
-
 ## 依赖
 
 * CMake >=3.12  这是为了兼容torch-vision的编译
@@ -74,13 +70,13 @@ source ~/.bashrc
 ```shell
 source devel/setup.bash
 
-clion_Path=/home/chen/app/clion-2021.2
+clion_path=/home/chen/app/clion-2021.2
 
 #launch clion
-sh ${clion_Path}/bin/clion.sh
+sh ${clion_path}/bin/clion.sh
 
 #after catkin_make
-${clion_Path}/bin/cmake/linux/bin/cmake --build ${dynamic_vins_root}/src/dynamic_vins/cmake-build-debug --target dynamic_vins -- -j4
+${clion_path}/bin/cmake/linux/bin/cmake --build ${dynamic_vins_root}/src/dynamic_vins/cmake-build-debug --target dynamic_vins -- -j4
 ```
 
 
@@ -105,14 +101,17 @@ rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 * launch dynamic_vins
 
 ```shell
-#config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
-#config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml
+config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
+seq_name=city_day_0_none
+
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
-config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
 #config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking_raw_line.yaml
 #config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc2/euroc.yaml
+#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/custom/stereo_1920x1080/custom.yaml
 
-source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file}
+source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name}
 ```
 
 

@@ -17,7 +17,7 @@ namespace dynamic_vins{\
 
 
 
-void Det3dParameter::SetParameters(const std::string &config_path)
+void Det3dParameter::SetParameters(const std::string &config_path,const std::string &seq_name)
 {
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){
@@ -34,17 +34,13 @@ void Det3dParameter::SetParameters(const std::string &config_path)
             std::terminate();
         }
 
-        std::string kDatasetSequence;
-        fs["dataset_sequence"]>>kDatasetSequence;
         fs["det3d_preprocess_path"] >> kDet3dPreprocessPath;
-        kDet3dPreprocessPath = kDet3dPreprocessPath+kDatasetSequence+"/";
+        kDet3dPreprocessPath = kDet3dPreprocessPath+seq_name+"/";
     }
 
     if(!fs["object_groundtruth_path"].isNone()){
-        std::string kDatasetSequence;
-        fs["dataset_sequence"]>>kDatasetSequence;
         fs["object_groundtruth_path"] >> kGroundTruthPath;
-        kGroundTruthPath += kDatasetSequence+".txt";
+        kGroundTruthPath += seq_name+".txt";
     }
 
     fs.release();

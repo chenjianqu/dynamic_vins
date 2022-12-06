@@ -24,6 +24,8 @@
 
 #include "landmark.h"
 
+
+
 namespace dynamic_vins{\
 
 
@@ -51,6 +53,8 @@ public:
     cv::Scalar color;
     Box2D::Ptr box2d;
     Box3D::Ptr box3d;
+
+    vector<Vec3d> points;
 };
 
 
@@ -67,7 +71,6 @@ struct FrontendFeature{
 
     ///根据物体的实例信息,格式：{instnce_id,{feature_id,}}
     std::map<unsigned int,FeatureInstance> instances;
-
 };
 
 

@@ -15,7 +15,7 @@
 
 
 
-void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path) {
+void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path,const std::string &seq_name) {
 
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
     if(!fs.isOpened()){
@@ -33,10 +33,8 @@ void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path)
             std::terminate();
         }
 
-        std::string kDatasetSequence;
-        fs["dataset_sequence"]>>kDatasetSequence;
         fs["det2d_preprocess_path"] >> kDet2dPreprocessPath;
-        kDet2dPreprocessPath = kDet2dPreprocessPath+kDatasetSequence+"/";
+        kDet2dPreprocessPath = kDet2dPreprocessPath+seq_name+"/";
     }
 
     fs["solo_onnx_path"] >> kDetectorOnnxPath;

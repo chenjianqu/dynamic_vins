@@ -305,20 +305,9 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
                ///可视化线
                line_detector->VisualizeLine(img_vis, bg.curr_lines);
                if(cfg::is_stereo){
-                   if(cfg::dataset==DatasetType::kKitti){
-                       line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
-                   }
-                   else{
-                       line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
-                   }
+                   line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, cfg::is_vertical_draw);
 
-
-                   if(cfg::dataset==DatasetType::kKitti){
-                       line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,true);
-                   }
-                   else{
-                       line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,false);
-                   }
+                   //line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,cfg::is_vertical_draw);
                }
 
 
@@ -480,12 +469,7 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
             ///可视化线
             line_detector->VisualizeLine(img_vis, bg.curr_lines);
             if(cfg::is_stereo){
-                if(cfg::dataset==DatasetType::kKitti){
-                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, true);
-                }
-                else{
-                    line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, false);
-                }
+               line_detector->VisualizeRightLine(img_vis, bg.curr_lines_right, cfg::is_vertical_draw);
             }
 
             /*
@@ -607,7 +591,7 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
     }
 
     if (cfg::is_stereo && !img.color1.empty()){
-        if(cfg::dataset == DatasetType::kKitti){
+        if(cfg::is_vertical_draw){
             cv::vconcat(img_vis, img.color1, img_vis);
         }else{
             cv::hconcat(img_vis, img.color1, img_vis);
@@ -627,7 +611,7 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
         cv::circle(img_vis, pt, 2, cv::Scalar(255, 255, 255), 2);
 
     if (cfg::is_stereo && !img.color1.empty() ){
-        if(cfg::dataset == DatasetType::kKitti){
+        if(cfg::is_vertical_draw){
             for (auto &rightPt : curRightPts){
                 rightPt.y += (float)img.color0.rows;
                 cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
@@ -656,10 +640,11 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
                                vector<cv::Point2f> &curLeftPts,
                                vector<cv::Point2f> &curRightPts,
                                map<unsigned int, cv::Point2f> &prevLeftPtsMap){
+
     //int rows = imLeft.rows;
     int cols = imLeft.cols;
     if (!imRight.empty() && cfg::is_stereo){
-        if(cfg::dataset == DatasetType::kKitti){
+        if(cfg::is_vertical_draw){
             cv::vconcat(imLeft, imRight, img_vis);
         }else{
             cv::hconcat(imLeft, imRight, img_vis);
@@ -669,7 +654,6 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
         img_vis = imLeft.clone();
     }
 
-
     cv::cvtColor(img_vis, img_vis, CV_GRAY2RGB);
 
     for (size_t j = 0; j < curLeftPts.size(); j++){
@@ -678,7 +662,7 @@ void FeatureTracker::DrawTrack(const cv::Mat &imLeft, const cv::Mat &imRight,
     }
 
     if (cfg::is_stereo && !imRight.empty() ){
-        if(cfg::dataset == DatasetType::kKitti){
+        if(cfg::is_vertical_draw){
             for (auto &rightPt : curRightPts){
                 rightPt.y += (float)imLeft.rows;
                 cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);

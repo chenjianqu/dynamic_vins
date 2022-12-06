@@ -440,21 +440,21 @@ public:
 
 
 
-    void InitGlobalParameters(const string &file_name){
-        cfg cfg(file_name);
+    void InitGlobalParameters(const string &file_name,const string &seq_name){
+        cfg cfg(file_name,seq_name);
         ///初始化logger
         MyLogger::InitLogger(file_name);
         ///初始化相机模型
-        InitCamera(file_name);
+        InitCamera(file_name,seq_name);
         ///初始化局部参数
-        io_para::SetParameters(file_name);
+        io_para::SetParameters(file_name,seq_name);
 
-        det3d_para::SetParameters(file_name);
+        det3d_para::SetParameters(file_name,seq_name);
 
 
         object3d_root_path=det3d_para::kDet3dPreprocessPath;
         tracking_gt_path=det3d_para::kGroundTruthPath;
-        tracking_estimation_path= io_para::kOutputFolder + cfg::kDatasetSequence+".txt";
+        tracking_estimation_path= io_para::kOutputFolder + seq_name+".txt";
         camera_pose_file = io_para::kVinsResultPath;
         img_root_path=io_para::kImageDatasetLeft;
     }
@@ -479,8 +479,8 @@ public:
 
 int main(int argc, char **argv)
 {
-    if(argc != 3){
-        std::cerr<<"please input: rosrun dynamic_vins pub_object3d ${cfg_file} mode"<< std::endl;
+    if(argc != 4){
+        std::cerr<<"please input: rosrun dynamic_vins pub_object3d ${cfg_file} ${seq_name} mode"<< std::endl;
         return 1;
     }
 
@@ -490,9 +490,9 @@ int main(int argc, char **argv)
 
     dynamic_vins::PubDemo pub_demo;
 
-    pub_demo.InitGlobalParameters(argv[1]);
+    pub_demo.InitGlobalParameters(argv[1],argv[2]);
 
-    string mode=argv[2];
+    string mode=argv[3];
     if(mode.find("gt")==string::npos && mode.find("estimation")==string::npos && mode.find("prediction")==string::npos){
         cerr<<"mode must be gt|estimation|prediction"<<endl;
         return -1;

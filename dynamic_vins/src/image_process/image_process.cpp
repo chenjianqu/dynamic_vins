@@ -10,13 +10,13 @@
 namespace dynamic_vins{ \
 
 
-ImageProcessor::ImageProcessor(const std::string &config_file){
-    detector2d.reset(new Detector2D(config_file));
+ImageProcessor::ImageProcessor(const std::string &config_file,const std::string &seq_name){
+    detector2d.reset(new Detector2D(config_file,seq_name));
     if(cfg::use_det3d){
-        detector3d.reset(new Detector3D(config_file));
+        detector3d.reset(new Detector3D(config_file,seq_name));
     }
     //flow_estimator = std::make_unique<FlowEstimator>(config_file);
-    stereo_matcher = std::make_shared<MyStereoMatcher>(config_file);
+    stereo_matcher = std::make_shared<MyStereoMatcher>(config_file,seq_name);
 }
 
 
@@ -169,6 +169,7 @@ void ImageProcessor::Run(SemanticImage &img) {
             }
             else{
                 std::cerr<<"ImageProcessor::Run()::set_mask not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+                std::terminate();
             }
         }
         Infos("ImageProcess SetMask: {} ms", tt.TocThenTic());

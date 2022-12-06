@@ -25,8 +25,8 @@
 namespace dynamic_vins{\
 
 
-Detector3D::Detector3D(const std::string& config_path){
-    det3d_para::SetParameters(config_path);
+Detector3D::Detector3D(const std::string& config_path,const std::string& seq_name){
+    det3d_para::SetParameters(config_path,seq_name);
 }
 
 
@@ -50,6 +50,11 @@ std::vector<Box3D::Ptr>  Detector3D::WaitResult(){
         else if(cfg::dataset == DatasetType::kKitti){
             string target_name = PadNumber(image_seq_id,6);//补零
             return Detector3D::ReadBox3D(target_name);
+        }
+        else if(cfg::dataset == DatasetType::kKitti){
+            std::cerr<<"Detector3D::WaitResult() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+            throw std::runtime_error("Detector3D::WaitResult() not is implemented");
+            return {};
         }
         else{
             std::cerr<<"Detector3D::WaitResult() not is implemented, as dataset is "<<cfg::dataset_name<<endl;

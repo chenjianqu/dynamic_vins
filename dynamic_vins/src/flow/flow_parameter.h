@@ -28,7 +28,7 @@ public:
 
     inline static bool use_offline_flow;
 
-    static void SetParameters(const std::string &config_path);
+    static void SetParameters(const std::string &config_path,const std::string &seq_name);
 };
 
 using flow_para = FlowParameter;

@@ -654,6 +654,24 @@ void Publisher::PubInstances(const std_msgs::Header &header)
 
 
     PointCloudPublisher::Pub(instance_point_cloud,"instance_point_cloud");
+
+    PointCloud::Ptr pc(new PointCloud);
+    for(auto &[key,inst] : e->im.instances){
+        if(!inst.is_tracking ){
+            continue;
+        }
+        if(!inst.points_extra[body.frame].empty()){
+            for(auto &v:inst.points_extra[body.frame]){
+                PointT p(inst.color[2],inst.color[1],inst.color[0]);
+                p.x = v.x();
+                p.y = v.y();
+                p.z = v.z();
+                pc->points.push_back(p);
+            }
+        }
+    }
+    PointCloudPublisher::Pub(*pc,"stereo_point_cloud");
+
     //PointCloudPublisher::Pub(stereo_point_cloud,"instance_stereo_point_cloud");
 }
 

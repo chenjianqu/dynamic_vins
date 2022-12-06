@@ -99,10 +99,10 @@ vector<Box2D::Ptr> BuildBoxes2D(torch::Tensor &seg_label,torch::Tensor &cate_lab
 
 
 
-Detector2D::Detector2D(const std::string& config_path)
+Detector2D::Detector2D(const std::string& config_path,const std::string& seq_name)
 {
     ///初始化参数
-    det2d_para::SetParameters(config_path);
+    det2d_para::SetParameters(config_path,seq_name);
 
     if(!(cfg::slam == SLAM::kNaive || cfg::slam == SLAM::kDynamic) || cfg::is_input_seg){
         fmt::print("cfg::slam == SlamType::kRaw || cfg::is_input_seg. So don't need detector\n");

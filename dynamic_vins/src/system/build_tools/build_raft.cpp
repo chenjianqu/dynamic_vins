@@ -27,7 +27,7 @@ int main(int argc, char **argv)
     string config_file = argv[1];
     fmt::print("config_file:{}\n",argv[1]);
 
-    dv::flow_para::SetParameters(config_file);
+    dv::flow_para::SetParameters(config_file,"");
 
     fmt::print("start build fnet_onnx_path\n");
     if(dv::BuildTensorRT(dv::flow_para::kRaftFnetOnnxPath,dv::flow_para::kRaftFnetTensorrtPath)!=0){

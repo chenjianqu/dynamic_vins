@@ -129,8 +129,6 @@ SemanticImage Dataloader::LoadStereo()
     SemanticImage img;
 
     if(index >= left_names.size()){
-        cfg::ok=false;
-        ros::shutdown();
         return img;
     }
     cout<<left_names[index]<<endl;
@@ -144,8 +142,6 @@ SemanticImage Dataloader::LoadStereo()
     img.time0 = time;
     img.time1 = time;
     img.seq = std::stoi(name_stem);
-
-
 
     time+=0.05; // 时间戳
     index++;

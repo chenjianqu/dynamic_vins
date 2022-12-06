@@ -85,7 +85,7 @@ extern CameraInfo cam_s;//用于segmentation线程的相机
 extern CameraInfo cam_t;//用于tracking线程的相机
 extern CameraInfo cam_v;//用于VIO线程的相机
 
-void InitCamera(const std::string& config_path);
+void InitCamera(const std::string& config_path,const std::string& seq_name);
 
 vector<string> GetCameraPath(const string &config_path);
 
