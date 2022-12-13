@@ -101,8 +101,8 @@ rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 * launch dynamic_vins
 
 ```shell
-config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
-seq_name=city_day_0_none
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
+#seq_name=city_day_0_none
 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
@@ -110,6 +110,11 @@ seq_name=city_day_0_none
 #config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking_raw_line.yaml
 #config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc2/euroc.yaml
 #config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/custom/stereo_1920x1080/custom.yaml
+
+config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720_vison_only/custom.yaml
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720/custom.yaml
+
+seq_name=room_static_1
 
 source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name}
 ```

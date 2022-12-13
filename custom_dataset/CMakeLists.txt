@@ -58,3 +58,9 @@ target_link_libraries(capture_single_image ${catkin_LIBRARIES} ${OpenCV_LIBS} ${
 add_executable(calib_camera src/calib_camera.cpp src/io_utils.cpp)
 target_link_libraries(calib_camera ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} )
 
+add_executable(write_rosbag src/write_rosbag.cpp src/io_utils.cpp)
+target_link_libraries(write_rosbag ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} )
+
+add_executable(sub_write_vicon src/sub_write_vicon.cpp src/io_utils.cpp)
+target_link_libraries(sub_write_vicon ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} )
+

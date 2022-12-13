@@ -3,18 +3,32 @@
 
 # Evaluate
 
+* set alias
+
+```shell
+vim ~/.bashrc
+```
+
+write down:
+
+```shell
+alias clion='sh /home/chen/app/clion-2021.2/bin/clion.sh'
+alias sourced='source devel/setup.bash'
+alias sourceb='source ~/.bashrc'
+alias startconda='export PATH="/home/chen/anaconda3/bin:$PATH" && source activate'
+```
 
 
 
 
 
-## Evaluate ego-motion with EVO
+
+## Evaluate odometry with EVO
 
 ### Install EVO
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
+startconda && conda activate py36
 
 sudo apt install python-pip 
 pip install evo --upgrade --no-binary evo 
@@ -22,7 +36,7 @@ pip install evo --upgrade --no-binary evo
 
 
 
-### Evaluate Kitti-Tracking ego-motion
+### Evaluate Kitti-Tracking odometry
 
 #### Manually
 
@@ -48,8 +62,7 @@ rosrun dynamic_vins_eval save_oxts ${oxts_path}/${sequence}.txt ${save_path}/${s
 * Evaluation
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
+startconda && conda activate py36
 
 sequence=0004
 
@@ -87,8 +100,7 @@ evo_traj tum ${save_path}/${sequence}.txt -p
 * Evaluate
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
+startconda && conda activate py36
 
 estimate_dir=data/exp/2022-6-7/kitti_tracking_naive/
 sequence=0004
@@ -104,13 +116,13 @@ source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_kitti_tracking_traj.sh
 
 
 
-### Evaluate VIODE ego-motion
+### Evaluate VIODE odometry
 
 * Generate VIODE ground-truth trajectory
 
 ```shell
 cd dynamic_ws
-source devel/setup.bash
+sourced
 
 save_dir=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/viode_egomotion/
 save_name=city_night_3_high
@@ -130,8 +142,7 @@ rosbag play ${viode_dir}/${sequence}.bag
 * Visualize Trajectory
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
+startconda && conda activate py36
 
 gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/viode_egomotion/
 estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-05/viode_odometry/point_line/raw
@@ -146,8 +157,7 @@ evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt --ref=${gt_path}/${sequ
 * Evaluate
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
+startconda && conda activate py36
 
 gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/viode_egomotion/
 estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-05/viode_odometry/
@@ -165,13 +175,12 @@ evo_ape tum --align  ${file_name} ${gt_path}/${sequence}.txt && evo_rpe tum --al
 
 
 
-### Evaluate EuRoc ego-motion
+### Evaluate EuRoc odometry
 
 * Prepare EuRoc dataset ground-truth
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
+startconda && conda activate py36
 
 evo_traj euroc --help
 
@@ -204,8 +213,7 @@ evo_traj tum ${estimate_path}/${sequence}_ego-motion.txt --ref=${gt_path}/${sequ
 * Evaluate
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
+startconda && conda activate py36
 
 gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion
 estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
@@ -213,6 +221,67 @@ estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
 sequence=MH_01_easy
 
 evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
+```
+
+
+
+
+
+
+
+### Evaluate Custom dataset odometry
+
+```shell
+startconda && conda activate py36
+
+
+
+gt_name=${gt_path}/room_static_2/vicon.txt
+estimate_name=${estimate_path}/room_static_2_VO_raw_PointLine_Odometry.txt
+
+evo_ape tum --align  ${estimate_name} ${gt_name} && evo_rpe tum --align  ${estimate_name} ${gt_name} -r trans_part && evo_rpe tum --align  ${estimate_name} ${gt_name} -r rot_part
+```
+
+and draw the plot:
+
+```shell
+evo_traj tum ${estimate_name}  --ref=${gt_name}  --align -p
+```
+
+
+
+* Evaluate and write to csv
+
+将输出的评估结果绘制为表格
+
+```shell
+startconda && conda activate py36
+
+gt_name=${gt_path}/room_static_3/vicon.txt
+
+estimate_file=room_static_3_VO_raw_LinePoint_Odometry.txt
+
+echo ${estimate_file}  > ape.txt
+evo_ape tum --align  ${estimate_path}/${estimate_file} ${gt_name} >> ape.txt
+
+echo ${estimate_file}  > rpe_t.txt
+evo_rpe tum --align  ${estimate_path}/${estimate_file} ${gt_name}  -r trans_part  >> rpe_t.txt
+
+echo ${estimate_file}  > rpe_r.txt
+evo_rpe tum --align  ${estimate_path}/${estimate_file} ${gt_name}  -r rot_part  >> rpe_r.txt
+
+python ${dynamic_vins_root}/src/dynamic_vins/scripts/python/write_summary.py ape.txt ape.csv
+python ${dynamic_vins_root}/src/dynamic_vins/scripts/python/write_summary.py rpe_t.txt rpe_t.csv
+python  ${dynamic_vins_root}/src/dynamic_vins/scripts/python/write_summary.py rpe_r.txt rpe_r.csv
+
+```
+
+
+
+或者，修改 `${dynamic_vins_root}/src/dynamic_vins/scripts/eval_custom_odometry.sh`，直接执行脚本即可：
+
+```shell
+sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_custom_odometry.sh
 ```
 
 
@@ -236,11 +305,8 @@ evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${se
 * Split object tracking label to `TUM` format
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
-conda activate py36
-
-cd ${dynamic_vins_root}
-source devel/setup.bash
+startconda && conda activate py36
+sourced
 
 sequence=0004
 gt_id=2
@@ -313,7 +379,7 @@ Here we use TrackEval to evaluate our mot estimation result.
 ```shell
 git clone https://github.com/JonathonLuiten/TrackEval.git
 
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+startconda
 conda create -n track_evel python=3.8
 
 conda activate track_evel
@@ -375,7 +441,7 @@ gedit ${TrackEval}/data/gt/kitti/kitti_mots_val/evaluate_mots.seqmap.val
 Eval:
 
 ```shell
-export PATH="/home/chen/anaconda3/bin:$PATH" && source activate
+startconda
 conda activate track_evel
 
 TrackEval=/home/chen/PycharmProjects/MOT_Eval/TrackEval-master

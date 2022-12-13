@@ -26,7 +26,7 @@ void BodyState::SetOptimizeParameters() {
         para_pose[i][5] = q.z();
         para_pose[i][6] = q.w();
 
-        if(cfg::is_use_imu)
+        if(cfg::use_imu)
         {
             para_speed_bias[i][0] = Vs[i].x();
             para_speed_bias[i][1] = Vs[i].y();
@@ -60,7 +60,7 @@ void BodyState::SetOptimizeParameters() {
 
 void BodyState::GetOptimizationParameters(Vec3d &origin_R0,Vec3d &origin_P0) {
 
-    if(cfg::is_use_imu){
+    if(cfg::use_imu){
         Vec3d origin_R00 = Utility::R2ypr(Quaterniond(para_pose[0][6],
                                                       para_pose[0][3],
                                                       para_pose[0][4],
@@ -113,7 +113,7 @@ void BodyState::GetOptimizationParameters(Vec3d &origin_R0,Vec3d &origin_P0) {
         }
     }
 
-    if(cfg::is_use_imu){
+    if(cfg::use_imu){
         for (int i = 0; i < cfg::kCamNum; i++){
             tic[i] = Vec3d(para_ex_pose[i][0],
                            para_ex_pose[i][1],

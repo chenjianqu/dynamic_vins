@@ -76,11 +76,11 @@ void Estimator::AddInstanceParameterBlock(ceres::Problem &problem) {
     for (int i = 0; i < frame + 1; i++){
         ceres::LocalParameterization *lp = new PoseLocalParameterization();
         problem.AddParameterBlock(body.para_pose[i], kSizePose, lp);
-        if(cfg::is_use_imu)
+        if(cfg::use_imu)
             problem.AddParameterBlock(body.para_speed_bias[i], kSizeSpeedBias);
     }
 
-    if(!cfg::is_use_imu)
+    if(!cfg::use_imu)
         problem.SetParameterBlockConstant(body.para_pose[0]);
 
     ///添加外参顶点
@@ -115,7 +115,7 @@ int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *lo
     }
 
     ///IMU因子
-    if(cfg::is_use_imu){
+    if(cfg::use_imu){
         for (int i = 0; i < frame; i++){
             int j = i + 1;
             if (pre_integrations[j]->sum_dt > 10.0)
@@ -387,7 +387,7 @@ void Estimator::SetMarginalizationInfo()
             marg_info->addResidualBlockInfo(residual_block_info);
         }
         ///IMU的边缘化信息
-        if(cfg::is_use_imu){
+        if(cfg::use_imu){
             if (pre_integrations[1]->sum_dt < 10.0) {
                 auto* imu_factor = new IMUFactor(pre_integrations[1]);
                 auto *residual_block_info = new ResidualBlockInfo(
@@ -499,7 +499,7 @@ void Estimator::SetMarginalizationInfo()
         std::unordered_map<long, double *> addr_shift;
         for (int i = 1; i <= kWinSize; i++){
             addr_shift[reinterpret_cast<long>(body.para_pose[i])] = body.para_pose[i - 1];
-            if(cfg::is_use_imu)
+            if(cfg::use_imu)
                 addr_shift[reinterpret_cast<long>(body.para_speed_bias[i])] = body.para_speed_bias[i - 1];
         }
         for (int i = 0; i < cfg::kCamNum; i++)
@@ -555,12 +555,12 @@ void Estimator::SetMarginalizationInfo()
                 }
                 else if (i == kWinSize){
                     addr_shift[reinterpret_cast<long>(body.para_pose[i])] = body.para_pose[i - 1];
-                    if(cfg::is_use_imu)
+                    if(cfg::use_imu)
                         addr_shift[reinterpret_cast<long>(body.para_speed_bias[i])] = body.para_speed_bias[i - 1];
                 }
                 else{
                     addr_shift[reinterpret_cast<long>(body.para_pose[i])] = body.para_pose[i];
-                    if(cfg::is_use_imu)
+                    if(cfg::use_imu)
                         addr_shift[reinterpret_cast<long>(body.para_speed_bias[i])] = body.para_speed_bias[i];
                 }
             }
@@ -663,9 +663,9 @@ void Estimator::ChangeSensorType(int use_imu, int use_stereo)
         printf("at least use two sensobody.Rs! \n");
     }
     else{
-        if(cfg::is_use_imu != use_imu){
-            cfg::is_use_imu = use_imu;
-            if(cfg::is_use_imu){
+        if(cfg::use_imu != use_imu){
+            cfg::use_imu = use_imu;
+            if(cfg::use_imu){
                 restart = true;
             }
             else{
@@ -676,7 +676,7 @@ void Estimator::ChangeSensorType(int use_imu, int use_stereo)
             }
         }
         cfg::is_stereo = use_stereo;
-        printf("use imu %d use stereo %d\n", cfg::is_use_imu, cfg::is_stereo);
+        printf("use imu %d use stereo %d\n", cfg::use_imu, cfg::is_stereo);
     }
     process_mutex.unlock();
 
@@ -1144,7 +1144,7 @@ void Estimator::SlideWindow()
                 body.headers[i] = body.headers[i + 1];
                 body.Rs[i].swap(body.Rs[i + 1]);
                 body.Ps[i].swap(body.Ps[i + 1]);
-                if(cfg::is_use_imu){
+                if(cfg::use_imu){
                     std::swap(pre_integrations[i], pre_integrations[i + 1]);
                     dt_buf[i].swap(dt_buf[i + 1]);
                     linear_acceleration_buf[i].swap(linear_acceleration_buf[i + 1]);
@@ -1159,7 +1159,7 @@ void Estimator::SlideWindow()
             body.Ps[kWinSize] = body.Ps[kWinSize - 1];
             body.Rs[kWinSize] = body.Rs[kWinSize - 1];
 
-            if(cfg::is_use_imu){
+            if(cfg::use_imu){
                 body.Vs[kWinSize] = body.Vs[kWinSize - 1];
                 body.Bas[kWinSize] = body.Bas[kWinSize - 1];
                 body.Bgs[kWinSize] = body.Bgs[kWinSize - 1];
@@ -1189,7 +1189,7 @@ void Estimator::SlideWindow()
             body.Ps[frame - 1] = body.Ps[frame];
             body.Rs[frame - 1] = body.Rs[frame];
 
-            if(cfg::is_use_imu){
+            if(cfg::use_imu){
                 for (unsigned int i = 0; i < dt_buf[frame].size(); i++){
                     double tmp_dt = dt_buf[frame][i];
                     Vec3d tmp_linear_acceleration = linear_acceleration_buf[frame][i];
@@ -1348,7 +1348,7 @@ void Estimator::InitEstimator(double header){
         }
     }
 
-    if (!cfg::is_stereo && cfg::is_use_imu){ // monocular + IMU initilization
+    if (!cfg::is_stereo && cfg::use_imu){ // monocular + IMU initilization
         if (frame == kWinSize){
             bool result = false;
             if(cfg::is_estimate_ex != 2 && (header - initial_timestamp) > 0.1){
@@ -1369,7 +1369,7 @@ void Estimator::InitEstimator(double header){
         }
     }
     // stereo + IMU initilization
-    else if(cfg::is_stereo && cfg::is_use_imu){
+    else if(cfg::is_stereo && cfg::use_imu){
         feat_manager.InitFramePoseByPnP(frame);
         feat_manager.TriangulatePoints();
         if (frame == kWinSize){
@@ -1390,7 +1390,7 @@ void Estimator::InitEstimator(double header){
         }
     }
     // stereo only initilization
-    else if(cfg::is_stereo && !cfg::is_use_imu){
+    else if(cfg::is_stereo && !cfg::use_imu){
         feat_manager.InitFramePoseByPnP(frame);
         feat_manager.TriangulatePoints();
         Optimization();
@@ -1460,7 +1460,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
 
 
     ///若没有IMU,则需要根据PnP得到当前帧的位姿
-    if(!cfg::is_use_imu)
+    if(!cfg::use_imu)
         feat_manager.InitFramePoseByPnP(frame);
 
     ///三角化背景特征点
@@ -1609,8 +1609,8 @@ void Estimator::ProcessMeasurements(){
         if(!front_time)
             continue;
         cur_time = *front_time + body.td;
-        if(cfg::is_use_imu && !IMUAvailable(cur_time)){
-            std::cerr<<"wait for imu ..."<<endl;
+        if(cfg::use_imu && !IMUAvailable(cur_time)){
+            //std::cerr<<"wait for imu ..."<<endl;
             std::this_thread::sleep_for(5ms);
             continue;
         }
@@ -1620,7 +1620,7 @@ void Estimator::ProcessMeasurements(){
 
         ///获取上一帧时刻到当前时刻的IMU测量值
         vector<pair<double, Vec3d>> acc_vec, gyr_vec;
-        if(cfg::is_use_imu){
+        if(cfg::use_imu){
             std::unique_lock<std::mutex> lock(buf_mutex);
             GetIMUInterval(prev_time, cur_time, acc_vec, gyr_vec);
         }
@@ -1635,7 +1635,7 @@ void Estimator::ProcessMeasurements(){
         body.frame_time = feature_frame.time;
 
         ///IMU预积分 和 状态递推
-        if(cfg::is_use_imu){
+        if(cfg::use_imu){
             if(!is_init_first_pose)
                 InitFirstIMUPose(acc_vec);
 

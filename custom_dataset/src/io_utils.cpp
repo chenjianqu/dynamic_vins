@@ -9,7 +9,9 @@
  *******************************************************/
 
 #include "io_utils.h"
-
+#include<sys/types.h>
+#include<sys/stat.h>
+#include<dirent.h>
 
 
 /**
@@ -19,7 +21,7 @@
 void ClearDirectory(const string &path){
     fs::path dir_path(path);
     if(!fs::exists(dir_path)){
-        int isCreate = mkdir(path.c_str(),S_IRUSR | S_IWUSR | S_IXUSR | S_IRWXG | S_IRWXO);
+        int isCreate = mkdir(path.c_str(),0755);
     }
     fs::directory_iterator dir_iter(dir_path);
     for(auto &it : dir_iter){

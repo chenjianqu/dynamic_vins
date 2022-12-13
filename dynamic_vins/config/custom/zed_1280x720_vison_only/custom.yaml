@@ -1,0 +1,137 @@
+%YAML:1.0
+####################### General Parameters ########################
+
+imu: 0 #enable imu or not
+num_of_cam: 2
+
+only_imgprocess: 0  #for debug
+only_frontend: 0  #for debug
+
+dataset_type: "custom" #support:kitti,viode
+slam_type: "naive" #SLAM mode,optional:raw,naive,dynamic
+
+use_line: 1 #line feature
+undistort_input: 1 #是否对输入进行矫正
+
+basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
+
+plane_constraint: 1 #是否使用平面约束
+
+show_input: 1
+
+####################### Camera Parameters ########################
+
+cam0_calib: "cam0_pinhole.yaml"
+cam1_calib: "cam1_pinhole.yaml"
+
+image_width: 1280
+image_height: 720
+
+######################### Extrinsic ###########################
+#Whether to estimate the extrinsic between the camera and IMU,
+#0 means that there are fixed extrinsic, and external parameters are not estimated;
+#1 means estimated extrinsic with initial value
+#2 means estimated extrinsic, but no initial initial value
+estimate_extrinsic: 0
+
+body_T_cam0: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: d
+  data: [1.0, 0.0, 0.0, 0.0,
+         0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0,
+         0.0, 0.0, 0.0, 1.0]
+
+body_T_cam1: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: d
+  data: [1.0, 0.0, 0.0, 0.12,
+         0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0,
+         0.0, 0.0, 0.0, 1.0]
+
+
+####################### ROS Topic ########################
+
+##### 发布的话题
+vins_vio_topic: "/dynamic_vins/odometry"
+vins_keyframe_pose_topic: "/dynamic_vins/keyframe_pose"
+vins_extrinsic_topic: "/dynamic_vins/extrinsic"
+vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
+vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
+
+
+####################### Frontend Parameters ########################
+
+max_cnt: 250            # max feature number in feature tracking
+min_dist: 25            # min distance between two features
+freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
+F_threshold: 1.0        # ransac threshold (pixel)
+show_track: 1           # publish tracking image as topic
+flow_back: 1            # perform forward and backward optical flow to improve feature tracking accuracy
+
+min_dynamic_dist: 4 #检测动态特征点时每个点之间的最小距离
+max_dynamic_cnt: 50 #前端中每个动态物体上最多同时跟踪的特征数量
+
+use_mask_morphology: 1 #是否对输入mask进行形态学运算
+mask_morphology_size: 20
+
+####################### VIO Parameters ########################
+
+#optimization parameters
+max_solver_time: 0.08  # max solver itration time (s), to guarantee real time
+max_num_iterations: 10   # max solver itrations, to guarantee real time
+keyframe_parallax: 15 # keyframe selection threshold (pixel)
+
+#imu parameters       The more accurate parameters you provide, the better performance
+acc_n: 1.3816015296770526e-02          # accelerometer measurement noise standard deviation. #0.2   0.04
+gyr_n: 1.7437150007509720e-03         # gyroscope measurement noise standard deviation.     #0.05  0.004
+acc_w: 5.1404537157728519e-04         # accelerometer bias random work noise standard deviation.  #0.02
+gyr_w: 3.5656511595590793e-05       # gyroscope bias random work noise standard deviation.     #4.0e-5
+g_norm: 9.81007     # gravity magnitude
+
+#unsynchronization parameters
+estimate_td: 0                      # online estimate time offset between camera and imu
+td: 0.0                             # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock)
+
+INIT_DEPTH: 5.0
+BIAS_ACC_THRESHOLD: 0.1
+BIAS_GYR_THRESHOLD: 0.1
+
+#######################  Log Parameters ########################
+estimator_log_level: "debug"
+estimator_log_flush: "info"
+feature_tracker_log_level: "debug"
+feature_tracker_log_flush: "info"
+segmentor_log_level: "debug"
+segmentor_log_flush: "info"
+log_output_path: "data/log/"
+
+#是否输出每一帧的每个路标点和位姿的信息,用于debug
+print_detail: 0
+
+####################### Visualization Parameters ########################
+visual_inst_duration: 2000  #duration of marker display
+
+pub_groundtruth_box: 0
+pub_predict_box: 0
+pub_object_axis: 1
+pub_object_trajectory: 1
+
+####################### Dataloader Parameters ########################
+use_dataloader: 0 #read image for disk,not from ros
+image0_topic: "/zed_cam/cam0"
+image1_topic: "/zed_cam/cam1"
+
+######################### Bounding box ########################
+use_det3d: 0
+
+use_offline_det2d: 1
+
+det2d_preprocess_path: "/home/chen/datasets/MyData/ZED_data/mask/" #预处理的2D框,位置应该是 det2d_preprocess_path+seq_name/
+
+
+####################### Flow Parameters ########################
+use_dense_flow: 0 #是否使用稠密光流

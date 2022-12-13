@@ -14,6 +14,44 @@
 
 namespace dynamic_vins{\
 
+
+string GetPathKey(){
+    string key;
+
+    if(cfg::use_imu){
+        key+="VIO";
+    }
+    else{
+        key+="VO";
+    }
+
+    key+="_";
+
+    if(cfg::slam==SLAM::kRaw){
+        key+="raw";
+    }
+    else if(cfg::slam==SLAM::kNaive){
+        key+="naive";
+    }
+    else if(cfg::slam==SLAM::kDynamic){
+        key+="dynamic";
+    }
+    else{
+        key+= "notdef";
+    }
+    key+="_";
+
+    if(cfg::use_line){
+        key+="LinePoint";
+    }
+    else{
+        key+="PointOnly";
+    }
+
+    return key;
+}
+
+
 void IOParameter::SetParameters(const std::string &config_path,const std::string &seq_name)
 {
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
@@ -21,8 +59,13 @@ void IOParameter::SetParameters(const std::string &config_path,const std::string
         throw std::runtime_error(std::string("ERROR: Wrong path to settings:" + config_path));
     }
 
-    if(cfg::is_use_imu){
-        fs["imu_topic"] >> kImuTopic;
+    if(cfg::use_imu){
+        if(!fs["imu_topic"].isNone()){
+            fs["imu_topic"] >> kImuTopic;
+        }
+        else{
+            throw std::runtime_error(std::string("use_imu==true, but imu_topic was not set"));
+        }
     }
 
     fs["visual_inst_duration"] >> kVisualInstDuration;
@@ -32,28 +75,10 @@ void IOParameter::SetParameters(const std::string &config_path,const std::string
 
     kOutputFolder = kBasicDir+"data/output/";
 
-    string mode_string;
-    if(cfg::slam==SLAM::kRaw){
-        mode_string="raw";
-    }
-    else if(cfg::slam==SLAM::kNaive){
-        mode_string="naive";
-    }
-    else if(cfg::slam==SLAM::kDynamic){
-        mode_string="dynamic";
-    }
-    else{
-        mode_string = "notdef";
-    }
+    static string mode_string = GetPathKey();
 
-    if(cfg::use_line){
-        kVinsResultPath = kOutputFolder + seq_name + "_" + mode_string +  "_LinePoint_Odometry.txt";
-    }
-    else{
-        kVinsResultPath = kOutputFolder + seq_name + "_" + mode_string +  "_PointOnly_Odometry.txt";
-    }
-
-    kObjectResultPath = kOutputFolder +seq_name+ "_" + mode_string +"_Object.txt";
+    kVinsResultPath = kOutputFolder + seq_name + "_" + mode_string + "_Odometry.txt";
+    kObjectResultPath = kOutputFolder +seq_name+ "_" + mode_string + "_Object.txt";
 
     fs["use_dataloader"]>>use_dataloader;
     if(use_dataloader){

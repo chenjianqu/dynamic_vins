@@ -316,11 +316,11 @@ void CamSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
 {
     if (switch_msg->data == true){
         Warnv("use stereo!");
-        estimator->ChangeSensorType(cfg::is_use_imu, 1);
+        estimator->ChangeSensorType(cfg::use_imu, 1);
     }
     else{
         Warnv("use mono camera (left)!");
-        estimator->ChangeSensorType(cfg::is_use_imu, 0);
+        estimator->ChangeSensorType(cfg::use_imu, 0);
     }
 }
 

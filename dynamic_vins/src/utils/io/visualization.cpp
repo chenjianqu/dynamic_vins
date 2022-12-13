@@ -114,8 +114,16 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
     *pub_line=n.advertise<MarkerArray>("lines", 1000);
 
     camera_pose_visual=std::make_shared<CameraPoseVisualization>(1, 0, 0, 1);
-    camera_pose_visual->setScale(1.);
-    camera_pose_visual->setLineWidth(0.1);
+
+    if(cfg::dataset==DatasetType::kCustom){
+        camera_pose_visual->setScale(0.2);
+        camera_pose_visual->setLineWidth(0.05);
+    }
+    else{
+        camera_pose_visual->setScale(1.);
+        camera_pose_visual->setLineWidth(0.1);
+    }
+
 }
 
 void Publisher::PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quaterniond &Q, const Eigen::Vector3d &V, double t)
@@ -406,8 +414,15 @@ void Publisher::PubLines(const std_msgs::Header &header)
         if(!line.is_triangulation){
             continue;
         }
-        Marker m = LineMarker(line.ptw1,line.ptw2,line.feature_id,color_norm);
-        markers.markers.push_back(m);
+        if(cfg::dataset == DatasetType::kCustom){
+            Marker m = LineMarker(line.ptw1,line.ptw2,line.feature_id,color_norm,0.02);
+            markers.markers.push_back(m);
+        }
+        else{
+            Marker m = LineMarker(line.ptw1,line.ptw2,line.feature_id,color_norm);
+            markers.markers.push_back(m);
+        }
+
     }
 
     pub_line->publish(markers);

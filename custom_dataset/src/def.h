@@ -21,9 +21,7 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
-#include <spdlog/logger.h>
 #include <opencv2/opencv.hpp>
-
 
 
 using namespace std::chrono_literals;
@@ -94,26 +92,12 @@ private:
 
 
 
-template<typename MatrixType>
-inline std::string EigenToStr(const MatrixType &m){
-    std::string text;
-    for(int i=0;i<m.rows();++i){
-        for(int j=0;j<m.cols();++j)
-            text+=fmt::format("{:.2f} ",m(i,j));
-        if(m.rows()>1) text+="\n";
-    }
-    return text;
-}
-
 template<typename T>
 inline std::string VecToStr(const Eigen::Matrix<T,3,1> &vec){
     return EigenToStr(vec.transpose());
 }
 
-template<typename T>
-inline std::string QuaternionToStr(const Eigen::Quaternion<T> &q){
-    return fmt::format("x:{:.2f} y:{:.2f} z:{:.2f} w:{:.2f}",q.x(),q.y(),q.z(),q.w());
-}
+
 
 
 inline std::string PadNumber(int number,int name_width){

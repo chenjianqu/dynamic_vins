@@ -36,24 +36,28 @@ void dynamic_vins::Det2dParameter::SetParameters(const std::string &config_path,
         fs["det2d_preprocess_path"] >> kDet2dPreprocessPath;
         kDet2dPreprocessPath = kDet2dPreprocessPath+seq_name+"/";
     }
+    else{
+        fs["solo_onnx_path"] >> kDetectorOnnxPath;
+        kDetectorOnnxPath = kBasicDir + kDetectorOnnxPath;
+        fs["solo_serialize_path"] >> kDetectorSerializePath;
+        kDetectorSerializePath = kBasicDir + kDetectorSerializePath;
+        fs["SOLO_NMS_PRE"] >> kSoloNmsPre;
+        fs["SOLO_MAX_PER_IMG"] >> kSoloMaxPerImg;
+        fs["SOLO_NMS_KERNEL"] >> kSoloNmsKernel;
+        fs["SOLO_NMS_SIGMA"] >> kSoloNmsSigma;
+        fs["SOLO_SCORE_THR"] >> kSoloScoreThr;
+        fs["SOLO_MASK_THR"] >> kSoloMaskThr;
+        fs["SOLO_UPDATE_THR"] >> kSoloUpdateThr;
 
-    fs["solo_onnx_path"] >> kDetectorOnnxPath;
-    kDetectorOnnxPath = kBasicDir + kDetectorOnnxPath;
-    fs["solo_serialize_path"] >> kDetectorSerializePath;
-    kDetectorSerializePath = kBasicDir + kDetectorSerializePath;
-    fs["SOLO_NMS_PRE"] >> kSoloNmsPre;
-    fs["SOLO_MAX_PER_IMG"] >> kSoloMaxPerImg;
-    fs["SOLO_NMS_KERNEL"] >> kSoloNmsKernel;
-    fs["SOLO_NMS_SIGMA"] >> kSoloNmsSigma;
-    fs["SOLO_SCORE_THR"] >> kSoloScoreThr;
-    fs["SOLO_MASK_THR"] >> kSoloMaskThr;
-    fs["SOLO_UPDATE_THR"] >> kSoloUpdateThr;
+        if(!fs["warn_up_image"].isNone()){
+            fs["warn_up_image"] >> kWarnUpImagePath;
+        }
 
-    if(!fs["warn_up_image"].isNone()){
-        fs["warn_up_image"] >> kWarnUpImagePath;
+        fs["box2d_min_height"]>>kBoxMinHeight;
+
     }
 
-    fs["box2d_min_height"]>>kBoxMinHeight;
+
 
     fs.release();
 

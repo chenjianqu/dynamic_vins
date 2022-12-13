@@ -36,7 +36,7 @@ void VioParameters::SetParameters(const std::string &config_path)
     kMinParallax = fs["keyframe_parallax"];
     kMinParallax = kMinParallax / kFocalLength;
 
-    if(cfg::is_use_imu){
+    if(cfg::use_imu){
         ACC_N = fs["acc_n"];
         ACC_W = fs["acc_w"];
         GYR_N = fs["gyr_n"];

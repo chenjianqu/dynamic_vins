@@ -77,10 +77,10 @@ Config::Config(const std::string &file_name,const std::string &seq_name)
         is_stereo = true;
     }
 
-    is_use_imu = fs["imu"];
-    cout << "is_use_imu:" << is_use_imu << endl;
+    use_imu = fs["imu"];
+    cout << "is_use_imu:" << use_imu << endl;
 
-    if(!is_use_imu){
+    if(!use_imu){
         is_estimate_ex = 0;
         is_estimate_td = 0;
     }

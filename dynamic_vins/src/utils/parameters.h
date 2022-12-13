@@ -72,7 +72,7 @@ public:
 
     inline static int kCamNum;
     inline static bool is_stereo;
-    inline static int is_use_imu;
+    inline static int use_imu;
     inline static std::map<int, Eigen::Vector3d> pts_gt;
     inline static std::string FISHEYE_MASK;
 

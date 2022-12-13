@@ -83,6 +83,9 @@ void SemanticImage::SetBackgroundMask(){
     merge_mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1, merge_tensor.data_ptr()).clone();///一定要clone，不然tensor内存的数据会被改变
     merge_mask_gpu.download(merge_mask);
 
+    cv::remap(merge_mask, merge_mask, cam_s.left_undist_map1, cam_s.left_undist_map2, CV_INTER_LINEAR);
+    merge_mask_gpu.upload(merge_mask);
+
     cv::cuda::bitwise_not(merge_mask_gpu,inv_merge_mask_gpu);
     inv_merge_mask_gpu.download(inv_merge_mask);
 }

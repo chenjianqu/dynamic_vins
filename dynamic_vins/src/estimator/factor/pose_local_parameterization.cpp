@@ -65,7 +65,7 @@ bool PoseConstraintLocalParameterization::Plus(const double *x, const double *de
     Eigen::Map<const Eigen::Quaterniond> _q(x + 3);
 
     //由于使用和IMU和vision-only两种情况下的世界坐标系定义不同
-    if(cfg::is_use_imu){
+    if(cfg::use_imu){
         Vec3d dp(delta[0],delta[1],0);
 
         Eigen::Quaterniond dq = Utility::deltaQ(Eigen::Map<const Eigen::Vector3d>(delta + 3));
@@ -110,7 +110,7 @@ bool SpeedConstraintLocalParameterization::Plus(const double *x, const double *d
 
     //Eigen::Map<const Eigen::Vector3d> dp(delta);
     Vec6d dv;
-    if(cfg::is_use_imu){
+    if(cfg::use_imu){
         dv(0,0) = delta[0];
         dv(1,0) = delta[1];
         dv(2,0) = 0;

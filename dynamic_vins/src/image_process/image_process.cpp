@@ -154,8 +154,9 @@ void ImageProcessor::Run(SemanticImage &img) {
         if(!cfg::is_input_seg){
             detector2d->Launch(img);
 
-            if(cfg::slam == SLAM::kNaive)
+            if(cfg::slam == SLAM::kNaive){
                 img.SetBackgroundMask();
+            }
             else if(cfg::slam == SLAM::kDynamic){
                 img.SetMaskAndRoi();
             }
