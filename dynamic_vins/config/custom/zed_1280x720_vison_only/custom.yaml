@@ -8,7 +8,7 @@ only_imgprocess: 0  #for debug
 only_frontend: 0  #for debug
 
 dataset_type: "custom" #support:kitti,viode
-slam_type: "naive" #SLAM mode,optional:raw,naive,dynamic
+slam_type: "raw" #SLAM mode,optional:raw,naive,dynamic
 
 use_line: 1 #line feature
 undistort_input: 1 #是否对输入进行矫正

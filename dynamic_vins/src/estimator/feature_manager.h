@@ -33,8 +33,8 @@
 
 #include "utils/def.h"
 #include "utils/parameters.h"
-#include "frontend_feature.h"
-#include "line_landmark.h"
+#include "estimator/basic/frontend_feature.h"
+#include "estimator/basic/line_landmark.h"
 
 
 namespace dynamic_vins{\

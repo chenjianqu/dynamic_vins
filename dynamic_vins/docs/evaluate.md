@@ -93,8 +93,6 @@ evo_traj tum ${save_path}/${sequence}.txt -p
 
 
 
-
-
 #### Use shell script
 
 * Evaluate
@@ -112,11 +110,9 @@ source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_kitti_tracking_traj.sh
 
 
 
-
-
-
-
 ### Evaluate VIODE odometry
+
+
 
 * Generate VIODE ground-truth trajectory
 
@@ -173,6 +169,14 @@ evo_ape tum --align  ${file_name} ${gt_path}/${sequence}.txt && evo_rpe tum --al
 
 
 
+或者使用脚本直接评估: 修改`eval_viode_odometry.sh`：
+
+```shell
+sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_viode_odometry.sh
+```
+
+
+
 
 
 ### Evaluate EuRoc odometry
@@ -184,17 +188,20 @@ startconda && conda activate py36
 
 evo_traj euroc --help
 
-dataset_dir=/home/chen/datasets/Euroc
-sequence=MH_01_easy
+gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion/
 
+mkdir ${gt_path}
+
+dataset_dir=/home/chen/datasets/EuRoc
+
+
+sequence=V2_03_difficult
 raw_gt_path=${dataset_dir}/${sequence}/mav0/state_groundtruth_estimate0/data.csv
-save_gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion/${sequence}.txt
-
-mkdir ${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/euroc_egomotion
+save_gt_path=${gt_path}/${sequence}.txt
 
 evo_traj euroc ${raw_gt_path} --save_as_tum #得到data.tum文件
-
 mv ./data.tum ${save_gt_path} #移动文件
+
 ```
 
 
@@ -221,6 +228,12 @@ estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
 sequence=MH_01_easy
 
 evo_ape tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r trans_part && evo_rpe tum --align  ${estimate_path}/${sequence}_ego-motion.txt ${gt_path}/${sequence}.txt -r rot_part
+```
+
+或者使用脚本直接评估: 修改`eval_euroc_odometry.sh`：
+
+```shell
+sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_euroc_odometry.sh
 ```
 
 
@@ -283,16 +296,6 @@ python  ${dynamic_vins_root}/src/dynamic_vins/scripts/python/write_summary.py rp
 ```shell
 sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_custom_odometry.sh
 ```
-
-
-
-
-
-
-
-
-
-
 
 
 

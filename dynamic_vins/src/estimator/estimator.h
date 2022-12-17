@@ -39,9 +39,9 @@
 #include "vio_util.h"
 #include "estimator_insts.h"
 #include "utils/def.h"
-#include "landmark.h"
+#include "estimator/basic/point_landmark.h"
 #include "vio_parameters.h"
-#include "frontend_feature.h"
+#include "estimator/basic/frontend_feature.h"
 
 #include "estimator/imu/imu_factor.h"
 #include "estimator/initial/solve_5pts.h"
@@ -87,22 +87,6 @@ class Estimator
         return {R_out,P_out,R_bc_out,P_bc_out};
     }
 
-
-    vector<Vec3d> key_poses;
-    SolverFlag solver_flag;
-    MarginFlag margin_flag;
-
-
-    InstanceManager im;
-    FeatureManager feat_manager;
-    MotionEstimator m_estimator;
-    InitialEXRotation initial_ex_rotation;
-
-
-    FrontendFeature feature_frame;
-
-    int frame;
-
 private:
 
     void InitEstimator(double header);
@@ -141,6 +125,9 @@ private:
 
     int AddLineResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
+    void Output();
+
+    void AddIMU(vector<pair<double, Vec3d>> &acc_vec,vector<pair<double, Vec3d>> &gyr_vec);
 
     bool IMUAvailable(double t){
         if(!acc_buf.empty() && t <= acc_buf.back().first)
@@ -164,6 +151,22 @@ private:
         initR = r;
     }
 
+
+public:
+    vector<Vec3d> key_poses;
+    SolverFlag solver_flag;
+    MarginFlag margin_flag;
+
+    InstanceManager im;
+    FeatureManager feat_manager;
+    MotionEstimator m_estimator;
+    InitialEXRotation initial_ex_rotation;
+
+    FrontendFeature feature_frame;
+
+    int frame;
+
+private:
 
     std::mutex process_mutex;
     std::mutex buf_mutex;

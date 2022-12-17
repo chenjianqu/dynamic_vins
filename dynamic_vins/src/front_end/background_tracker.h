@@ -32,7 +32,7 @@
 
 #include "utils/def.h"
 #include "utils/parameters.h"
-#include "instance_tracker.h"
+#include "dynamic_tracker.h"
 #include "det2d/detector2d.h"
 #include "feature_utils.h"
 #include "estimator/vio_util.h"

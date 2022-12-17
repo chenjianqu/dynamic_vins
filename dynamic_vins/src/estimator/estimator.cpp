@@ -25,10 +25,11 @@
 
 #include "estimator.h"
 #include "utils/io/visualization.h"
+#include "utils/io/publisher_map.h"
 #include "utils/def.h"
 #include "vio_parameters.h"
 
-#include "utils/utility.h"
+#include "utility.h"
 #include "estimator/factor/pose_local_parameterization.h"
 #include "estimator/factor/projection_two_frame_one_cam_factor.h"
 #include "estimator/factor/projection_two_frame_two_cam_factor.h"
@@ -41,7 +42,6 @@
 namespace dynamic_vins{\
 
 FeatureQueue feature_queue;
-
 
 
 Estimator::Estimator(const string& config_path): feat_manager{body.Rs}
@@ -483,7 +483,6 @@ void Estimator::SetMarginalizationInfo()
                         marg_info->addResidualBlockInfo(residual_block_info);
             }
         }*/
-
 
 
         TicToc t_pre_margin;
@@ -969,10 +968,10 @@ bool Estimator::VisualInitialAlign()
         body.Ps[i] = s * body.Ps[i] - body.Rs[i] * T_IC[0] - (s * body.Ps[0] - body.Rs[0] * T_IC[0]);
 
     int kv = -1;
-    for (auto frame_i = all_image_frame.begin(); frame_i != all_image_frame.end(); frame_i++){
-        if(frame_i->second.is_key_frame){
+    for (auto & frame_i : all_image_frame){
+        if(frame_i.second.is_key_frame){
             kv++;
-            body.Vs[kv] = frame_i->second.R * x.segment<3>(kv * 3);
+            body.Vs[kv] = frame_i.second.R * x.segment<3>(kv * 3);
         }
     }
 
@@ -1374,9 +1373,9 @@ void Estimator::InitEstimator(double header){
         feat_manager.TriangulatePoints();
         if (frame == kWinSize){
             int i = 0;
-            for (auto frame_it = all_image_frame.begin(); frame_it != all_image_frame.end(); frame_it++){
-                frame_it->second.R = body.Rs[i];
-                frame_it->second.T = body.Ps[i];
+            for (auto & frame_it : all_image_frame){
+                frame_it.second.R = body.Rs[i];
+                frame_it.second.T = body.Ps[i];
                 i++;
             }
             SolveGyroscopeBias(all_image_frame, body.Bgs);
@@ -1485,10 +1484,15 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     if(cfg::slam == SLAM::kDynamic){
         ///添加动态特征点,并创建物体
         im.PushBack(frame, image.instances);
-        ///将输出实例的速度信息
+        Infov("processImage im.PushBack():{} ms",tt.TocThenTic());
+        ///输出实例的速度信息
         im.SetOutputInstInfo();
+        Infov("processImage im.SetOutputInstInfo():{} ms",tt.TocThenTic());
+
         ///动态物体的位姿递推
         im.PropagatePose();
+        Infov("processImage im.PropagatePose():{} ms",tt.TocThenTic());
+
         ///动态特征点的三角化
         //im.Triangulate();
         ///若动态物体未初始化, 则进行初始化
@@ -1497,6 +1501,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         im.InitialInstanceVelocity();
         ///根据重投影误差和对极几何判断物体是运动的还是静态的
         im.SetDynamicOrStatic();
+        Infov("processImage im.InitialInstance():{} ms",tt.TocThenTic());
 
         if(para::is_print_detail){
             PrintFeaturesInfo(im, true, true);
@@ -1514,7 +1519,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
 
         im.OutliersRejection();
 
-        Infov("processImage dynamic Optimization:{} ms",tt.TocThenTic());
+        Infov("processImage im.Optimization:{} ms",tt.TocThenTic());
 
         Debugv("--完成处理动态物体--");
     }
@@ -1589,6 +1594,81 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
 
 
 /**
+ * 系统输出
+ */
+void Estimator::Output(){
+    SetOutputEgoInfo(body.Rs[kWinSize], body.Ps[kWinSize], body.ric[0], body.tic[0]);
+
+    //输出时间
+    string log_time="headers: ";
+    for(int i=0;i<=kWinSize;++i){
+        log_time += fmt::format("{}:{} ",i,body.headers[i]);
+    }
+    Debugv(log_time);
+
+    Publisher::PrintStatistics(0);
+
+    std_msgs::Header header;
+    header.frame_id = "world";
+    header.stamp = ros::Time(feature_frame.time);
+
+    if(cfg::slam == SLAM::kDynamic){
+        //printInstanceData(*this);
+        //输出物体的3D边界框
+        Publisher::PubInstances(header);
+        //输出物体的点云
+        Publisher::PubInstancePointCloud(header);
+        //输出顶视图
+        cv::Mat img_topview = DrawTopView(im);
+        PublisherMap::PubImage(img_topview,"top_view");
+    }
+
+    //输出相机相关信息
+    Publisher::PubOdometry(header);
+    Publisher::PubKeyPoses(header);
+    Publisher::PubCameraPose(header);
+    Publisher::PubPointCloud(header);
+    Publisher::PubKeyframe();
+    Publisher::PubTF(header);
+
+    //输出3D直线
+    if(cfg::use_line){
+        Publisher::PubLines(header);
+    }
+
+    //PubPredictBox3D(*this,feature_frame.boxes);
+
+    //相机轨迹保存
+    SaveBodyTrajectory(header);
+
+    //保存所有物体在当前帧的位姿
+    if(cfg::slam == SLAM::kDynamic){
+        SaveInstancesTrajectory(im);
+
+        //SaveInstancesPointCloud(im);
+    }
+}
+
+
+void Estimator::AddIMU(vector<pair<double, Vec3d>> &acc_vec,vector<pair<double, Vec3d>> &gyr_vec){
+    if(!is_init_first_pose)
+        InitFirstIMUPose(acc_vec);
+
+    for(size_t i = 0; i < acc_vec.size(); i++){
+        double dt;
+        if(i == 0)
+            dt = acc_vec[i].first - prev_time;
+        else if (i == acc_vec.size() - 1)
+            dt = cur_time - acc_vec[i - 1].first;
+        else
+            dt = acc_vec[i].first - acc_vec[i - 1].first;
+        ProcessIMU(acc_vec[i].first, dt, acc_vec[i].second, gyr_vec[i].second);
+    }
+}
+
+
+
+/**
  * 滑动窗口状态估计的入口函数
  */
 void Estimator::ProcessMeasurements(){
@@ -1599,7 +1679,7 @@ void Estimator::ProcessMeasurements(){
     double time_sum=0;
     TicToc tt,t_all;
 
-    while (cfg::ok.load(std::memory_order_seq_cst)){
+    while (cfg::ok==true){
         if(feature_queue.empty()){
             std::this_thread::sleep_for(2ms);
             continue;
@@ -1629,6 +1709,7 @@ void Estimator::ProcessMeasurements(){
 
         Infov("\n \n \n \n");
         Warnv("----------Time:{} seq:{} ----------", std::to_string(*front_time),feature_frame.seq_id);
+
         Infov("ProcessMeasurements::GetIMUInterval:{} ms",tt.TocThenTic());
 
         body.seq_id = feature_frame.seq_id;
@@ -1636,19 +1717,7 @@ void Estimator::ProcessMeasurements(){
 
         ///IMU预积分 和 状态递推
         if(cfg::use_imu){
-            if(!is_init_first_pose)
-                InitFirstIMUPose(acc_vec);
-
-            for(size_t i = 0; i < acc_vec.size(); i++){
-                double dt;
-                if(i == 0)
-                    dt = acc_vec[i].first - prev_time;
-                else if (i == acc_vec.size() - 1)
-                    dt = cur_time - acc_vec[i - 1].first;
-                else
-                    dt = acc_vec[i].first - acc_vec[i - 1].first;
-                ProcessIMU(acc_vec[i].first, dt, acc_vec[i].second, gyr_vec[i].second);
-            }
+            AddIMU(acc_vec,gyr_vec);
         }
 
         Infov("ProcessMeasurements::ProcessIMU:{} ms",tt.TocThenTic());
@@ -1661,6 +1730,8 @@ void Estimator::ProcessMeasurements(){
 
         prev_time = cur_time;
 
+        process_mutex.unlock();
+
         double time_cost=t_all.Toc();
         time_sum+=time_cost;
         cnt++;
@@ -1668,53 +1739,10 @@ void Estimator::ProcessMeasurements(){
         Infov("ProcessMeasurements::ProcessImage:{} ms",tt.TocThenTic());
 
         ///输出
-        SetOutputEgoInfo(body.Rs[kWinSize], body.Ps[kWinSize], body.ric[0], body.tic[0]);
-        string log_time="headers: ";
-        for(int i=0;i<=kWinSize;++i){
-            log_time += fmt::format("{}:{} ",i,body.headers[i]);
-        }
-        Debugv(log_time);
-
-        Publisher::PrintStatistics(0);
-
-        std_msgs::Header header;
-        header.frame_id = "world";
-        header.stamp = ros::Time(feature_frame.time);
-
-        if(cfg::slam == SLAM::kDynamic){
-            //printInstanceData(*this);
-            Publisher::PubInstances(header);
-            cv::Mat img_topview = DrawTopView(im);
-            ImagePublisher::Pub(img_topview,"top_view");
-        }
-
-        Publisher::PubOdometry(header);
-        Publisher::PubKeyPoses(header);
-        Publisher::PubCameraPose(header);
-        Publisher::PubPointCloud(header);
-        Publisher::PubKeyframe();
-        Publisher::PubTF(header);
-
-        if(cfg::use_line){
-            Publisher::PubLines(header);
-        }
-
-        //PubPredictBox3D(*this,feature_frame.boxes);
-
-        process_mutex.unlock();
-
-        ///轨迹保存
-        SaveBodyTrajectory(header);
-
-        //保存所有物体在当前帧的位姿
-        if(cfg::slam == SLAM::kDynamic){
-            SaveInstancesTrajectory(im);
-        }
-
+        Output();
         Infov("ProcessMeasurements::Output:{} ms",tt.TocThenTic());
 
-        static unsigned int estimator_cnt=0;
-        auto output_msg=fmt::format("cnt:{} ___________estimator process time: {} ms_____________\n",
+        string output_msg=fmt::format("cnt:{} ___________estimator process time: {} ms_____________\n",
                                     cnt,t_all.TocThenTic());
         Infov(output_msg);
         cout<<output_msg<<endl;

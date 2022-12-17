@@ -7,25 +7,19 @@
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
  *******************************************************/
-/*******************************************************
- * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
- * 
- * This file is part of VINS.
- * 
- * Licensed under the GNU General Public License v3.0;
- * you may not use this file except in compliance with the License.
- *******************************************************/
+
 
 
 #include "visualization.h"
 
-#include <fstream>
 #include <string>
 
 #include "utils/io_utils.h"
+#include "utils/convert_utils.h"
 #include "utils/io/build_markers.h"
 #include "estimator/estimator_insts.h"
 #include "det3d/detector3d.h"
+#include "utils/io/publisher_map.h"
 
 
 namespace dynamic_vins{\
@@ -42,18 +36,6 @@ static double sum_of_path = 0;
 static Vector3d last_path(0.0, 0.0, 0.0);
 
 CameraPoseVisualization::Ptr camera_pose_visual;
-
-std::shared_ptr<ros::Publisher> pub_odometry;
-std::shared_ptr<ros::Publisher> pub_latest_odometry;
-std::shared_ptr<ros::Publisher> pub_path;
-std::shared_ptr<ros::Publisher> pub_line;
-std::shared_ptr<ros::Publisher> pub_key_poses;
-std::shared_ptr<ros::Publisher> pub_camera_pose;
-std::shared_ptr<ros::Publisher> pub_camera_pose_visual;
-std::shared_ptr<ros::Publisher> pub_keyframe_pose;
-std::shared_ptr<ros::Publisher> pub_keyframe_point;
-std::shared_ptr<ros::Publisher> pub_extrinsic;
-std::shared_ptr<ros::Publisher> pub_instance_marker;
 
 std::shared_ptr<tf::TransformBroadcaster> transform_broadcaster;
 
@@ -77,44 +59,9 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
 {
     transform_broadcaster = std::make_shared<tf::TransformBroadcaster>();
 
-    ImagePublisher imagePublisher(n);
-    PointCloudPublisher pointCloudPublisher(n);
-
-    pub_latest_odometry=std::make_shared<ros::Publisher>();
-    *pub_latest_odometry = n.advertise<nav_msgs::Odometry>("imu_propagate", 1000);
-
-    pub_path=std::make_shared<ros::Publisher>();
-    *pub_path = n.advertise<nav_msgs::Path>("path", 1000);
-
-    pub_odometry=std::make_shared<ros::Publisher>();
-    *pub_odometry = n.advertise<nav_msgs::Odometry>("odometry", 1000);
-
-    pub_key_poses=std::make_shared<ros::Publisher>();
-    *pub_key_poses = n.advertise<Marker>("key_poses", 1000);
-
-    pub_camera_pose=std::make_shared<ros::Publisher>();
-    *pub_camera_pose = n.advertise<nav_msgs::Odometry>("camera_pose", 1000);
-
-    pub_camera_pose_visual=std::make_shared<ros::Publisher>();
-    *pub_camera_pose_visual = n.advertise<MarkerArray>("camera_pose_visual", 1000);
-
-    pub_keyframe_pose=std::make_shared<ros::Publisher>();
-    *pub_keyframe_pose = n.advertise<nav_msgs::Odometry>("keyframe_pose", 1000);
-
-    pub_keyframe_point=std::make_shared<ros::Publisher>();
-    *pub_keyframe_point = n.advertise<sensor_msgs::PointCloud>("keyframe_point", 1000);
-
-    pub_extrinsic=std::make_shared<ros::Publisher>();
-    *pub_extrinsic = n.advertise<nav_msgs::Odometry>("extrinsic", 1000);
-
-    pub_instance_marker=std::make_shared<ros::Publisher>();
-    *pub_instance_marker=n.advertise<MarkerArray>("instance_marker", 1000);
-
-    pub_line=std::make_shared<ros::Publisher>();
-    *pub_line=n.advertise<MarkerArray>("lines", 1000);
+    PublisherMap pub_map(n);
 
     camera_pose_visual=std::make_shared<CameraPoseVisualization>(1, 0, 0, 1);
-
     if(cfg::dataset==DatasetType::kCustom){
         camera_pose_visual->setScale(0.2);
         camera_pose_visual->setLineWidth(0.05);
@@ -134,8 +81,8 @@ void Publisher::PubLatestOdometry(const Eigen::Vector3d &P, const Eigen::Quatern
     odometry.pose.pose.position = EigenToGeometryPoint(P);
     odometry.pose.pose.orientation = EigenToGeometryQuaternion(Q);
     odometry.twist.twist.linear = EigenToGeometryVector3(V);
-    pub_latest_odometry->publish(odometry);
 
+    PublisherMap::Pub<nav_msgs::Odometry>(odometry,"imu_propagate");
     //Debugv("Publisher::pubLatestOdometry:{}", VecToStr(P));
 }
 
@@ -184,7 +131,7 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
     odometry.pose.pose.position = EigenToGeometryPoint(body.Ps[kWinSize]);
     odometry.pose.pose.orientation = EigenToGeometryQuaternion(tmp_Q);
     odometry.twist.twist.linear = EigenToGeometryVector3(body.Vs[kWinSize]);
-    pub_odometry->publish(odometry);
+    PublisherMap::Pub<nav_msgs::Odometry>(odometry,"odometry");
 
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.header = header;
@@ -193,7 +140,8 @@ void Publisher::PubOdometry(const std_msgs::Header &header)
     path.header = header;
     path.header.frame_id = "world";
     path.poses.push_back(pose_stamped);
-    pub_path->publish(path);
+
+    PublisherMap::Pub<nav_msgs::Path>(path,"path");
 }
 
 
@@ -221,10 +169,14 @@ void Publisher::PubKeyPoses(const std_msgs::Header &header)
     for (int i = 0; i <= kWinSize; i++){
         key_poses.points.push_back(EigenToGeometryPoint(e->key_poses[i]));
     }
-    pub_key_poses->publish(key_poses);
+    PublisherMap::Pub<Marker>(key_poses,"key_poses");
 }
 
 
+/**
+ * 可视化相机的marker
+ * @param header
+ */
 void Publisher::PubCameraPose(const std_msgs::Header &header)
 {
     if(e->solver_flag != SolverFlag::kNonLinear)
@@ -241,7 +193,9 @@ void Publisher::PubCameraPose(const std_msgs::Header &header)
     odometry.pose.pose.position = EigenToGeometryPoint(P_eigen);
     odometry.pose.pose.orientation = EigenToGeometryQuaternion(Q_eigen);
 
-    pub_camera_pose->publish(odometry);
+    PublisherMap::Pub<nav_msgs::Odometry>(odometry,"camera_pose");
+
+
 
     camera_pose_visual->reset();
     camera_pose_visual->add_pose(P_eigen, Q_eigen);
@@ -250,11 +204,15 @@ void Publisher::PubCameraPose(const std_msgs::Header &header)
         Quaterniond R = Quaterniond(body.Rs[i] * body.ric[1]);
         camera_pose_visual->add_pose(P, R);
     }
-    camera_pose_visual->publish_by(*pub_camera_pose_visual, odometry.header);
 
+    ros::Publisher cam_pub = PublisherMap::GetPublisher<MarkerArray>("camera_pose_visual");
+    camera_pose_visual->publish_by(cam_pub ,odometry.header);
 }
 
-
+/**
+ * 输出点云和边缘化点
+ * @param header
+ */
 void Publisher::PubPointCloud(const std_msgs::Header &header)
 {
     sensor_msgs::PointCloud point_cloud, loop_point_cloud;
@@ -270,7 +228,7 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
                 body.CamToWorld(lm.feats[0].point * lm.depth, imu_i)));
     }
 
-    PointCloudPublisher::Pub(point_cloud,"point_cloud");
+    PublisherMap::PubPointCloud(point_cloud,"point_cloud");
 
     // pub margined potin
     sensor_msgs::PointCloud margin_cloud;
@@ -282,16 +240,14 @@ void Publisher::PubPointCloud(const std_msgs::Header &header)
         //if (lm->start_frame > kWindowSize * 3.0 / 4.0 || lm->solve_flag != 1)
         //        continue;
 
-        if (lm.start_frame == 0 && lm.feats.size() <= 2
-        && lm.solve_flag == 1 ){
+        if (lm.start_frame == 0 && lm.feats.size() <= 2 && lm.solve_flag == 1 ){
             int imu_i = lm.start_frame;
             margin_cloud.points.push_back(EigenToGeometryPoint32(
                     body.CamToWorld(lm.feats[0].point * lm.depth, imu_i)) );
         }
     }
 
-    PointCloudPublisher::Pub(margin_cloud,"margin_cloud");
-
+    PublisherMap::PubPointCloud(margin_cloud,"margin_cloud");
 }
 
 
@@ -323,7 +279,7 @@ void Publisher::PubTF(const std_msgs::Header &header)
     odometry.pose.pose.position = EigenToGeometryPoint(P_bc);
     Quaterniond q_eigen{body.ric[0]};
     odometry.pose.pose.orientation = EigenToGeometryQuaternion(q_eigen);
-    pub_extrinsic->publish(odometry);
+    PublisherMap::Pub<nav_msgs::Odometry>(odometry,"extrinsic");
 }
 
 
@@ -343,7 +299,7 @@ void Publisher::PubKeyframe()
         odometry.header.frame_id = "world";
         odometry.pose.pose.position = EigenToGeometryPoint(P);
         odometry.pose.pose.orientation = EigenToGeometryQuaternion(q_eigen);
-        pub_keyframe_pose->publish(odometry);
+        PublisherMap::Pub<nav_msgs::Odometry>(odometry,"keyframe_pose");
 
         sensor_msgs::PointCloud point_cloud;
         point_cloud.header.stamp = ros::Time(body.headers[kWinSize - 2]);
@@ -366,7 +322,7 @@ void Publisher::PubKeyframe()
                 point_cloud.channels.push_back(p_2d);
             }
         }
-        pub_keyframe_point->publish(point_cloud);
+        PublisherMap::PubPointCloud(point_cloud,"keyframe_point");
     }
 }
 
@@ -400,7 +356,7 @@ void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
         index++;
     }
 
-    pub_instance_marker->publish(markers);
+    PublisherMap::PubMarkers(markers,"instance_marker");
 }
 
 
@@ -425,7 +381,7 @@ void Publisher::PubLines(const std_msgs::Header &header)
 
     }
 
-    pub_line->publish(markers);
+    PublisherMap::PubMarkers(markers,"lines");
 }
 
 
@@ -462,39 +418,31 @@ Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &histor
     return msg;
 }
 
-
-
-
-void Publisher::PubInstances(const std_msgs::Header &header)
-{
+/**
+ * 输出物体的点云
+ * @param header
+ */
+void Publisher::PubInstancePointCloud(const std_msgs::Header &header){
     if(e->im.tracking_number() < 1)
         return;
 
-    MarkerArray markers;
     PointCloud instance_point_cloud;
     PointCloud stereo_point_cloud;
 
+    bool is_visual_all_point= false;
+
+    ///输出角点
     for(auto &[key,inst] : e->im.instances){
         if(!inst.is_tracking ){
             continue;
         }
-
-
-        ///可视化点
-        bool is_visual_all_point= false;
-        //string log_text= fmt::format("inst:{} 3D Points\n",inst.id);
-
         PointCloud cloud;
-
         for(auto &lm : inst.landmarks){
-            if(lm.depth <= 0)
-                continue;
-
+            if(lm.depth <= 0)continue;
             int frame_j=lm.frame();
             int frame_i=e->frame;
             Vec3d pt = inst.ObjectToWorld(inst.CamToObject(lm.feats.front()->point * lm.depth,frame_j),frame_i);
             cloud.push_back(PointPCL(pt,inst.color[2],inst.color[1],inst.color[0]));
-
 
             auto &back_p = lm.feats.back();
             if(!is_visual_all_point){
@@ -509,12 +457,41 @@ void Publisher::PubInstances(const std_msgs::Header &header)
                     }
                 }
             }
-
         }
-        //Debugv(log_text);
-
         instance_point_cloud+=cloud;
+    }
 
+    printf("所有实例点云的数量: %ld\n",instance_point_cloud.size());
+    PublisherMap::PubPointCloud(instance_point_cloud,"instance_point_cloud");
+
+    ///输出额外点
+    PointCloud::Ptr pc(new PointCloud);
+    for(auto &[key,inst] : e->im.instances){
+        if(!inst.is_tracking ){
+            continue;
+        }
+        if(!(inst.points_extra_pcl[body.frame-1]) || inst.points_extra_pcl[body.frame-1]->empty()){
+            continue;
+        }
+        *pc += *(inst.points_extra_pcl[body.frame-1]);
+    }
+
+    PublisherMap::PubPointCloud(*pc,"stereo_point_cloud");
+    //PointCloudPublisher::Pub(stereo_point_cloud,"instance_stereo_point_cloud");
+}
+
+
+void Publisher::PubInstances(const std_msgs::Header &header)
+{
+    if(e->im.tracking_number() < 1)
+        return;
+
+    MarkerArray markers;
+
+    for(auto &[key,inst] : e->im.instances){
+        if(!inst.is_tracking ){
+            continue;
+        }
         if(!inst.is_initial || !inst.is_curr_visible){
             continue;
         }
@@ -570,7 +547,6 @@ void Publisher::PubInstances(const std_msgs::Header &header)
             markers.markers.push_back(std::get<2>(axis_markers));
         }
 
-
         ///可视化检测得到的包围框
         /*for(int i=0;i<=kWinSize;++i){
             if(inst.boxes3d[i]){
@@ -602,7 +578,6 @@ void Publisher::PubInstances(const std_msgs::Header &header)
             }
         }
 
-
         string text=fmt::format("{}\n p:{}", inst.id,VecToStr(inst.state[kWinSize].P));
         ///计算可视化文字信息
         if(!inst.is_static && inst.is_init_velocity && inst.vel.v.norm() > 1.){
@@ -619,9 +594,7 @@ void Publisher::PubInstances(const std_msgs::Header &header)
         }
         auto textMarker = TextMarker(inst.state[kWinSize].P, key, text, BgrColor("blue"), 1.2, action);
         markers.markers.push_back(textMarker);
-
     }
-
 
     ///可视化gt框
     if(io_para::is_pub_groundtruth_box){
@@ -638,7 +611,6 @@ void Publisher::PubInstances(const std_msgs::Header &header)
             index++;
         }*/
     }
-
 
     ///设置删除当前帧不显示的marker
     /*std::set<int> curr_marker_ids;
@@ -662,95 +634,10 @@ void Publisher::PubInstances(const std_msgs::Header &header)
     }
     last_marker_ids=curr_marker_ids;*/
 
-    pub_instance_marker->publish(markers);
+    PublisherMap::PubMarkers(markers,"instance_marker");
 
-
-    printf("实例点云的数量: %ld\n",instance_point_cloud.size());
-
-
-    PointCloudPublisher::Pub(instance_point_cloud,"instance_point_cloud");
-
-    PointCloud::Ptr pc(new PointCloud);
-    for(auto &[key,inst] : e->im.instances){
-        if(!inst.is_tracking ){
-            continue;
-        }
-        if(!inst.points_extra[body.frame].empty()){
-            for(auto &v:inst.points_extra[body.frame]){
-                PointT p(inst.color[2],inst.color[1],inst.color[0]);
-                p.x = v.x();
-                p.y = v.y();
-                p.z = v.z();
-                pc->points.push_back(p);
-            }
-        }
-    }
-    PointCloudPublisher::Pub(*pc,"stereo_point_cloud");
-
-    //PointCloudPublisher::Pub(stereo_point_cloud,"instance_stereo_point_cloud");
-}
-
-
-ImagePublisher::ImagePublisher(ros::NodeHandle &n){
-    nh = &n;
-}
-
-
-void ImagePublisher::Pub(cv::Mat &img,const string &topic){
-
-    if(pub_map.find(topic)==pub_map.end()){
-        ros::Publisher pub = nh->advertise<sensor_msgs::Image>(topic,10);
-        pub_map.insert({topic,pub});
-    }
-
-    std_msgs::Header header;
-    header.frame_id = "world";
-    header.stamp = ros::Time(body.frame_time);
-    sensor_msgs::ImagePtr imgTrackMsg = cv_bridge::CvImage(header, "bgr8", img).toImageMsg();
-
-    pub_map[topic].publish(imgTrackMsg);
-}
-
-
-PointCloudPublisher::PointCloudPublisher(ros::NodeHandle &n){
-    nh = &n;
-}
-
-
-void PointCloudPublisher::Pub(sensor_msgs::PointCloud &cloud,const string &topic){
-    if(pub_map.find(topic)==pub_map.end()){
-        ros::Publisher pub = nh->advertise<sensor_msgs::PointCloud>(topic,10);
-        pub_map.insert({topic,pub});
-    }
-
-    std_msgs::Header header;
-    header.frame_id = "world";
-    header.stamp = ros::Time(body.frame_time);
-
-    cloud.header = header;
-
-    pub_map[topic].publish(cloud);
 
 }
-
-
-void PointCloudPublisher::Pub(PointCloud &cloud,const string &topic){
-    if(pub_map.find(topic)==pub_map.end()){
-        ros::Publisher pub = nh->advertise<sensor_msgs::PointCloud2>(topic,10);
-        pub_map.insert({topic,pub});
-    }
-
-    std_msgs::Header header;
-    header.frame_id = "world";
-    header.stamp = ros::Time(body.frame_time);
-
-    sensor_msgs::PointCloud2 point_cloud_msg;
-    pcl::toROSMsg(cloud,point_cloud_msg);
-    point_cloud_msg.header = header;
-
-    pub_map[topic].publish(point_cloud_msg);
-}
-
 
 
 

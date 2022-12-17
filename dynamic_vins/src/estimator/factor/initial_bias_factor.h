@@ -14,7 +14,7 @@
 #include <ros/assert.h>
 #include <ceres/ceres.h>
 #include <eigen3/Eigen/Dense>
-#include "utils/utility.h"
+#include "estimator/utility.h"
 #include "utils/def.h"
 #include "utils/parameters.h"
 

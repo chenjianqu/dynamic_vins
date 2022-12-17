@@ -19,11 +19,17 @@
 #include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
 
+#include <pcl/filters/radius_outlier_removal.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/registration/icp.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/search/kdtree.h>
+
 #include "utils/parameters.h"
 #include "estimator/vio_util.h"
 #include "instance.h"
-#include "landmark.h"
-#include "frontend_feature.h"
+#include "estimator/basic/point_landmark.h"
+#include "estimator/basic/frontend_feature.h"
 
 
 namespace dynamic_vins{\
@@ -104,7 +110,6 @@ public:
         });
     }
 
-
     std::unordered_map<unsigned int,InstEstimatedInfo> GetOutputInstInfo(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
         return insts_output;
@@ -128,10 +133,14 @@ public:
 
     int tracking_number() const {return tracking_num;}
 
-    std::unordered_map<unsigned int,Instance> instances;
 private:
+    bool PropagateByICP(Instance &inst);
 
 
+public:
+    std::unordered_map<unsigned int,Instance> instances;
+
+private:
     std::mutex vel_mutex_;
     std::unordered_map<unsigned int,InstEstimatedInfo> insts_output;
 
@@ -139,6 +148,8 @@ private:
     int tracking_num{0};//正在跟踪的物体数量
 
     int frame{0};
+
+    pcl::IterativeClosestPoint<PointT, PointT> icp;
 
 };
 

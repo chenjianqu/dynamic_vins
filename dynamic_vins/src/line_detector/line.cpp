@@ -11,8 +11,6 @@
 #include "line.h"
 
 
-#include "line_descriptor/include/line_descriptor_custom.hpp"
-
 namespace dynamic_vins{
 
 void FrameLines::SetLines() {

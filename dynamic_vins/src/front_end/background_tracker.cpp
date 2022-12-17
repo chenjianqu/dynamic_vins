@@ -198,7 +198,7 @@ void FeatureTracker::TrackLine(cv::Mat gray0, cv::Mat gray1,cv::Mat mask){
  */
 FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
 {
-    TicToc t_r,tt;
+    TicToc t_all,tt;
     cur_time = img.time0;
     cur_img = img;
 
@@ -326,11 +326,16 @@ FeatureBackground FeatureTracker::TrackImageLine(SemanticImage &img)
     for(size_t i = 0; i < bg.curr_points.size(); i++)
         last_id_pts_map[bg.ids[i]] = bg.curr_points[i];
 
+    Infot("TrackImageLine() used {} ms",t_all.Toc());
+
     return SetOutputFeats();
 }
 
 
-
+/**
+ * 打包输出背景特征
+ * @return
+ */
 FeatureBackground FeatureTracker::SetOutputFeats()
 {
     FeatureBackground fm;
@@ -728,7 +733,7 @@ void FeatureTracker::SetPrediction(std::map<int, Eigen::Vector3d> &predictPts)
  */
 FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
 {
-    TicToc t_r,tt;
+    TicToc t_all,tt;
     cur_time = img.time0;
     cur_img = img;
 
@@ -783,6 +788,8 @@ FeatureBackground FeatureTracker::TrackSemanticImage(SemanticImage &img)
     last_id_pts_map.clear();
     for(size_t i = 0; i < bg.curr_points.size(); i++)
         last_id_pts_map[bg.ids[i]] = bg.curr_points[i];
+
+    Infot("TrackSemanticImage() used {} ms",t_all.Toc());
 
     return SetOutputFeats();
 }

@@ -20,51 +20,17 @@
 #include <ceres/ceres.h>
 
 #include "vio_util.h"
-#include "landmark.h"
+#include "estimator/basic/point_landmark.h"
 #include "vio_parameters.h"
 #include "utils/parameters.h"
 #include "utils/box2d.h"
 #include "utils/box3d.h"
 #include "body.h"
+#include "estimator/basic/velocity.h"
+#include "estimator/basic/state.h"
 
 namespace dynamic_vins{\
 
-
-
-struct State{
-    State():R(Mat3d::Identity()),P(Vec3d::Zero()){
-    }
-
-    /**
-     * 拷贝构造函数
-     */
-    State(const State& rhs):R(rhs.R),P(rhs.P),time(rhs.time){}
-
-    /**
-     * 拷贝赋值运算符
-     * @param rhs
-     * @return
-     */
-    State& operator=(const State& rhs){
-        R = rhs.R;
-        P = rhs.P;
-        time = rhs.time;
-        return *this;
-    }
-
-    void swap(State &rstate){
-        State temp=rstate;
-        rstate.R=std::move(R);
-        rstate.P=std::move(P);
-        rstate.time=time;
-        R=std::move(temp.R);
-        P=std::move(temp.P);
-        time=temp.time;
-    }
-    Mat3d R;
-    Vec3d P;
-    double time{0};
-};
 
 class Instance{
 public:
@@ -150,7 +116,8 @@ public:
     vector<Eigen::Vector3d> point3d_curr;
     std::list<LandmarkPoint> landmarks;
 
-    vector<Vec3d> points_extra[kSizePose];
+    vector<Vec3d> points_extra[kWinSize+1];
+    PointCloud::Ptr points_extra_pcl[kWinSize+1];
 
     unsigned int id{0};
 
@@ -164,10 +131,9 @@ public:
     bool is_static{false};//物体是运动的还是静态的
     bool is_init_velocity{false};
 
-
     State state[(kWinSize + 1)]{}; //物体的位姿
-    Velocity vel,last_vel;//物体的速度
 
+    Velocity vel,last_vel;//物体的速度
     Velocity point_vel;
     std::list<Velocity> history_vel;
 

@@ -12,7 +12,7 @@
 
 #include "utils/def.h"
 #include "utils/camera_model.h"
-#include "utils/io/visualization.h"
+#include "utils/io/publisher_map.h"
 
 
 namespace dynamic_vins{\
@@ -47,7 +47,7 @@ void StereoTest(const SemanticImage &img){
 
     cout<<"stereo_point_cloud:"<<pc.size()<<endl;
 
-    PointCloudPublisher::Pub(pc,"/dynamic_vins/stereo_point_cloud");
+    PublisherMap::PubPointCloud(pc,"/dynamic_vins/stereo_point_cloud");
 }
 
 

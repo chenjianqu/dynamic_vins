@@ -35,7 +35,7 @@
 #include "utils/box3d.h"
 #include "utils/box2d.h"
 #include "line_detector/line.h"
-#include "line_detector/line_descriptor/include/line_descriptor_custom.hpp"
+#include "line_descriptor/include/line_descriptor_custom.hpp"
 #include "line_detector/line_detector.h"
 
 namespace dynamic_vins{\
@@ -79,6 +79,7 @@ struct InstFeat{
                        cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
                        cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward);
 
+    void DetectExtraPoints(const cv::Mat& disp);
 
     ///后处理
     void PostProcess(){
@@ -132,10 +133,7 @@ struct InstFeat{
 
     inline static unsigned long global_id_count{1};//全局特征序号
 
-    vector<cv::Point2f> extra_points;
-    vector<cv::Point2f> extra_un_points;
-    vector<unsigned int> extra_ids;
-
+    vector<Vec3d> extra_points3d;
 };
 
 

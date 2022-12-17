@@ -11,7 +11,9 @@
 #include "build_markers.h"
 
 #include "utils/io_utils.h"
+#include "utils/convert_utils.h"
 #include "io_parameters.h"
+
 
 namespace dynamic_vins{\
 

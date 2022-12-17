@@ -10,7 +10,7 @@
  *******************************************************/
 
 #include "projection_two_frame_two_cam_factor.h"
-#include "utils/utility.h"
+#include "estimator/utility.h"
 
 namespace dynamic_vins{\
 

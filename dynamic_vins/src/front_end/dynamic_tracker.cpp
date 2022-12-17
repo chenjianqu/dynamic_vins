@@ -8,14 +8,18 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "instance_tracker.h"
+#include "dynamic_tracker.h"
+
+#include <pcl/segmentation/extract_clusters.h>
+#include <pcl/search/kdtree.h>
+#include <pcl/filters/radius_outlier_removal.h>
+
 #include "semantic_image.h"
 #include "utils/def.h"
 #include "front_end_parameters.h"
 #include "utils/dataset/coco_utils.h"
-#include "utils/dataset/nuscenes_utils.h"
-#include "utils/dataset/kitti_utils.h"
-#include "estimator/landmark.h"
+#include "estimator/basic/point_landmark.h"
+#include "utils/convert_utils.h"
 
 namespace dynamic_vins{\
 
@@ -148,13 +152,175 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
 }
 
 
-tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2){
-    int rows = std::max(img1.rows,img2.rows);
-    int cols = std::max(img1.cols,img2.cols);
-    cv::Mat img1_padded,img2_padded;
-    cv::copyMakeBorder(img1,img1_padded,0,rows-img1.rows,0,cols-img1.cols,cv::BORDER_CONSTANT,cv::Scalar(0));
-    cv::copyMakeBorder(img2,img2_padded,0,rows-img2.rows,0,cols-img2.cols,cv::BORDER_CONSTANT,cv::Scalar(0));
-    return {img1_padded,img2_padded};
+/**
+ * 构建额外点，并进行处理
+ * 里面执行点云滤波和分割
+ */
+void InstsFeatManager::ProcessExtraPoints(){
+
+    using PointCloud=pcl::PointCloud<pcl::PointXYZ>;
+
+    TicToc t_all;
+
+    pcl::RadiusOutlierRemoval<pcl::PointXYZ> radius_filter;
+    radius_filter.setRadiusSearch(0.5);
+    radius_filter.setMinNeighborsInRadius(10);//一米内至少有10个点
+
+    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+    ec.setClusterTolerance (1.); //设置近邻搜索的搜索半径为1.0m
+    ec.setMinClusterSize (10);//设置一个聚类需要的最少点数目为100
+    ec.setMaxClusterSize (25000); //设置一个聚类需要的最大点数目为25000
+
+    /*std::queue<pair<unsigned int,PointCloud::Ptr>> pc_queue;
+    std::mutex queue_mutex;
+    std::atomic_bool filter_finished=false;
+
+    ///线程1：点云采样和滤波
+    std::thread t_filter([&](){
+        ExecInst([&](unsigned int key, InstFeat& inst){
+            if(inst.is_curr_visible){
+                Debugt("ProcessExtraPoints() start t_filter");
+
+                ///检测额外点,构建点云
+                inst.DetectExtraPoints(curr_img.disp);
+
+                ///转换为PCL点云
+                PointCloud::Ptr pc = EigenToPclXYZ(inst.extra_points3d);
+                PointCloud::Ptr pc_filtered(new PointCloud);
+
+                ///半径滤波
+                radius_filter.setInputCloud(pc);
+                radius_filter.filter(*pc_filtered);
+
+                if(pc_filtered->empty() || pc_filtered->points.size()<5){
+                    return;
+                }
+
+                {
+                    std::unique_lock<std::mutex> lock(queue_mutex);
+                    pc_queue.push({key,pc_filtered});
+                }
+                Debugt("ProcessExtraPoints() end t_filter");
+            }
+        });
+        filter_finished = true;
+    });
+
+    ///线程2：聚类分割
+    while(true){
+        bool is_empty =false;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            if(pc_queue.empty()){
+                is_empty=true;
+            }
+        }
+        if(filter_finished && is_empty){
+            break;
+        }
+        else if(is_empty){
+            std::this_thread::sleep_for(5ms);
+            continue;
+        }
+
+
+        pair<unsigned int,PointCloud::Ptr> key_pc;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            key_pc = pc_queue.front();
+            pc_queue.pop();
+        }
+
+        Debugt("ProcessExtraPoints() start segmentation pc.size:{}",key_pc.second->points.size());
+
+
+        ///聚类分割
+        pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+        ec.setSearchMethod (tree);//设置点云的搜索机制
+        std::vector<pcl::PointIndices> cluster_indices;
+        ec.setInputCloud (key_pc.second);
+        ec.extract (cluster_indices);//从点云中提取聚类，并将点云索引保存在cluster_indices中
+
+        if(cluster_indices.empty()){
+            return;
+        }
+
+        ///选择第一个簇作为分割结果
+        PointCloud::Ptr segmented_pc(new PointCloud);
+        auto &indices = cluster_indices[0].indices;
+        segmented_pc->points.reserve(indices.size());
+        for(auto &index:indices){
+            segmented_pc->points.push_back(key_pc.second->points[index]);
+        }
+        segmented_pc->width = segmented_pc->points.size();
+        segmented_pc->height=1;
+        segmented_pc->is_dense = true;
+
+        Debugt("ProcessExtraPoints() put segmentation");
+
+        ///将结果转换eigen
+        instances_[key_pc.first].extra_points3d = PclToEigen<pcl::PointXYZ>(segmented_pc);
+
+        Debugt("ProcessExtraPoints() end segmentation");
+    }
+
+    if(t_filter.joinable())
+        t_filter.join();*/
+
+
+
+    ExecInst([&](unsigned int key, InstFeat& inst){
+        if(inst.is_curr_visible){
+            Debugt("ProcessExtraPoints() start t_filter");
+
+            ///检测额外点,构建点云
+            inst.DetectExtraPoints(curr_img.disp);
+
+            ///转换为PCL点云
+            PointCloud::Ptr pc = EigenToPclXYZ(inst.extra_points3d);
+            inst.extra_points3d.clear();//先清空
+
+            PointCloud::Ptr pc_filtered(new PointCloud);
+
+            ///半径滤波
+            radius_filter.setInputCloud(pc);
+            radius_filter.filter(*pc_filtered);
+
+            if(pc_filtered->empty() || pc_filtered->points.size()<5){
+                return;
+            }
+
+            Debugt("ProcessExtraPoints() end t_filter");
+
+            pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+            ec.setSearchMethod (tree);//设置点云的搜索机制
+            std::vector<pcl::PointIndices> cluster_indices;
+            ec.setInputCloud (pc_filtered);
+            ec.extract (cluster_indices);//从点云中提取聚类，并将点云索引保存在cluster_indices中
+
+            if(cluster_indices.empty()){
+                return;
+            }
+
+            ///选择第一个簇作为分割结果
+            PointCloud::Ptr segmented_pc(new PointCloud);
+            auto &indices = cluster_indices[0].indices;
+            segmented_pc->points.reserve(indices.size());
+            for(auto &index:indices){
+                segmented_pc->points.push_back(pc_filtered->points[index]);
+            }
+            segmented_pc->width = segmented_pc->points.size();
+            segmented_pc->height=1;
+            segmented_pc->is_dense = true;
+
+            ///将结果转换eigen
+            inst.extra_points3d = PclToEigen<pcl::PointXYZ>(segmented_pc);
+        }
+    });
+
+
+
+    Debugt("ProcessExtraPoints() used time:{} ms",t_all.Toc());
 }
 
 
@@ -174,9 +340,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         inst.is_curr_visible=false;
         inst.box2d.reset();
         inst.box3d.reset();
-
-        inst.extra_ids.clear();
-        inst.extra_points.clear();
     }
 
     ///MOT
@@ -209,12 +372,13 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
     is_exist_inst_ = !img.boxes2d.empty();
 
-
-
     if(is_exist_inst_){
         ///形态学运算
         ErodeMaskGpu(img.merge_mask_gpu, img.merge_mask_gpu);
         img.merge_mask_gpu.download(img.merge_mask);
+
+        ///开启另一个线程处理点云
+        std::thread t_process_extra = std::thread(&InstsFeatManager::ProcessExtraPoints, this);
 
         ///对每个目标进行光流跟踪
         ExecInst([&](unsigned int key, InstFeat& inst){
@@ -234,8 +398,10 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 auto [prev_roi_gray_padded,roi_gray_padded] = InstanceImagePadding(inst.roi->prev_roi_gray,
                                                                       inst.roi->roi_gray);
 
-                ///DEBUG
-                /*{
+
+                /*
+                 ///DEBUG
+                 {
                     if(img.seq>8 && img.seq<=15){
                         cv::Mat merge;
                         cv::vconcat(prev_roi_gray_padded,roi_gray_padded,merge);
@@ -252,8 +418,8 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 Debugt("instsTrack id:{} curr_size:{}",inst.id,inst.curr_points.size());
             }
         });
-
         Infot("instsTrack flowTrack:{} ms", tic_toc.TocThenTic());
+
 
         ///角点检测
         ExecInst([&](unsigned int key, InstFeat& inst){
@@ -308,7 +474,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 continue;
             ///去畸变和计算归一化坐标
             inst.UndistortedPointsWithAddOffset(cam_t.cam0,inst.curr_points,inst.curr_un_points);
-            inst.UndistortedPointsWithAddOffset(cam_t.cam0,inst.extra_points,inst.extra_un_points);
 
             //inst.UndistortedPts(camera_);
             ///计算特征点的速度
@@ -331,6 +496,10 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
         ManageInstances();
 
+        ///等待线程结束
+        t_process_extra.join();
+
+
         ExecInst([&](unsigned int key, InstFeat& inst){
             inst.PostProcess();
         });
@@ -339,6 +508,8 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             inst.prev_id_pts=inst.curr_id_pts;
             inst.right_prev_id_pts=inst.right_curr_id_pts;
         }*/
+
+
     }
     else{
         ManageInstances();
@@ -375,6 +546,7 @@ void InstsFeatManager::ManageInstances()
 }
 
 
+
 /**
  ** 用于将特征点传到VIO模块
  * @param result
@@ -394,33 +566,7 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
         features_map.color = inst.color;
         features_map.box2d = inst.box2d;
         features_map.box3d = inst.box3d;
-
-        ///构建双目点云
-        int rows=inst.roi->roi_gray.rows;
-        int cols=inst.roi->roi_gray.cols;
-        vector<Vec3d> pts3d;
-        for(int i=0;i<rows;i+=2){
-            for(int j=0;j<cols;j+=2){
-                if(inst.roi->mask_cv.at<uchar>(i,j)<=0.5){
-                    continue;
-                }
-                int r=i+inst.box2d->rect.tl().y;
-                int c=j+inst.box2d->rect.tl().x;
-                float disparity = curr_img.disp.at<float>(r,c);
-                if(disparity<=0){
-                    continue;
-                }
-                float depth = cam_s.fx0 * cam_s.baseline / disparity;//根据视差计算深度
-                float x_3d = (c- cam_s.cx0)*depth/cam_s.fx0;
-                float y_3d = (r-cam_s.cy0)*depth/cam_s.fy0;
-                pts3d.emplace_back(x_3d,y_3d,depth);
-                //if(i==j){
-                //    cout<<cam_s.fx0<<" "<<cam_s.baseline<<" "<<disparity<<endl;
-                //}
-            }
-        }
-        features_map.points = pts3d;
-
+        features_map.points = inst.extra_points3d;
 
         for(int i=0;i<(int)inst.curr_un_points.size();++i){
             FeaturePoint::Ptr feat=std::make_shared<FeaturePoint>();
@@ -437,18 +583,6 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
             features_map.features.insert({inst.ids[i],feat});
         }
 
-        for(int i=0;i<(int)inst.extra_un_points.size();++i){
-            FeaturePoint::Ptr feat=std::make_shared<FeaturePoint>();
-            feat->is_extra=true;
-
-            feat->point.x() = inst.extra_un_points[i].x;
-            feat->point.y() = inst.extra_un_points[i].y;
-            feat->point.z()=1;
-
-            feat->disp = prev_img.disp.at<float>(inst.extra_points[i]);
-
-            features_map.features.insert({inst.extra_ids[i],feat});
-        }
 
         int right_cnt=0;
         if(cfg::is_stereo){
@@ -467,8 +601,8 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
             }
         }
         result.insert({key,features_map});
-        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{} extra:{}\n", key,inst.box2d->class_name,
-                                inst.curr_points.size(), inst.right_points.size(),inst.extra_points.size());
+        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{} extra3d:{}\n", key,inst.box2d->class_name,
+                                inst.curr_points.size(), inst.right_points.size(),inst.extra_points3d.size());
     });
     Debugt(log_text);
 

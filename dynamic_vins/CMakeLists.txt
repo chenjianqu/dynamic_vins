@@ -55,6 +55,9 @@ set(PCL_LIB
         /usr/lib/x86_64-linux-gnu/libpcl_io.so
         /usr/lib/x86_64-linux-gnu/libpcl_filters.so
         /usr/lib/x86_64-linux-gnu/libpcl_visualization.so
+        /usr/lib/x86_64-linux-gnu/libpcl_search.so
+		/usr/lib/x86_64-linux-gnu/libpcl_kdtree.so
+		/usr/lib/x86_64-linux-gnu/libpcl_segmentation.so
         )
 
 
@@ -86,7 +89,8 @@ catkin_package()
 
 
 include_directories(src)
-include_directories(src/line_detector/line_descriptor/include)
+include_directories(thirdparty)
+include_directories(thirdparty/line_descriptor/include)
 
 aux_source_directory(src/utils utils_sources)
 aux_source_directory(src/utils/dataset dataset_sources)
@@ -104,7 +108,7 @@ aux_source_directory(src/estimator/initial initial_sources)
 aux_source_directory(src/estimator/factor factor_sources)
 aux_source_directory(src/estimator/imu imu_sources)
 aux_source_directory(src/estimator estimator_sources)
-aux_source_directory(src/line_detector/line_descriptor/src line_descriptor_sources)
+aux_source_directory(thirdparty/line_descriptor/src line_descriptor_sources)
 aux_source_directory(src/line_detector line_detector_sources)
 
 message("estimator: ${estimator} ")
@@ -114,7 +118,7 @@ add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sourc
         ${mot_sources}  ${front_end_sources} ${initial_sources}  ${factor_sources} ${imu_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES}
-        /home/chen/ws/dynamic_ws/src/dynamic_vins/src/line_detector/line_descriptor/lib/liblinedesc.so
+		${PROJECT_SOURCE_DIR}/thirdparty/line_descriptor/lib/liblinedesc.so
         )
 
 add_executable(build_raft src/system/build_tools/build_raft.cpp src/flow/flow_parameter.cpp ${tensorrt_sources} src/utils/log_utils.cpp)
@@ -157,9 +161,12 @@ target_link_libraries(ransac_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LI
 add_executable(stereo_test src/system/exp_tools/stereo_test.cpp src/utils/io_utils.cpp)
 target_link_libraries(stereo_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
 
+add_executable(object_pointcloud_test src/system/exp_tools/object_pointcloud_test.cpp src/utils/io_utils.cpp)
+target_link_libraries(object_pointcloud_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
+
 
 
 add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp ${line_detector_sources} ${line_descriptor_sources})
 target_link_libraries(line_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}
-		/home/chen/ws/dynamic_ws/src/dynamic_vins/src/line_detector/line_descriptor/lib/liblinedesc.so)
+		${PROJECT_SOURCE_DIR}/thirdparty/line_descriptor/lib/liblinedesc.so)
 

@@ -21,8 +21,8 @@
 #include "utils/def.h"
 #include "utils/parameters.h"
 #include "utils/io/visualization.h"
+#include "utils/io/publisher_map.h"
 #include "utils/io/io_parameters.h"
-#include "utils/io_utils.h"
 #include "utils/io/feature_serialization.h"
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
@@ -32,8 +32,6 @@
 #include "front_end/background_tracker.h"
 #include "front_end/front_end_parameters.h"
 #include "image_process/image_process.h"
-#include "image_process/deeplearning_utils.h"
-#include "utils/test/stereo_test.h"
 
 namespace dynamic_vins{\
 
@@ -63,7 +61,7 @@ void ImageProcess()
     TicToc t_all;
     ImageViewer viewer;
 
-    while(cfg::ok.load(std::memory_order_seq_cst)){
+    while(cfg::ok==true){
 
         if(image_queue.size() >= kImageQueueSize){
             cerr<<"ImageProcess image_queue.size() >= kImageQueueSize,blocked"<<endl;
@@ -81,17 +79,14 @@ void ImageProcess()
             img = callback->SyncProcess();
         }
 
-
-
-
         std::cout<<"image seq_id:"<<img.seq<<std::endl;
-
         Warns("----------Time : {} ----------", std::to_string(img.time0));
         t_all.Tic();
 
         ///结束程序
         if(img.color0.empty()){
             cfg::ok = false;
+            ros::shutdown();
             break;
         }
 
@@ -162,8 +157,6 @@ void ImageProcess()
             image_queue.push_back(img);
         }
 
-
-
     }
 
     Infos("Image Process Avg cost:{} ms",time_sum/cnt);
@@ -179,7 +172,7 @@ void FeatureTrack()
     TicToc tt;
     int cnt=0;
     double time_sum=0;
-    while(cfg::ok.load(std::memory_order_seq_cst))
+    while(cfg::ok==true)
     {
         if(auto img = image_queue.request_image();img){
             tt.Tic();
@@ -193,7 +186,7 @@ void FeatureTrack()
             if(cfg::slam == SLAM::kDynamic){
                 insts_tracker->SetEstimatedInstancesInfo(estimator->im.GetOutputInstInfo());
                 TicToc t_i;
-                ///开启另一个线程检测动态特征点
+                ///开启一个线程检测动态特征点
                 std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
 
                 ///执行背景区域跟踪
@@ -208,12 +201,12 @@ void FeatureTrack()
                     insts_tracker->DrawInsts(feature_tracker->img_track());
                 }
 
-                //if(img->seq%10==0){
-                 //   cv::Mat img_w=img->color0.clone();
-                 //   string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
-                //    insts_tracker->DrawInsts(img_w);
-                //    cv::imwrite(save_name,img_w);
-               // }
+                /*if(img->seq%10==0){
+                    cv::Mat img_w=img->color0.clone();
+                    string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
+                    insts_tracker->DrawInsts(img_w);
+                    cv::imwrite(save_name,img_w);
+                }*/
             }
             else if(cfg::slam == SLAM::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
@@ -257,7 +250,7 @@ void FeatureTrack()
 
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){
-                ImagePublisher::Pub(feature_tracker->img_track(),"image_track");
+                PublisherMap::PubImage(feature_tracker->img_track(),"image_track");
                 /*cv::imshow("img",feature_tracker->img_track);
                 cv::waitKey(1);*/
                 /*string label=to_string(img.time0)+".jpg";

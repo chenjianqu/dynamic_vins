@@ -63,23 +63,37 @@ source ~/.bashrc
 
 
 
+## Features
+
+### Support datasets
+
+* Kitti tracking
+
+* VIODE
+* EuRoC
+* Custom dataset
+
+see [custom_dataset](custom_dataset/README.md)
 
 
-* use clion
 
-```shell
-source devel/setup.bash
+### Support mode
 
-clion_path=/home/chen/app/clion-2021.2
+**sensor mode**:
 
-#launch clion
-sh ${clion_path}/bin/clion.sh
+* Vison-only
+* VIO
 
-#after catkin_make
-${clion_path}/bin/cmake/linux/bin/cmake --build ${dynamic_vins_root}/src/dynamic_vins/cmake-build-debug --target dynamic_vins -- -j4
-```
+**line-point mode**:
 
+* PointOnly
+* LinePoint
 
+**dynamic mode**:
+
+* raw
+* naive
+* dynamic
 
 
 
@@ -101,22 +115,22 @@ rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 * launch dynamic_vins
 
 ```shell
+
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/viode/viode.yaml 
-#seq_name=city_day_0_none
 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_09_30/kitti_09_30_config.yaml 
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_10_03/kitti_10_03_config.yaml
-#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
+config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking.yaml
 #config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_tracking/kitti_tracking_raw_line.yaml
-#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc2/euroc.yaml
+
+#config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/euroc/euroc.yaml
+
 #config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/custom/stereo_1920x1080/custom.yaml
 
-config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720_vison_only/custom.yaml
+#config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720_vison_only/custom.yaml
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720/custom.yaml
 
-seq_name=room_static_1
-
-source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name}
+source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name} 0000
 ```
 
 
@@ -128,10 +142,13 @@ source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vin
 rosbag play /home/chen/datasets/VIODE/bag/city_night/0_none.bag
 
 #kitti
-rosbag play /home/chen/Datasets/kitti/odometry_color_07.bag
+rosbag play /home/chen/datasets/kitti/odometry_color_07.bag
 
 #euroc
 rosbag play /home/chen/datasets/Euroc/MH_01_easy.bag
+
+#custom
+rosbag play corridor_dynamic_1/data.bag -r 0.5
 ```
 
 

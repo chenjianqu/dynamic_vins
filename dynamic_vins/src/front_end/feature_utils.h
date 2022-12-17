@@ -204,6 +204,8 @@ void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, con
 cv::Scalar color_map(int64_t n);
 
 
+tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2);
+
 
 
 }

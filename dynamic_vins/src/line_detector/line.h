@@ -19,37 +19,12 @@
 
 #include "line_descriptor/include/line_descriptor_custom.hpp"
 #include "utils/camera_model.h"
+#include "estimator/basic/line_feature.h"
 
 
 namespace dynamic_vins{\
 
-struct Line{
-    cv::Point2f StartPt;
-    cv::Point2f EndPt;
-    float lineWidth;
-    cv::Point2f Vp;
 
-    cv::Point2f Center;
-    cv::Point2f unitDir; // [cos(theta), sin(theta)]
-    float length;
-    float theta;
-
-    // para_a * x + para_b * y + c = 0
-    float para_a;
-    float para_b;
-    float para_c;
-
-    float image_dx;
-    float image_dy;
-    float line_grad_avg;
-
-    float xMin;
-    float xMax;
-    float yMin;
-    float yMax;
-    unsigned int id;
-    int colorIdx;
-};
 
 
 class FrameLines{

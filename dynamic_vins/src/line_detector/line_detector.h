@@ -12,7 +12,8 @@
 #define DYNAMIC_VINS_LINE_DETECTOR_H
 
 #include <string>
-#include "line_descriptor_custom.hpp"
+
+#include "line_descriptor/include/line_descriptor_custom.hpp"
 #include "line.h"
 
 namespace dynamic_vins{\

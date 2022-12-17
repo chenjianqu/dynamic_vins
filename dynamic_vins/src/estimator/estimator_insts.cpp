@@ -13,8 +13,6 @@
 #include <algorithm>
 #include <filesystem>
 
-#include <pcl/filters/radius_outlier_removal.h>
-
 #include "utils/def.h"
 #include "vio_parameters.h"
 
@@ -23,37 +21,31 @@
 #include "estimator/factor/speed_factor.h"
 #include "estimator/factor/box_factor.h"
 #include "utils/io/io_parameters.h"
-#include "utils/io_utils.h"
 #include "utils/io/output.h"
 #include "utils/camera_model.h"
+#include "utils/convert_utils.h"
 
 
 namespace dynamic_vins{\
 
 
-vector<Vec3d> ProcessExtraPoint(const vector<Vec3d> &points){
-    PointCloud::Ptr stereo_pc(new PointCloud);
-    for(auto &p_cam : points){
-        Vec3d p_w = body.CamToWorld(p_cam,body.frame);
-        PointT p;
-        p.x = p_w.x();
-        p.y = p_w.y();
-        p.z = p_w.z();
-        stereo_pc->points.push_back(p);
+/**
+ * 处理点云,将点云变换到世界坐标系下
+ * @param points
+ * @return
+ */
+PointCloud::Ptr ProcessExtraPoint(const vector<Vec3d> &points,const cv::Scalar& color){
+    if(points.empty()){
+        return PointCloud::Ptr(new PointCloud);
     }
-    PointCloud::Ptr stereo_pc_filtered(new PointCloud);
-    pcl::RadiusOutlierRemoval<PointT> radius_filter;
-    radius_filter.setInputCloud(stereo_pc);
-    radius_filter.setRadiusSearch(1);
-    radius_filter.setMinNeighborsInRadius(10);//一米内至少有10个点
-    radius_filter.filter(*stereo_pc_filtered);
 
-    int size = stereo_pc_filtered->size();
-    vector<Vec3d> outputs(size);
-    for(int i=0;i<size;++i){
-        outputs[i] << stereo_pc_filtered->points[i].x,stereo_pc_filtered->points[i].y,stereo_pc_filtered->points[i].z;
+    vector<Vec3d> points_w(points.size());
+    for(int i=0;i<points.size();++i){
+        points_w[i] = body.CamToWorld(points[i],body.frame);
     }
-    return outputs;
+
+    ///转换为PCL点云
+    return EigenToPclXYZRGB(points_w,color);
 }
 
 
@@ -79,18 +71,19 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
         return;
     }
 
+    Debugv("InstanceManager::PushBack() start");
+
     string log_text = fmt::format("InstanceManager::PushBack input_inst_size:{},feat_size:{}\n",input_insts.size(),
            std::accumulate(input_insts.begin(), input_insts.end(), 0,
                            [](int sum, auto &p) { return sum + p.second.features.size(); }));
 
     for(auto &[instance_id , inst_feat] : input_insts){
-        log_text += fmt::format("PushBack input_id:{} input_feat_size:{} class:{}\n",
-                                instance_id,inst_feat.features.size(),inst_feat.box2d->class_name);
+        log_text += fmt::format("PushBack input_id:{} class:{} input_feat_size:{} 3d_points:{} \n",
+                                instance_id,inst_feat.box2d->class_name,inst_feat.features.size(),inst_feat.points.size());
         if(inst_feat.box3d){
-            log_text += fmt::format("input box3d center:{},yaw:{} score:{}\n",
-                                    VecToStr(inst_feat.box3d->center_pt), inst_feat.box3d->yaw, inst_feat.box3d->score);
+            Debugv( fmt::format("input box3d center:{},yaw:{} score:{}\n",
+                                VecToStr(inst_feat.box3d->center_pt), inst_feat.box3d->yaw, inst_feat.box3d->score) );
         }
-
 
         auto inst_iter = instances.find(instance_id);
         if(inst_iter == instances.end()){///创建物体
@@ -115,7 +108,10 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                 it->second.landmarks.push_back(lm);
             }
 
-            it->second.points_extra[body.frame]=ProcessExtraPoint(inst_feat.points);
+            it->second.points_extra_pcl[body.frame] = ProcessExtraPoint(inst_feat.points,it->second.color);
+            it->second.points_extra[body.frame] = PclToEigen<PointT>(it->second.points_extra_pcl[body.frame]);//转换为Eigen数组
+
+            //cout<< fmt::format("PushBack | Create Instance:{}\n", instance_id)<<endl;
 
             log_text += fmt::format("PushBack | Create Instance:{}\n", instance_id);
         }
@@ -150,10 +146,14 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                 it->feats.push_back(feat_ptr);//添加第一个观测
             }
 
-            inst_iter->second.points_extra[body.frame]=ProcessExtraPoint(inst_feat.points);
-
+            inst_iter->second.points_extra_pcl[body.frame] = ProcessExtraPoint(inst_feat.points,inst_iter->second.color);
+            inst_iter->second.points_extra[body.frame] = PclToEigen<PointT>(inst_iter->second.points_extra_pcl[body.frame]);//转换为Eigen数组
 
         }
+
+        //cout<<fmt::format("PushBack input_id:{} input_feat_size:{} class:{}\n",
+        //                  instance_id,inst_feat.features.size(),inst_feat.box2d->class_name)<<endl;
+
     }
 
     //根据观测次数,对特征点进行排序
@@ -177,6 +177,50 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
 
 
 
+/**
+ * 使用ICP推断当前帧的位姿
+ * @param inst
+ * @return
+ */
+bool InstanceManager::PropagateByICP(Instance &inst){
+    if(!inst.points_extra_pcl[body.frame]){
+        return false;
+    }
+    //找到前面的一个点云
+    int last_index=-1;
+    for(int i=body.frame-1;i>=0;--i){
+        if(inst.points_extra_pcl[i] && !inst.points_extra_pcl[i]->empty()){
+            last_index=i;
+            break;
+        }
+    }
+    if(last_index==-1){
+        Debugv("PropagateByICP() inst:{} can't found last_points",inst.id);
+        return false;
+    }
+
+    ///ICP匹配
+    PointCloud::Ptr pc_transformed(new PointCloud);
+    icp.setInputSource(inst.points_extra_pcl[last_index]);//点云A
+    icp.setInputTarget(inst.points_extra_pcl[body.frame]);//点云B
+    icp.align(*pc_transformed);
+
+    if (icp.hasConverged()) {
+        //设当前时刻为 j,上一时刻为i，要求的是位姿T_woj
+        Eigen::Matrix4d T_ojoi_tmp = icp.getFinalTransformation().cast<double>();//得到的是将点从source变换到target的变换矩阵
+        Eigen::Isometry3d T_ojoi(T_ojoi_tmp);
+
+        //则有： T_woj = T_oioj * T_woi
+        Eigen::Isometry3d T_woj = T_ojoi.inverse() * inst.state[last_index].GetTransform();
+        // T_oioj = T_oiw * T_woj
+        inst.state[body.frame].SetPose(T_woj);
+
+        return true;
+    } else {
+        Warnv("inst {} ICP has not converged.",inst.id);
+        return false;
+    }
+}
 
 
 
@@ -193,37 +237,24 @@ void InstanceManager::PropagatePose()
     int last_frame= frame - 1;
     double time_ij= body.headers[frame] - body.headers[last_frame];
 
-    InstExec([&](int key,Instance& inst){
 
+
+    InstExec([&](int key,Instance& inst){
         if(!inst.is_tracking){
             return;
         }
+        inst.state[frame].time = body.headers[frame];
 
         //inst.vel = inst.point_vel;
 
-        inst.state[frame].time = body.headers[frame];
+        ///首先计算出位姿的初值
 
-        /*inst.state[frame].R = inst.state[frame].R;
-        inst.state[frame].P = inst.state[frame].P;*/
-
-        /*
-        if(!inst.is_init_velocity || inst.is_static){
-            inst.state[frame].R = inst.state[last_frame].R;
-            inst.state[frame].P = inst.state[last_frame].P;
-            Debugv("InstanceManager::PropagatePose id:{} same",inst.id);
-        }
-        */
-
-        /*Mat3d Roioj=Sophus::SO3d::exp(inst.point_vel.a*time_ij).matrix();
-        Vec3d Poioj=inst.point_vel.v*time_ij;
-        inst.state[frame].R = Roioj * inst.state[last_frame].R;
-        inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
-        Debugv("InstanceManager::PropagatePose id:{} Poioj:{}",inst.id, VecToStr(Poioj));*/
-
+        ///静态物体
         if(inst.is_static){
             inst.state[frame].R = inst.state[last_frame].R;
             inst.state[frame].P = inst.state[last_frame].P;
             log_text += fmt::format("inst:{}.is_static,inst.state[frame].P:{} \n",inst.id, VecToStr(inst.state[frame].P));
+            return;
         }
         ///距离太远,计算得到的速度不准确
         else if((inst.state[frame].P - body.Ps[frame]).norm() > 80){
@@ -247,14 +278,25 @@ void InstanceManager::PropagatePose()
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;*/
 
-            Mat3d Roioj=Sophus::SO3d::exp(inst.point_vel.a*time_ij).matrix();
-            Vec3d Poioj=inst.point_vel.v*time_ij;
+            auto [Roioj,Poioj] = inst.point_vel.RelativePose(time_ij);
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
             log_text += fmt::format("inst:{} predict by vel, Poioj:{} \n",inst.id, VecToStr(Poioj));
         }
 
         inst.vel = inst.point_vel;
+
+        ///再根据ICP得到更加准确的位姿
+        if(!PropagateByICP(inst)){
+            Debugv("inst {} ICP init failed",inst.id);
+        }
+        else{
+            //根据ICP的结果得到速度
+            // T_oioj = T_oiw * T_woj，这里的i指的是body.frame-1，j指的是body.frame
+            Eigen::Isometry3d T_oioj = inst.state[body.frame-1].GetTransform().inverse() * inst.state[body.frame].GetTransform();
+            inst.vel.SetVel(T_oioj,body.headers[body.frame] - body.headers[body.frame-1]);
+        }
+
 
         },true);
 

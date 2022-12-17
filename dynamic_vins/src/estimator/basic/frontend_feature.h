@@ -22,8 +22,7 @@
 #include "utils/parameters.h"
 #include "line_detector/line.h"
 
-#include "landmark.h"
-
+#include "point_landmark.h"
 
 
 namespace dynamic_vins{\

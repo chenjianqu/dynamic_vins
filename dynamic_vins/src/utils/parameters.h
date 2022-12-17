@@ -26,7 +26,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/common/common.h>
 
-#include "utility.h"
+#include "estimator/utility.h"
 #include "camera_model.h"
 #include "log_utils.h"
 

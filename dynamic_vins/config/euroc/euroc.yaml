@@ -5,18 +5,18 @@ imu: 1 #enable imu or not
 num_of_cam: 2
 
 only_imgprocess: 0  #for debug
-only_frontend: 1  #for debug
+only_frontend: 0  #for debug
 
 dataset_type: "euroc" #support:kitti,viode
 slam_type: "raw" #SLAM mode,optional:raw
 
 use_line: 1 #line feature
+undistort_input: 1 #是否对输入进行矫正
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 plane_constraint: 0 #是否使用平面约束
 
-undistort_input: 1 #是否对输入进行矫正
 
 ####################### Camera Parameters ########################
 
@@ -122,7 +122,7 @@ log_output_path: "data/log/"
 print_detail: 0
 
 ####################### Visualization Parameters ########################
-visual_inst_duration: 200  #duration of marker display
+visual_inst_duration: 1000  #duration of marker display
 
 pub_groundtruth_box: 0
 pub_predict_box: 0

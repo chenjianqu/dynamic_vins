@@ -353,7 +353,14 @@ void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, con
 
 
 
-
+tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2){
+    int rows = std::max(img1.rows,img2.rows);
+    int cols = std::max(img1.cols,img2.cols);
+    cv::Mat img1_padded,img2_padded;
+    cv::copyMakeBorder(img1,img1_padded,0,rows-img1.rows,0,cols-img1.cols,cv::BORDER_CONSTANT,cv::Scalar(0));
+    cv::copyMakeBorder(img2,img2_padded,0,rows-img2.rows,0,cols-img2.cols,cv::BORDER_CONSTANT,cv::Scalar(0));
+    return {img1_padded,img2_padded};
+}
 
 
 

@@ -28,6 +28,9 @@ void SaveInstancesTrajectory(InstanceManager& im);
 
 void SaveBodyTrajectory(const std_msgs::Header &header);
 
+void SaveInstancesPointCloud(InstanceManager& im);
+
+
 string PrintInstancePoseInfo(InstanceManager& im,bool output_lm);
 
 cv::Mat DrawTopView(InstanceManager& im,cv::Size size=cv::Size(600,600));

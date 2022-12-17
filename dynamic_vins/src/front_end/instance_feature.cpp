@@ -14,7 +14,6 @@
 #include "utils/dataset/viode_utils.h"
 #include "front_end_parameters.h"
 #include "utils/dataset/coco_utils.h"
-#include "utils/dataset/nuscenes_utils.h"
 
 namespace dynamic_vins{\
 
@@ -45,7 +44,7 @@ void InstFeat::PtsVelocity(double dt){
         }
     }
     else{
-        for (unsigned int i = 0; i < curr_un_points.size(); i++){
+        for (size_t i = 0; i < curr_un_points.size(); i++){
             pts_velocity.emplace_back(0, 0);
         }
     }
@@ -58,17 +57,17 @@ void InstFeat::RightPtsVelocity(double dt){
     right_pts_velocity.clear();
     right_curr_id_pts.clear();
 
-    for (unsigned int i = 0; i < right_ids.size(); i++){
+    for (size_t i = 0; i < right_ids.size(); i++){
         right_curr_id_pts.insert({right_ids[i], right_un_points[i]});
     }
 
     // caculate points velocity
     if (!right_prev_id_pts.empty()){
-        for (unsigned int i = 0; i < right_un_points.size(); i++){
+        for (size_t i = 0; i < right_un_points.size(); i++){
             auto it = right_prev_id_pts.find( right_ids[i]);
             if (it != right_prev_id_pts.end()){
-                double v_x = (right_un_points[i].x - it->second.x) / dt;
-                double v_y = (right_un_points[i].y - it->second.y) / dt;
+                const double v_x = (right_un_points[i].x - it->second.x) / dt;
+                const double v_y = (right_un_points[i].y - it->second.y) / dt;
                 right_pts_velocity.emplace_back(v_x, v_y);
             }
             else{
@@ -77,7 +76,7 @@ void InstFeat::RightPtsVelocity(double dt){
         }
     }
     else{
-        for (unsigned int i = 0; i < right_un_points.size(); i++){
+        for (size_t i = 0; i < right_un_points.size(); i++){
             right_pts_velocity.emplace_back(0, 0);
         }
     }
@@ -318,7 +317,7 @@ void InstFeat::SortPoints()
  * @param use_gpu
  */
 void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,int min_dist,const cv::Mat &mask){
-    int n_max_cnt = fe_para::kMaxCnt - (int)curr_points.size();
+    const int n_max_cnt = fe_para::kMaxCnt - (int)curr_points.size();
     if ( n_max_cnt < 10){
         return;
     }
@@ -378,10 +377,45 @@ void InstFeat::RemoveOutliers(std::set<unsigned int> &removePtsIds)
 }
 
 
+/**
+ * 额外点检测
+ */
+void InstFeat::DetectExtraPoints(const cv::Mat& disp){
+    if(!roi || disp.empty()){
+        return;
+    }
 
+    const int rows=roi->roi_gray.rows;
+    const int cols=roi->roi_gray.cols;
 
+    //设置采样步长
+    constexpr float N_max = 1000.;
+    const int step = std::max(std::sqrt(0.8 * rows * cols / N_max),2.);
+    Debugt("DetectExtraPoints() inst {}'s step:{}",id,step);
 
+    extra_points3d.clear();
 
+    for(int i=0;i<rows;i+=step){
+        for(int j=0;j<cols;j+=step){
+            if(roi->mask_cv.at<uchar>(i,j)<=0.5){
+                continue;
+            }
+            const int r=i + box2d->rect.tl().y;
+            const int c=j + box2d->rect.tl().x;
+            const float disparity = disp.at<float>(r,c);
+            if(disparity<=0){
+                continue;
+            }
+
+            ///TODO 注意，这里未实现畸变矫正，因此需要输入的图像无畸变
+
+            const float depth = cam_s.fx0 * cam_s.baseline / disparity;//根据视差计算深度
+            const float x_3d = (c - cam_s.cx0)*depth/cam_s.fx0;
+            const float y_3d = (r - cam_s.cy0)*depth/cam_s.fy0;
+            extra_points3d.emplace_back(x_3d,y_3d,depth);
+        }
+    }
+}
 
 
 

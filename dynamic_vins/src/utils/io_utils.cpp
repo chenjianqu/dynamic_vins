@@ -13,6 +13,58 @@
 
 namespace dynamic_vins{\
 
+
+
+int CreateDir(const std::string& dir)
+{
+    int ret = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if (ret && errno == EEXIST){
+        printf("dir[%s] already exist.\n",dir.c_str());
+    }
+    else if (ret){
+        printf("create dir[%s] error: %d %s\n" ,dir.c_str(),ret ,strerror(errno));
+        return -1;
+    }
+    else{
+        printf("create dir[%s] success.\n", dir.c_str());
+    }
+    return 0;
+}
+
+std::string GetParentDir(const std::string& dir)
+{
+    std::string pdir = dir;
+    if(pdir.length() < 1 || (pdir[0] != '/')){
+        return "";
+    }
+    while(pdir.length() > 1 && (pdir[pdir.length() -1] == '/')) pdir = pdir.substr(0,pdir.length() -1);
+
+    pdir = pdir.substr(0,pdir.find_last_of('/'));
+    return pdir;
+}
+
+/**
+ * 递归创建多级目录
+ * @param dir
+ * @return
+ */
+int CreateDirs(const std::string& dir){
+    int ret = 0;
+    if(dir.empty())
+        return -1;
+    std::string pdir;
+    if((ret = CreateDir(dir)) == -1){
+        pdir = GetParentDir(dir);
+        if((ret = CreateDir(pdir)) == 0){
+            ret = CreateDir(dir);
+        }
+    }
+    return ret;
+}
+
+
+
+
 /**
  * 清除某个目录下的所有文件
  * @param path
@@ -20,7 +72,8 @@ namespace dynamic_vins{\
 void ClearDirectory(const string &path){
     fs::path dir_path(path);
     if(!fs::exists(dir_path)){
-        int isCreate = mkdir(path.c_str(),S_IRUSR | S_IWUSR | S_IXUSR | S_IRWXG | S_IRWXO);
+        //int isCreate = mkdir(path.c_str(),S_IRUSR | S_IWUSR | S_IXUSR | S_IRWXG | S_IRWXO);
+        int isCreate = CreateDirs(path.c_str());
     }
     fs::directory_iterator dir_iter(dir_path);
     for(auto &it : dir_iter){
@@ -93,6 +146,42 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
     }
 }
 
+/**
+ * 获取某个目录下的所有文件
+ * @param dir 目录
+ * @param files 输出的文件列表
+ * @param filter_suffix 后缀，默认不设置
+ */
+void GetAllFiles(const string& dir, vector<string> &files,const string &filter_suffix){
+    // 首先检查目录是否为空，以及是否是目录
+    if (!CheckIsDir(dir))
+        return;
+
+    // 递归遍历所有的文件
+    std::filesystem::directory_iterator iters(dir);
+    for(auto &iter: iters) {
+        string file_path(dir);
+        file_path += "/";
+        file_path += iter.path().filename();
+
+        // 查看是否是目录，如果是目录则循环递归
+        if (CheckIsDir(file_path)) {
+            GetAllFiles(file_path, files,filter_suffix);
+        }
+        //不是目录则检查后缀是否是满足条件
+        else {
+            string extension = iter.path().extension(); // 获取文件的后缀名
+            if (!filter_suffix.empty() && extension == filter_suffix) {
+                files.push_back(file_path);
+            }
+            else{
+                files.push_back(file_path);
+            }
+        }
+    }
+}
+
+
 
 /**
  * 将字符串写入到文件中
@@ -115,70 +204,6 @@ void WriteTextFile(const string& path,std::string& text){
 
 }
 
-
-
-cv::Scalar BgrColor(const string &color_str,bool is_norm){
-    cv::Scalar color;
-    color[3]=1.;
-    if(color_str=="white"){
-        color[0]=1.;
-        color[1]=1.;
-        color[2]=1.;
-    }
-    else if(color_str=="black"){
-        color[0]=0;
-        color[1]=0;
-        color[2]=0;
-    }
-    else if(color_str=="gray"){
-        color[0]=0.5;
-        color[1]=0.5;
-        color[2]=0.5;
-    }
-    else if(color_str=="blue"){
-        color[0]=1.;
-        color[1]=0;
-        color[2]=0;
-    }
-    else if(color_str=="green"){
-        color[0]=0;
-        color[1]=1.;
-        color[2]=0;
-    }
-    else if(color_str=="red"){
-        color[0]=0;
-        color[1]=0;
-        color[2]=1.;
-    }
-    else if(color_str=="yellow"){//红绿混合
-        color[0]= 0;
-        color[1]= 1;
-        color[2]= 1;
-    }
-    else if(color_str=="cyan"){//青色,蓝绿混合
-        color[0]= 1;
-        color[1]= 1;
-        color[2]= 0;
-    }
-    else if(color_str=="magenta"){//品红,红蓝混合
-        color[0]= 1;
-        color[1]= 0;
-        color[2]= 1;
-    }
-    else{
-        color[0]=1.;
-        color[1]=1.;
-        color[2]=1.;
-    }
-
-    if(!is_norm){
-        color[0] = color[0] * 255;
-        color[1] = color[1] * 255;
-        color[2] = color[2] * 255;
-    }
-
-    return color;
-}
 
 
 

@@ -10,7 +10,7 @@
 
 #include "project_instance_factor.h"
 
-#include "utils/utility.h"
+#include "estimator/utility.h"
 #include "estimator/vio_util.h"
 
 namespace dynamic_vins{\

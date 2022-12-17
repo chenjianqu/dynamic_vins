@@ -10,8 +10,12 @@
 
 #include "output.h"
 
+#include <pcl/io/io.h>
+#include <pcl/io/pcd_io.h>
+
 #include "utils/io/io_parameters.h"
 #include "utils/io_utils.h"
+#include "utils/convert_utils.h"
 #include "utils/dataset/kitti_utils.h"
 #include "estimator/feature_manager.h"
 
@@ -44,7 +48,7 @@ string PrintFactorDebugMsg(InstanceManager& im){
 
     }
 
-    WriteTextFile(MyLogger::kLogOutputDir + "FactorDebugMsg.txt",log_text);
+    WriteTextFile(MyLogger::kLogOutputDir + "factor_debug.txt",log_text);
 
     return {};
 }
@@ -225,6 +229,45 @@ void SaveBodyTrajectory(const std_msgs::Header &header){
 }
 
 
+/**
+ * 保存物体的点云到磁盘
+ * @param im
+ */
+void SaveInstancesPointCloud(InstanceManager& im){
+    if(cfg::slam != SLAM::kDynamic){
+        return;
+    }
+    const string object_base_path = io_para::kOutputFolder + cfg::kDatasetSequence + "/point_cloud/";
+    static bool first_run=true;
+    if(first_run){
+        ClearDirectory(object_base_path);//获取目录中所有的路径,并将这些文件全部删除
+        first_run=false;
+    }
+
+    for(auto &[inst_id,inst] : im.instances){
+        if(!inst.is_curr_visible)
+            continue;
+        //if(!inst.is_tracking || !inst.is_initial)
+        //    continue;
+
+        if(inst.id !=1){
+            continue;
+        }
+
+        if(!inst.points_extra[body.frame].empty()){
+            pcl::PointCloud<pcl::PointXYZRGB>::Ptr stereo_pc =
+                    EigenToPclXYZRGB(inst.points_extra[body.frame],inst.color);
+
+            const string save_path = object_base_path+fmt::format("{}_{}.pcd",PadNumber(body.seq_id,6),inst_id);
+            pcl::io::savePCDFile(save_path,*stereo_pc);
+        }
+
+    }
+
+
+}
+
+
 
 /**
  * 保存所有物体在当前帧的位姿
@@ -233,26 +276,19 @@ void SaveInstancesTrajectory(InstanceManager& im){
     if(cfg::slam != SLAM::kDynamic){
         return;
     }
-
-    Mat3d R_iw = body.Rs[body.frame].transpose();
-    Vec3d P_iw = - R_iw * body.Ps[body.frame];
-    Mat3d R_ci = body.ric[0].transpose();
-    Vec3d P_ci = - R_ci * body.tic[0];
-
-    Mat3d R_cw = R_ci * R_iw;
-    Vec3d P_cw = R_ci * P_iw + P_ci;
-
-    string object_tracking_path= io_para::kOutputFolder + cfg::kDatasetSequence+".txt";
-    string object_object_dir= io_para::kOutputFolder + cfg::kDatasetSequence+"/";
-    string object_tum_dir=io_para::kOutputFolder + cfg::kDatasetSequence+"_tum/";
+    ///文件夹设置
+    const string object_base_path = io_para::kOutputFolder + cfg::kDatasetSequence + "/";
+    const string object_tracking_path = object_base_path+cfg::kDatasetSequence+".txt";
+    const string object_object_dir= object_base_path + cfg::kDatasetSequence+"/";
+    const string object_tum_dir=object_base_path + cfg::kDatasetSequence+"_tum/";
 
     static bool first_run=true;
     if(first_run){
-        std::ofstream fout(object_tracking_path, std::ios::out);
-        fout.close();
-
         ClearDirectory(object_object_dir);//获取目录中所有的路径,并将这些文件全部删除
         ClearDirectory(object_tum_dir);
+
+        std::ofstream fout(object_tracking_path, std::ios::out);
+        fout.close();
 
         first_run=false;
     }
@@ -265,10 +301,17 @@ void SaveInstancesTrajectory(InstanceManager& im){
         object_object_path = object_object_dir+ PadNumber(body.seq_id,6)+".txt";
     }
     std::ofstream fout_object(object_object_path, std::ios::out);
-
     std::ofstream fout_mot(object_tracking_path, std::ios::out | std::ios::app);//追加写入
 
     string log_text="InstanceManager::SaveInstancesTrajectory()\n";
+
+    Mat3d R_iw = body.Rs[body.frame].transpose();
+    Vec3d P_iw = - R_iw * body.Ps[body.frame];
+    Mat3d R_ci = body.ric[0].transpose();
+    Vec3d P_ci = - R_ci * body.tic[0];
+
+    Mat3d R_cw = R_ci * R_iw;
+    Vec3d P_cw = R_ci * P_iw + P_ci;
 
     for(auto &[inst_id,inst] : im.instances){
         if(!inst.is_curr_visible)

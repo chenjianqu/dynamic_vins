@@ -122,18 +122,18 @@ int Instance::SlideWindowOld()
         }
     }
 
-
-
     ///将最老帧的相关变量去掉
     for (int i = 0; i < kWinSize; i++){
         state[i].swap(state[i+1]);
-    }
-    state[kWinSize]=state[kWinSize - 1];
-
-    for (int i = 0; i < kWinSize; i++){
         boxes3d[i].swap(boxes3d[i+1]);
+        points_extra[i] = points_extra[i+1];
+        points_extra_pcl[i] = points_extra_pcl[i+1];
     }
+
+    state[kWinSize]=state[kWinSize - 1];
     boxes3d[kWinSize].reset();
+    points_extra[kWinSize].clear();
+    points_extra_pcl[kWinSize].reset();
 
     return debug_num;
 }
@@ -178,6 +178,11 @@ int Instance::SlideWindowNew()
 
     boxes3d[kWinSize-1] = boxes3d[kWinSize];
     boxes3d[kWinSize].reset();
+
+    points_extra[kWinSize-1] = points_extra[kWinSize];
+    points_extra[kWinSize].clear();
+    points_extra_pcl[kWinSize-1] = points_extra_pcl[kWinSize];
+    points_extra_pcl[kWinSize].reset();
 
     state[kWinSize - 1] = state[kWinSize];
     return debug_num;

@@ -23,8 +23,8 @@
 
 #include "utils/def.h"
 #include "utils/box3d.h"
-#include "landmark.h"
-#include "line_landmark.h"
+#include "estimator/basic/point_landmark.h"
+#include "estimator/basic/line_landmark.h"
 
 namespace dynamic_vins{\
 

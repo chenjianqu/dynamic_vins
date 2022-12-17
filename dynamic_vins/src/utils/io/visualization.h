@@ -7,15 +7,6 @@
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
  *******************************************************/
-/*******************************************************
- * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
- *
- * This file is part of VINS.
- *
- * Licensed under the GNU General Public License v3.0;
- * you may not use this file except in compliance with the License.
- *******************************************************/
-
 
 
 #pragma once
@@ -78,6 +69,8 @@ public:
 
     static void PubKeyframe();
 
+    static void PubInstancePointCloud(const std_msgs::Header &header);
+
     static void PubInstances(const std_msgs::Header &header);
 
     static void PubPredictBox3D(std::vector<Box3D> &boxes);
@@ -93,34 +86,6 @@ public:
 };
 
 
-class ImagePublisher{
-public:
-    using Ptr=std::shared_ptr<ImagePublisher>;
-
-    explicit ImagePublisher(ros::NodeHandle &n);
-
-    static void Pub(cv::Mat &img,const string &topic);
-
-
-    inline static ros::NodeHandle *nh;
-    inline static std::unordered_map<string,ros::Publisher> pub_map;
-
-};
-
-
-class PointCloudPublisher{
-public:
-    using Ptr=std::shared_ptr<PointCloudPublisher>;
-
-    explicit PointCloudPublisher(ros::NodeHandle &n);
-
-    static void Pub(PointCloud &cloud,const string &topic);
-    static void Pub(sensor_msgs::PointCloud &cloud,const string &topic);
-
-    inline static ros::NodeHandle *nh;
-    inline static std::unordered_map<string,ros::Publisher> pub_map;
-
-};
 
 
 

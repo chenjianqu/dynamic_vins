@@ -8,8 +8,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_INSTANCE_TRACKER_H
-#define DYNAMIC_VINS_INSTANCE_TRACKER_H
+#ifndef DYNAMIC_VINS_DYNAMIC_TRACKER_H
+#define DYNAMIC_VINS_DYNAMIC_TRACKER_H
 
 
 #include <queue>
@@ -31,10 +31,10 @@
 
 #include "semantic_image.h"
 #include "utils/parameters.h"
-#include "estimator/landmark.h"
+#include "estimator/basic/point_landmark.h"
 #include "mot/deep_sort.h"
 #include "feature_utils.h"
-#include "estimator/frontend_feature.h"
+#include "estimator/basic/frontend_feature.h"
 #include "utils/box3d.h"
 #include "instance_feature.h"
 
@@ -47,7 +47,8 @@ public:
     explicit InstsFeatManager(const string& config_path);
 
     void InstsTrack(SemanticImage img);
-    void InstsTrackByMatching(SemanticImage img);
+
+    void ProcessExtraPoints();
 
     std::map<unsigned int,FeatureInstance> Output();
     void AddViodeInstances(SemanticImage &img);
@@ -67,6 +68,7 @@ private:
 
     void BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes);
 
+    void DetectExtraPoints();
 
     vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
 
@@ -80,6 +82,8 @@ private:
         }
     }
 
+
+private:
     std::unordered_map<unsigned int,InstFeat> instances_;
     std::unordered_map<unsigned int,InstEstimatedInfo> estimated_info;
 
@@ -100,4 +104,4 @@ private:
 
 }
 
-#endif //DYNAMIC_VINS_INSTANCE_TRACKER_H
+#endif //DYNAMIC_VINS_DYNAMIC_TRACKER_H

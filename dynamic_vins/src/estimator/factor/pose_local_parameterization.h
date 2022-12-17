@@ -20,7 +20,7 @@
 
 #include <eigen3/Eigen/Dense>
 #include <ceres/ceres.h>
-#include "utils/utility.h"
+#include "estimator/utility.h"
 
 namespace dynamic_vins{\
 
