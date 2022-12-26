@@ -37,7 +37,7 @@ git clone https://github.com/chenjianqu/dynamic_vins.git
 build line_descriptor:
 
 ```shell
-cd ./dynamic_vins/src/utils/line_detector/line_descriptor
+cd ./dynamic_vins/src/thirdparty/line_descriptor
 mkdir build && cd build
 cmake ..
 make
@@ -110,8 +110,6 @@ roscore
 rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
 ```
 
-
-
 * launch dynamic_vins
 
 ```shell
@@ -130,7 +128,7 @@ config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_trackin
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720_vison_only/custom.yaml
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720/custom.yaml
 
-source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name} 0000
+source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name} 0010
 ```
 
 

@@ -55,8 +55,6 @@ public:
 
     static void PubOdometry(const std_msgs::Header &header);
 
-    static void pubInitialGuess(const std_msgs::Header &header);
-
     static void PubKeyPoses(const std_msgs::Header &header);
 
     static void PubCameraPose(const std_msgs::Header &header);
@@ -73,14 +71,12 @@ public:
 
     static void PubInstances(const std_msgs::Header &header);
 
-    static void PubPredictBox3D(std::vector<Box3D> &boxes);
+    static void PubPredictBox3D(const std_msgs::Header &header);
+
+    static void PubGroundTruthBox3D(const std_msgs::Header &header);
 
     static void PubTransform(const Mat3d &R,const Vec3d &P,tf::TransformBroadcaster &br,ros::Time time,
                              const string &frame_id,const string &child_frame_id);
-
-    static Marker BuildTrajectoryMarker(unsigned int id, std::list<State> &history, State* sliding_window, const cv::Scalar &color,
-                                        Marker::_action_type action=Marker::ADD, const string &ns="trajectory" ,int offset=4);
-
 
     inline static std::shared_ptr<Estimator> e;
 };

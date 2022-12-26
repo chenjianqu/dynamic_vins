@@ -16,7 +16,7 @@
 
 #include "utils/io_utils.h"
 #include "utils/convert_utils.h"
-#include "utils/io/build_markers.h"
+#include "utils/io/markers_utils.h"
 #include "estimator/estimator_insts.h"
 #include "det3d/detector3d.h"
 #include "utils/io/publisher_map.h"
@@ -328,35 +328,63 @@ void Publisher::PubKeyframe()
 
 
 
-
-
-
-void Publisher::PubPredictBox3D(std::vector<Box3D> &boxes)
+/**
+ * 可视化3D检测框
+ * @param boxes
+ */
+void Publisher::PubPredictBox3D(const std_msgs::Header &header)
 {
     MarkerArray markers;
-
-    ///根据box初始化物体的位姿和包围框
-
     cv::Scalar color_norm(0.5,0.5,0.5);
 
-    int index=0;
-    for(auto &box : boxes){
-        //将包围框的8个顶点转换到世界坐标系下
-        Mat38d corners = box.corners;
-        for(int i=0;i<8;++i){
-            corners.col(i) = body.CamToWorld(corners.col(i),body.frame);
+    int frame = body.frame-1;//因为已经经过了边缘化，所以要-1
+
+    for(auto &[key,inst] : e->im.instances){
+        if(!inst.is_curr_visible || !inst.boxes3d[frame]){
+            continue;
         }
-        string log_text = fmt::format("id:{} class:{} score:{}\n",index,box.class_id,box.score);
-        log_text += EigenToStr(box.corners);
-        Debugv(log_text);
-        auto cube_marker = CubeMarker(corners, index + 4000, color_norm);
+        Mat38d corners = inst.boxes3d[frame]->corners;
+        for(int i=0;i<8;++i)
+            corners.col(i) = body.CamToWorld(corners.col(i),frame);
 
+        auto cube_marker = CubeMarker(corners, inst.id + 4000, color_norm,
+                                      0.05,Marker::ADD,"predict_boxes",3,20);
         markers.markers.push_back(cube_marker);
-
-        index++;
     }
 
     PublisherMap::PubMarkers(markers,"instance_marker");
+}
+
+
+void Publisher::PubGroundTruthBox3D(const std_msgs::Header &header)
+{
+    MarkerArray markers;
+    cv::Scalar color_norm(0.5,0.5,0.5);
+
+    int frame = body.frame-1;//因为已经经过了边缘化，所以要-1
+
+    ///可视化gt框
+    if(cfg::dataset==DatasetType::kKitti){
+        int index=10000;
+        auto boxes_gt = Detector3D::ReadGroundtruthFromKittiTracking(body.seq_id);
+        for(auto &box : boxes_gt){
+            Mat38d corners_w = box->corners;
+            for(int i=0;i<8;++i){
+                corners_w.col(i) = body.CamToWorld(corners_w.col(i),frame);
+            }
+            auto gt_cube_marker = CubeMarker(corners_w, index, BgrColor("magenta"),
+                                             0.06, Marker::ADD,"gt_boxes",3,20);
+            markers.markers.push_back(gt_cube_marker);
+            index++;
+        }
+
+        PublisherMap::PubMarkers(markers,"instance_marker");
+    }
+    else{
+        throw std::runtime_error(fmt::format("Publisher::PubGroundTruthBox3D(): the visualization "
+                                             "of gt_boxes of {} is not implemented",cfg::dataset_name));
+    }
+
 }
 
 
@@ -386,37 +414,6 @@ void Publisher::PubLines(const std_msgs::Header &header)
 
 
 
-Marker Publisher::BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,
-                                        const cv::Scalar &color,Marker::_action_type action,
-                                        const string &ns,int offset){
-    Marker msg;
-
-    msg.header.frame_id="world";
-    msg.header.stamp=ros::Time::now();
-    msg.ns=ns;
-    msg.action=action;
-    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
-    msg.type=Marker::LINE_STRIP;//marker的类型
-    if(action==Marker::DELETE){
-        return msg;
-    }
-
-    msg.pose.orientation.w=1.0;
-
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()
-
-    msg.scale.x=0.1;//线宽
-    msg.color = ScalarBgrToColorRGBA(color);
-    msg.color.a=1.0;//不透明度
-
-    for(auto &pose : history){
-        msg.points.push_back(EigenToGeometryPoint(pose.P));
-    }
-    for(int i=0;i<=kWinSize;++i){
-        msg.points.push_back(EigenToGeometryPoint(sliding_window[i].P));
-    }
-    return msg;
-}
 
 /**
  * 输出物体的点云
@@ -473,7 +470,7 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header){
         if(!(inst.points_extra_pcl[body.frame-1]) || inst.points_extra_pcl[body.frame-1]->empty()){
             continue;
         }
-        *pc += *(inst.points_extra_pcl[body.frame-1]);
+        //*pc += *(inst.points_extra_pcl[body.frame-1]);
     }
 
     PublisherMap::PubPointCloud(*pc,"stereo_point_cloud");
@@ -493,8 +490,11 @@ void Publisher::PubInstances(const std_msgs::Header &header)
             continue;
         }
         if(!inst.is_initial || !inst.is_curr_visible){
+        //if(!inst.is_curr_visible){
             continue;
         }
+
+        Debugv("PubInstances() inst:{}",key);
 
         Marker::_action_type action=Marker::ADD;
         if(!inst.is_curr_visible){
@@ -525,7 +525,6 @@ void Publisher::PubInstances(const std_msgs::Header &header)
         auto lineStripMarker = LineStripMarker(vertex, key, color_norm, 0.1, action);
         markers.markers.push_back(lineStripMarker);*/
 
-
         Mat38d corners_w = Box3D::GetCorners(inst.box3d->dims,inst.state[e->frame].R,inst.state[e->frame].P);
         auto estimate_cube_marker = CubeMarker(corners_w, key, color_norm,0.1, action,"cube_estimation",7);
         markers.markers.push_back(estimate_cube_marker);
@@ -547,36 +546,13 @@ void Publisher::PubInstances(const std_msgs::Header &header)
             markers.markers.push_back(std::get<2>(axis_markers));
         }
 
-        ///可视化检测得到的包围框
-        /*for(int i=0;i<=kWinSize;++i){
-            if(inst.boxes3d[i]){
-                Mat38d corners_w = inst.boxes3d[i]->GetCornersInWorld(body.Rs[i],body.Ps[i],
-                                                                      body.ric[0],body.tic[0]);
-                Eigen::Matrix<double,8,3> corners_w_t = corners_w.transpose();
-                auto detect_cube_marker = BuildCubeMarker(corners_w_t,key,action);
-                markers.markers.push_back(detect_cube_marker);
-            }
-        }*/
-
-        if(io_para::is_pub_predict_box){
-/*            if(inst.boxes3d[e->frame-1]){
-                Mat38d corners_w = inst.boxes3d[e->frame-1]->corners;
-                for(int i=0;i<8;++i){
-                    corners_w.col(i) = body.Rs[body.frame-1] * (body.ric[0] * corners_w.col(i) + body.tic[0]) + body.Ps[body.frame-1];
-                }
-                auto detect_cube_marker = CubeMarker(corners_w, key, BgrColor("gray"),
-                                                     0.05, action);
-                markers.markers.push_back(detect_cube_marker);
-            }*/
-        }
-
         ///可视化历史轨迹
-        if(io_para::is_pub_object_trajectory){
+        /*if(io_para::is_pub_object_trajectory){
             if(inst.is_initial ){
                 auto history_marker = BuildTrajectoryMarker(key,inst.history_pose,inst.state,color_norm,action);
                 markers.markers.push_back(history_marker);
             }
-        }
+        }*/
 
         string text=fmt::format("{}\n p:{}", inst.id,VecToStr(inst.state[kWinSize].P));
         ///计算可视化文字信息
@@ -585,31 +561,15 @@ void Publisher::PubInstances(const std_msgs::Header &header)
             text += fmt::format("\n v:{}",VecToStr(vel));
 
             //可视化速度
-            Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 2;
-            auto arrowMarker = ArrowMarker(inst.state[kWinSize].P, end, key, color_norm, 0.1, action);
-            markers.markers.push_back(arrowMarker);
+            //Eigen::Vector3d end= inst.state[kWinSize].P + vel.normalized() * 2;
+            //auto arrowMarker = ArrowMarker(inst.state[kWinSize].P, end, key, color_norm, 0.1, action);
+            //markers.markers.push_back(arrowMarker);
         }
         else if(inst.is_static){
             text += "\nstatic";
         }
         auto textMarker = TextMarker(inst.state[kWinSize].P, key, text, BgrColor("blue"), 1.2, action);
         markers.markers.push_back(textMarker);
-    }
-
-    ///可视化gt框
-    if(io_para::is_pub_groundtruth_box){
-/*        int index=10000;
-        auto boxes_gt = Detector3D::ReadGroundtruthFromKittiTracking(body.seq_id);
-        for(auto &box : boxes_gt){
-            Mat38d corners_w = box->corners;
-            for(int i=0;i<8;++i){
-                corners_w.col(i) = body.Rs[body.frame-1] * (body.ric[0] * corners_w.col(i) + body.tic[0]) + body.Ps[body.frame-1];
-            }
-            auto gt_cube_marker = CubeMarker(corners_w, index, BgrColor("magenta"),
-                                             0.06, Marker::ADD);
-            markers.markers.push_back(gt_cube_marker);
-            index++;
-        }*/
     }
 
     ///设置删除当前帧不显示的marker

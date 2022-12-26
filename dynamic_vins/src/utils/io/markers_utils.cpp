@@ -8,11 +8,10 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "build_markers.h"
+#include "markers_utils.h"
 
 #include "utils/io_utils.h"
 #include "utils/convert_utils.h"
-#include "io_parameters.h"
 
 
 namespace dynamic_vins{\
@@ -165,9 +164,20 @@ Marker ArrowMarker(const Eigen::Vector3d &start_pt, const Eigen::Vector3d &end_p
     return msg_x;
 }
 
-
+/**
+ * 构建CubeMarker
+ * @param corners 立方体的8个3D点
+ * @param id
+ * @param color
+ * @param scale 立方体每条线的宽度
+ * @param action 增加或删除
+ * @param ns 命名空间
+ * @param offset id偏置
+ * @param duration 持续时间
+ * @return
+ */
 Marker CubeMarker(Mat38d &corners, unsigned int id, const cv::Scalar &color, double scale,
-                  Marker::_action_type action,const string &ns ,int offset){
+                  Marker::_action_type action,const string &ns ,int offset,float duration){
     Marker msg;
 
     msg.header.frame_id="world";
@@ -181,7 +191,7 @@ Marker CubeMarker(Mat38d &corners, unsigned int id, const cv::Scalar &color, dou
         return msg;
     }
 
-    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间3s，若为ros::Duration()表示一直持续
+    msg.lifetime=ros::Duration(duration);//持续时间(s)，若为ros::Duration()表示一直持续
 
     msg.pose.orientation.w=1.0;
 
@@ -281,6 +291,41 @@ std::tuple<Marker,Marker,Marker> AxisMarker(Mat34d &axis, unsigned int id, Marke
     msg_z.color = ScalarBgrToColorRGBA(BgrColor("blue"));
 
     return {msg_x,msg_y,msg_z};
+}
+
+
+
+
+Marker BuildTrajectoryMarker(unsigned int id,std::list<State> &history,State* sliding_window,
+                                        const cv::Scalar &color,Marker::_action_type action,
+                                        const string &ns,int offset){
+    Marker msg;
+
+    msg.header.frame_id="world";
+    msg.header.stamp=ros::Time::now();
+    msg.ns=ns;
+    msg.action=action;
+    msg.id=id * kMarkerTypeNumber + offset;//当存在多个marker时用于标志出来
+    msg.type=Marker::LINE_STRIP;//marker的类型
+    if(action==Marker::DELETE){
+        return msg;
+    }
+
+    msg.pose.orientation.w=1.0;
+
+    msg.lifetime=ros::Duration(io_para::kVisualInstDuration);//持续时间，若为ros::Duration()
+
+    msg.scale.x=0.1;//线宽
+    msg.color = ScalarBgrToColorRGBA(color);
+    msg.color.a=1.0;//不透明度
+
+    for(auto &pose : history){
+        msg.points.push_back(EigenToGeometryPoint(pose.P));
+    }
+    for(int i=0;i<=kWinSize;++i){
+        msg.points.push_back(EigenToGeometryPoint(sliding_window[i].P));
+    }
+    return msg;
 }
 
 

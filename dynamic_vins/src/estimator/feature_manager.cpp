@@ -266,9 +266,9 @@ void FeatureManager::InitFramePoseByPnP(int frameCnt)
             if (lm.depth > 0){
                 int index = frameCnt - lm.start_frame;
                 if((int)lm.feats.size() >= index + 1){
-                    Vec3d ptsInCam = ric[0] * (lm.feats[0].point * lm.depth) + body.tic[0];
-                    Vec3d ptsInWorld = Rs[lm.start_frame] * ptsInCam + body.Ps[lm.start_frame];
-
+                    //Vec3d ptsInCam = ric[0] * (lm.feats[0].point * lm.depth) + body.tic[0];
+                    //Vec3d ptsInWorld = Rs[lm.start_frame] * ptsInCam + body.Ps[lm.start_frame];
+                    Vec3d ptsInWorld = body.CamToWorld(lm.feats[0].point * lm.depth,lm.start_frame);
                     cv::Point3f point3d(ptsInWorld.x(), ptsInWorld.y(), ptsInWorld.z());
                     cv::Point2f point2d(lm.feats[index].point.x(), lm.feats[index].point.y());
                     pts3D.push_back(point3d);
@@ -391,11 +391,14 @@ void FeatureManager::TriangulatePoints()
 }
 
 
+/**
+ * 单目三角化线段
+ */
 void FeatureManager::TriangulateLineMono()
 {
-    string log_text="TriangulateLineMono:\n";
+    //string log_text="TriangulateLineMono:\n";
     for (auto &landmark : line_landmarks){        // 遍历每个特征，对新特征进行三角化
-        log_text += fmt::format("lid:{} obs:{} tri:{}\n",landmark.feature_id,landmark.feats.size(),landmark.is_triangulation);
+        //log_text += fmt::format("lid:{} obs:{} tri:{}\n",landmark.feature_id,landmark.feats.size(),landmark.is_triangulation);
 
         landmark.used_num = landmark.feats.size();    // 已经有多少帧看到了这个特征
         if (landmark.used_num < para::kLineMinObs)   // 看到的帧数少于2， 或者 这个特征最近倒数第二帧才看到， 那都不三角化
@@ -403,11 +406,10 @@ void FeatureManager::TriangulateLineMono()
         if (landmark.is_triangulation)       // 如果已经三角化了
             continue;
         TriangulateOneLine(landmark);
-
     }
-    log_text += "\n\n";
+    //log_text += "\n\n";
 
-    WriteTextFile(MyLogger::kLogOutputDir + "line_info.txt",log_text);
+    //WriteTextFile(MyLogger::kLogOutputDir + "line_info.txt",log_text);
 
     //    removeLineOutlier(Ps,tic,ric);
 }
@@ -443,8 +445,10 @@ void FeatureManager::TriangulateLineStereo(double baseline)
 }
 
 
-
-
+/**
+ * 获得观测次数达到kLineMinObs的线特征
+ * @return
+ */
 int FeatureManager::GetLineFeatureCount()
 {
     int cnt = 0;

@@ -61,8 +61,7 @@ string PrintFeaturesInfo(InstanceManager& im, bool output_lm, bool output_stereo
 
     string s =fmt::format("--------------InstanceInfo : {} --------------\n",body.headers[body.frame]);
     im.InstExec([&s,&output_lm,&output_stereo](int key,Instance& inst){
-
-        if(key!=1)
+        if(io_para::inst_ids_print.count(key)==0)
             return;
 
         if(inst.is_tracking){
@@ -131,8 +130,10 @@ string PrintInstancePoseInfo(InstanceManager& im,bool output_lm){
     string log_text =fmt::format("--------------PrintInstancePoseInfo : {} --------------\n",body.headers[body.frame]);
 
     im.InstExec([&log_text,&output_lm](int key,Instance& inst){
-
-        if(key!=1)
+        if(!inst.is_tracking || !inst.is_curr_visible){
+            return;
+        }
+        if(io_para::inst_ids_print.count(key)==0)
             return;
 
         log_text += fmt::format("Time:{} inst_id:{} info:\n box:{} v:{} a:{}\n",body.frame_time,inst.id,
@@ -154,7 +155,7 @@ string PrintInstancePoseInfo(InstanceManager& im,bool output_lm){
         }
         log_text+="\n";
 
-    });
+    },true);
 
     ///将这些信息保存到文件中
     WriteTextFile(MyLogger::kLogOutputDir + "pose_info.txt",log_text);
@@ -166,7 +167,7 @@ string PrintInstancePoseInfo(InstanceManager& im,bool output_lm){
 
 string PrintLineInfo(FeatureManager &fm){
 
-    string log_text =fmt::format("--------------PrintInstancePoseInfo : {} --------------\n",body.headers[body.frame]);
+    string log_text =fmt::format("--------------PrintLineInfo : {} --------------\n",body.headers[body.frame]);
 
     for(auto &line:fm.line_landmarks){
         if(!line.is_triangulation){
@@ -250,9 +251,8 @@ void SaveInstancesPointCloud(InstanceManager& im){
         //if(!inst.is_tracking || !inst.is_initial)
         //    continue;
 
-        if(inst.id !=1){
+        if(io_para::inst_ids_print.count(inst_id)==0)
             continue;
-        }
 
         if(!inst.points_extra[body.frame].empty()){
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr stereo_pc =
@@ -480,33 +480,30 @@ cv::Mat DrawTopView(InstanceManager& im,cv::Size size){
     double half_metric = 6.;
 
     for(auto &[key,inst] : im.instances){
-        if(key==1){
+        //绘制车辆包围框的矩形
+        double x_max = inst.box3d->dims.x()/2.;
+        x_max = x_max / half_metric * half_size + half_size;
+        double x_min = -inst.box3d->dims.x()/2.;
+        x_min = x_min / half_metric * half_size + half_size;
+        double z_max = inst.box3d->dims.z()/2.;
+        z_max = z_max / half_metric * half_size + half_size;
+        double z_min = -inst.box3d->dims.z()/2.;
+        z_min = z_min / half_metric * half_size + half_size;
+        cv::Rect2i rect(cv::Point2i(x_max,z_max),cv::Point2i(x_min,z_min));
+        cv::rectangle(img,rect, BgrColor("blue",false),2);
 
-            //绘制车辆包围框的矩形
-            double x_max = inst.box3d->dims.x()/2.;
-            x_max = x_max / half_metric * half_size + half_size;
-            double x_min = -inst.box3d->dims.x()/2.;
-            x_min = x_min / half_metric * half_size + half_size;
-            double z_max = inst.box3d->dims.z()/2.;
-            z_max = z_max / half_metric * half_size + half_size;
-            double z_min = -inst.box3d->dims.z()/2.;
-            z_min = z_min / half_metric * half_size + half_size;
-            cv::Rect2i rect(cv::Point2i(x_max,z_max),cv::Point2i(x_min,z_min));
-            cv::rectangle(img,rect, BgrColor("blue",false),2);
+        //将点变换到物体坐标系
+        for(auto &lm:inst.landmarks){
+            if(!lm.bad && lm.depth>0){
+                Vec3d pts_obj = inst.WorldToObject(lm.front()->p_w,lm.frame());
 
-            //将点变换到物体坐标系
-            for(auto &lm:inst.landmarks){
-                if(!lm.bad && lm.depth>0){
-                    Vec3d pts_obj = inst.WorldToObject(lm.front()->p_w,lm.frame());
+                double x = pts_obj.x() / half_metric * half_size + half_size;
+                double z = pts_obj.z() / half_metric * half_size + half_size;
 
-                    double x = pts_obj.x() / half_metric * half_size + half_size;
-                    double z = pts_obj.z() / half_metric * half_size + half_size;
-
-                    cv::circle(img,cv::Point2d(x,z),2, BgrColor("red",false),-1);
-
-                }
+                cv::circle(img,cv::Point2d(x,z),2, BgrColor("red",false),-1);
 
             }
+
         }
 
     }

@@ -81,7 +81,7 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
         log_text += fmt::format("PushBack input_id:{} class:{} input_feat_size:{} 3d_points:{} \n",
                                 instance_id,inst_feat.box2d->class_name,inst_feat.features.size(),inst_feat.points.size());
         if(inst_feat.box3d){
-            Debugv( fmt::format("input box3d center:{},yaw:{} score:{}\n",
+            Debugv( fmt::format("inst:{} input box3d center:{},yaw:{} score:{}",instance_id,
                                 VecToStr(inst_feat.box3d->center_pt), inst_feat.box3d->yaw, inst_feat.box3d->score) );
         }
 
@@ -182,21 +182,16 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
  * @param inst
  * @return
  */
-bool InstanceManager::PropagateByICP(Instance &inst){
-    if(!inst.points_extra_pcl[body.frame]){
-        return false;
+std::optional<Mat4d> InstanceManager::PropagateByICP(Instance &inst){
+    if(!inst.points_extra_pcl[body.frame] || inst.points_extra_pcl[body.frame]->empty()){
+        return std::nullopt;
     }
     //找到前面的一个点云
-    int last_index=-1;
-    for(int i=body.frame-1;i>=0;--i){
-        if(inst.points_extra_pcl[i] && !inst.points_extra_pcl[i]->empty()){
-            last_index=i;
-            break;
-        }
-    }
-    if(last_index==-1){
+    int last_index=body.frame - 1;
+    if(!inst.points_extra_pcl[last_index] || inst.points_extra_pcl[last_index]->empty()||
+    inst.points_extra_pcl[last_index]->points.size()<10){
         Debugv("PropagateByICP() inst:{} can't found last_points",inst.id);
-        return false;
+        return std::nullopt;
     }
 
     ///ICP匹配
@@ -208,17 +203,10 @@ bool InstanceManager::PropagateByICP(Instance &inst){
     if (icp.hasConverged()) {
         //设当前时刻为 j,上一时刻为i，要求的是位姿T_woj
         Eigen::Matrix4d T_ojoi_tmp = icp.getFinalTransformation().cast<double>();//得到的是将点从source变换到target的变换矩阵
-        Eigen::Isometry3d T_ojoi(T_ojoi_tmp);
-
-        //则有： T_woj = T_oioj * T_woi
-        Eigen::Isometry3d T_woj = T_ojoi.inverse() * inst.state[last_index].GetTransform();
-        // T_oioj = T_oiw * T_woj
-        inst.state[body.frame].SetPose(T_woj);
-
-        return true;
+        return T_ojoi_tmp;
     } else {
         Warnv("inst {} ICP has not converged.",inst.id);
-        return false;
+        return std::nullopt;
     }
 }
 
@@ -232,37 +220,52 @@ void InstanceManager::PropagatePose()
     if(tracking_num < 1)
         return;
 
-    string log_text = "InstanceManager::PropagatePose \n";
-
     int last_frame= frame - 1;
     double time_ij= body.headers[frame] - body.headers[last_frame];
 
-
+    string log_text = "InstanceManager::PropagatePose \n";
 
     InstExec([&](int key,Instance& inst){
-        if(!inst.is_tracking){
+        if(!inst.is_tracking)
             return;
-        }
+
         inst.state[frame].time = body.headers[frame];
 
-        //inst.vel = inst.point_vel;
-
-        ///首先计算出位姿的初值
-
-        ///静态物体
-        if(inst.is_static){
+        ///对于不可见的物体，直接设置为不变
+        if(!inst.is_curr_visible){
             inst.state[frame].R = inst.state[last_frame].R;
             inst.state[frame].P = inst.state[last_frame].P;
-            log_text += fmt::format("inst:{}.is_static,inst.state[frame].P:{} \n",inst.id, VecToStr(inst.state[frame].P));
             return;
         }
-        ///距离太远,计算得到的速度不准确
-        else if((inst.state[frame].P - body.Ps[frame]).norm() > 80){
+
+        ///第一步 设置一个位姿初值
+        //1.1 静态物体
+        if(inst.is_static){//静态物体
+            Debugv("inst:{} is static",inst.id);
             inst.state[frame].R = inst.state[last_frame].R;
             inst.state[frame].P = inst.state[last_frame].P;
-            log_text += fmt::format("inst:{} too far,inst.state[frame].P:{} \n",inst.id, VecToStr(inst.state[frame].P));
+            return;
         }
-        else if(!inst.is_init_velocity){
+        //1.2 根据点云设置初值
+        else if(!inst.points_extra[frame].empty()){//
+            State init_state = inst.state[frame];
+            if(cfg::use_det3d && inst.boxes3d[frame]){
+                Debugv("inst:{} use det3d and points3d",inst.id);
+                inst.box3d->dims = inst.boxes3d[frame]->dims;
+                init_state.R = inst.state[frame].R;
+                init_state.P = BoxFitPoints(inst.points_extra[frame],init_state.R,inst.box3d->dims);
+            }
+            ///无3D框初始化物体
+            else{
+                Debugv("inst:{} use only points3d",inst.id);
+                init_state.R = inst.state[frame].R;
+                init_state.P = BoxFitPoints(inst.points_extra[frame],init_state.R,inst.box3d->dims);
+            }
+            inst.state[frame] = init_state;
+        }
+        //1.3 根据前面的位姿设置初值
+        else if(!inst.is_init_velocity && inst.age>5){
+            Debugv("inst:{} use last pose",inst.id);
             //Mat3d Roioj=Sophus::SO3d::exp(inst.point_vel.a*time_ij).matrix();
             //Vec3d Poioj=inst.point_vel.v*time_ij;
             Mat3d Roioj = Mat3d::Identity();
@@ -270,23 +273,30 @@ void InstanceManager::PropagatePose()
             Poioj /= 3.;
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
-            log_text += fmt::format("inst:{} not is_init_velocity, Poioj:{} \n",inst.id, VecToStr(Poioj));
         }
-        else{
+        //1.4 根据速度设置初值
+        else if(inst.is_init_velocity){
             /*Mat3d Roioj=Sophus::SO3d::exp(inst.vel.a*time_ij).matrix();
-            Vec3d Poioj=inst.vel.v*time_ij;
-            inst.state[frame].R = Roioj * inst.state[last_frame].R;
-            inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;*/
-
-            auto [Roioj,Poioj] = inst.point_vel.RelativePose(time_ij);
+                Vec3d Poioj=inst.vel.v*time_ij;
+                inst.state[frame].R = Roioj * inst.state[last_frame].R;
+                inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;*/
+            Debugv("inst:{} use velocity",inst.id);
+            auto [Roioj,Poioj] = inst.vel.RelativePose(time_ij);
             inst.state[frame].R = Roioj * inst.state[last_frame].R;
             inst.state[frame].P = Roioj* inst.state[last_frame].P + Poioj;
-            log_text += fmt::format("inst:{} predict by vel, Poioj:{} \n",inst.id, VecToStr(Poioj));
+        }
+        //1.5 设置不变
+        else{
+            Debugv("inst:{} use same",inst.id);
+            inst.state[frame].R = inst.state[last_frame].R;
+            inst.state[frame].P = inst.state[last_frame].P;
         }
 
         inst.vel = inst.point_vel;
+        Debugv("InstanceManager::PropagatePose set init value");
 
-        ///再根据ICP得到更加准确的位姿
+        /*
+        ///第二步，再根据ICP得到更加准确的位姿
         if(!PropagateByICP(inst)){
             Debugv("inst {} ICP init failed",inst.id);
         }
@@ -295,9 +305,13 @@ void InstanceManager::PropagatePose()
             // T_oioj = T_oiw * T_woj，这里的i指的是body.frame-1，j指的是body.frame
             Eigen::Isometry3d T_oioj = inst.state[body.frame-1].GetTransform().inverse() * inst.state[body.frame].GetTransform();
             inst.vel.SetVel(T_oioj,body.headers[body.frame] - body.headers[body.frame-1]);
+
+            ///直接根据速度判断是否在运动
+            if(inst.vel.v.norm()<1 && inst.vel.a.norm()<1){
+                inst.is_static=true;
+            }
         }
-
-
+*/
         },true);
 
     Debugv(log_text);
@@ -306,7 +320,7 @@ void InstanceManager::PropagatePose()
 
 
 /**
- * 三角化动态特征点,限制三角化的点的数量在50以内
+ * 三角化动态特征点
  */
 void InstanceManager::Triangulate()
 {
@@ -328,31 +342,6 @@ void InstanceManager::Triangulate()
         for(auto &lm : inst.landmarks){
             if(lm.bad)
                 continue;
-
-            ///根据视差计算额外点的三角化和深度
-            if(lm.front()->is_extra && lm.depth<=0){
-                if(lm.front()->disp > 0){
-                    float depth =cam_v.fx0 * cam_v.baseline / lm.front()->disp;//根据视差计算深度
-                    if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
-                        lm.front()->p_w = body.CamToWorld(lm.front()->point*depth,frame);
-                        lm.depth = depth;
-                        lm.front()->is_triangulated = true;
-
-                        //log_inst_text += fmt::format("un:{} d:{} pw:{} \n",VecToStr(lm.front()->point),
-                        //                             depth,VecToStr(lm.front()->p_w));
-                        extra_triangle_succeed++;
-                    }
-                    else{//深度值无效
-                        //log_inst_text += fmt::format("un bad:{} d:{} \n",VecToStr(lm.front()->point), depth);
-                        lm.bad=true;
-                        extra_triangle_failed++;
-                    }
-                }
-                continue;//extra点只有一个观测
-            }
-
-            ///TODO DEBUG
-            continue;
 
             ///三角化
             for(auto it=lm.feats.begin(),it_next=it;it!=lm.feats.end();it=it_next){
@@ -387,37 +376,11 @@ void InstanceManager::Triangulate()
                         feat->is_stereo=false;
                     }
                 }
-                ///根据视差三角化
-                else{
-                    if(feat->disp > 0){
-                        float depth = cam_v.fx0* cam_v.baseline / feat->disp;
-                        if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
-                            feat->is_triangulated = true;
-                            feat->p_w = body.CamToWorld(feat->point*depth,feat->frame);
-                            mono_triangle_succeed++;
-                            if(lm.depth <=0 ){//这里的情况更加复杂一些,只有当该路标点未初始化时,才会进行初始化
-                                lm.erase(lm.feats.begin(),it);//清空该点之前的观测
-                                lm.depth = depth;
-                            }
-                        }
-                        else{
-                            lm.erase(it);
-                            mono_triangle_succeed++;
-                        }
-                    }
-
-                }
-
             }
-
         }
 
-        ///TODO DEBUG
-        continue;
-
         ///多视角三角化
-
-        for(auto &lm:inst.landmarks){
+       /* for(auto &lm:inst.landmarks){
             if(lm.depth > 0
             || lm.bad
             || (lm.size()==1  ) //只有一个单目观测,且不在当前帧,则删除
@@ -475,8 +438,13 @@ void InstanceManager::Triangulate()
                 mono_triangle_failed++;
             }
         }
+*/
 
-        log_text += log_inst_text;
+       if(stereo_triangle_succeed + stereo_triangle_failed==0){
+           continue;
+       }
+
+       log_text += log_inst_text;
 
         inst.set_triangle_num();
         log_text += fmt::format("inst:{} landmarks.size:{} triangle_size:{} valid:{}\n",
@@ -490,84 +458,77 @@ void InstanceManager::Triangulate()
 }
 
 
+/**
+ * 根据3D点云、3D框的旋转、3D框的大小拟合一个位置
+ * @param points3d
+ * @param R_cioi
+ * @param dims
+ * @return 输出的位置
+ */
+Vec3d InstanceManager::BoxFitPoints(const vector<Vec3d> &points3d,const Mat3d &R_cioi,const Vec3d &dims){
+    if(points3d.empty()){
+        return Vec3d::Zero();
+    }
+    ///根据box初始化物体的位姿和包围框
+    Mat3d R_woi = body.Rs[frame] * body.ric[0] * R_cioi;//旋转
+    //将点转换到物体旋转坐标系下
+    vector<Vec3d> points_r(points3d.size());
+    for(int i=0;i<points3d.size();++i){
+        points_r[i] = R_woi * points3d[i];
+    }
+    Vec3d P = Vec3d::Zero();
+
+    ///Ransac获得绝对位置
+    auto init_cam_pt = FitBox3DWithRANSAC(points_r,dims);
+    if(init_cam_pt){
+        P = R_woi.inverse() * (*init_cam_pt);
+    }
+    else{
+        P.setZero();
+        for(auto &p:points3d){
+            P += p;
+        }
+        P /= points3d.size();
+    }
+    return P;
+}
+
 
 /**
 * 进行物体的位姿初始化
 */
 void InstanceManager::InitialInstance(){
-
-    ///DEBUG
-    //return;
-
     string log_text="InstanceManager::InitialInstance \n";
 
     for(auto &[inst_id,inst] : instances){
         if(inst.is_initial){
             inst.age++;
         }
-
-        if(inst.is_initial || !inst.is_tracking || inst.valid_size() <= 0)
+        if(inst.is_initial || !inst.is_tracking || inst.points_extra[frame].empty())
             continue;
-
-        ///寻找当前帧三角化的路标点
-        vector<Vec3d> points3d;
-        for(auto &lm : inst.landmarks){
-            if(lm.bad)
-                continue;
-            auto &back_p = lm.feats.back();
-            if(back_p->frame == frame && back_p->is_triangulated){
-                points3d.push_back(back_p->p_w);
-            }
-        }
-
-        if(points3d.size() <= para::kInstanceInitMinNum){ //路标数量太少了
-            log_text += fmt::format("inst:{} have not enough features,points3d_cam.size():{}\n",inst.id,points3d.size());
+        if(inst.points_extra[frame].size() <= para::kInstanceInitMinNum){ //路标数量太少了
+            log_text += fmt::format("inst:{} have not enough features,points3d_cam.size():{}\n",
+                                    inst.id,inst.points_extra[frame].size());
             continue;
         }
+
+        vector<Vec3d> &points3d = inst.points_extra[frame];
 
         State init_state;
         ///根据3d box初始化物体
         if(cfg::use_det3d){
             if(!inst.boxes3d[frame]){//未检测到box3d
-                log_text += fmt::format("inst:{} have enough features,but not associate box3d\n",inst.id);
+                log_text += fmt::format("inst:{} have enough features {} ,but not associate box3d\n",
+                                        inst.id,points3d.size());
                 continue;
             }
 
             ///设置边界框的大小
             inst.box3d->dims = inst.boxes3d[frame]->dims;
-
-            ///根据box初始化物体的位姿和包围框
-            /*
-            //将包围框的8个顶点转换到世界坐标系下
-            Vec3d corner_sum=Vec3d::Zero();
-            for(int i=0;i<8;++i){
-                corner_sum +=  cam_to_world( inst.boxes3d[frame]->corners.col(i));
-            }
-            init_state.P = corner_sum/8.;*/
-            //init_state.R = Box3D::GetCoordinateRotationFromCorners(corners);//在box中构建坐标系
+            ///设置旋转
             init_state.R = body.Rs[frame] * body.ric[0] * inst.boxes3d[frame]->R_cioi();//设置包围框的旋转为初始旋转
-
-            //将点转换到物体旋转坐标系下
-            vector<Vec3d> points_rotation(points3d.size());
-            for(int i=0;i<points3d.size();++i){
-                points_rotation[i] = init_state.R * points3d[i];
-            }
-
-            ///Ransac获得绝对位置
-            //auto init_cam_pt = FitBox3DSimple(points3d_cam,inst.box3d->dims);
-            //auto init_cam_pt = FitBox3DFromCameraFrame(points_rotation,inst.box3d->dims);
-            auto init_cam_pt = FitBox3DWithRANSAC(points_rotation,inst.box3d->dims);
-            if(init_cam_pt){
-                init_state.P = *init_cam_pt;
-            }
-            else{
-                log_text += fmt::format("FitBox3D() inst:{} failed,points3d_cam.size():{}\n",inst.id,points3d.size());
-                init_state.P.setZero();
-                for(auto &p:points3d){
-                    init_state.P += p;
-                }
-                init_state.P /= points3d.size();
-            }
+            ///根据box初始化物体的位姿和包围框
+            init_state.P = BoxFitPoints(inst.points_extra[frame],init_state.R,inst.box3d->dims);
 
             /*if(cfg::use_plane_constraint){
                 if(cfg::is_use_imu){
@@ -577,7 +538,6 @@ void InstanceManager::InitialInstance(){
                     init_state.P.y()=0;
                 }
             }*/
-
 
         }
         ///无3D框初始化物体
@@ -595,7 +555,6 @@ void InstanceManager::InitialInstance(){
             init_state.P = *init_cam_pt;
             init_state.R.setIdentity();
         }
-
 
         inst.state[frame].time=body.headers[0];
         inst.vel.SetZero();
@@ -615,32 +574,11 @@ void InstanceManager::InitialInstance(){
                                 VecToStr(inst.box3d->dims));
 
         ///删去初始化之前的观测
-        for(auto &lm:inst.landmarks){
-            if(lm.bad || lm.frame()==frame)
-                continue;
-
-            if(lm.size() == 1){ //只有一个观测,直接删除
-                lm.bad=true;
-                continue;
-            }
-            else{
-                for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
-                    it_next++;
-                    if((*it)->frame < frame) {
-                        lm.erase(it); //删掉掉前面的观测
-                    }
-                }
-                if(lm.depth > 0){
-                    lm.depth=-1.0;//需要重新进行三角化
-                }
-            }
-
-        }
+        inst.DeleteOutdatedLandmarks(frame);
 
     }
 
     Debugv(log_text);
-
 }
 
 
@@ -648,76 +586,26 @@ void InstanceManager::InitialInstance(){
  * 初始化物体的速度
  */
 void InstanceManager::InitialInstanceVelocity(){
-
     string log_text="InitialInstanceVelocity:\n";
 
     for(auto &[inst_id,inst] : instances){
         if(!inst.is_initial || inst.is_init_velocity){
             continue;
         }
-
-        Vec3d avg_t = Vec3d::Zero();
-        int cnt_t = 0;
-        for(auto &lm: inst.landmarks){
-            if(lm.bad)
-                continue;
-            std::list<FeaturePoint::Ptr>::iterator first_point;
-            bool found_first=false;
-            for(auto it=lm.feats.begin();it!=lm.feats.end();++it){
-                auto &feat=*it;
-                if(feat->is_triangulated){
-                    if(!found_first){
-                        first_point=it;
-                        found_first=true;
-                    }
-                    else{
-                        double time_ij = body.headers[feat->frame] - body.headers[(*first_point)->frame];
-                        avg_t += (feat->p_w - (*first_point)->p_w) / time_ij;
-                        //log_text += fmt::format("avg_t:{} time:{} frame2:{} frame1:{} t2:{} t1:{}\n",
-                        //                        VecToStr(avg_t),time_ij,feat->frame,(*first_point)->frame,
-                        //                        body.headers[feat->frame],body.headers[(*first_point)->frame]);
-                        cnt_t++;
-                        break;
-                    }
-                }
-            }
+        if(inst.age<3){
+            continue;
         }
 
-        log_text += fmt::format("inst:{} v_cnt:{}\n",inst.id,cnt_t);
+        Eigen::Isometry3d T_oioj = inst.state[body.frame-1].GetTransform().inverse() * inst.state[body.frame].GetTransform();
+        inst.vel.SetVel(T_oioj,body.headers[body.frame] - body.headers[body.frame-1]);
 
+        inst.is_init_velocity=true;
 
-        if(cnt_t>5){
-            Velocity v;
-            v.v=avg_t/(cnt_t*1.);
-            inst.history_vel.push_back(v);
-
-            inst.vel.SetZero();
-/*            for(auto &v:inst.history_vel){
-                inst.vel.v += v.v;
-            }
-            inst.vel.v /= (double)inst.history_vel.size();*/
-
-            inst.vel.v = v.v;
-
-
-            log_text += fmt::format("init_v {}\n", VecToStr(inst.vel.v));
-
-            inst.is_init_velocity = true;
-
-            ///根据速度,和当前帧位姿,重新设置前面的物体位姿
-            for(int i=0;i<frame;++i){
-                double time_ij = body.headers[frame] - body.headers[i];
-                Vec3d P_oioj = time_ij*inst.vel.v;
-                Mat3d R_oioj = Sophus::SO3d::exp(time_ij * inst.vel.a).matrix();
-                inst.state[i].R = R_oioj.transpose() * inst.state[frame].R;
-                inst.state[i].P = R_oioj.transpose() * (inst.state[frame].P - P_oioj);
-            }
-
-        }
+        log_text += fmt::format("inst:{} vel: v{} a{} \n",inst.id,VecToStr(inst.vel.v), VecToStr(inst.vel.a));
 
     }
 
-        Debugv(log_text);
+    Debugv(log_text);
 }
 
 
@@ -727,66 +615,9 @@ void InstanceManager::InitialInstanceVelocity(){
 void InstanceManager::SetDynamicOrStatic(){
     string log_text="InstanceManager::SetDynamicOrStatic\n";
 
-    InstExec([&log_text,this](int key,Instance& inst){
-
-        if(!inst.is_tracking || inst.triangle_num<5){
-            return;
-        }
-
-        /*if(is_init_velocity && vel.v.norm() > 2){
-            is_static = false;
-            static_frame=0;
-            return;
-        }*/
-
-        ///下面根据场景流判断物体是否运动
-        int cnt=0;
-        Vec3d scene_vec=Vec3d::Zero();
-        Vec3d point_v=Vec3d::Zero();
-
-        for(auto &lm : inst.landmarks){
-            if(lm.bad
-            || lm.depth<=0
-            || lm.size() <= 1){
-                continue;
-            }
-
-            //计算第一个观测所在的世界坐标
-            Vec3d ref_vec;
-            double ref_time;
-            if(lm.front()->is_triangulated){
-                ref_vec = lm.front()->p_w;
-            }
-            else{
-                //将深度转换到世界坐标系
-                ref_vec = body.CamToWorld(lm.front()->point * lm.depth,lm.frame());
-            }
-            ref_time= body.headers[lm.frame()];
-
-            //计算其它观测的世界坐标
-            int feat_index=1;
-            for(auto feat_it = (++lm.feats.begin());feat_it!=lm.feats.end();++feat_it){
-                if((*feat_it)->is_triangulated){//计算i观测时点的3D位置
-                    scene_vec += ( (*feat_it)->p_w - ref_vec ) / feat_index; //加上平均距离向量
-                    point_v   += ( (*feat_it)->p_w - ref_vec ) / (body.headers[(*feat_it)->frame] -ref_time);
-                    cnt++;
-                }
-                feat_index++;
-            }
-        }
-
-        if(cnt<3){//点数太少,无法判断
-            return;
-        }
-
-        ///根据场景流判断是否是运动物体
-        scene_vec = point_v / cnt;
-        Velocity v;
-        v.v = scene_vec;
-        inst.history_vel.push_back(v);
-
-        if(scene_vec.norm() > 1. || (std::abs(scene_vec.x())>0.8 ||
-        std::abs(scene_vec.y())>0.8 || std::abs(scene_vec.z())>0.8) ){
+    InstExec([&log_text](int key,Instance& inst){
+        Vec3d vel = (inst.state[body.frame].P - inst.state[body.frame-1].P ) / (inst.state[body.frame].time - inst.state[body.frame-1].time);
+        if(vel.norm()>3){
             inst.is_static=false;
             inst.static_frame=0;
         }
@@ -794,28 +625,98 @@ void InstanceManager::SetDynamicOrStatic(){
             inst.static_frame++;
         }
 
-        if(!inst.history_vel.empty()){
-            inst.point_vel.SetZero();
-            for(auto &v:inst.history_vel){
-                inst.point_vel.v += v.v;
-            }
-            inst.point_vel.v /= (double)inst.history_vel.size();
-        }
-        inst.point_vel.v.y()=0;
-
-        if(inst.history_vel.size()>5){
-            inst.history_vel.pop_front();
-        }
-
-
         if(inst.static_frame>=3){
             inst.is_static=true;
+            log_text += fmt::format("inst:{} set static",inst.id);
         }
+    });
 
-        log_text +=fmt::format("inst_id:{} is_static:{} vec_size:{} scene_vec:{} static_frame:{} point_vel.v:{} \n",
-                               inst.id,inst.is_static,cnt, VecToStr(scene_vec),inst.static_frame, VecToStr(inst.point_vel.v));
 
-        },true);
+    /*    InstExec([&log_text,this](int key,Instance& inst){
+
+            if(!inst.is_tracking || inst.triangle_num<5){
+                return;
+            }
+
+            ///下面根据场景流判断物体是否运动
+            int cnt=0;
+            Vec3d scene_vec=Vec3d::Zero();
+            Vec3d point_v=Vec3d::Zero();
+
+            for(auto &lm : inst.landmarks){
+                if(lm.bad
+                || lm.depth<=0
+                || lm.size() <= 1){
+                    continue;
+                }
+
+                //计算第一个观测所在的世界坐标
+                Vec3d ref_vec;
+                double ref_time;
+                if(lm.front()->is_triangulated){
+                    ref_vec = lm.front()->p_w;
+                }
+                else{
+                    //将深度转换到世界坐标系
+                    ref_vec = body.CamToWorld(lm.front()->point * lm.depth,lm.frame());
+                }
+                ref_time= body.headers[lm.frame()];
+
+                //计算其它观测的世界坐标
+                int feat_index=1;
+                for(auto feat_it = (++lm.feats.begin());feat_it!=lm.feats.end();++feat_it){
+                    if((*feat_it)->is_triangulated){//计算i观测时点的3D位置
+                        scene_vec += ( (*feat_it)->p_w - ref_vec ) / feat_index; //加上平均距离向量
+                        point_v   += ( (*feat_it)->p_w - ref_vec ) / (body.headers[(*feat_it)->frame] -ref_time);
+                        cnt++;
+                    }
+                    feat_index++;
+                }
+            }
+
+            if(cnt<3){//点数太少,无法判断
+                return;
+            }
+
+            ///根据场景流判断是否是运动物体
+            scene_vec = point_v / cnt;
+            Velocity v;
+            v.v = scene_vec;
+            inst.history_vel.push_back(v);
+
+            if(scene_vec.norm() > 1. || (std::abs(scene_vec.x())>0.8 ||
+            std::abs(scene_vec.y())>0.8 || std::abs(scene_vec.z())>0.8) ){
+                inst.is_static=false;
+                inst.static_frame=0;
+            }
+            else{
+                inst.static_frame++;
+            }
+
+            if(inst.static_frame>=3){
+                inst.is_static=true;
+            }
+
+            {
+                if(!inst.history_vel.empty()){
+                    inst.point_vel.SetZero();
+                    for(auto &v:inst.history_vel){
+                        inst.point_vel.v += v.v;
+                    }
+                    inst.point_vel.v /= (double)inst.history_vel.size();
+                }
+                inst.point_vel.v.y()=0;
+                if(inst.history_vel.size()>5){
+                    inst.history_vel.pop_front();
+                }
+            }
+
+
+
+            log_text +=fmt::format("inst_id:{} is_static:{} vec_size:{} scene_vec:{} static_frame:{} point_vel.v:{} \n",
+                                   inst.id,inst.is_static,cnt, VecToStr(scene_vec),inst.static_frame, VecToStr(inst.point_vel.v));
+
+            },true);*/
 
     Debugv(log_text);
 }
@@ -984,18 +885,25 @@ void InstanceManager::SlideWindow(const MarginFlag &flag)
         else/// 去掉次新帧
             debug_num= inst.SlideWindowNew();
 
-        inst.set_triangle_num();
-
         if(debug_num>0){
             log_text+=fmt::format("Inst:{},del:{} \n", inst.id, debug_num);
         }
+
+        int pc_frame_num=0;
+        for(int i=0;i<=kWinSize;++i){
+            if(!inst.points_extra[i].empty()){
+                pc_frame_num++;
+            }
+        }
+
+        inst.set_triangle_num();
 
         ///当物体没有正在跟踪的特征点时，将其设置为不在跟踪状态
         if(inst.landmarks.empty()){
             inst.ClearState();
             log_text+=fmt::format("inst_id:{} ClearState\n", inst.id);
         }
-        else if(inst.is_tracking && inst.triangle_num==0){
+        else if(inst.is_tracking && (inst.triangle_num==0 && pc_frame_num==0)){
             inst.is_initial=false;
             log_text+=fmt::format("inst_id:{} set is_initial=false\n", inst.id);
         }

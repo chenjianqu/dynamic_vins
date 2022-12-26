@@ -483,16 +483,17 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         Infot("instsTrack UndistortedPts & PtsVelocity:{} ms", tic_toc.TocThenTic());
 
         /// 右边相机图像的跟踪
-        /*if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
+        if((!img.gray1.empty() || !img.gray1_gpu.empty()) && cfg::is_stereo){
             ExecInst([&](unsigned int key, InstFeat& inst){
                 if(!inst.is_curr_visible)
                     return;
-                inst.TrackRight(img);
-                inst.RightUndistortedPts(right_camera_);
+                //inst.TrackRight(img);
+                inst.TrackRightByPad(img);
+                inst.RightUndistortedPts(cam_t.cam1);
                 inst.RightPtsVelocity(curr_time - last_time);
             });
         }
-        Infot("instsTrack track right:{} ms", tic_toc.TocThenTic());*/
+        Infot("instsTrack track right:{} ms", tic_toc.TocThenTic());
 
         ManageInstances();
 
@@ -974,9 +975,9 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
 
         ///绘制检测的3D边界框
         if(inst.box3d){
-            //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
+            cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
 
-            //inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);//绘制投影3D-2D框
+            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);//绘制投影3D-2D框
             //Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
 
             //Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);

@@ -134,7 +134,9 @@ public:
     int tracking_number() const {return tracking_num;}
 
 private:
-    bool PropagateByICP(Instance &inst);
+    std::optional<Mat4d> PropagateByICP(Instance &inst);
+
+    Vec3d BoxFitPoints(const vector<Vec3d> &points3d,const Mat3d &R_cioi,const Vec3d &dims);
 
 
 public:

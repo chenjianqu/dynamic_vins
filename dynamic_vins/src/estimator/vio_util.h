@@ -58,7 +58,7 @@ std::optional<Vec3d> FitBox3DFromCameraFrame(vector<Vec3d> &points,const Vec3d& 
 
 std::optional<Vec3d> FitBox3DSimple(vector<Vec3d> &points,const Vec3d& dims);
 
-std::optional<Vec3d> FitBox3DWithRANSAC(vector<Vec3d> &points,const Vec3d& dims);
+std::optional<Vec3d> FitBox3DWithRANSAC(const vector<Vec3d> &points,const Vec3d& dims);
 
 
 void OutliersRejection(std::set<int> &removeIndex,std::list<StaticLandmark>& point_landmarks);

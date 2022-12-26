@@ -97,11 +97,19 @@ log_output_path: "data/log/"
 #for debug
 print_detail: 1
 
+#for debug，输出某些id的物体的位姿
+print_inst_ids: [1,4,5]
+
 ####################### Visualization Parameters ########################
 visual_inst_duration: 1000  #duration of marker display
 
-pub_groundtruth_box: 0
-pub_predict_box: 0
+pub_groundtruth_box: 0 #可视化物体的GT框
+
+#当pub_groundtruth_box==1时，设置该路径
+object_groundtruth_path: "/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/"
+
+pub_predict_box: 0 #可视化3D检测框
+
 pub_object_axis: 1
 pub_object_trajectory: 1
 
@@ -125,7 +133,6 @@ det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/ima
 use_offline_det2d: 1
 det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/" #预处理的2D框
 
-object_groundtruth_path: "/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/"
 
 box2d_min_height: 0 #至少高40pixel才会被处理
 

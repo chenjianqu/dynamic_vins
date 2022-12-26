@@ -3,6 +3,7 @@
 sequence=$1
 gt_id=$2
 object_id=$3
+pose_file=$4
 
 #KITTI TRACKING dataset
 dataset_root=/home/chen/datasets/kitti/tracking
@@ -16,7 +17,7 @@ dynamic_vins_root=/home/chen/ws/dynamic_ws
 
 gt_file=${dataset_root}/data_tracking_label_2/training/label_02/${sequence}.txt
 
-cam_pose_file=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}_ego-motion.txt
+cam_pose_file=${dynamic_vins_root}/src/dynamic_vins/data/output/${pose_file}
 
 save_to_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_tum/${sequence}_${gt_id}.txt
 
@@ -27,7 +28,7 @@ rosrun dynamic_vins_eval split_mot_to_tum ${gt_id} ${gt_file} ${cam_pose_file} $
 
 ### Eval
 
-estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}_tum/${object_id}.txt
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_tum/${object_id}.txt
 
 ref_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_tum/${sequence}_${gt_id}.txt
 

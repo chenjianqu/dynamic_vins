@@ -32,7 +32,7 @@ include_directories(${spdlog_INCLUDE_DIRS})
 message("spdlog version:${spdlog_VERSION}")
 message("spdlog dir:${spdlog_DIR}")
 
-
+#set(OpenCV_DIR /home/chen/app/opencv-3.4.16/build)
 find_package(OpenCV 3.4 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 message("OpenCV DIR:  ${OpenCV_DIR}")

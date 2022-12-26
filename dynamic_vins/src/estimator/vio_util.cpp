@@ -202,24 +202,22 @@ std::optional<Vec3d> FitBox3DFromObjectFrame(vector<Vec3d> &points,const Vec3d& 
 
 /**
 * 使用RANSAC拟合包围框,根据距离的远近删除点
-* @param points 相机坐标系下的3D点
+* @param points 世界坐标系下的3D点
 * @param dims 包围框的长度
 * @return
 */
-std::optional<Vec3d> FitBox3DWithRANSAC(vector<Vec3d> &points,const Vec3d& dims)
+std::optional<Vec3d> FitBox3DWithRANSAC(const vector<Vec3d> &points,const Vec3d& dims)
 {
     if(points.empty()){
         return {};
     }
     int size = points.size();
 
-    vector<Vec3d> points_rest(size);
     Vec3d best_center = Vec3d::Zero();
     int best_inlines = 10;
     ///计算初始值
     for(int i=0;i<points.size();++i){
         best_center+= points[i];
-        points_rest[i] = points[i].cwiseAbs();
     }
     best_center /= (double)size;
 
@@ -238,7 +236,7 @@ std::optional<Vec3d> FitBox3DWithRANSAC(vector<Vec3d> &points,const Vec3d& dims)
         std::shuffle(random_indices.begin(),random_indices.end(),rd);
         Vec3d center=Vec3d::Zero();
         for(int i=0;i<batch_size;++i){
-            center += points_rest[random_indices[i]];
+            center += points[random_indices[i]];
         }
         center /= (double)batch_size;
 
@@ -246,9 +244,8 @@ std::optional<Vec3d> FitBox3DWithRANSAC(vector<Vec3d> &points,const Vec3d& dims)
 
         ///判断落在边界框内的点的数量
         for(int i=0;i<size;++i){
-            if(points_rest[i].x() <= box.x() ||
-            points_rest[i].y() <= box.y() ||
-            points_rest[i].z() <= box.z()){
+            Vec3d point_abs = (points[i] - center).cwiseAbs();
+            if(point_abs.x() <= box.x() && point_abs.y() <= box.y() && point_abs.z() <= box.z()){
                 inliers++;
             }
         }

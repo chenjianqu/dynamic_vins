@@ -270,6 +270,20 @@ python solov2_det2d_zed.py
 
 
 
+## Generate Dataset with MYNT-Eye-Camera
+
+
+
+### 启动相机
+
+* 首先安装MYNT-eye的SDK
+
+```shell
+roslaunch mynt_eye_ros_wrapper mynteye.launch
+```
+
+
+
 
 
 

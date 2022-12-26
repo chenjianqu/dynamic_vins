@@ -303,19 +303,30 @@ sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_custom_odometry.sh
 
 ## Evaluate object trajectory with EVO
 
+* Visualize ground-turth boxes and its IDs
 
+```shell
+sourced
+
+gt_file=/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/0005.txt
+image_dir=/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0005
+
+rosrun dynamic_vins_eval visualize_box ${gt_file} ${image_dir}
+```
+
+根据该程序，可以看到每个物体的gt id。
 
 * Split object tracking label to `TUM` format
 
 ```shell
 startconda && conda activate py36
-sourced
 
-sequence=0004
-gt_id=2
+sequence=0005
+gt_id=31
 object_id=1
+pose_file=0005_VO_dynamic_PointOnly_Odometry.txt
 
-${dynamic_vins_root}/src/dynamic_vins/scripts/eval_object_traj.sh ${sequence} ${gt_id} ${object_id}
+${dynamic_vins_root}/src/dynamic_vins/scripts/eval_object_traj.sh ${sequence} ${gt_id} ${object_id} ${pose_file}
 ```
 
 
@@ -323,8 +334,10 @@ ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_object_traj.sh ${sequence} ${
 * Visualize the **estimate** object trajectory and **ground-truth** trajectory
 
 ```shell
+startconda && conda activate py36
+
 ref_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_tum/${sequence}_${gt_id}.txt
-estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}_tum/${object_id}.txt
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_tum/${object_id}.txt
 
 evo_traj tum ${estimate_path} --ref=${ref_path} -p
 ```
@@ -333,11 +346,15 @@ evo_traj tum ${estimate_path} --ref=${ref_path} -p
 
 
 
-## Evaluate mot with KITTI devkit_tracking
 
 
 
-#### Install devkit_tracking
+
+## Evaluate MOT with KITTI devkit_tracking
+
+
+
+### Install devkit_tracking
 
 Download the devkit： [The KITTI Vision Benchmark Suite (cvlibs.net)](http://www.cvlibs.net/datasets/kitti/eval_tracking.php) .
 
@@ -349,16 +366,16 @@ Run environment: `Python2`, dependency:
 
 
 
-#### Evaluate
+### Evaluate
 
-​		执行评估:
+执行评估:
 
 ```shell
-sequence=0004
-gt_id=2
-object_id=1
+sequence=0005
+gt_object_id=31
+estimate_object_id=1
 
-source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking.sh ${sequence} ${gt_id} ${object_id}
+source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking.sh ${sequence} ${gt_object_id} ${estimate_object_id}
 ```
 
 ​	这是一个python脚本，其中dynamic_vins是`./result`下保存模型输出结果的地方。

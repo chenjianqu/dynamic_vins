@@ -14,6 +14,8 @@ dynamic_vins_root=/home/chen/ws/dynamic_ws
 
 ### split the single object from GT and estimation
 
+mkdir -p ${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_single
+
 gt_file=${dataset_root}/data_tracking_label_2/training/label_02/${sequence}.txt
 save_to_gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_single/${sequence}_${gt_id}.txt
 
@@ -30,7 +32,7 @@ cp ${save_to_gt_path} ${cp_to_gt_path}
 
 #split the single object from **estimate results**:
 
-estimate_file=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}.txt
+estimate_file=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}.txt
 save_to_estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/kitti_tracking_single/${sequence}_${object_id}.txt
 
 rosrun dynamic_vins_eval split_mot_to_single ${object_id} ${estimate_file} ${save_to_estimate_path}

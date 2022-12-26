@@ -128,6 +128,10 @@ void IOParameter::SetParameters(const std::string &config_path,const std::string
         cout<<"show_input=true"<<endl;
     }
 
+    cv::FileNode inst_id_node=fs["print_inst_ids"];
+    for(auto && it : inst_id_node){
+        inst_ids_print.insert((int)it);
+    }
 
     fs.release();
 

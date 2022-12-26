@@ -417,10 +417,6 @@ int Instance::DeleteBadLandmarks(){
         }
     }
 
-    if(landmarks.empty()){
-        ClearState();
-    }
-
     return cnt;
 }
 
@@ -517,8 +513,36 @@ void Instance::GetOptimizationParameters()
     }
 }
 
+/**
+ * 删除某一帧之前的所有路标
+ * @param critical_frame 临界帧
+ */
+void Instance::DeleteOutdatedLandmarks(int critical_frame){
+    for(auto &lm:landmarks){
+        if(lm.bad || lm.frame()==critical_frame)
+            continue;
 
+        if(lm.size() == 1){ //只有一个观测,直接删除
+            lm.bad=true;
+            continue;
+        }
+        else{
+            for(auto it=lm.feats.begin(),it_next=it; it != lm.feats.end(); it=it_next){
+                it_next++;
+                if((*it)->frame < critical_frame) {
+                    lm.erase(it); //删掉掉前面的观测
+                }
+            }
+            if(lm.feats.empty()){
+                lm.bad=true;
+            }
+            if(lm.depth > 0){
+                lm.depth=-1.0;//需要重新进行三角化
+            }
+        }
 
+    }
+}
 
 
 }

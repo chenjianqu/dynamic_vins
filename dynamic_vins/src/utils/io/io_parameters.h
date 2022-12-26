@@ -13,6 +13,7 @@
 
 
 #include <string>
+#include <set>
 
 namespace dynamic_vins{\
 
@@ -40,7 +41,7 @@ public:
 
     inline static bool is_show_input{false};
 
-
+    inline static std::set<int> inst_ids_print;
 
     static void SetParameters(const std::string &config_path,const std::string &seq_name);
 };

@@ -1328,9 +1328,11 @@ void Estimator::UpdateLatestStates(){
     propogate_mutex.unlock();
 }
 
-
+/**
+ * 系统初始化
+ * @param header
+ */
 void Estimator::InitEstimator(double header){
-
     ///初始化外参数
     if(cfg::is_estimate_ex == 2){
         if (frame != 0){
@@ -1347,7 +1349,8 @@ void Estimator::InitEstimator(double header){
         }
     }
 
-    if (!cfg::is_stereo && cfg::use_imu){ // monocular + IMU initilization
+    ///初始化：monocular + IMU initilization
+    if (!cfg::is_stereo && cfg::use_imu){
         if (frame == kWinSize){
             bool result = false;
             if(cfg::is_estimate_ex != 2 && (header - initial_timestamp) > 0.1){
@@ -1367,7 +1370,7 @@ void Estimator::InitEstimator(double header){
             }
         }
     }
-    // stereo + IMU initilization
+    ///初始化：stereo + IMU initilization
     else if(cfg::is_stereo && cfg::use_imu){
         feat_manager.InitFramePoseByPnP(frame);
         feat_manager.TriangulatePoints();
@@ -1388,7 +1391,7 @@ void Estimator::InitEstimator(double header){
             Infov("Initialization finish!");
         }
     }
-    // stereo only initilization
+    ///初始化： stereo only
     else if(cfg::is_stereo && !cfg::use_imu){
         feat_manager.InitFramePoseByPnP(frame);
         feat_manager.TriangulatePoints();
@@ -1457,7 +1460,6 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         return ;
     }
 
-
     ///若没有IMU,则需要根据PnP得到当前帧的位姿
     if(!cfg::use_imu)
         feat_manager.InitFramePoseByPnP(frame);
@@ -1467,9 +1469,9 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
 
     ///三角化线特征
     if(cfg::use_line){
-        if(cfg::is_stereo){
+        //if(cfg::is_stereo){
             //feat_manager.TriangulateLineStereo(cam_v.baseline);
-        }
+        //}
         //else{
             feat_manager.TriangulateLineMono();
         //}
@@ -1485,6 +1487,7 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         ///添加动态特征点,并创建物体
         im.PushBack(frame, image.instances);
         Infov("processImage im.PushBack():{} ms",tt.TocThenTic());
+
         ///输出实例的速度信息
         im.SetOutputInstInfo();
         Infov("processImage im.SetOutputInstInfo():{} ms",tt.TocThenTic());
@@ -1494,24 +1497,25 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         Infov("processImage im.PropagatePose():{} ms",tt.TocThenTic());
 
         ///动态特征点的三角化
-        //im.Triangulate();
+        im.Triangulate();
         ///若动态物体未初始化, 则进行初始化
-        //im.InitialInstance();
+        im.InitialInstance();
         ///初始化速度
         im.InitialInstanceVelocity();
         ///根据重投影误差和对极几何判断物体是运动的还是静态的
         im.SetDynamicOrStatic();
         Infov("processImage im.InitialInstance():{} ms",tt.TocThenTic());
 
-        if(para::is_print_detail){
-            PrintFeaturesInfo(im, true, true);
-        }
+        //if(para::is_print_detail){
+        //    PrintFeaturesInfo(im, true, true);
+        //}
 
-        ///单独优化动态物体
         if(para::is_print_detail){
             PrintInstancePoseInfo(im, true);
         }
-        im.Optimization();
+
+        ///单独优化动态物体
+        //im.Optimization();
 
         if(para::is_print_detail){
             PrintInstancePoseInfo(im, true);
@@ -1541,7 +1545,6 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
     feat_manager.RemoveOutlier(removeIndex);
     feat_manager.RemoveLineOutlier();
 
-
     if (FailureDetection()){
         Warnv("failure detection!");
         failure_occur = true;
@@ -1569,6 +1572,13 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         im.OutliersRejection();
 
          im.DeleteBadLandmarks();
+
+         ///判断是否清空物体
+         for(auto &[inst_id,inst] : im.instances){
+             if(inst.landmarks.empty() && inst.GetPointsExtraFrames()==0){
+                 inst.ClearState();
+             }
+         }
     }
 
     Infov("processImage SlideWindow:{} ms", tt.TocThenTic());
@@ -1636,7 +1646,14 @@ void Estimator::Output(){
         Publisher::PubLines(header);
     }
 
-    //PubPredictBox3D(*this,feature_frame.boxes);
+    //可视化3D检测框
+    if(io_para::is_pub_predict_box){
+        Publisher::PubPredictBox3D(header);
+    }
+    //可视化gt框
+    if(io_para::is_pub_groundtruth_box){
+        Publisher::PubGroundTruthBox3D(header);
+    }
 
     //相机轨迹保存
     SaveBodyTrajectory(header);
@@ -1672,9 +1689,6 @@ void Estimator::AddIMU(vector<pair<double, Vec3d>> &acc_vec,vector<pair<double, 
  * 滑动窗口状态估计的入口函数
  */
 void Estimator::ProcessMeasurements(){
-
-    pcl::RadiusOutlierRemoval<PointT> radius_filter;
-
     int cnt=0;
     double time_sum=0;
     TicToc tt,t_all;

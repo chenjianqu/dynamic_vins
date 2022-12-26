@@ -79,6 +79,8 @@ struct InstFeat{
                        cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
                        cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward);
 
+    void TrackRightByPad(SemanticImage &img);
+
     void DetectExtraPoints(const cv::Mat& disp);
 
     ///后处理

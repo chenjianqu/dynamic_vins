@@ -118,8 +118,9 @@ void InstFeat::UndistortedPoints(camodocal::CameraPtr &cam,vector<cv::Point2f>& 
 }
 
 
-void InstFeat::UndistortedPointsWithAddOffset(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un)
-{
+void InstFeat::UndistortedPointsWithAddOffset(camodocal::CameraPtr &cam,
+                                              vector<cv::Point2f>& point_cam,
+                                              vector<cv::Point2f>& point_un){
     point_un.clear();
     for (auto & pt : point_cam){
         Vec2d a(pt.x + box2d->rect.tl().x, pt.y + box2d->rect.tl().y);///加上偏置
@@ -227,6 +228,34 @@ void InstFeat::TrackRight(SemanticImage &img){
     right_points.clear();
 
     auto status= FeatureTrackByLK(img.gray0,img.gray1,curr_points,right_points,fe_para::is_flow_back);
+    if(cfg::dataset == DatasetType::kViode){
+        for(size_t i=0;i<status.size();++i){
+            if(status[i] && VIODE::PixelToKey(right_points[i], img.seg1) != id )
+                status[i]=0;
+        }
+    }
+    else{
+        std::cerr<<"InstFeat::TrackRight() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+    }
+    right_ids = ids;
+    ReduceVector(right_points, status);
+    ReduceVector(right_ids, status);
+}
+
+
+
+void InstFeat::TrackRightByPad(SemanticImage &img){
+    if(curr_points.empty())
+        return;
+    right_points.clear();
+
+    vector<cv::Point2f> curr_points_padded(curr_points.size());
+    for(int i=0;i<curr_points.size();++i){
+        curr_points_padded[i].x = curr_points[i].x + box2d->rect.tl().x;
+        curr_points_padded[i].y = curr_points[i].y + box2d->rect.tl().y;
+    }
+
+    auto status= FeatureTrackByLK(img.gray0,img.gray1,curr_points_padded,right_points,fe_para::is_flow_back);
     if(cfg::dataset == DatasetType::kViode){
         for(size_t i=0;i<status.size();++i){
             if(status[i] && VIODE::PixelToKey(right_points[i], img.seg1) != id )

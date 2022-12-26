@@ -53,17 +53,10 @@ public:
 
     int OutlierRejectionByBox3d();
 
-    int set_triangle_num(){
-        triangle_num=0;
-        for(auto &lm:landmarks){
-            if(lm.bad)
-                continue;
-            else if(lm.depth>0){
-                triangle_num++;
-            }
-        }
-        return triangle_num;
-    }
+    void DeleteOutdatedLandmarks(int critical_frame);
+
+    int DeleteBadLandmarks();
+
 
     [[nodiscard]] Vec3d WorldToObject(const Vec3d& pt,int frame_idx) const{
         return state[frame_idx].R.transpose() * ( pt - state[frame_idx].P);
@@ -97,9 +90,9 @@ public:
         return cnt;
     }
 
-    int DeleteBadLandmarks();
-
-
+    /**
+     * 清空物体
+     */
     void ClearState(){
         is_init_velocity=false;
         is_initial = false;
@@ -111,6 +104,36 @@ public:
         vel.SetZero();
 
         Debugv("ClearState() inst:{}",id);
+    }
+
+    /**
+     * 滑动窗口内有点云的帧的数量
+     * @return
+     */
+    [[nodiscard]] int GetPointsExtraFrames(){
+        int num=0;
+        for(int i=0;i<=kWinSize;++i){
+            if(!points_extra[i].empty()){
+                num++;
+            }
+        }
+        return num;
+    }
+
+    /**
+     * 设置并返回路标点中具有深度的点的数量
+     * @return
+     */
+    int set_triangle_num(){
+        triangle_num=0;
+        for(auto &lm:landmarks){
+            if(lm.bad)
+                continue;
+            else if(lm.depth>0){
+                triangle_num++;
+            }
+        }
+        return triangle_num;
     }
 
     vector<Eigen::Vector3d> point3d_curr;
