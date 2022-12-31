@@ -8,7 +8,6 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-
 #pragma once
 
 #include <fstream>
@@ -77,6 +76,8 @@ public:
 
     static void PubTransform(const Mat3d &R,const Vec3d &P,tf::TransformBroadcaster &br,ros::Time time,
                              const string &frame_id,const string &child_frame_id);
+
+    static void PubSceneVec(const std_msgs::Header &header);
 
     inline static std::shared_ptr<Estimator> e;
 };

@@ -27,8 +27,16 @@ namespace dynamic_vins{\
 struct LandmarkPoint{
     explicit LandmarkPoint(unsigned int id_):id(id_){}
 
-    FeaturePoint::Ptr front(){
+    [[nodiscard]] FeaturePoint::Ptr front(){
         return feats.front();
+    }
+
+    /**
+     * （如果存在的话）返回倒数第二个成员
+     * @return
+     */
+    [[nodiscard]] FeaturePoint::Ptr penultimate(){
+        return *(std::prev(feats.end(),2));
     }
 
     [[nodiscard]] int frame() const{
@@ -97,7 +105,9 @@ public:
     used_num(0), depth(-1.0), solve_flag(0)
     {}
 
-    int endFrame();
+    int endFrame(){
+        return start_frame + feats.size() - 1;
+    }
 };
 
 

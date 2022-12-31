@@ -22,9 +22,7 @@
 
 #include "def.h"
 
-
 namespace dynamic_vins{\
-
 
 inline geometry_msgs::Point EigenToGeometryPoint(const Vec3d &vec_point){
     geometry_msgs::Point point;
@@ -64,8 +62,6 @@ inline geometry_msgs::Quaternion EigenToGeometryQuaternion(const Eigen::Quaterni
 inline tf::Vector3 EigenToTfVector(const Vec3d &v_eigen){
     return {v_eigen.x(),v_eigen.y(),v_eigen.z()};
 }
-
-
 
 
 inline tf::Quaternion EigenToTfQuaternion(const Eigen::Quaterniond &q_eigen){
@@ -126,6 +122,26 @@ inline std_msgs::ColorRGBA ScalarBgrToColorRGBA(const cv::Scalar &color){
 
 cv::Scalar BgrColor(const string &color_str,bool is_norm=true);
 
+
+template<typename T>
+string CvMatToStr(const cv::Mat &m){
+    if(m.empty()){
+        return {};
+    }
+    else if(m.channels()>1){
+        return "CvMatToStr() input Mat has more than one channel";
+    }
+    else{
+        string ans;
+        for(int i=0;i<m.rows;++i){
+            for(int j=0;j<m.cols;++j){
+                ans += std::to_string(m.at<T>(i,j)) + " ";
+            }
+            ans+="\n";
+        }
+        return ans;
+    }
+}
 
 
 

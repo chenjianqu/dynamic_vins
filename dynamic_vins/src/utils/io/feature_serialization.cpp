@@ -8,8 +8,6 @@
 namespace dynamic_vins{\
 
 
-
-
 string Vec7dToStr(const Eigen::Matrix<double, 7, 1> &v){
     return fmt::format("{} {} {} {} {} {} {}",
                        v(0,0),v(1,0),v(2,0),v(3,0),
@@ -25,9 +23,9 @@ string LineToStr(const Line &line){
  * @param path
  * @param points
  */
-void SerializePointFeature(const string& path,const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &points){
+void SerializePointFeature(const string& path,
+                           const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &points){
     std::ofstream fout(path.data(), std::ios::out);
-
     for(auto &[id,vec_feat] : points){
         if(vec_feat.size()==1){
             fout<<fmt::format("0 {} {}",id, Vec7dToStr(vec_feat[0].second))<<endl;
@@ -36,7 +34,6 @@ void SerializePointFeature(const string& path,const std::map<unsigned int, std::
             fout<<fmt::format("1 {} {} {}",id, Vec7dToStr(vec_feat[0].second),Vec7dToStr(vec_feat[1].second))<<endl;
         }
     }
-
     fout.close();
 }
 
@@ -72,6 +69,7 @@ DeserializePointFeature(const string& path){
     return points;
 }
 
+
 /**
  * 序列化线特征
  * @param path
@@ -85,12 +83,13 @@ void SerializeLineFeature(const string& path,const std::map<unsigned int, std::v
             fout<<fmt::format("0 {} {}",id, LineToStr(vec_feat[0].second))<<endl;
         }
         else{
-            fout<<fmt::format("1 {} {} {}",id, LineToStr(vec_feat[0].second),LineToStr(vec_feat[1].second))<<endl;
+            fout<<fmt::format("1 {} {} {}",id, LineToStr(vec_feat[0].second),
+                              LineToStr(vec_feat[1].second))<<endl;
         }
     }
-
     fout.close();
 }
+
 
 /**
  * 反序列化线特征
@@ -129,11 +128,8 @@ DeserializeLineFeature(const string& path){
         }
     }
     fin.close();
-
     return lines;
 }
-
-
 
 
 }

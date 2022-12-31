@@ -43,6 +43,8 @@ cmake ..
 make
 ```
 
+**note**: if you changed OpenCV version, please recompile the line_descriptor.
+
 
 
 build `dynamic_vins` from github:
@@ -128,7 +130,7 @@ config_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/config/kitti/kitti_trackin
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720_vison_only/custom.yaml
 #config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720/custom.yaml
 
-source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name} 0010
+source  ${dynamic_vins_root}/devel/setup.bash && rosrun dynamic_vins dynamic_vins ${config_file} ${seq_name} 0000
 ```
 
 

@@ -25,8 +25,6 @@
 namespace dynamic_vins{\
 
 
-GlobalSFM::GlobalSFM(){}
-
 void GlobalSFM::triangulatePoint(Eigen::Matrix<double, 3, 4> &Pose0, Eigen::Matrix<double, 3, 4> &Pose1,
                                  Vec2d &point0, Vec2d &point1, Vec3d &point_3d){
     Mat4d design_matrix = Mat4d::Zero();
@@ -136,13 +134,24 @@ void GlobalSFM::triangulateTwoFrames(int frame0, Eigen::Matrix<double, 3, 4> &Po
 //  c_translation cam_R_w
 // relative_q[i][j]  j_q_i
 // relative_t[i][j]  j_t_ji  (j < i)
+/**
+ * 执行SFM
+ * @param frame_num 当前滑窗内帧的数量
+ * @param q
+ * @param T
+ * @param l
+ * @param relative_R 已知的相对位姿
+ * @param relative_T
+ * @param sfm_f 所有的点特征
+ * @param sfm_tracked_points
+ * @return
+ */
 bool GlobalSFM::construct(int frame_num, Eigen::Quaterniond* q, Vec3d* T, int l,
                           const Eigen::Matrix3d relative_R, const Vec3d relative_T,
                           vector<SFMFeature> &sfm_f, map<int, Vec3d> &sfm_tracked_points){
     feature_num = sfm_f.size();
-    //cout << "set 0 and " << l << " as known " << endl;
-    // have relative_r relative_t
-    // intial two view
+
+    /// intial two view
     q[l].w() = 1;
     q[l].x() = 0;
     q[l].y() = 0;
@@ -150,8 +159,6 @@ bool GlobalSFM::construct(int frame_num, Eigen::Quaterniond* q, Vec3d* T, int l,
     T[l].setZero();
     q[frame_num - 1] = q[l] * Eigen::Quaterniond(relative_R);
     T[frame_num - 1] = relative_T;
-    //cout << "init q_l " << q[l].w() << " " << q[l].vec().transpose() << endl;
-    //cout << "init t_l " << T[l].transpose() << endl;
 
     //rotate to cam frame
     Eigen::Matrix3d c_Rotation[frame_num];
@@ -287,7 +294,7 @@ bool GlobalSFM::construct(int frame_num, Eigen::Quaterniond* q, Vec3d* T, int l,
                     sfm_f[i].observation[j].second.x(),
                     sfm_f[i].observation[j].second.y());
 
-            problem.AddResidualBlock(cost_function, NULL, c_rotation[l], c_translation[l],
+            problem.AddResidualBlock(cost_function, nullptr, c_rotation[l], c_translation[l],
                                      sfm_f[i].position);
         }
 

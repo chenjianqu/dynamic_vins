@@ -15,7 +15,7 @@ undistort_input: 0 #是否对输入进行矫正
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
-plane_constraint: 1 #是否使用平面约束
+plane_constraint: 0 #是否使用平面约束
 
 
 ####################### Camera Parameters ########################

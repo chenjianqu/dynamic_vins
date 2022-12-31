@@ -20,7 +20,7 @@
 #include "utils/box2d.h"
 #include "utils/box3d.h"
 #include "utils/parameters.h"
-#include "line_detector/line.h"
+#include "line_detector/frame_lines.h"
 
 #include "point_landmark.h"
 

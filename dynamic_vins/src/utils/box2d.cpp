@@ -10,13 +10,7 @@
 
 #include "box2d.h"
 
-#include "utils/dataset/coco_utils.h"
-#include "utils/dataset/kitti_utils.h"
-
 namespace dynamic_vins{\
-
-
-
 
 /**
  * 计算两个box之间的IOU

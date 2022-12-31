@@ -2,7 +2,9 @@
 /*/cmake-build-debug/
 /dynamic_vins/weights/
 /dynamic_vins/data/
+/dynamic_vins/thirdparty/line_descriptor/build/
 /dynamic_vins_eval/data/
 /dynamic_vins_eval/eval_tools/devkit_object/cpp/build/
+/dynamic_vins_eval/eval_tools/devkit_object/cpp/lib/
 /dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/data/tracking/label_02/
 

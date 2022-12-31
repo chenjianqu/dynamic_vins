@@ -16,22 +16,13 @@
 namespace dynamic_vins{\
 
 struct InferDeleter{
-template <typename T>
-void operator()(T* obj) const{
-    if (obj)
-        obj->destroy();
-}
+    template <typename T> void operator()(T* obj) const{
+        if (obj)
+            obj->destroy();
+    }
 };
 
-
-/**
- * TensorRT编译ONNX模型
- * @param onnx_path
- * @param tensorrt_path
- * @return
- */
 int BuildTensorRT(const std::string &onnx_path,const std::string &tensorrt_path);
-
 
 
 }

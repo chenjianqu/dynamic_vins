@@ -16,7 +16,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "utils/log_utils.h"
-#include "line_detector/line.h"
+#include "line_detector/frame_lines.h"
 #include "line_detector/line_detector.h"
 
 using namespace std;

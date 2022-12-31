@@ -1,11 +1,16 @@
-//
-// Created by chen on 2022/6/13.
-//
+/*******************************************************
+ * Copyright (C) 2022, Chen Jianqu, Shanghai University
+ *
+ * This file is part of dynamic_vins.
+ * Github:https://github.com/chenjianqu/dynamic_vins
+ *
+ * Licensed under the MIT License;
+ * you may not use this file except in compliance with the License.
+ *******************************************************/
 
 #include "image_process.h"
-
 #include "utils/dataset/viode_utils.h"
-#include "deeplearning_utils.h"
+
 
 namespace dynamic_vins{ \
 
@@ -105,11 +110,13 @@ void ImageProcessor::Run(SemanticImage &img) {
         ///去畸变
         //由于需要检测直线，因此对整张图像去畸变
         cv::Mat un_image0,un_image1;
-        cv::remap(img.color0, un_image0, cam_s.left_undist_map1, cam_s.left_undist_map2, CV_INTER_LINEAR);
+        cv::remap(img.color0, un_image0, cam_s.left_undist_map1,
+                  cam_s.left_undist_map2, CV_INTER_LINEAR);
 
         img.color0 = un_image0;
         if(cfg::is_stereo){
-            cv::remap(img.color1, un_image1, cam_s.right_undist_map1, cam_s.right_undist_map2, CV_INTER_LINEAR);
+            cv::remap(img.color1, un_image1, cam_s.right_undist_map1,
+                      cam_s.right_undist_map2, CV_INTER_LINEAR);
             img.color1 = un_image1;
         }
     }

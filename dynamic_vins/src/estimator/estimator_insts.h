@@ -31,9 +31,7 @@
 #include "estimator/basic/point_landmark.h"
 #include "estimator/basic/frontend_feature.h"
 
-
 namespace dynamic_vins{\
-
 
 
 class InstanceManager{
@@ -58,7 +56,6 @@ public:
 
     void SetOutputInstInfo();
 
-
     void InitialInstance();
 
     void SetDynamicOrStatic();
@@ -68,7 +65,6 @@ public:
     void AddResidualBlockForInstOpt(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
     void Optimization();
-
 
 
     /**
@@ -138,7 +134,6 @@ private:
 
     Vec3d BoxFitPoints(const vector<Vec3d> &points3d,const Mat3d &R_cioi,const Vec3d &dims);
 
-
 public:
     std::unordered_map<unsigned int,Instance> instances;
 
@@ -152,7 +147,6 @@ private:
     int frame{0};
 
     pcl::IterativeClosestPoint<PointT, PointT> icp;
-
 };
 
 }

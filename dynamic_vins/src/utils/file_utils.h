@@ -8,14 +8,11 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_IO_UTILS_H
-#define DYNAMIC_VINS_IO_UTILS_H
+#ifndef DYNAMIC_VINS_FILE_UTILS_H
+#define DYNAMIC_VINS_FILE_UTILS_H
 
 #include <filesystem>
-
 #include "utils/def.h"
-
-
 
 namespace dynamic_vins{\
 
@@ -33,9 +30,6 @@ void GetAllFiles(const string& dir, vector<string> &files,const string &filter_s
 
 void WriteTextFile(const string& path,std::string& text);
 
-
-
 }
 
-
-#endif //DYNAMIC_VINS_IO_UTILS_H
+#endif //DYNAMIC_VINS_FILE_UTILS_H

@@ -58,6 +58,12 @@ set(PCL_LIB
         /usr/lib/x86_64-linux-gnu/libpcl_search.so
 		/usr/lib/x86_64-linux-gnu/libpcl_kdtree.so
 		/usr/lib/x86_64-linux-gnu/libpcl_segmentation.so
+		/usr/lib/x86_64-linux-gnu/libvtkCommonCore-6.3.so.6.3
+		/usr/lib/x86_64-linux-gnu/libvtkRenderingFreeTypeFontConfig-6.3.so.6.3
+		/usr/lib/x86_64-linux-gnu/libvtkRenderingMatplotlib-6.3.so.6.3
+		/usr/lib/x86_64-linux-gnu/libvtkRenderingOpenGL-6.3.so.6.3
+		/usr/lib/x86_64-linux-gnu/libvtkInteractionStyle-6.3.so.6.3
+		/usr/lib/x86_64-linux-gnu/libvtkRenderingFreeType-6.3.so.6.3
         )
 
 
@@ -114,25 +120,29 @@ aux_source_directory(src/line_detector line_detector_sources)
 message("estimator: ${estimator} ")
 
 add_executable(dynamic_vins src/system/main.cpp ${utils_sources} ${dataset_sources} ${tensorrt_sources} ${test_sources}
-        ${det2d_sources} ${det3d_sources} ${image_process_source} ${stereo_sources} ${line_detector_sources} ${line_descriptor_sources} ${io_sources}
+        ${det2d_sources} ${det3d_sources} ${image_process_source} ${stereo_sources} ${line_detector_sources}
+		${line_descriptor_sources} ${io_sources}
         ${mot_sources}  ${front_end_sources} ${initial_sources}  ${factor_sources} ${imu_sources} ${estimator_sources})
 target_link_libraries(dynamic_vins ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES}
 		${PROJECT_SOURCE_DIR}/thirdparty/line_descriptor/lib/liblinedesc.so
         )
 
-add_executable(build_raft src/system/build_tools/build_raft.cpp src/flow/flow_parameter.cpp ${tensorrt_sources} src/utils/log_utils.cpp)
+add_executable(build_raft src/system/build_tools/build_raft.cpp src/flow/flow_parameter.cpp ${tensorrt_sources}
+		src/utils/log_utils.cpp)
 target_link_libraries(build_raft ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
 
-add_executable(build_solo src/system/build_tools/build_solo.cpp ${tensorrt_sources} src/utils/log_utils.cpp src/det2d/det2d_parameter.cpp)
+add_executable(build_solo src/system/build_tools/build_solo.cpp ${tensorrt_sources} src/utils/log_utils.cpp
+		src/det2d/det2d_parameter.cpp)
 target_link_libraries(build_solo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
 
 add_executable(pub_object3d src/system/eval/pub_object3d.cpp  ${utils_sources} ${dataset_sources} ${tensorrt_sources}
-        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources}  ${line_detector_sources} ${line_descriptor_sources}
+        ${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources}
+		${line_detector_sources} ${line_descriptor_sources}
 		${mot_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
 target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
@@ -154,19 +164,23 @@ add_executable(orb_demo src/system/exp_tools/orb_demo.cpp ${orb_sources})
 target_link_libraries(orb_demo ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
 
 
+add_executable(read_pub_pointcloud src/system/exp_tools/read_pub_pointcloud.cpp src/utils/file_utils.cpp)
+target_link_libraries(read_pub_pointcloud ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
+
 add_executable(ransac_test src/system/exp_tools/ransac_test.cpp)
 target_link_libraries(ransac_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
 
 
-add_executable(stereo_test src/system/exp_tools/stereo_test.cpp src/utils/io_utils.cpp)
+add_executable(stereo_test src/system/exp_tools/stereo_test.cpp src/utils/file_utils.cpp)
 target_link_libraries(stereo_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
 
-add_executable(object_pointcloud_test src/system/exp_tools/object_pointcloud_test.cpp src/utils/io_utils.cpp)
+add_executable(object_pointcloud_test src/system/exp_tools/object_pointcloud_test.cpp src/utils/file_utils.cpp)
 target_link_libraries(object_pointcloud_test ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} ${PCL_LIB})
 
 
 
-add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp ${line_detector_sources} ${line_descriptor_sources})
+add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp
+		${line_detector_sources} ${line_descriptor_sources})
 target_link_libraries(line_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}
 		${PROJECT_SOURCE_DIR}/thirdparty/line_descriptor/lib/liblinedesc.so)
 

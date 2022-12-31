@@ -26,6 +26,12 @@ using std::string;
 namespace dynamic_vins{\
 
 
+/**
+ * 将ONNX模型转换为TensorRT模型
+ * @param onnx_path
+ * @param tensorrt_path
+ * @return
+ */
 int BuildTensorRT(const string &onnx_path,const string &tensorrt_path)
 {
     cout<<"createInferBuilder"<<endl;
@@ -58,7 +64,6 @@ int BuildTensorRT(const string &onnx_path,const string &tensorrt_path)
         return -1;
 
     ///读取模型文件
-
     cout<<"parseFromFile:"<<onnx_path<<endl;
     auto verbosity=sample::gLogger.getReportableSeverity();
     auto parsed=parser->parseFromFile(onnx_path.c_str(),static_cast<int>(verbosity));

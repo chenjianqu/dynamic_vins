@@ -13,14 +13,17 @@
 #include <ros/ros.h>
 
 #include "io_parameters.h"
-#include "utils/io_utils.h"
+#include "utils/file_utils.h"
 
 namespace dynamic_vins{\
 
 using namespace std::chrono_literals;
 
 
-
+/**
+ * 对接收到的图像消息进行同步
+ * @return
+ */
 SemanticImage CallBack::SyncProcess()
 {
     SemanticImage img;
@@ -149,6 +152,11 @@ SemanticImage Dataloader::LoadStereo()
     return img;
 }
 
+
+/**
+ * 阻塞延时
+ * @param period 延时时长
+ */
 void ImageViewer::Delay(int period){
     int delta_t =(int) tt.TocThenTic();
     int wait_time = period - delta_t;
@@ -158,6 +166,12 @@ void ImageViewer::Delay(int period){
 }
 
 
+/**
+ * 图像显示
+ * @param img 图像
+ * @param period 显示时长(ms)
+ * @param delay_frames 延时帧数
+ */
 void ImageViewer::ImageShow(cv::Mat &img,int period, int delay_frames){
     int delta_t =(int) tt.TocThenTic();
     int wait_time = period - delta_t;
@@ -168,7 +182,6 @@ void ImageViewer::ImageShow(cv::Mat &img,int period, int delay_frames){
     if(img_queue.size()>delay_frames){
         img = img_queue.front();
         img_queue.pop();
-
         bool pause=false;
         do{
             cv::imshow("ImageViewer",img);
@@ -182,13 +195,8 @@ void ImageViewer::ImageShow(cv::Mat &img,int period, int delay_frames){
                 pause=false;
             }
             wait_time=period;
-
         } while (pause);
-
     }
-
-
-
 }
 
 

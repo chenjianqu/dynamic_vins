@@ -9,7 +9,6 @@
  *******************************************************/
 
 #include "front_end_parameters.h"
-
 #include <opencv2/opencv.hpp>
 
 namespace dynamic_vins{\
@@ -35,11 +34,9 @@ void FrontendParemater::SetParameters(const std::string &config_path)
     is_flow_back = fs["flow_back"];
 
     fs["use_mask_morphology"] >> use_mask_morphology;
-
     fs["mask_morphology_size"] >> kMaskMorphologySize;
 
     fs.release();
-
 }
 
 

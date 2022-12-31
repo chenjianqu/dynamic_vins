@@ -57,7 +57,6 @@ public:
 
     int DeleteBadLandmarks();
 
-
     [[nodiscard]] Vec3d WorldToObject(const Vec3d& pt,int frame_idx) const{
         return state[frame_idx].R.transpose() * ( pt - state[frame_idx].P);
     }
@@ -169,7 +168,7 @@ public:
 
 
     int triangle_num{0};//已经三角化的路标点的数量
-    int static_frame{0};//连续静止了多少帧
+    int static_frame{1};//连续静止了多少帧
 
     int age{0};//初始化后走过了多少帧
     int lost_number{0};//已经连续多少帧未检测到特征了

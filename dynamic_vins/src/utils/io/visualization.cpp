@@ -14,7 +14,7 @@
 
 #include <string>
 
-#include "utils/io_utils.h"
+#include "utils/file_utils.h"
 #include "utils/convert_utils.h"
 #include "utils/io/markers_utils.h"
 #include "estimator/estimator_insts.h"
@@ -470,12 +470,50 @@ void Publisher::PubInstancePointCloud(const std_msgs::Header &header){
         if(!(inst.points_extra_pcl[body.frame-1]) || inst.points_extra_pcl[body.frame-1]->empty()){
             continue;
         }
-        //*pc += *(inst.points_extra_pcl[body.frame-1]);
+        *pc += *(inst.points_extra_pcl[body.frame-1]);
     }
 
     PublisherMap::PubPointCloud(*pc,"stereo_point_cloud");
     //PointCloudPublisher::Pub(stereo_point_cloud,"instance_stereo_point_cloud");
 }
+
+
+/**
+ * 可视化场景流
+ * @param header
+ */
+void Publisher::PubSceneVec(const std_msgs::Header &header)
+{
+    if(e->im.tracking_number() < 1)
+        return;
+    MarkerArray markers;
+    for(auto &[key,inst] : e->im.instances){
+        if(!inst.is_tracking ){
+            continue;
+        }
+        if(!inst.is_initial || !inst.is_curr_visible){
+            //if(!inst.is_curr_visible){
+            continue;
+        }
+        cv::Scalar color_norm = inst.color / 255.f;
+        color_norm[3]=1.0;
+
+        for(auto &lm:inst.landmarks){
+            //需要多个观测，且在当前帧有观测
+            if(!lm.bad && lm.feats.size()>1 && lm.feats.back()->frame==body.frame-1){
+                if(lm.feats.back()->is_triangulated && lm.penultimate()->is_triangulated){
+                    auto line = LineMarker(lm.feats.back()->p_w,lm.penultimate()->p_w,lm.id+10000,color_norm,
+                               0.02,Marker::ADD,"scene_vec");
+                    markers.markers.push_back(line);
+                }
+            }
+        }
+    }
+
+    PublisherMap::PubMarkers(markers,"scene_vec");
+
+}
+
 
 
 void Publisher::PubInstances(const std_msgs::Header &header)

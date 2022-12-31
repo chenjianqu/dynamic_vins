@@ -51,16 +51,6 @@ public:
     Box3D(int class_id_,string class_name_,double score_)
     :class_id(class_id_),class_name(std::move(class_name_)),score(score_){}
 
-    /**
-     * 根据yaw角构造物体位姿的旋转矩阵
-     * @return
-     */
-    [[nodiscard]] Mat3d R_cioi() const{
-        Mat3d R;
-        R<<cos(yaw),0, -sin(yaw),   0,1,0,   sin(yaw),0,cos(yaw);
-        return R.transpose();
-    }
-
     [[nodiscard]] Mat34d GetCoordinateVectorInCamera(double axis_len=1.) const;
 
     bool InsideBox(Eigen::Vector3d &point);
@@ -74,6 +64,7 @@ public:
     static Mat38d GetCorners(Vec3d &dims,Mat3d &R_xo,Vec3d &P_xo);
 
     static Box3D::Ptr Box3dFromFCOS3D(vector<string> &tokens,camodocal::CameraPtr &cam);
+
     static Box3D::Ptr Box3dFromKittiTracking(vector<string> &tokens,camodocal::CameraPtr &cam);
 
     static VecVector3d GetCoordinateVectorFromCorners(Mat38d &corners);
@@ -84,6 +75,15 @@ public:
 
     static Mat38d GetCornersFromPose(Mat3d &R_woi,Vec3d &P_woi,Vec3d &dims);
 
+    /**
+     * 根据yaw角构造物体位姿的旋转矩阵
+     * @return
+     */
+    [[nodiscard]] Mat3d R_cioi() const{
+        Mat3d R;
+        R<<cos(yaw),0, -sin(yaw),   0,1,0,   sin(yaw),0,cos(yaw);
+        return R.transpose();
+    }
 
     ///每行的前3个数字是类别,属性,分数
     unsigned int id{};
@@ -100,7 +100,7 @@ public:
     Eigen::Matrix<double,3,8> corners;//包围框的8个顶点在相机坐标系下的坐标
     Vec3d center_pt{0, 0, 0};//包围框中心坐标
 
-    Eigen::Matrix<double,2,8> corners_2d;////包围框的8个顶点在图像坐标系下的像素坐标
+    Eigen::Matrix<double,2,8> corners_2d;//包围框的8个顶点在图像坐标系下的像素坐标
     Rect2D box2d;
 };
 

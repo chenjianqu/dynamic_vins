@@ -14,7 +14,7 @@
 #include <string>
 
 #include "line_descriptor/include/line_descriptor_custom.hpp"
-#include "line.h"
+#include "frame_lines.h"
 
 namespace dynamic_vins{\
 
@@ -45,15 +45,14 @@ public:
                               std::vector<KeyLine> octave0_1, std::vector<KeyLine>octave0_2,
                               std::vector<bool> good_matches);
 
-    static void VisualizeLineStereoMatch(cv::Mat &img, const FrameLines::Ptr &left_lines, const FrameLines::Ptr &right_lines,bool vertical);
+    static void VisualizeLineStereoMatch(cv::Mat &img, const FrameLines::Ptr &left_lines,
+                                         const FrameLines::Ptr &right_lines,bool vertical);
 
     static void VisualizeLineMonoMatch(cv::Mat &img, const FrameLines::Ptr &prev_lines, const FrameLines::Ptr &curr_lines);
 
     static void VisualizeLine(cv::Mat &img,const FrameLines::Ptr &lines);
 
     static void VisualizeRightLine(cv::Mat &img,const FrameLines::Ptr &lines,bool vertical);
-
-
 
     static void NearbyLineTracking(const std::vector<Line> &forw_lines, const std::vector<Line> &cur_lines,
                                           std::vector<std::pair<int, int> > &lineMatches) ;
@@ -63,7 +62,6 @@ private:
     cv::line_descriptor::LSDDetectorC::LSDOptions lsd_opts;
     cv::Ptr<cv::line_descriptor::BinaryDescriptor> lbd_descriptor;
     cv::Ptr<cv::line_descriptor::BinaryDescriptorMatcher> line_matcher;
-
 
     unsigned int global_line_id=0;
 };

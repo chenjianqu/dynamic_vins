@@ -8,14 +8,14 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_LINE_H
-#define DYNAMIC_VINS_LINE_H
+#ifndef DYNAMIC_VINS_FRAME_LINES_H
+#define DYNAMIC_VINS_FRAME_LINES_H
 
 #include <memory>
 #include <vector>
 
 #include <opencv2/features2d.hpp>
-#include "camodocal/camera_models/CameraFactory.h"
+#include <camodocal/camera_models/CameraFactory.h>
 
 #include "line_descriptor/include/line_descriptor_custom.hpp"
 #include "utils/camera_model.h"
@@ -25,8 +25,6 @@
 namespace dynamic_vins{\
 
 
-
-
 class FrameLines{
 public:
     using Ptr=std::shared_ptr<FrameLines>;
@@ -34,7 +32,6 @@ public:
     void SetLines();
 
     void UndistortedLineEndPoints(camodocal::CameraPtr &cam);
-
 
     int frame_id;
     cv::Mat img;
@@ -54,4 +51,4 @@ public:
 
 
 
-#endif //DYNAMIC_VINS_LINE_H
+#endif //DYNAMIC_VINS_FRAME_LINES_H

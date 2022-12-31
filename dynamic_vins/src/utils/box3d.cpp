@@ -12,12 +12,10 @@
 #include "utils/dataset/nuscenes_utils.h"
 #include "utils/dataset/kitti_utils.h"
 
-
 namespace dynamic_vins{\
 
 using namespace std;
 namespace fs=std::filesystem;
-
 
 
 /**
@@ -36,7 +34,6 @@ Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens,camodocal::CameraPtr &c
     //score=1.;
 
     Box3D::Ptr box3d = std::make_shared<Box3D>(class_id,class_name,0,score);
-
 
     ///2-4个数字是物体包围框底部的中心
     box3d->bottom_center<<std::stod(tokens[2]),std::stod(tokens[3]),std::stod(tokens[4]);
@@ -101,7 +98,6 @@ Box3D::Ptr Box3D::Box3dFromFCOS3D(vector<string> &tokens,camodocal::CameraPtr &c
 
 
 
-
 Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens,camodocal::CameraPtr &cam)
 {
     /**
@@ -144,7 +140,6 @@ Box3D::Ptr Box3D::Box3dFromKittiTracking(vector<string> &tokens,camodocal::Camer
     box3d->dims<<std::stod(tokens[12]),std::stod(tokens[11]),std::stod(tokens[10]);
 
     box3d->bottom_center<<std::stod(tokens[13]),std::stod(tokens[14]),std::stod(tokens[15]);
-
 
     /**
                 z front (yaw=-0.5*pi)
@@ -275,7 +270,6 @@ Mat34d Box3D::GetCoordinateVectorInCamera(double axis_len) const{
     matrix.col(2) = R * y_unit + bottom_center;
     matrix.col(3) = R * z_unit + bottom_center;
 
-
     /*Mat34d matrix;
     matrix.col(0) = (corners.col(1)+corners.col(7))/2.;
     matrix.col(1) = (corners.col(4)+corners.col(5)+corners.col(6)+corners.col(7))/4.;
@@ -284,7 +278,6 @@ Mat34d Box3D::GetCoordinateVectorInCamera(double axis_len) const{
 
     return matrix;
 }
-
 
 
 /**
@@ -497,8 +490,6 @@ int Box3D::CoordinateDirection(int x_d,int y_d,int z_d){
             }
         }
     }
-
-
 }
 
 

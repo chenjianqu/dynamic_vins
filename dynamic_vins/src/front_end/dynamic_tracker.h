@@ -11,7 +11,6 @@
 #ifndef DYNAMIC_VINS_DYNAMIC_TRACKER_H
 #define DYNAMIC_VINS_DYNAMIC_TRACKER_H
 
-
 #include <queue>
 #include <vector>
 #include <unordered_map>
@@ -24,10 +23,9 @@
 #include <eigen3/Eigen/Geometry>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
-
 #include <torch/torch.h>
 
-#include "camodocal/camera_models/CameraFactory.h"
+#include <camodocal/camera_models/CameraFactory.h>
 
 #include "semantic_image.h"
 #include "utils/parameters.h"

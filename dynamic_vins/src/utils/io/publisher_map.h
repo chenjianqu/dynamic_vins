@@ -19,12 +19,13 @@
 #include <sensor_msgs/Image.h>
 #include <visualization_msgs/MarkerArray.h>
 
-
 #include "utils/def.h"
 
 namespace dynamic_vins{\
 
-
+/**
+ * ROS的消息发布类
+ */
 class PublisherMap{
 public:
     using Ptr=std::shared_ptr<PublisherMap>;
@@ -34,11 +35,10 @@ public:
     static void PubImage(cv::Mat &img,const string &topic);
 
     static void PubPointCloud(pcl::PointCloud<pcl::PointXYZRGB> &cloud,const string &topic);
+
     static void PubPointCloud(sensor_msgs::PointCloud &cloud,const string &topic);
 
     static void PubMarkers(visualization_msgs::MarkerArray &markers,const string &topic);
-
-    static void PubMarker(visualization_msgs::Marker &marker,const string &topic);
 
     /**
      * 发布一条消息
@@ -72,7 +72,10 @@ public:
         return pub_map[topic];
     }
 
+
+private:
     inline static ros::NodeHandle *nh;
+
     inline static std::unordered_map<string,ros::Publisher> pub_map;
 
 };

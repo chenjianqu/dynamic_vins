@@ -14,30 +14,34 @@
 #include <pcl/io/pcd_io.h>
 
 #include "utils/io/io_parameters.h"
-#include "utils/io_utils.h"
+#include "utils/file_utils.h"
 #include "utils/convert_utils.h"
 #include "utils/dataset/kitti_utils.h"
 #include "estimator/feature_manager.h"
 
-
 namespace dynamic_vins{ \
 
 
-
-
+/**
+ * 输出Debug信息
+ * @param im
+ * @return
+ */
 string PrintFactorDebugMsg(InstanceManager& im){
     string log_text=fmt::format("***********PrintFactorDebugMsg:{}***************\n",body.frame_time);
 
     for(auto &[key,inst]:im.instances){
         if(key==1){
-            log_text += fmt::format("Time:{} inst:{} P_woj:{} \n",body.frame_time,key, VecToStr(inst.state[body.frame].P));
+            log_text += fmt::format("Time:{} inst:{} P_woj:{} \n",
+                                    body.frame_time,key,
+                                    VecToStr(inst.state[body.frame].P));
             log_text += fmt::format("dims:{} \n", VecToStr(inst.box3d->dims));
 
             for(auto &lm:inst.landmarks){
                 if(lm.bad || lm.depth<=0)
                     continue;
                 ///误差计算
-                Vec3d pts_obj_j=inst.state[body.frame].R.transpose() * (lm.front()->p_w - inst.state[body.frame].P);//k点在j时刻的物体坐标
+                Vec3d pts_obj_j=inst.state[body.frame].R.transpose() * (lm.front()->p_w - inst.state[body.frame].P);
                 Vec3d abs_v=pts_obj_j.cwiseAbs();
                 Vec3d vec_err = abs_v - inst.box3d->dims/2;
                 vec_err *=10;
@@ -184,7 +188,6 @@ string PrintLineInfo(FeatureManager &fm){
 
 void SaveBodyTrajectory(const std_msgs::Header &header){
 
-
     static bool is_first_run=true;
     if(is_first_run){
         is_first_run=false;
@@ -193,16 +196,16 @@ void SaveBodyTrajectory(const std_msgs::Header &header){
         fout.close();
     }
 
-    std::ofstream foutC(io_para::kVinsResultPath, std::ios::app);
-    foutC.setf(std::ios::fixed, std::ios::floatfield);
+    std::ofstream fout(io_para::kVinsResultPath, std::ios::app);
+    fout.setf(std::ios::fixed, std::ios::floatfield);
 
     Quaterniond tmp_Q (body.Rs[kWinSize]);
 
     /*
-    foutC.precision(0);
-    foutC << header.stamp.toSec() * 1e9 << ",";
-    foutC.precision(5);
-    foutC << e.Ps[kWindowSize].x() << ","
+    fout.precision(0);
+    fout << header.stamp.toSec() * 1e9 << ",";
+    fout.precision(5);
+    fout << e.Ps[kWindowSize].x() << ","
           << e.Ps[kWindowSize].y() << ","
           << e.Ps[kWindowSize].z() << ","
           << tmp_Q.w() << ","
@@ -213,7 +216,7 @@ void SaveBodyTrajectory(const std_msgs::Header &header){
           << e.Vs[kWindowSize].y() << ","
           << e.Vs[kWindowSize].z() << endl;
         */
-    foutC << header.stamp << " "
+    fout << header.stamp << " "
     << body.Ps[kWinSize].x() << " "
     << body.Ps[kWinSize].y() << " "
     << body.Ps[kWinSize].z() << " "
@@ -221,7 +224,7 @@ void SaveBodyTrajectory(const std_msgs::Header &header){
     <<tmp_Q.y()<<" "
     <<tmp_Q.z()<<" "
     <<tmp_Q.w()<<endl;
-    foutC.close();
+    fout.close();
 
     Eigen::Vector3d tmp_T = body.Ps[kWinSize];
     printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(),
@@ -258,7 +261,8 @@ void SaveInstancesPointCloud(InstanceManager& im){
             pcl::PointCloud<pcl::PointXYZRGB>::Ptr stereo_pc =
                     EigenToPclXYZRGB(inst.points_extra[body.frame],inst.color);
 
-            const string save_path = object_base_path+fmt::format("{}_{}.pcd",PadNumber(body.seq_id,6),inst_id);
+            const string save_path = object_base_path+
+                    fmt::format("{}_{}.pcd",PadNumber(body.seq_id,6),inst_id);
             pcl::io::savePCDFile(save_path,*stereo_pc);
         }
 

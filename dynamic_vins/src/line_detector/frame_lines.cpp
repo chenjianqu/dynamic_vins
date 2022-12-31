@@ -8,8 +8,7 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "line.h"
-
+#include "frame_lines.h"
 
 namespace dynamic_vins{
 

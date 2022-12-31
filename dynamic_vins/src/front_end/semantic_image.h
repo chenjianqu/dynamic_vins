@@ -38,8 +38,6 @@ struct SemanticImage{
     void SetColorImage();
     void SetColorImageGpu();
 
-    void CropInstanceGray();
-
     cv::Mat color0,seg0,color1,seg1;
     cv::cuda::GpuMat color0_gpu,color1_gpu;
     double time0,seg0_time,time1,seg1_time;
@@ -62,41 +60,6 @@ struct SemanticImage{
 
     unsigned int seq;
     bool exist_inst{false};//当前帧是否检测到物体
-};
-
-
-/**
- * 多线程图像队列
- */
-class SemanticImageQueue{
-public:
-
-    void push_back(SemanticImage& img){
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        if(img_list.size() < kImageQueueSize){
-            img_list.push_back(img);
-        }
-        queue_cond.notify_one();
-    }
-
-    int size(){
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        return (int)img_list.size();
-    }
-
-    std::optional<SemanticImage> request_image() {
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        if(!queue_cond.wait_for(lock, 30ms, [&]{return !img_list.empty();}))
-            return std::nullopt;
-        //queue_cond_.wait(lock,[&]{return !seg_img_list_.empty();});
-        SemanticImage frame=std::move(img_list.front());
-        img_list.pop_front();
-        return frame;
-    }
-
-    std::mutex queue_mutex;
-    std::condition_variable queue_cond;
-    std::list<SemanticImage> img_list;
 };
 
 

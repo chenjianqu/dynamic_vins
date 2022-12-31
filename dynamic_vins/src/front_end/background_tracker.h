@@ -7,7 +7,6 @@
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
  *******************************************************/
-
 /*******************************************************
  * Copyright (C) 2019, Aerial Robotics Group, Hong Kong University of Science and Technology
  * 
@@ -18,7 +17,6 @@
  *
  * Author: Qin Tong (qintonguav@gmail.com)
  *******************************************************/
-
 
 #pragma once
 
@@ -37,9 +35,6 @@
 #include "feature_utils.h"
 #include "estimator/vio_util.h"
 #include "line_detector/line_detector.h"
-
-
-
 
 namespace dynamic_vins{\
 
@@ -78,7 +73,6 @@ private:
                    vector<cv::Point2f> &curRightPts,
                    map<unsigned int, cv::Point2f> &prevLeftPtsMap);
 
-
     cv::Mat img_vis;
 
     std::map<unsigned int, cv::Point2f> last_id_pts_map;
@@ -86,10 +80,8 @@ private:
 
     cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow;
     cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_optical_flow_back;
-    cv::Ptr<cv::cuda::CornersDetector> detector;
-
+    cv::Ptr<cv::cuda::CornersDetector> corners_detector;
     LineDetector::Ptr line_detector;
-
     InstFeat bg;
 };
 

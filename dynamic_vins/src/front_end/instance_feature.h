@@ -11,7 +11,6 @@
 #ifndef DYNAMIC_VINS_INSTANCEFEATURE_H
 #define DYNAMIC_VINS_INSTANCEFEATURE_H
 
-
 #include <queue>
 #include <vector>
 #include <unordered_map>
@@ -26,16 +25,14 @@
 #include <opencv2/opencv.hpp>
 
 #include <torch/torch.h>
-
-#include "camodocal/camera_models/CameraFactory.h"
+#include <camodocal/camera_models/CameraFactory.h>
 
 #include "semantic_image.h"
 #include "utils/parameters.h"
 #include "feature_utils.h"
 #include "utils/box3d.h"
 #include "utils/box2d.h"
-#include "line_detector/line.h"
-#include "line_descriptor/include/line_descriptor_custom.hpp"
+#include "line_detector/frame_lines.h"
 #include "line_detector/line_detector.h"
 
 namespace dynamic_vins{\
@@ -46,7 +43,8 @@ struct InstFeat{
     roi(std::make_shared<InstRoi>())
     {}
 
-    InstFeat(unsigned int id_): id(id_),color(color_rd(random_engine), color_rd(random_engine), color_rd(random_engine)),
+    InstFeat(unsigned int id_): id(id_),
+    color(color_rd(random_engine), color_rd(random_engine),color_rd(random_engine)),
     roi(std::make_shared<InstRoi>())
     {}
 
@@ -64,17 +62,20 @@ struct InstFeat{
     void RightUndistortedPts(camodocal::CameraPtr &cam);
 
     void UndistortedPoints(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un);
-    void UndistortedPointsWithAddOffset(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un);
 
+    void UndistortedPointsWithAddOffset(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,
+                                        vector<cv::Point2f>& point_un);
 
     ///跟踪图像
     void TrackLeft(cv::Mat &curr_img,cv::Mat &last_img,const cv::Mat &mask=cv::Mat());
+
     void TrackLeftGPU(SemanticImage &img,SemanticImage &prev_img,
                       cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
                       cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward,
                       const cv::Mat &mask=cv::Mat());
 
     void TrackRight(SemanticImage &img);
+
     void TrackRightGPU(SemanticImage &img,
                        cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_forward,
                        cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow> lk_backward);

@@ -29,7 +29,7 @@ inline bool InBorder(const cv::Point2f &pt, int row, int col)
     return kBorderSize <= img_x && img_x < col - kBorderSize && kBorderSize <= img_y && img_y < row - kBorderSize;
 }
 
-inline float distance(const cv::Point2f& pt1, const cv::Point2f& pt2)
+inline float PointDistance(const cv::Point2f& pt1, const cv::Point2f& pt2)
 {
     float dx = pt1.x - pt2.x;
     float dy = pt1.y - pt2.y;
@@ -99,7 +99,7 @@ FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &
                                  cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,30, 0.01),
                                  cv::OPTFLOW_USE_INITIAL_FLOW);
         for(size_t i = 0; i < reverse_status.size(); i++){
-            if(reverse_status[i] && distance(pts1[i], reverse_pts[i]) <= 0.5)
+            if(reverse_status[i] && PointDistance(pts1[i], reverse_pts[i]) <= 0.5)
                 reverse_status[i] = 1;
             else
                 reverse_status[i] = 0;

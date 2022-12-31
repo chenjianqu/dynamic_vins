@@ -196,10 +196,6 @@ std::optional<Vec3d> FitBox3DFromObjectFrame(vector<Vec3d> &points,const Vec3d& 
 
 
 
-
-
-
-
 /**
 * 使用RANSAC拟合包围框,根据距离的远近删除点
 * @param points 世界坐标系下的3D点
@@ -259,8 +255,6 @@ std::optional<Vec3d> FitBox3DWithRANSAC(const vector<Vec3d> &points,const Vec3d&
 
     return best_center;
 }
-
-
 
 
 
@@ -632,9 +626,6 @@ void TriangulateOneLineStereo(LineLandmark &line){
 
 
 
-
-
-
 /**
  * PnP求解
  * @param R
@@ -683,9 +674,6 @@ bool SolvePoseByPnP(Mat3d &R, Vec3d &P,
     P = R * (-T_pnp);
     return true;
 }
-
-
-
 
 
 double CompensatedParallax2(const StaticLandmark &landmark, int frame_count)

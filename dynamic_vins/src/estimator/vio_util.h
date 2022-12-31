@@ -35,7 +35,6 @@ inline Mat3d hat(T && v){
 }
 
 
-
 void TriangulatePoint(Mat34d &Pose0, Mat34d &Pose1, Vec2d &point0, Vec2d &point1, Vec3d &point_3d);
 
 Vec3d TriangulatePoint(const Mat34d &Pose0, const Mat34d &Pose1, const Vec2d &point0, const Vec2d &point1);

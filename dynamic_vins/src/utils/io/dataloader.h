@@ -22,14 +22,13 @@
 #include "front_end/semantic_image.h"
 #include "utils/def.h"
 
-
 namespace fs=std::filesystem;
-
-
 
 namespace dynamic_vins{\
 
-
+/**
+ * 接收并同步ROS的图像消息
+ */
 class CallBack{
 public:
     using Ptr=std::unique_ptr<CallBack>;
@@ -76,9 +75,7 @@ public:
         seg1_mutex.unlock();
     }
 
-
     SemanticImage SyncProcess();
-
 
 private:
     std::list<sensor_msgs::ImageConstPtr> img0_buf;
@@ -90,7 +87,9 @@ private:
     std::mutex img0_mutex,img1_mutex,seg0_mutex,seg1_mutex;
 };
 
-
+/**
+ * 图像读取类
+ */
 class Dataloader{
 public:
     using Ptr = std::shared_ptr<Dataloader>;
@@ -105,9 +104,11 @@ private:
 
     int index{0};
     double time{0};
-
 };
 
+/**
+ * 图像可视化类
+ */
 class ImageViewer{
 public:
     ImageViewer(){
@@ -118,6 +119,7 @@ public:
 
     void Delay(int period);
 
+private:
     std::queue<cv::Mat> img_queue;
 
     TicToc tt;

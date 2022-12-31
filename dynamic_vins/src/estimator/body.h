@@ -11,8 +11,7 @@
 #ifndef DYNAMIC_VINS_BODY_H
 #define DYNAMIC_VINS_BODY_H
 
-#include "camodocal/camera_models/CameraFactory.h"
-#
+#include <camodocal/camera_models/CameraFactory.h>
 
 #include "utils/def.h"
 #include "utils/parameters.h"

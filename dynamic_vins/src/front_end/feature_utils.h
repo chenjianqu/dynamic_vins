@@ -13,27 +13,57 @@
 
 #include <string>
 #include <vector>
-
 #include <torch/torch.h>
 #include <opencv2/opencv.hpp>
-
-#include "camodocal/camera_models/CameraFactory.h"
-
+#include <camodocal/camera_models/CameraFactory.h>
 
 #include "utils/def.h"
 #include "semantic_image.h"
 #include "utils/camera_model.h"
 
-using std::vector;
-
 namespace dynamic_vins{\
 
-inline float distance(const cv::Point2f& pt1, const cv::Point2f& pt2)
+void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2);
+
+std::vector<cv::Point2f> UndistortedPts(std::vector<cv::Point2f> &pts, camodocal::CameraPtr &cam);
+
+std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2,
+                                    std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2,bool flow_back=true);
+
+std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
+                                       const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
+                                       const cv::cuda::GpuMat &img_prev,const cv::cuda::GpuMat &img_next,
+                                       std::vector<cv::Point2f> &pts_prev,std::vector<cv::Point2f> &pts_next,
+                                       bool flow_back=true);
+
+std::vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
+                                           std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2);
+
+std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img,
+                                                   const cv::cuda::GpuMat &mask,int min_dist=10);
+
+std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask, int step,cv::Rect rect=cv::Rect());
+
+void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr_un_pts,
+                 std::map<unsigned int, cv::Point2f> &prev_id_pts,vector<cv::Point2f> &output_velocity);
+
+void SortPoints(vector<cv::Point2f> &cur_pts, vector<int> &track_cnt, vector<unsigned  int> &ids);
+
+void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos,
+              float scale= 1.f, int thickness= 1, bool reverse = false);
+
+cv::Scalar ColorMapping(int64_t n);
+
+tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2);
+
+
+inline float PointDistance(const cv::Point2f& pt1, const cv::Point2f& pt2)
 {
     float dx = pt1.x - pt2.x;
     float dy = pt1.y - pt2.y;
     return std::sqrt(dx * dx + dy * dy);
 }
+
 
 inline bool InBorder(const cv::Point2f &pt, int row, int col)
 {
@@ -67,12 +97,14 @@ inline void GpuMat2Points(const cv::cuda::GpuMat& d_mat, std::vector<cv::Point2f
     vec = points;
 }
 
+
 inline void GpuMat2Status(const cv::cuda::GpuMat& d_mat, std::vector<uchar>& vec){
     std::vector<uchar> points(d_mat.cols);
     cv::Mat mat(1, d_mat.cols, CV_8UC1, (void*)&points[0]);
     d_mat.download(mat);
     vec=points;
 }
+
 
 /**
  * 将point2f转换为gpu mat
@@ -89,7 +121,6 @@ inline void Status2GpuMat(const std::vector<uchar>& vec, cv::cuda::GpuMat& d_mat
     d_mat=cv::cuda::GpuMat(mat);
 }
 
-void SuperpositionMask(cv::Mat &mask1, const cv::Mat &mask2);
 
 /**
  * 对mask进行腐蚀运算
@@ -115,47 +146,9 @@ inline void ErodeMask(cv::Mat &in, cv::Mat &out,int kernel_size=5){
 }
 
 
-
-
 inline void SetStatusByMask(vector<uchar> &status,vector<cv::Point2f> &points,cv::Mat &mask){
     for(size_t i=0;i<status.size();++i) if(status[i] && mask.at<uchar>(points[i]) == 0) status[i]=0;
 }
-
-
-std::vector<cv::Point2f> UndistortedPts(std::vector<cv::Point2f> &pts, camodocal::CameraPtr &cam);
-
-std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2,
-                                    std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2,bool flow_back=true);
-
-std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
-                                       const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
-                                       const cv::cuda::GpuMat &img_prev,const cv::cuda::GpuMat &img_next,
-                                       std::vector<cv::Point2f> &pts_prev,std::vector<cv::Point2f> &pts_next,
-                                       bool flow_back=true);
-
-std::vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
-                                           std::vector<cv::Point2f> &pts1, std::vector<cv::Point2f> &pts2);
-
-/**
- * 使用GPU检测Shi Tomasi角点
- * @param detect_num
- * @param img
- * @param mask
- * @return
- */
-std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img, const cv::cuda::GpuMat &mask,int min_dist=10);
-
-
-
-/**
- * 输出mask中规则点，规则点是指像素(10,15)、(10+delta,15+delta)...这样的点
- * @param detect_num 检测的数量
- * @param inst_mask mask,二值图像，0处表示背景，1处表示该实例
- * @param rect 在矩形框内检测点
- * @param curr_pts 已有的点
- * @return
- */
-std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask, int step,cv::Rect rect=cv::Rect());
 
 
 /**
@@ -175,6 +168,7 @@ inline float GetMaskIoU(const torch::Tensor &mask1, const Box2D &instInfo1, cons
     return intersection_area/(mask1_area + mask2_area - intersection_area);
 }
 
+
 /**
  * 将id和特征组合在一起
  * @param ids
@@ -188,24 +182,6 @@ inline void SetIdPointPair(vector<unsigned int> &ids,
     for (unsigned int i = 0; i < ids.size(); i++)
         out_pairs.insert({ids[i], curr_un_pts[i]});
 }
-
-void PtsVelocity(double dt, vector<unsigned int> &ids, vector<cv::Point2f> &curr_un_pts,
-                        std::map<unsigned int, cv::Point2f> &prev_id_pts,vector<cv::Point2f> &output_velocity);
-
-
-
-void SortPoints(vector<cv::Point2f> &cur_pts, vector<int> &track_cnt, vector<unsigned  int> &ids);
-
-
-
-void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos,
-              float scale= 1.f, int thickness= 1, bool reverse = false);
-
-cv::Scalar color_map(int64_t n);
-
-
-tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2);
-
 
 
 }

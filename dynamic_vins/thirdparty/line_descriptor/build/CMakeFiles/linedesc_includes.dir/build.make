@@ -53,10 +53,10 @@ RM = /opt/cmake-3.20.0/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor
+CMAKE_SOURCE_DIR = /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor/build
+CMAKE_BINARY_DIR = /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor/build
 
 # Utility rule file for linedesc_includes.
 
@@ -86,6 +86,6 @@ CMakeFiles/linedesc_includes.dir/clean:
 .PHONY : CMakeFiles/linedesc_includes.dir/clean
 
 CMakeFiles/linedesc_includes.dir/depend:
-	cd /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor/build /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor/build /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor/build/CMakeFiles/linedesc_includes.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor/build /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor/build /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor/build/CMakeFiles/linedesc_includes.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/linedesc_includes.dir/depend
 

@@ -18,11 +18,9 @@
 
 #include "estimator/factor/pose_local_parameterization.h"
 #include "estimator/factor/project_instance_factor.h"
-#include "estimator/factor/speed_factor.h"
 #include "estimator/factor/box_factor.h"
 #include "utils/io/io_parameters.h"
 #include "utils/io/output.h"
-#include "utils/camera_model.h"
 #include "utils/convert_utils.h"
 
 
@@ -146,14 +144,13 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
                 it->feats.push_back(feat_ptr);//添加第一个观测
             }
 
-            inst_iter->second.points_extra_pcl[body.frame] = ProcessExtraPoint(inst_feat.points,inst_iter->second.color);
-            inst_iter->second.points_extra[body.frame] = PclToEigen<PointT>(inst_iter->second.points_extra_pcl[body.frame]);//转换为Eigen数组
-
+            inst_iter->second.points_extra_pcl[body.frame] =
+                    ProcessExtraPoint(inst_feat.points,inst_iter->second.color);
+            inst_iter->second.points_extra[body.frame] =
+                    PclToEigen<PointT>(inst_iter->second.points_extra_pcl[body.frame]);
         }
-
         //cout<<fmt::format("PushBack input_id:{} input_feat_size:{} class:{}\n",
         //                  instance_id,inst_feat.features.size(),inst_feat.box2d->class_name)<<endl;
-
     }
 
     //根据观测次数,对特征点进行排序
@@ -170,7 +167,6 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
             tracking_num++;
         }
     }
-
     log_text += fmt::format("tracking_number:{}\n", tracking_num);
     Debugv(log_text);
 }
@@ -209,7 +205,6 @@ std::optional<Mat4d> InstanceManager::PropagateByICP(Instance &inst){
         return std::nullopt;
     }
 }
-
 
 
 /**
@@ -575,7 +570,6 @@ void InstanceManager::InitialInstance(){
 
         ///删去初始化之前的观测
         inst.DeleteOutdatedLandmarks(frame);
-
     }
 
     Debugv(log_text);
@@ -616,8 +610,49 @@ void InstanceManager::SetDynamicOrStatic(){
     string log_text="InstanceManager::SetDynamicOrStatic\n";
 
     InstExec([&log_text](int key,Instance& inst){
-        Vec3d vel = (inst.state[body.frame].P - inst.state[body.frame-1].P ) / (inst.state[body.frame].time - inst.state[body.frame-1].time);
-        if(vel.norm()>3){
+        if(!inst.is_curr_visible){
+            return;
+        }
+
+        ///计算场景流
+        int vec_size = 0;
+        Vec3d scene_vec = Vec3d::Zero();
+        FeaturePoint::Ptr next_ptr;
+        for(auto &lm:inst.landmarks){
+            //需要多个观测，且在当前帧有观测
+            bool is_found_next=false;
+            if(!lm.bad && lm.feats.size()>1 && lm.feats.back()->frame==body.frame){
+                //在所有观测中，寻找某两帧的三角化点
+                for(auto it=lm.feats.rbegin();it!=lm.feats.rend();it++){
+                    if((*it)->is_triangulated){
+                        if(!is_found_next){
+                            next_ptr = *it;
+                            is_found_next = true;
+                        }
+                        else{
+                            scene_vec += (next_ptr->p_w - (*it)->p_w) /
+                                    (body.headers[next_ptr->frame] - body.headers[(*it)->frame]);
+                            vec_size++;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        Vec3d vel = (inst.state[body.frame].P - inst.state[body.frame-1].P ) /
+                (inst.state[body.frame].time - inst.state[body.frame-1].time);
+        scene_vec /= vec_size;
+
+        Debugv("InstanceManager::SetDynamicOrStatic inst:{} vel:{} scene_vec:{} vec_size:{}",
+               inst.id,VecToStr(vel),VecToStr(scene_vec),vec_size);
+
+        if(vec_size<3){
+            return;
+        }
+        //计算平均场景流
+
+        if(vel.norm()>8 || scene_vec.norm()>5){ //根据位姿变化或平均场景流判断是否为静态
             inst.is_static=false;
             inst.static_frame=0;
         }
@@ -625,7 +660,7 @@ void InstanceManager::SetDynamicOrStatic(){
             inst.static_frame++;
         }
 
-        if(inst.static_frame>=3){
+        if(inst.static_frame>=2){
             inst.is_static=true;
             log_text += fmt::format("inst:{} set static",inst.id);
         }
@@ -848,9 +883,10 @@ void InstanceManager::ManageTriangulatePoint()
 
         inst.set_triangle_num();
 
-        log_text+=fmt::format("inst:{}  cnt_del_nodepth:{} cnt_del_valid_num:{} remain triangle_num:{} valid:{} all:{}\n",
-                              inst.id, cnt_del_nodepth,cnt_del_valid_num,
-                              inst.triangle_num, inst.valid_size(), inst.landmarks.size());
+        log_text+=fmt::format(
+                "inst:{}  cnt_del_nodepth:{} cnt_del_valid_num:{} remain triangle_num:{} valid:{} all:{}\n",
+                inst.id, cnt_del_nodepth,cnt_del_valid_num,
+                inst.triangle_num, inst.valid_size(), inst.landmarks.size());
 
     }
 
@@ -962,18 +998,14 @@ void InstanceManager::AddInstanceParameterBlock(ceres::Problem &problem)
             for(int i=0;i<=frame; i++){
                 problem.AddParameterBlock(inst.para_state[i], kSizePose,
                                           new PoseConstraintLocalParameterization());
-
-                //problem.AddParameterBlock(inst.para_speed[0],6,
-                //                          new SpeedConstraintLocalParameterization());*/
             }
         }
         else{
             for(int i=0;i<=frame; i++){
-                problem.AddParameterBlock(inst.para_state[i], kSizePose, new PoseLocalParameterization());
+                problem.AddParameterBlock(inst.para_state[i], kSizePose,
+                                          new PoseLocalParameterization());
             }
         }
-
-
     });
 }
 
@@ -986,14 +1018,10 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
     ///DEBUG
     PrintFactorDebugMsg(*this);
 
-
     for(auto &[key,inst] : instances){
         if(!inst.is_initial || !inst.is_tracking)
             continue;
         if(inst.valid_size() < 1)
-            continue;
-
-        if(key!=1)
             continue;
 
         std::unordered_map<string,int> statistics;//用于统计每个误差项的数量
@@ -1002,15 +1030,16 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
         for(int i=0;i<=kWinSize;++i){
             if(inst.boxes3d[i]){
                 ///包围框大小误差
-                /*problem.AddResidualBlock(new BoxDimsFactor(inst.boxes3d[i]->dims),loss_function,inst.para_box[0]);
-                statistics["BoxDimsFactor"]++;*/
+                problem.AddResidualBlock(new BoxDimsFactor(inst.boxes3d[i]->dims),
+                                         loss_function,inst.para_box[0]);
+                statistics["BoxDimsFactor"]++;
                 ///物体的方向误差
                 //Mat3d R_cioi = Box3D::GetCoordinateRotationFromCorners(inst.boxes3d[i]->corners);
-                /*Mat3d R_cioi = inst.boxes3d[i]->R_cioi();
+                Mat3d R_cioi = inst.boxes3d[i]->R_cioi();
                 problem.AddResidualBlock(
                         new BoxOrientationFactor(R_cioi,body.ric[0]),
-                        nullptr,body.para_Pose[i],inst.para_state[i]);
-                statistics["BoxOrientationFactor"]++;*/
+                        nullptr,body.para_pose[i],inst.para_state[i]);
+                statistics["BoxOrientationFactor"]++;
 
                 /*problem.AddResidualBlock(new BoxPoseFactor(R_cioi,inst.boxes3d[i]->center,body.ric[0],body.tic[0]),
                                          loss_function,body.para_Pose[i],inst.para_state[i]);
@@ -1211,7 +1240,9 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
 
         //log
         string log_text;
-        for(auto &pair : statistics)  if(pair.second>0) log_text += fmt::format("{} : {}\n",pair.first,pair.second);
+        for(auto &pair : statistics)
+            if(pair.second>0)
+                log_text += fmt::format("{} : {}\n",pair.first,pair.second);
         Debugv("inst:{} 各个残差项的数量: \n{}",inst.id,log_text);
 
     } //inst

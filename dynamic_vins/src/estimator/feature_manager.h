@@ -17,8 +17,6 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-
-
 #ifndef FEATURE_MANAGER_H
 #define FEATURE_MANAGER_H
 
@@ -36,20 +34,21 @@
 #include "estimator/basic/frontend_feature.h"
 #include "estimator/basic/line_landmark.h"
 
-
 namespace dynamic_vins{\
-
 
 class FeatureManager
 {
   public:
-    FeatureManager(Mat3d _Rs[]);
+    FeatureManager();
 
-    void SetRic(Mat3d _ric[]);
     void ClearState();
     int GetFeatureCount();
 
-    bool AddFeatureCheckParallax(int frame_count, const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td);
+    bool AddFeatureCheckParallax(
+            int frame_count,
+            const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &image,
+            double td);
+
     bool AddFeatureCheckParallax(int frame_count, FeatureBackground &image, double td);
 
     vector<pair<Vec3d, Vec3d>> GetCorresponding(int frame_count_l, int frame_count_r);
@@ -66,7 +65,6 @@ class FeatureManager
 
     Eigen::MatrixXd GetLineOrthVectorInCamera();
 
-
     void SetLineOrth(Eigen::MatrixXd &x);
 
     void TriangulatePoints();
@@ -75,10 +73,10 @@ class FeatureManager
 
     void TriangulateLineStereo(double baseline);  // stereo line
 
-    void InitFramePoseByPnP(int frameCnt);
-
     void RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg_P, Mat3d new_R, Vec3d new_P);
+
     void RemoveBack();
+
     void RemoveFront(int frame_count);
 
     void RemoveOutlier(std::set<int> &outlierIndex);
@@ -87,15 +85,12 @@ class FeatureManager
 
     void RemoveLineOutlier();
 
-
+public:
     std::list<StaticLandmark> point_landmarks;
     std::list<LineLandmark> line_landmarks;
     int last_track_num;
 
 private:
-    const Mat3d *Rs;
-    Mat3d ric[2];
-
     double last_average_parallax;
     int new_feature_num;
     int long_track_num;

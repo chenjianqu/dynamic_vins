@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = -Dlinedesc_EXPORTS
 
-CXX_INCLUDES = -I/home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor/include -isystem /usr/local/include/opencv
+CXX_INCLUDES = -I/home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor/include -isystem /usr/local/include/opencv
 
 CXX_FLAGS =  -std=c++0x -O3 -mtune=native -march=native -fPIC
 

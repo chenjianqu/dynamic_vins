@@ -70,8 +70,6 @@ class Estimator
     void ProcessMeasurements();
     void ChangeSensorType(int use_imu, int use_stereo);
 
-    void PredictPtsInNextFrame();
-
     void ClearState();
 
     void SetOutputEgoInfo(const Mat3d &R, const Vec3d &P, const Mat3d &R_bc, const Vec3d &P_bc){
@@ -119,7 +117,7 @@ private:
 
     void InitFirstIMUPose(vector<pair<double, Vec3d>> &accVector);
 
-    void AddInstanceParameterBlock(ceres::Problem &problem);
+    void AddBodyParameterBlock(ceres::Problem &problem);
 
     int AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *loss_function);
 
@@ -128,6 +126,8 @@ private:
     void Output();
 
     void AddIMU(vector<pair<double, Vec3d>> &acc_vec,vector<pair<double, Vec3d>> &gyr_vec);
+
+    void InitFramePoseByPnP(int frameCnt);
 
     bool IMUAvailable(double t){
         if(!acc_buf.empty() && t <= acc_buf.back().first)

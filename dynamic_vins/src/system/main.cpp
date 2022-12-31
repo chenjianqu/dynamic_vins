@@ -29,6 +29,7 @@
 #include "utils/io/dataloader.h"
 #include "estimator/estimator.h"
 #include "front_end/semantic_image.h"
+#include "front_end/semantic_image_queue.h"
 #include "front_end/background_tracker.h"
 #include "front_end/front_end_parameters.h"
 #include "image_process/image_process.h"
@@ -38,8 +39,6 @@ namespace dynamic_vins{\
 namespace fs=std::filesystem;
 using namespace std;
 
-
-
 Estimator::Ptr estimator;
 ImageProcessor::Ptr processor;
 FeatureTracker::Ptr feature_tracker;
@@ -48,7 +47,6 @@ CallBack* callback;
 Dataloader::Ptr dataloader;
 
 SemanticImageQueue image_queue;
-
 
 
 /**

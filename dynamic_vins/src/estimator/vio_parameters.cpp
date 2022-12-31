@@ -11,18 +11,10 @@
 #include "vio_parameters.h"
 
 #include <opencv2/opencv.hpp>
-
-#include "utils/dataset/kitti_utils.h"
-#include "utils/def.h"
 #include "utils/parameters.h"
 
 
 namespace dynamic_vins{\
-
-
-
-
-
 
 void VioParameters::SetParameters(const std::string &config_path)
 {

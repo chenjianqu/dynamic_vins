@@ -1,4 +1,4 @@
-# Install script for directory: /home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor
+# Install script for directory: /home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/chen/ws/dynamic_ws/src/dynamic_vins/src/utils/line_detector/line_descriptor/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/chen/ws/dynamic_ws/src/dynamic_vins/thirdparty/line_descriptor/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

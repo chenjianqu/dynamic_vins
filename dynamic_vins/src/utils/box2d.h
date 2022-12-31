@@ -15,10 +15,12 @@
 #include <memory>
 #include <vector>
 #include <opencv2/opencv.hpp>
-#include <torch/torch.h>
 
 namespace dynamic_vins{\
 
+/**
+ * 物体的ROI
+ */
 struct InstRoi
 {
     using Ptr=std::shared_ptr<InstRoi>;
@@ -32,12 +34,13 @@ struct InstRoi
     cv::cuda::GpuMat prev_roi_gpu;
 };
 
+
 struct Box2D{
     using Ptr=std::shared_ptr<Box2D>;
 
     static float IoU(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt);
 
-    cv::Point2f center_pt(){
+    [[nodiscard]] cv::Point2f center_pt() const{
         return {(min_pt.x+max_pt.x)/2.f,(min_pt.y+max_pt.y)/2.f};
     }
 
@@ -48,8 +51,6 @@ struct Box2D{
     cv::Point2f min_pt,max_pt;
     cv::Rect2f rect;
     float score;
-
-    cv::Point2f mask_center;
 
     InstRoi::Ptr roi;
 };

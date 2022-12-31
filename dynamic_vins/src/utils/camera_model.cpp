@@ -15,8 +15,8 @@
 
 #include "def.h"
 #include "parameters.h"
-#include "io_utils.h"
 #include "utils/dataset/kitti_utils.h"
+#include "utils/convert_utils.h"
 
 namespace dynamic_vins{\
 
@@ -26,8 +26,6 @@ std::vector<Eigen::Vector3d> T_IC;
 CameraInfo cam_s;//用于segmentation线程的相机
 CameraInfo cam_t;//用于tracking线程的相机
 CameraInfo cam_v;//用于VIO线程的相机
-
-
 
 
 /*
@@ -195,8 +193,6 @@ bool PinHoleCamera::ReadFromYamlFile(const std::string& filename)
 
 
 
-
-
 /**
  * 读取相机到IMU的外参
  * @param config_path
@@ -235,7 +231,8 @@ void ReadExtrinsicParameters(const std::string& config_path,const std::string& s
         //将点从IMU坐标系变换到相机坐标系0的变换矩阵
         Mat4d T_imu_c0 =calib_map["Tr_imu_velo"] * calib_map["Tr_velo_cam"];
 
-        double baseline_2 = calib_map["P2"](0,3) / calib_map["P2"](0,0);//如 baseline_2=4.485728000000e+01 / (-7.215377000000e+02) =−0.062169004
+        //如 baseline_2=4.485728000000e+01 / (-7.215377000000e+02) =−0.062169004
+        double baseline_2 = calib_map["P2"](0,3) / calib_map["P2"](0,0);
 
         Mat4d T_c0_c2 = Mat4d::Identity();
         T_c0_c2(0,3) = -baseline_2;
@@ -260,7 +257,8 @@ void ReadExtrinsicParameters(const std::string& config_path,const std::string& s
         T_IC.emplace_back(Vec3d::Zero());
 
         if(cfg::kCamNum == 2){
-            double baseline_3 = calib_map["P3"](0,3) / calib_map["P3"](0,0); //如 baseline_2=-3.395242000000e+02 / (-7.215377000000e+02) = 0.470556424
+            //如 baseline_2=-3.395242000000e+02 / (-7.215377000000e+02) = 0.470556424
+            double baseline_3 = calib_map["P3"](0,3) / calib_map["P3"](0,0);
             double baseline = baseline_3-baseline_2;//0.5
             cam.baseline = std::abs(baseline);
             R_IC.emplace_back(Mat3d::Identity());
@@ -305,21 +303,21 @@ void ReadExtrinsicParameters(const std::string& config_path,const std::string& s
     cfg::kExCalibResultPath = kOutputFolder + "extrinsic_parameter.txt";
 
     fs.release();
-
 }
 
 
-
+/**
+ * 获得相机模型的路径
+ * @param config_path
+ * @return
+ */
 vector<string> GetCameraPath(const string &config_path){
     auto pn = config_path.find_last_of('/');
     std::string config_dir = config_path.substr(0, pn);
-
     cv::FileStorage fs(config_path, cv::FileStorage::READ);
-
     if (!fs.isOpened()){
         return {};
     }
-
     vector<string> ans;
 
     if(!fs["cam0_calib"].isNone()){
@@ -342,33 +340,8 @@ vector<string> GetCameraPath(const string &config_path){
     }
 
     fs.release();
-
     return ans;
 }
-
-
-
-
-template<typename T>
-string CvMatToStr(const cv::Mat &m){
-    if(m.empty()){
-        return {};
-    }
-    else if(m.channels()>1){
-        return "CvMatToStr() input Mat has more than one channel";
-    }
-    else{
-        string ans;
-        for(int i=0;i<m.rows;++i){
-            for(int j=0;j<m.cols;++j){
-                ans += std::to_string(m.at<T>(i,j)) + " ";
-            }
-            ans+="\n";
-        }
-        return ans;
-    }
-}
-
 
 
 void SetCameraIntrinsicByK(CameraInfo &cam){
@@ -418,20 +391,24 @@ void InitCameraByConfig(const std::string& config_path,const std::string& seq_na
             fs.release();
 
             cv::Size size(image_width,image_height);
-            cam.cam0 = camodocal::CameraFactory::instance()->generateCamera(CamModelType::PINHOLE,"camera",size);
-            cam.cam1 = camodocal::CameraFactory::instance()->generateCamera(CamModelType::PINHOLE,"camera",size);
+            cam.cam0 = camodocal::CameraFactory::instance()->generateCamera(
+                    CamModelType::PINHOLE,"camera",size);
+            cam.cam1 = camodocal::CameraFactory::instance()->generateCamera(
+                    CamModelType::PINHOLE,"camera",size);
 
             auto calib_map = kitti::ReadCalibFile(kitti_calib_path);
 
             //0 k1();1 k2();2 p1();3 p2();4 fx();5 fy();6 cx();7 cy();
             vector<double> left_cam_para =
                     {0,0,0,0,
-                     calib_map["P2"](0,0),calib_map["P2"](1,1),calib_map["P2"](0,2),calib_map["P2"](1,2)};
+                     calib_map["P2"](0,0),calib_map["P2"](1,1),calib_map["P2"](0,2),
+                     calib_map["P2"](1,2)};
             cam.cam0->readParameters(left_cam_para);
 
             vector<double> right_cam_para =
                     {0,0,0,0,
-                     calib_map["P3"](0,0),calib_map["P3"](1,1),calib_map["P3"](0,2),calib_map["P3"](1,2)};
+                     calib_map["P3"](0,0),calib_map["P3"](1,1),calib_map["P3"](0,2),
+                     calib_map["P3"](1,2)};
             cam.cam1->readParameters(right_cam_para);
         }
         else{
@@ -461,14 +438,20 @@ void InitOneCamera(const std::string& config_path,const std::string& seq_name,Ca
         //0 k1();1 k2();2 p1();3 p2();4 fx();5 fy();6 cx();7 cy();
         vector<double> left_cam_para;
         cam.cam0->writeParameters(left_cam_para);
-        cam.K0 = ( cv::Mat_<float> ( 3,3 ) << left_cam_para[4], 0.0, left_cam_para[6], 0.0, left_cam_para[5], left_cam_para[7], 0.0, 0.0, 1.0 );
-        cam.D0 = ( cv::Mat_<float> ( 4,1 ) << left_cam_para[0], left_cam_para[1], left_cam_para[2], left_cam_para[3]);//畸变系数 k1 k2 p1 p2
+        cam.K0 = ( cv::Mat_<float> ( 3,3 ) <<
+                left_cam_para[4], 0.0, left_cam_para[6],
+                0.0, left_cam_para[5], left_cam_para[7],
+                0.0, 0.0, 1.0 );
+        cam.D0 = ( cv::Mat_<float> ( 4,1 ) <<
+                left_cam_para[0], left_cam_para[1], left_cam_para[2], left_cam_para[3]);//畸变系数 k1 k2 p1 p2
 
         if(cfg::is_stereo){
             vector<double> right_cam_para;
             cam.cam1->writeParameters(right_cam_para);
-            cam.K1 = ( cv::Mat_<float> ( 3,3 ) << right_cam_para[4], 0.0, right_cam_para[6], 0.0, right_cam_para[5], right_cam_para[7], 0.0, 0.0, 1.0 );
-            cam.D1 = ( cv::Mat_<float> ( 4,1 ) << right_cam_para[0], right_cam_para[1], right_cam_para[2], right_cam_para[3]);//畸变系数 k1 k2 p1 p2
+            cam.K1 = ( cv::Mat_<float> ( 3,3 ) <<
+                    right_cam_para[4], 0.0, right_cam_para[6], 0.0, right_cam_para[5], right_cam_para[7], 0.0, 0.0, 1.0 );
+            cam.D1 = ( cv::Mat_<float> ( 4,1 ) <<
+                    right_cam_para[0], right_cam_para[1], right_cam_para[2], right_cam_para[3]);//畸变系数 k1 k2 p1 p2
         }
 
         SetCameraIntrinsicByK(cam);
@@ -483,7 +466,8 @@ void InitOneCamera(const std::string& config_path,const std::string& seq_name,Ca
 
     ///设置是否对输入图像进行去畸变处理
     if(cfg::use_line && cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false){
-        throw std::runtime_error("InitOneCamera() cfg::use_line==true && cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false");
+        throw std::runtime_error("InitOneCamera() cfg::use_line==true && "
+                                 "cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false");
     }
 
     ///获取去畸变的映射矩阵
@@ -529,7 +513,6 @@ void InitOneCamera(const std::string& config_path,const std::string& seq_name,Ca
             cerr<<"InitOneCamera not implement"<<endl;
             std::terminate();
         }
-
     }
 
     Debugv("InitOneCamera() left cam intrinsic fx:{} fy:{} cx:{} cy:{}",cam.fx0,cam.fy0,cam.cx0,cam.cy0);
@@ -551,7 +534,6 @@ void InitCamera(const std::string& config_path,const std::string& seq_name){
 
     cam_t = cam_s;
     cam_v = cam_s;
-
 }
 
 

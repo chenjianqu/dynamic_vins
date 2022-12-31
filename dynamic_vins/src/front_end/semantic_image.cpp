@@ -8,7 +8,6 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-
 #include "semantic_image.h"
 #include "utils/log_utils.h"
 
@@ -30,8 +29,8 @@ void SemanticImage::SetMaskAndRoi(){
 
     ///计算合并的mask
     auto merge_tensor = (mask_tensor.sum(0).clamp(0,1)*255).to(torch::kUInt8);
-
-    merge_mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1, merge_tensor.data_ptr()).clone();///一定要clone，不然tensor内存的数据会被改变
+    //一定要clone，不然tensor内存的数据会被改变
+    merge_mask_gpu = cv::cuda::GpuMat(mask_size, CV_8UC1, merge_tensor.data_ptr()).clone();
     merge_mask_gpu.download(merge_mask);
 
     cv::cuda::bitwise_not(merge_mask_gpu,inv_merge_mask_gpu);
@@ -137,12 +136,6 @@ void SemanticImage::SetColorImageGpu(){
         cv::cuda::cvtColor(gray1_gpu, color1_gpu, CV_GRAY2BGR);
     }
 }
-
-
-
-
-
-
 
 
 

@@ -13,7 +13,6 @@
 namespace dynamic_vins{ \
 
 
-
 /**
  * 根据速度推导滑动窗口中各个物体的位姿
  */

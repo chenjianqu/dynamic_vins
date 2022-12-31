@@ -60,8 +60,6 @@ enum class MarginFlag{
 };
 
 
-
-
 class VioParameters{
 public:
     inline static double kInitDepth;
@@ -78,18 +76,17 @@ public:
     inline static int kLineMinObs;
 
     inline static int kInstanceInitMinNum;//为了初始化实例,在某一帧的最少三角化特征数量
+
     inline static double kInstanceStaticErrThreshold;//判断物体是否运动的重投影误差阈值
 
     inline static double TD;
 
     inline static bool is_print_detail{false};
 
-
     static void SetParameters(const std::string &config_path);
 };
 
 using para = VioParameters;
-
 
 }
 

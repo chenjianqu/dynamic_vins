@@ -40,6 +40,7 @@ bool PoseLocalParameterization::Plus(const double *x, const double *delta, doubl
 
     return true;
 }
+
 bool PoseLocalParameterization::ComputeJacobian(const double *x, double *jacobian) const
 {
     Eigen::Map<Eigen::Matrix<double, 7, 6, Eigen::RowMajor>> j(jacobian);
@@ -48,7 +49,6 @@ bool PoseLocalParameterization::ComputeJacobian(const double *x, double *jacobia
 
     return true;
 }
-
 
 
 /**
@@ -77,6 +77,7 @@ bool PoseConstraintLocalParameterization::Plus(const double *x, const double *de
         q = (_q * dq).normalized();
     }
     else{
+        ///不使用IMU时，z轴向前，y轴向下，x轴向左
         Vec3d dp(delta[0],0,delta[2]);
 
         Eigen::Quaterniond dq = Utility::deltaQ(Eigen::Map<const Eigen::Vector3d>(delta + 3));

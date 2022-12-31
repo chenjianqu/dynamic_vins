@@ -15,12 +15,13 @@
 #include <string>
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
-
-#include "camodocal/camera_models/CameraFactory.h"
+#include <camodocal/camera_models/CameraFactory.h>
 
 #include "utils/def.h"
 
 namespace dynamic_vins{\
+
+using CamModelType=camodocal::Camera::ModelType;
 
 
 /*class PinHoleCamera{
@@ -54,12 +55,9 @@ public:
 //inline std::shared_ptr<PinHoleCamera> cam0;
 //inline std::shared_ptr<PinHoleCamera> cam1;
 
-using CamModelType=camodocal::Camera::ModelType;
-
 
 class CameraInfo{
 public:
-
     camodocal::CameraPtr cam0,cam1;
     //左相机内参和畸变系数
     cv::Mat K0,D0;
@@ -74,12 +72,12 @@ public:
     CamModelType model_type;
 };
 
+
 /**
  * 相机到IMU的外参
  */
 extern std::vector<Eigen::Matrix3d> R_IC;
 extern std::vector<Eigen::Vector3d> T_IC;
-
 
 extern CameraInfo cam_s;//用于segmentation线程的相机
 extern CameraInfo cam_t;//用于tracking线程的相机
@@ -88,10 +86,6 @@ extern CameraInfo cam_v;//用于VIO线程的相机
 void InitCamera(const std::string& config_path,const std::string& seq_name);
 
 vector<string> GetCameraPath(const string &config_path);
-
-template<typename T> string CvMatToStr(const cv::Mat &m);
-
-
 
 }
 

@@ -23,6 +23,7 @@ namespace dynamic_vins{\
 
 using Tensor = torch::Tensor;
 
+
 /**
  * LK光流估计
  * @param img1
@@ -31,9 +32,8 @@ using Tensor = torch::Tensor;
  * @param pts2
  * @return
  */
-std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1, vector<cv::Point2f> &pts2,
-                                    bool flow_back)
-{
+std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, vector<cv::Point2f> &pts1,
+                                    vector<cv::Point2f> &pts2,bool flow_back){
     std::vector<uchar> status;
     std::vector<float> err;
     if(img1.empty() || img2.empty() || pts1.empty()){
@@ -53,7 +53,7 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
                                  cv::OPTFLOW_USE_INITIAL_FLOW);
         //cv::calcOpticalFlowPyrLK(cur_img, prev_img, cur_pts, reverse_pts, reverse_status, err, cv::Size(21, 21), 3);
         for(size_t i = 0; i < status.size(); i++){
-            if(status[i] && reverse_status[i] && distance(pts1[i], reverse_pts[i]) <= 0.5)
+            if(status[i] && reverse_status[i] && PointDistance(pts1[i], reverse_pts[i]) <= 0.5)
                 status[i] = 1;
             else
                 status[i] = 0;
@@ -69,7 +69,17 @@ std::vector<uchar> FeatureTrackByLK(const cv::Mat &img1, const cv::Mat &img2, ve
 }
 
 
-
+/**
+ * 执行光流跟踪（CUDA）
+ * @param lkOpticalFlow
+ * @param lkOpticalFlowBack
+ * @param img_prev
+ * @param img_next
+ * @param pts_prev
+ * @param pts_next
+ * @param flow_back
+ * @return
+ */
 std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlow,
                                        const cv::Ptr<cv::cuda::SparsePyrLKOpticalFlow>& lkOpticalFlowBack,
                                        const cv::cuda::GpuMat &img_prev, const cv::cuda::GpuMat &img_next,
@@ -113,7 +123,7 @@ std::vector<uchar> FeatureTrackByLKGpu(const cv::Ptr<cv::cuda::SparsePyrLKOptica
         //constexpr float SAVE_RATIO=0.2f;
         //if(int inv_success = getValidStatusSize(reverse_status); inv_success*1.0 / forward_success > SAVE_RATIO){
         for(size_t i = 0; i < reverse_status.size(); i++){
-            if(status[i] && reverse_status[i] && distance(pts_prev[i], pts_prev_reverse[i]) <= 1.)
+            if(status[i] && reverse_status[i] && PointDistance(pts_prev[i], pts_prev_reverse[i]) <= 1.)
                 status[i] = 1;
             else
                 status[i] = 0;
@@ -193,6 +203,13 @@ vector<cv::Point2f> UndistortedPts(vector<cv::Point2f> &pts,camodocal::CameraPtr
 }
 
 
+/**
+ * 根据光流执行点跟踪
+ * @param flow
+ * @param pts1
+ * @param pts2
+ * @return
+ */
 vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
                                       vector<cv::Point2f> &pts1,
                                       vector<cv::Point2f> &pts2){
@@ -208,13 +225,19 @@ vector<uchar> FeatureTrackByDenseFlow(cv::Mat &flow,
             status[i]=1;
         else
             status[i]=0;
-        //Debugt("index:{},({},{}),({},{})", i, delta[0], delta[1], pts2[i].x, pts2[i].y);
     }
     return status;
 }
 
 
-
+/**
+ * 栅格采样像素点
+ * @param detect_num 采样数量
+ * @param inst_mask mask
+ * @param step 采样步长
+ * @param rect 采样的ROI
+ * @return
+ */
 std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &inst_mask,int step ,cv::Rect rect){
     int cnt=0;
     int row_start=0,row_end=inst_mask.rows,col_start=0,col_end=inst_mask.cols;
@@ -238,9 +261,9 @@ std::vector<cv::Point2f> DetectRegularCorners(int detect_num, const cv::Mat &ins
     std::shuffle(vec.begin(),vec.end(),
                  std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
 
-    vector<cv::Point2f> vec_out(vec.begin(),vec.begin()+std::min(detect_num,(int)vec.size()));
-    return vec_out;
+    return vector<cv::Point2f>(vec.begin(),vec.begin()+std::min(detect_num,(int)vec.size()));
 }
+
 
 /**
  * 计算特征点的像素速度
@@ -305,6 +328,14 @@ void SortPoints(std::vector<cv::Point2f> &cur_pts, std::vector<int> &track_cnt, 
 }
 
 
+/**
+ * 检测Shi-Tomasi角点（CUDA）
+ * @param detect_num
+ * @param img
+ * @param mask
+ * @param min_dist
+ * @return
+ */
 std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cuda::GpuMat &img,
                                                    const cv::cuda::GpuMat &mask,int min_dist)
 {
@@ -317,8 +348,12 @@ std::vector<cv::Point2f> DetectShiTomasiCornersGpu(int detect_num, const cv::cud
 }
 
 
-
-cv::Scalar color_map(int64_t n) {
+/**
+ * 根据整数映射一个颜色
+ * @param n
+ * @return
+ */
+cv::Scalar ColorMapping(int64_t n) {
     auto bit_get = [](int64_t x, int64_t i) {
         return x & (1 << i);
     };
@@ -335,7 +370,18 @@ cv::Scalar color_map(int64_t n) {
 }
 
 
-void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos, float scale, int thickness, bool reverse) {
+/**
+ * 在图像上绘制文件
+ * @param img 图像
+ * @param str 文字
+ * @param color 文字的颜色
+ * @param pos 文字的位置
+ * @param scale 文字的大小
+ * @param thickness 文字的字宽
+ * @param reverse
+ */
+void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, const cv::Point& pos,
+              float scale, int thickness, bool reverse) {
     auto t_size = cv::getTextSize(str, cv::FONT_HERSHEY_SIMPLEX, scale, thickness, nullptr);
     cv::Point bottom_left, upper_right;
     if (reverse) {
@@ -351,8 +397,12 @@ void DrawText(cv::Mat &img, const std::string &str, const cv::Scalar &color, con
 }
 
 
-
-
+/**
+ * 将两个图像padding到相同大小
+ * @param img1
+ * @param img2
+ * @return
+ */
 tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2){
     int rows = std::max(img1.rows,img2.rows);
     int cols = std::max(img1.cols,img2.cols);
@@ -361,8 +411,6 @@ tuple<cv::Mat,cv::Mat> InstanceImagePadding(cv::Mat &img1,cv::Mat &img2){
     cv::copyMakeBorder(img2,img2_padded,0,rows-img2.rows,0,cols-img2.cols,cv::BORDER_CONSTANT,cv::Scalar(0));
     return {img1_padded,img2_padded};
 }
-
-
 
 
 }

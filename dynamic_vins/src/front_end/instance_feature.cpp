@@ -10,6 +10,8 @@
 
 #include "instance_feature.h"
 
+#include "line_descriptor/include/line_descriptor_custom.hpp"
+
 #include "utils/def.h"
 #include "utils/dataset/viode_utils.h"
 #include "front_end_parameters.h"
@@ -48,7 +50,6 @@ void InstFeat::PtsVelocity(double dt){
             pts_velocity.emplace_back(0, 0);
         }
     }
-
 }
 
 
@@ -101,6 +102,7 @@ void InstFeat::UndistortedPts(camodocal::CameraPtr  &cam)
     }
 }
 
+
 void InstFeat::UndistortedPoints(camodocal::CameraPtr &cam,vector<cv::Point2f>& point_cam,vector<cv::Point2f>& point_un)
 {
     point_un.clear();
@@ -148,7 +150,9 @@ void InstFeat::TrackLeft(cv::Mat &curr_img,cv::Mat &last_img,const cv::Mat &mask
     if(last_points.empty())
         return;
     curr_points.clear();
-    //Debugt("inst:{} last_points:{} mask({}x{},type:{})",  id, last_points.size(), mask_img.rows, mask_img.cols, mask_img.type());
+    //Debugt("inst:{} last_points:{} mask({}x{},type:{})",  id, last_points.size(),
+    // mask_img.rows, mask_img.cols, mask_img.type());
+
     //光流跟踪
     vector<uchar> status;
     //if(dense_flow){
@@ -364,8 +368,6 @@ void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,int min_dist,con
         cv::circle(mask_detect, pt, min_dist, 0, -1);
     }
 
-
-
     ///特征检测
     vector<cv::Point2f > n_pts;
     if(use_gpu){
@@ -373,7 +375,6 @@ void InstFeat::DetectNewFeature(SemanticImage &img,bool use_gpu,int min_dist,con
             img.gray0_gpu.upload(img.gray0);
         }
         cv::cuda::GpuMat mask_detect_gpu(mask_detect);
-
         n_pts = DetectShiTomasiCornersGpu(n_max_cnt, img.gray0_gpu, mask_detect_gpu,min_dist);
     }
     else{

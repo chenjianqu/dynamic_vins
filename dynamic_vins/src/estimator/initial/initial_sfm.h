@@ -78,7 +78,8 @@ struct ReprojectionError3D
 class GlobalSFM
 {
 public:
-	GlobalSFM();
+    GlobalSFM(){}
+
 	bool construct(int frame_num, Eigen::Quaterniond* q, Eigen::Vector3d* T, int l,
                    const Eigen::Matrix3d relative_R, const Eigen::Vector3d relative_T,
                    vector<SFMFeature> &sfm_f, map<int, Eigen::Vector3d> &sfm_tracked_points);

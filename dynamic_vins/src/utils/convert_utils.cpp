@@ -10,7 +10,6 @@
 
 #include "convert_utils.h"
 
-
 namespace dynamic_vins{\
 
 

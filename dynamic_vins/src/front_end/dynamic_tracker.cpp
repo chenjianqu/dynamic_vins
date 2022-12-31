@@ -13,6 +13,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/io/pcd_io.h>
 
 #include "semantic_image.h"
 #include "utils/def.h"
@@ -267,8 +268,6 @@ void InstsFeatManager::ProcessExtraPoints(){
     if(t_filter.joinable())
         t_filter.join();*/
 
-
-
     ExecInst([&](unsigned int key, InstFeat& inst){
         if(inst.is_curr_visible){
             Debugt("ProcessExtraPoints() start t_filter");
@@ -279,17 +278,19 @@ void InstsFeatManager::ProcessExtraPoints(){
             ///转换为PCL点云
             PointCloud::Ptr pc = EigenToPclXYZ(inst.extra_points3d);
             inst.extra_points3d.clear();//先清空
-
-            PointCloud::Ptr pc_filtered(new PointCloud);
+            pc->width = pc->points.size();
+            pc->height=1;
 
             ///半径滤波
+            PointCloud::Ptr pc_filtered(new PointCloud);
             radius_filter.setInputCloud(pc);
             radius_filter.filter(*pc_filtered);
 
             if(pc_filtered->empty() || pc_filtered->points.size()<5){
                 return;
             }
-
+            pc_filtered->width = pc_filtered->points.size();
+            pc_filtered->height=1;
             Debugt("ProcessExtraPoints() end t_filter");
 
             pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
@@ -312,6 +313,21 @@ void InstsFeatManager::ProcessExtraPoints(){
             segmented_pc->width = segmented_pc->points.size();
             segmented_pc->height=1;
             segmented_pc->is_dense = true;
+
+            ///TODO DEBUG
+            /*if(key==1){
+                const string object_base_path =
+                        "/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/point_cloud_temp/";
+                const string save_path_raw = object_base_path+fmt::format(
+                        "{}_{}_0_raw.pcd",PadNumber(curr_img.seq,6),key);
+                pcl::io::savePCDFile(save_path_raw,*pc);
+                const string save_path_filtered = object_base_path+fmt::format(
+                        "{}_{}_1_filtered.pcd",PadNumber(curr_img.seq,6),key);
+                pcl::io::savePCDFile(save_path_filtered,*pc_filtered);
+                const string save_path_segmented = object_base_path+fmt::format(
+                        "{}_{}_2_segmented.pcd",PadNumber(curr_img.seq,6),key);
+                pcl::io::savePCDFile(save_path_segmented,*segmented_pc);
+            }*/
 
             ///将结果转换eigen
             inst.extra_points3d = PclToEigen<pcl::PointXYZ>(segmented_pc);
@@ -434,7 +450,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             cv::Mat inst_mask = inst.roi->mask_cv.clone();
             for(size_t i=0;i<inst.curr_points.size();++i){
                 inst.visual_points_pair.emplace_back(inst.last_points[i],inst.curr_points[i]);//用于可视化
-                cv::circle(inst_mask, inst.curr_points[i], fe_para::kMinDynamicDist, 0, -1);//设置mask
+                cv::circle(inst_mask, inst.curr_points[i], fe_para::kMinDynamicDist, 0, -1);
             }
 
             ///添加新的特征点
@@ -602,7 +618,8 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
             }
         }
         result.insert({key,features_map});
-        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{} extra3d:{}\n", key,inst.box2d->class_name,
+        log_text += fmt::format("inst_id:{} class:{} l_track:{} r_track:{} extra3d:{}\n",
+                                key,inst.box2d->class_name,
                                 inst.curr_points.size(), inst.right_points.size(),inst.extra_points3d.size());
     });
     Debugt(log_text);
@@ -863,7 +880,8 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
             inst_feat.roi = det_box->roi;
             inst_feat.is_curr_visible=true;
             instances_.insert({id, inst_feat});
-            log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n", id, det_box->class_name,
+            log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",
+                                    id, det_box->class_name,
                                     inst_feat.box2d->min_pt.x,inst_feat.box2d->min_pt.y,inst_feat.box2d->max_pt.x,
                                     inst_feat.box2d->max_pt.y);
         }
@@ -926,7 +944,8 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
 
         ///绘制新的点
         for(const auto &pt : inst.visual_new_points){
-            cv::circle(img, cv::Point2f(pt.x+inst.box2d->rect.tl().x,pt.y+inst.box2d->rect.tl().y),
+            cv::circle(img,
+                       cv::Point2f(pt.x+inst.box2d->rect.tl().x,pt.y+inst.box2d->rect.tl().y),
                        2, cv::Scalar(255,0,0), -1);
         }
 
@@ -941,9 +960,11 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         for(const auto &[pt1,pt2] : inst.visual_points_pair){
             //cv::circle(img, pt1, 2, cv::Scalar(255, 255, 255), 2);//上一帧的点
             //cv::arrowedLine(img, pt1, pt2, cv::Scalar(255, 255, 255), 1, 8, 0, 0.15);
-            cv::circle(img, cv::Point2f(pt2.x+inst.box2d->rect.tl().x,pt2.y+inst.box2d->rect.tl().y),
+            cv::circle(img,
+                       cv::Point2f(pt2.x+inst.box2d->rect.tl().x,pt2.y+inst.box2d->rect.tl().y),
                        3, cv::Scalar(0,0,0), -1);
-            cv::circle(img, cv::Point2f(pt2.x+inst.box2d->rect.tl().x,pt2.y+inst.box2d->rect.tl().y),
+            cv::circle(img,
+                       cv::Point2f(pt2.x+inst.box2d->rect.tl().x,pt2.y+inst.box2d->rect.tl().y),
                        2, inst.color, -1);//当前帧的点
 
         }
@@ -975,7 +996,8 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
 
         ///绘制检测的3D边界框
         if(inst.box3d){
-            cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,cv::Scalar(255,255,255),2);
+            cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,
+                          cv::Scalar(255,255,255),2);
 
             inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);//绘制投影3D-2D框
             //Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);

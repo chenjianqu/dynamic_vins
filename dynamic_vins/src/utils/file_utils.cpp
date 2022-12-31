@@ -8,13 +8,15 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#include "io_utils.h"
-
+#include "file_utils.h"
 
 namespace dynamic_vins{\
 
-
-
+/**
+ * 创建文件夹
+ * @param dir
+ * @return
+ */
 int CreateDir(const std::string& dir)
 {
     int ret = mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -31,17 +33,25 @@ int CreateDir(const std::string& dir)
     return 0;
 }
 
+
+/**
+ * 获取一个路径的父文件夹
+ * @param dir
+ * @return
+ */
 std::string GetParentDir(const std::string& dir)
 {
     std::string pdir = dir;
     if(pdir.length() < 1 || (pdir[0] != '/')){
         return "";
     }
-    while(pdir.length() > 1 && (pdir[pdir.length() -1] == '/')) pdir = pdir.substr(0,pdir.length() -1);
+    while(pdir.length() > 1 && (pdir[pdir.length() -1] == '/'))
+        pdir = pdir.substr(0,pdir.length() -1);
 
     pdir = pdir.substr(0,pdir.find_last_of('/'));
     return pdir;
 }
+
 
 /**
  * 递归创建多级目录
@@ -63,8 +73,6 @@ int CreateDirs(const std::string& dir){
 }
 
 
-
-
 /**
  * 清除某个目录下的所有文件
  * @param path
@@ -80,6 +88,7 @@ void ClearDirectory(const string &path){
         remove(it.path().c_str());
     }
 }
+
 
 /**
  * 获取目录下的所有文件名
@@ -115,6 +124,7 @@ bool CheckIsDir(const string &dir) {
     return false;
 }
 
+
 /**
  * 递归的搜索一个目录下所有的图像文件，以 jpg,jpeg,png 结尾的文件
  * @param dir
@@ -124,7 +134,6 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
     // 首先检查目录是否为空，以及是否是目录
     if (!CheckIsDir(dir))
         return;
-
     // 递归遍历所有的文件
     std::filesystem::directory_iterator iters(dir);
     for(auto &iter: iters) {
@@ -145,6 +154,7 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
         }
     }
 }
+
 
 /**
  * 获取某个目录下的所有文件
@@ -182,7 +192,6 @@ void GetAllFiles(const string& dir, vector<string> &files,const string &filter_s
 }
 
 
-
 /**
  * 将字符串写入到文件中
  * @param path
@@ -201,12 +210,7 @@ void WriteTextFile(const string& path,std::string& text){
     std::ofstream fout(path.data(), std::ios::app);
     fout<<text<<endl;
     fout.close();
-
 }
-
-
-
-
 
 
 

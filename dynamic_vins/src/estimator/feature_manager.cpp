@@ -17,36 +17,17 @@
  *******************************************************/
 
 
-
 #include "feature_manager.h"
 #include "vio_util.h"
 #include "vio_parameters.h"
 #include "body.h"
 #include "line_detector/line_geometry.h"
-#include "utils/io_utils.h"
-
 
 namespace dynamic_vins{\
 
 
-
-int StaticLandmark::endFrame()
+FeatureManager::FeatureManager()
 {
-    return start_frame + feats.size() - 1;
-}
-
-FeatureManager::FeatureManager(Mat3d _Rs[])
-: Rs(_Rs)
-{
-    for (int i = 0; i < Config::kCamNum; i++)
-        ric[i].setIdentity();
-}
-
-void FeatureManager::SetRic(Mat3d _ric[])
-{
-    for (int i = 0; i < Config::kCamNum; i++){
-        ric[i] = _ric[i];
-    }
 }
 
 void FeatureManager::ClearState()
@@ -77,8 +58,10 @@ int FeatureManager::GetFeatureCount()
  * @param td
  * @return
  */
-bool FeatureManager::AddFeatureCheckParallax(int frame_count, const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &image, double td)
-{
+bool FeatureManager::AddFeatureCheckParallax(
+        int frame_count,
+        const std::map<unsigned int, std::vector<std::pair<int, Eigen::Matrix<double, 7, 1>>>> &image,
+        double td){
     double parallax_sum = 0;
     int parallax_num = 0;
     last_track_num = 0;
@@ -115,7 +98,7 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, const std::map<uns
 
     //if (frame_count < 2 || last_track_num < 20)
     //if (frame_count < 2 || last_track_num < 20 || new_feature_num > 0.5 * last_track_num)
-    if (frame_count < 2 || last_track_num < 20 || long_track_num < 40 || new_feature_num > 0.5 * last_track_num)
+    if (frame_count  < 2 || last_track_num < 20 || long_track_num < 40 || new_feature_num > 0.5 * last_track_num)
         return true;
 
     ///计算视差
@@ -143,7 +126,8 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, FeatureBackground 
     for(auto &[line_id,vec_feat]:image.lines){
         if(vec_feat.size()>1){
             LineFeature feat(vec_feat[0].second,vec_feat[1].second);
-            auto it = find_if(line_landmarks.begin(), line_landmarks.end(), [id=line_id](const LineLandmark &it){
+            auto it = find_if(line_landmarks.begin(), line_landmarks.end(),
+                              [id=line_id](const LineLandmark &it){
                 return it.feature_id == id;    // 在feature里找id号为feature_id的特征
             });
 
@@ -158,7 +142,8 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, FeatureBackground 
         }
         else{
             LineFeature feat(vec_feat[0].second);
-            auto it = find_if(line_landmarks.begin(), line_landmarks.end(), [id=line_id](const LineLandmark &it){
+            auto it = find_if(line_landmarks.begin(), line_landmarks.end(),
+                              [id=line_id](const LineLandmark &it){
                 return it.feature_id == id;    // 在feature里找id号为feature_id的特征
             });
 
@@ -179,20 +164,20 @@ bool FeatureManager::AddFeatureCheckParallax(int frame_count, FeatureBackground 
 
 
 
+/**
+ * 获取滑动窗口内某两帧之间的特征匹配
+ * @param frame_count_l
+ * @param frame_count_r
+ * @return
+ */
 vector<pair<Vec3d, Vec3d>> FeatureManager::GetCorresponding(int frame_count_l, int frame_count_r)
 {
     vector<pair<Vec3d, Vec3d>> corres;
-    for (auto &it : point_landmarks)
-    {
-        if (it.start_frame <= frame_count_l && it.endFrame() >= frame_count_r)
-        {
-            Vec3d a = Vec3d::Zero(), b = Vec3d::Zero();
+    for (auto &it : point_landmarks){
+        if (it.start_frame <= frame_count_l && it.endFrame() >= frame_count_r){
             int idx_l = frame_count_l - it.start_frame;
             int idx_r = frame_count_r - it.start_frame;
-
-            a = it.feats[idx_l].point;
-            b = it.feats[idx_r].point;
-            corres.emplace_back(a, b);
+            corres.emplace_back(it.feats[idx_l].point, it.feats[idx_r].point);
         }
     }
     return corres;
@@ -247,49 +232,6 @@ Eigen::VectorXd FeatureManager::GetDepthVector()
     return dep_vec;
 }
 
-
-/**
- * 使用PnP求解得到当前帧的位姿
- * @param frameCnt
- * @param Ps
- * @param Rs
- * @param tic
- * @param ric
- */
-void FeatureManager::InitFramePoseByPnP(int frameCnt)
-{
-    if(frameCnt > 0){
-        ///构建3D-2D匹配对
-        vector<cv::Point2f> pts2D;
-        vector<cv::Point3f> pts3D;
-        for (auto &lm : point_landmarks){
-            if (lm.depth > 0){
-                int index = frameCnt - lm.start_frame;
-                if((int)lm.feats.size() >= index + 1){
-                    //Vec3d ptsInCam = ric[0] * (lm.feats[0].point * lm.depth) + body.tic[0];
-                    //Vec3d ptsInWorld = Rs[lm.start_frame] * ptsInCam + body.Ps[lm.start_frame];
-                    Vec3d ptsInWorld = body.CamToWorld(lm.feats[0].point * lm.depth,lm.start_frame);
-                    cv::Point3f point3d(ptsInWorld.x(), ptsInWorld.y(), ptsInWorld.z());
-                    cv::Point2f point2d(lm.feats[index].point.x(), lm.feats[index].point.y());
-                    pts3D.push_back(point3d);
-                    pts2D.push_back(point2d);
-                }
-            }
-        }
-        Debugv("InitFramePoseByPnP pts2D.size:{}", pts2D.size());
-
-        ///使用上一帧的位姿作为初值
-        Mat3d RCam = Rs[frameCnt - 1] * ric[0];
-        Vec3d PCam = Rs[frameCnt - 1] * body.tic[0] + body.Ps[frameCnt - 1];
-
-        ///求解
-        if(SolvePoseByPnP(RCam, PCam, pts2D, pts3D)){
-            // trans to w_T_imu
-            body.Rs[frameCnt] = RCam * body.ric[0].transpose();
-            body.Ps[frameCnt] = -RCam * body.ric[0].transpose() * body.tic[0] + PCam;
-        }
-    }
-}
 
 /**
  * 三角化背景特征点
@@ -351,8 +293,8 @@ void FeatureManager::TriangulatePoints()
         int svd_idx = 0;
 
 
-        Vec3d t0 = body.Ps[imu_i] + Rs[imu_i] * body.tic[0];
-        Mat3d R0 = Rs[imu_i] * ric[0];
+        Vec3d t0 = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[0];
+        Mat3d R0 = body.Rs[imu_i] * body.ric[0];
         Mat34d P0;
         P0.leftCols<3>() = Mat3d::Identity();
         P0.rightCols<1>() = Vec3d::Zero();
@@ -360,8 +302,8 @@ void FeatureManager::TriangulatePoints()
         for (auto &feat : lm.feats){
             imu_j++;
 
-            Vec3d t1 = body.Ps[imu_j] + Rs[imu_j] * body.tic[0];
-            Mat3d R1 = Rs[imu_j] * ric[0];
+            Vec3d t1 = body.Ps[imu_j] + body.Rs[imu_j] * body.tic[0];
+            Mat3d R1 = body.Rs[imu_j] * body.ric[0];
             Vec3d t = R0.transpose() * (t1 - t0);
             Mat3d R = R0.transpose() * R1;
             Mat34d P;
@@ -398,7 +340,8 @@ void FeatureManager::TriangulateLineMono()
 {
     //string log_text="TriangulateLineMono:\n";
     for (auto &landmark : line_landmarks){        // 遍历每个特征，对新特征进行三角化
-        //log_text += fmt::format("lid:{} obs:{} tri:{}\n",landmark.feature_id,landmark.feats.size(),landmark.is_triangulation);
+        //log_text += fmt::format("lid:{} obs:{} tri:{}\n",
+        // landmark.feature_id,landmark.feats.size(),landmark.is_triangulation);
 
         landmark.used_num = landmark.feats.size();    // 已经有多少帧看到了这个特征
         if (landmark.used_num < para::kLineMinObs)   // 看到的帧数少于2， 或者 这个特征最近倒数第二帧才看到， 那都不三角化
@@ -517,7 +460,7 @@ void FeatureManager::SetLineOrth(Eigen::MatrixXd &x)
         int imu_i = landmark.start_frame;
 
         Eigen::Vector3d twc = body.Ps[imu_i] + body.Rs[imu_i] * body.tic[0];   // twc = Rwi * tic + twi
-        Eigen::Matrix3d Rwc = body.Rs[imu_i] * ric[0];               // Rwc = Rwi * Ric
+        Eigen::Matrix3d Rwc = body.Rs[imu_i] * body.ric[0];               // Rwc = Rwi * Ric
 
         landmark.line_plucker = plk_from_pose(line_w, Rwc, twc); // transfrom to camera frame
         //it_per_id.line_plucker = line_w; // transfrom to camera frame
@@ -720,8 +663,9 @@ void FeatureManager::RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg
                 line_landmarks.erase(it);
                 continue;
             }
-            else  // 如果还有很多帧看到它，而我们又把这个特征的初始化帧给marg掉了，那就得把这个特征转挂到下一帧上去, 这里 marg_R, new_R 都是相应时刻的相机坐标系到世界坐标系的变换
-            {
+            else{
+                // 如果还有很多帧看到它，而我们又把这个特征的初始化帧给marg掉了，
+                // 那就得把这个特征转挂到下一帧上去, 这里 marg_R, new_R 都是相应时刻的相机坐标系到世界坐标系的变换
                 it->removed_cnt++;
                 // transpose this line to the new pose
                 Mat3d Rji = new_R.transpose() * marg_R;     // Rcjw * Rwci
@@ -769,7 +713,6 @@ void FeatureManager::RemoveBackShiftDepth(const Mat3d& marg_R, const Vec3d& marg
 }
 
 
-
 void FeatureManager::RemoveBack()
 {
     for (auto it = point_landmarks.begin(), it_next = point_landmarks.begin(); it != point_landmarks.end(); it = it_next){
@@ -788,7 +731,8 @@ void FeatureManager::RemoveBack()
         it_next++;
 
         // 如果这个特征不是在窗口里最老关键帧上观测到的，由于窗口里移除掉了一个帧，所有其他特征对应的初始化帧id都要减1左移
-        // 例如： 窗口里有 0,1,2,3,4 一共5个关键帧，特征f2在第2帧上三角化的， 移除掉第0帧以后， 第2帧在窗口里的id就左移变成了第1帧，这是很f2的start_frame对应减1
+        // 例如： 窗口里有 0,1,2,3,4 一共5个关键帧，特征f2在第2帧上三角化的，
+        // 移除掉第0帧以后， 第2帧在窗口里的id就左移变成了第1帧，这是很f2的start_frame对应减1
         if (it->start_frame != 0)
             it->start_frame--;
         else{

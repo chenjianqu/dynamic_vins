@@ -15,6 +15,7 @@ dynamic_vins_root=/home/chen/ws/dynamic_ws
 ### split the single object from GT and estimation
 
 mkdir -p ${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_single
+mkdir -p ${dynamic_vins_root}/src/dynamic_vins/data/output/kitti_tracking_single
 
 gt_file=${dataset_root}/data_tracking_label_2/training/label_02/${sequence}.txt
 save_to_gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_single/${sequence}_${gt_id}.txt
