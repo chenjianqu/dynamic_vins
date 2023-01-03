@@ -11,12 +11,10 @@
 #ifndef DYNAMIC_VINS_LINE_LANDMARK_H
 #define DYNAMIC_VINS_LINE_LANDMARK_H
 
-#include "utils/def.h"
-#include "estimator/basic/line_feature.h"
-
+#include "def.h"
+#include "line_feature.h"
 
 namespace dynamic_vins{\
-
 
 
 class LineLandmark{
@@ -32,7 +30,6 @@ public:
     [[nodiscard]] int endFrame() const{
         return start_frame + feats.size() - 1;
     }
-
 
     const int feature_id;
     int start_frame;
@@ -61,7 +58,6 @@ public:
 
     int solve_flag; // 0 haven't solve yet; 1 solve succ; 2 solve fail;
 };
-
 
 
 }

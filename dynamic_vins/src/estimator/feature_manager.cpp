@@ -70,7 +70,7 @@ bool FeatureManager::AddFeatureCheckParallax(
     long_track_num = 0;
 
     for (auto &[feature_id,feat_vec] : image){ ///遍历每个观测
-        StaticFeature feat(feat_vec[0].second, td);
+        StaticPointFeature feat(feat_vec[0].second, td);
         assert(feat_vec[0].first == 0);
         if(feat_vec.size() == 2){
             feat.rightObservation(feat_vec[1].second);
@@ -78,7 +78,7 @@ bool FeatureManager::AddFeatureCheckParallax(
         }
         ///判断当前观测是否存在对应的路标
         if (auto it = find_if(point_landmarks.begin(), point_landmarks.end(),
-                              [feature_id=feature_id](const StaticLandmark &it){
+                              [feature_id=feature_id](const StaticPointLandmark &it){
             return it.feature_id == feature_id;
         });
         ///未存在路标，创建路标

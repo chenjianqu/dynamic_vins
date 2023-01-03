@@ -8,33 +8,32 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_STEREO_H
-#define DYNAMIC_VINS_STEREO_H
+#ifndef DYNAMIC_VINS_INST_ESTIMATED_INFO_H
+#define DYNAMIC_VINS_INST_ESTIMATED_INFO_H
 
-#include "basic/def.h"
+#include "def.h"
 
 namespace dynamic_vins{\
 
-class MyStereoMatcher{
+class InstEstimatedInfo{
 public:
-    using Ptr=std::shared_ptr<MyStereoMatcher>;
+    double time;
+    Mat3d R;
+    Vec3d P{0,0,0};
+    Vec3d v{0,0,0};
+    Vec3d a{0,0,0};
 
-    MyStereoMatcher(const std::string &config_path,const std::string &seq_name);
+    Vec3d dims{0,0,0};
+    Vec3d avg_point{0,0,0};
 
-    void Launch(int seq);
-
-    cv::Mat WaitResult();
-
-    cv::Mat StereoMatch();
-
-
-private:
-    int img_seq_id{};
+    bool is_init{false};
+    bool is_init_velocity{false};
+    bool is_static{false};
 };
-
 
 
 
 }
 
-#endif //DYNAMIC_VINS_STEREO_H
+
+#endif //DYNAMIC_VINS_INST_ESTIMATED_INFO_H

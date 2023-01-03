@@ -12,7 +12,7 @@
 
 #include "line_descriptor/include/line_descriptor_custom.hpp"
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/dataset/viode_utils.h"
 #include "front_end_parameters.h"
 #include "utils/dataset/coco_utils.h"

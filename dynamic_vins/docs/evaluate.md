@@ -63,58 +63,18 @@ rosrun dynamic_vins_eval save_oxts ${oxts_path}/${sequence}.txt ${save_path}/${s
 
 ```shell
 startconda && conda activate py36
+```
 
+```shell
 sequence=0003
-
-estimate_file=0003_VO_dynamic_LinePoint_Odometry.txt
+estimate_file=0003_VO_dynamic_PointOnly_Odometry.txt
 
 gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/
 estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
 
-
 evo_ape tum --align  ${estimate_path}/${estimate_file} ${gt_path}/${sequence}.txt \
 && evo_rpe tum --align  ${estimate_path}/${estimate_file} ${gt_path}/${sequence}.txt -r trans_part \
 && evo_rpe tum --align  ${estimate_path}/${estimate_file} ${gt_path}/${sequence}.txt -r rot_part
-```
-
-输出：
-
-```shell
-APE w.r.t. translation part (m)
-(with SE(3) Umeyama alignment)
-
-       max	12.310783
-      mean	1.788885
-    median	1.551813
-       min	0.217193
-      rmse	2.563968
-       sse	940.072483
-       std	1.836797
-
-RPE w.r.t. translation part (m)
-for delta = 1 (frames) using consecutive pairs
-(with SE(3) Umeyama alignment)
-
-       max	11.254441
-      mean	1.784602
-    median	1.674964
-       min	1.159199
-      rmse	1.971327
-       sse	551.830494
-       std	0.837452
-
-RPE w.r.t. rotation part (unit-less)
-for delta = 1 (frames) using consecutive pairs
-(with SE(3) Umeyama alignment)
-
-       max	0.025461
-      mean	0.006245
-    median	0.005226
-       min	0.000699
-      rmse	0.007423
-       sse	0.007824
-       std	0.004013
-
 ```
 
 
@@ -321,7 +281,7 @@ sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_euroc_odometry.sh
 ```shell
 startconda && conda activate py36
 
-
+gt_path=/home/chen/datasets/MyData/ZED_data
 
 gt_name=${gt_path}/room_static_2/vicon.txt
 estimate_name=${estimate_path}/room_static_2_VO_raw_PointLine_Odometry.txt
@@ -329,11 +289,24 @@ estimate_name=${estimate_path}/room_static_2_VO_raw_PointLine_Odometry.txt
 evo_ape tum --align  ${estimate_name} ${gt_name} && evo_rpe tum --align  ${estimate_name} ${gt_name} -r trans_part && evo_rpe tum --align  ${estimate_name} ${gt_name} -r rot_part
 ```
 
-and draw the plot:
+and draw the traj:
 
 ```shell
 evo_traj tum ${estimate_name}  --ref=${gt_name}  --align -p
 ```
+
+or
+
+```shell
+startconda && conda activate py36
+
+gt_path=/home/chen/datasets/MyData/ZED_data
+gt_name=${gt_path}/room_static_1/vicon.txt
+
+evo_traj tum ${gt_name}  -p --plot_mode xy
+```
+
+
 
 
 
@@ -360,7 +333,6 @@ evo_rpe tum --align  ${estimate_path}/${estimate_file} ${gt_name}  -r rot_part  
 python ${dynamic_vins_root}/src/dynamic_vins/scripts/python/write_summary.py ape.txt ape.csv
 python ${dynamic_vins_root}/src/dynamic_vins/scripts/python/write_summary.py rpe_t.txt rpe_t.csv
 python  ${dynamic_vins_root}/src/dynamic_vins/scripts/python/write_summary.py rpe_r.txt rpe_r.csv
-
 ```
 
 

@@ -28,8 +28,9 @@
 #include "utils/parameters.h"
 #include "estimator/vio_util.h"
 #include "instance.h"
-#include "estimator/basic/point_landmark.h"
-#include "estimator/basic/frontend_feature.h"
+#include "basic/point_landmark.h"
+#include "basic/frontend_feature.h"
+#include "basic/inst_estimated_info.h"
 
 namespace dynamic_vins{\
 
@@ -53,8 +54,6 @@ public:
     void AddInstanceParameterBlock(ceres::Problem &problem);
 
     void AddResidualBlockForJointOpt(ceres::Problem &problem, ceres::LossFunction *loss_function);
-
-    void SetOutputInstInfo();
 
     void InitialInstance();
 
@@ -88,9 +87,8 @@ public:
             if(inst.landmarks.empty())
                 continue;
             int del =  inst.DeleteBadLandmarks();
-            Debugv("inst:{} del bad num:{}",inst.id,del);
+            //Debugv("inst:{} del bad num:{}",inst.id,del);
         }
-
     }
 
     void SetInstanceCurrentPoint3d(){
@@ -99,12 +97,13 @@ public:
         });
     }
 
-
     void GetOptimizationParameters(){
         InstExec([](int key,Instance& inst){
             inst.GetOptimizationParameters();
         });
     }
+
+    void SetOutputInstInfo();
 
     std::unordered_map<unsigned int,InstEstimatedInfo> GetOutputInstInfo(){
         std::unique_lock<std::mutex> lk(vel_mutex_);
@@ -132,7 +131,7 @@ public:
 private:
     std::optional<Mat4d> PropagateByICP(Instance &inst);
 
-    Vec3d BoxFitPoints(const vector<Vec3d> &points3d,const Mat3d &R_cioi,const Vec3d &dims);
+    Vec3d BoxFitPoints(const vector<Vec3d> &points3d,const Mat3d &R_cioi,const Vec3d &dims) const;
 
 public:
     std::unordered_map<unsigned int,Instance> instances;

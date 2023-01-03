@@ -13,8 +13,8 @@
 
 #include <memory>
 
-#include "utils/box3d.h"
-#include "front_end/semantic_image.h"
+#include "basic/box3d.h"
+#include "basic/semantic_image.h"
 
 namespace dynamic_vins{\
 

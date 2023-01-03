@@ -14,7 +14,7 @@
 #include <eigen3/Eigen/Dense>
 
 #include "estimator/utility.h"
-#include "utils/def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

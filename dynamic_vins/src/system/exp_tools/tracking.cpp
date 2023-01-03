@@ -14,7 +14,7 @@
 
 #include "det2d/detector2d.h"
 #include "mot/deep_sort.h"
-#include "utils/def.h"
+#include "basic/def.h"
 
 
 Infer::Ptr infer;

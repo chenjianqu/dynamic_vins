@@ -24,8 +24,7 @@ ProjectionTwoFrameOneCamFactor::ProjectionTwoFrameOneCamFactor(const Vec3d &_pts
                                                                const Vec2d &_velocity_i, const Vec2d &_velocity_j,
                                                                const double _td_i, const double _td_j) :
                                                                pts_i(_pts_i), pts_j(_pts_j),
-                                                               td_i(_td_i), td_j(_td_j)
-                                                               {
+                                                               td_i(_td_i), td_j(_td_j){
     velocity_i.x() = _velocity_i.x();
     velocity_i.y() = _velocity_i.y();
     velocity_i.z() = 0;
@@ -44,7 +43,7 @@ ProjectionTwoFrameOneCamFactor::ProjectionTwoFrameOneCamFactor(const Vec3d &_pts
     tangent_base.block<1, 3>(0, 0) = b1.transpose();
     tangent_base.block<1, 3>(1, 0) = b2.transpose();
 #endif
-                                                               };
+};
 
 bool ProjectionTwoFrameOneCamFactor::Evaluate(double const *const *parameters, double *residuals, double **jacobians) const
 {

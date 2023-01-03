@@ -17,7 +17,7 @@
 #include <sophus/so3.hpp>
 #include <utility>
 
-#include "utils/def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

@@ -11,7 +11,7 @@
 #ifndef DYNAMIC_VINS_LINE_FEATURE_H
 #define DYNAMIC_VINS_LINE_FEATURE_H
 
-#include "utils/def.h"
+#include "def.h"
 #include "line.h"
 
 namespace dynamic_vins{\

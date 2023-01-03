@@ -18,7 +18,7 @@
 #include <spdlog/spdlog.h>
 #include <ros/ros.h>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/parameters.h"
 #include "utils/io/visualization.h"
 #include "utils/io/publisher_map.h"
@@ -27,9 +27,10 @@
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/io/dataloader.h"
+#include "basic/semantic_image.h"
+#include "basic/semantic_image_queue.h"
+#include "basic/feature_queue.h"
 #include "estimator/estimator.h"
-#include "front_end/semantic_image.h"
-#include "front_end/semantic_image_queue.h"
 #include "front_end/background_tracker.h"
 #include "front_end/front_end_parameters.h"
 #include "image_process/image_process.h"
@@ -117,12 +118,10 @@ void ImageProcess()
 
         Warns("ImageProcess, all:{} ms \n",time_cost);
 
-
         if(io_para::is_show_input){
             cv::Mat img_show;
             if(!img.inv_merge_mask.empty()){
                 cv::cvtColor(img.inv_merge_mask,img_show,CV_GRAY2BGR);
-
                 cv::scaleAdd(img_show,0.8,img.color0,img_show);
             }
             else{
@@ -154,12 +153,12 @@ void ImageProcess()
         if(!cfg::is_only_imgprocess){
             image_queue.push_back(img);
         }
-
     }
 
     Infos("Image Process Avg cost:{} ms",time_sum/cnt);
     Warns("ImageProcess 线程退出");
 }
+
 
 
 /**
@@ -184,6 +183,55 @@ void FeatureTrack()
             if(cfg::slam == SLAM::kDynamic){
                 insts_tracker->SetEstimatedInstancesInfo(estimator->im.GetOutputInstInfo());
                 TicToc t_i;
+
+                for(auto &[inst_id,inst]: insts_tracker->instances_){
+                    inst.is_curr_visible=false;
+                    inst.box2d.reset();
+                    inst.box3d.reset();
+                }
+
+                ///MOT
+                if(cfg::dataset == DatasetType::kKitti){
+                    insts_tracker->AddInstancesByTracking(*img);
+                }
+                else if(cfg::dataset == DatasetType::kViode){
+                    insts_tracker->AddViodeInstances(*img);
+                }
+                else{
+                    throw std::runtime_error("FeatureTrack()::MOT not is implemented, as dataset is "+cfg::dataset_name);
+                }
+
+                Debugt("FeatureTrack() MOT {} ms",t_i.TocThenTic());
+
+                ///将静态物体的mask去掉
+                int static_inst_cnt = 0;
+                insts_tracker->ExecInst([&](unsigned int key, InstFeat& inst){
+                    if(inst.roi && inst.box2d &&
+                    insts_tracker->estimated_info.find(key)!=insts_tracker->estimated_info.end() &&
+                    insts_tracker->estimated_info[key].is_static){
+                        static_inst_cnt++;
+                        int roi_rows = inst.roi->mask_cv.rows;
+                        int roi_cols = inst.roi->mask_cv.cols;
+                        int offset_row = inst.box2d->rect.tl().y;
+                        int offset_col = inst.box2d->rect.tl().x;
+                        Debugt("roi_rows:{} roi_cols:{} offset_row:{} offset_col:{}",roi_rows,roi_cols,offset_row,offset_col);
+                        for(int row=0;row<roi_rows;++row){
+                            for(int col=0;col<roi_cols;++col){
+                                if(inst.roi->mask_cv.at<uchar>(row,col)>=0.5){
+                                    img->merge_mask.at<uchar>(row + offset_row, col + offset_col) = 0;
+                                }
+                            }
+                        }
+                    }
+                });
+                if(static_inst_cnt>0){
+                    img->merge_mask_gpu.upload(img->merge_mask);
+                    cv::cuda::bitwise_not(img->merge_mask_gpu,img->inv_merge_mask_gpu);
+                    img->inv_merge_mask_gpu.download(img->inv_merge_mask);
+                }
+
+                Debugt("FeatureTrack() SetInstMask {} ms",t_i.TocThenTic());
+
                 ///开启一个线程检测动态特征点
                 std::thread t_inst_track = std::thread(&InstsFeatManager::InstsTrack, insts_tracker.get(), *img);
 

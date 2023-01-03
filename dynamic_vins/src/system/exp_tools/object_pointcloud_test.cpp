@@ -42,7 +42,7 @@
 //#include <pcl/visualization/pcl_visualizer.h>
 //#include <pcl/visualization/cloud_viewer.h>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/file_utils.h"
 
 using namespace std;

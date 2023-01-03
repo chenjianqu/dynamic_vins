@@ -25,10 +25,10 @@ struct InstRoi
 {
     using Ptr=std::shared_ptr<InstRoi>;
 
-    cv::Mat mask_cv;//物体的mask
-    cv::cuda::GpuMat mask_gpu;
+    cv::Mat mask_cv;//物体的mask,255表示物体区域，0表示背景区域
+    cv::cuda::GpuMat mask_gpu;//物体的mask,255表示物体区域，0表示背景区域
     cv::Mat roi_gray;//物体的灰度图像
-    cv::cuda::GpuMat roi_gpu;
+    cv::cuda::GpuMat roi_gpu;//物体的灰度图像
 
     cv::Mat prev_roi_gray;//上一时刻的物体的灰度图像
     cv::cuda::GpuMat prev_roi_gpu;

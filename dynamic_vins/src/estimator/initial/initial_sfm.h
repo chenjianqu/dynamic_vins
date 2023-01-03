@@ -30,7 +30,7 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 
-#include "utils/def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

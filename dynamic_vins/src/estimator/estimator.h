@@ -22,34 +22,30 @@
  
 #include <thread>
 #include <mutex>
-
 #include <std_msgs/Header.h>
 #include <std_msgs/Float32.h>
 #include <ceres/ceres.h>
 #include <opencv2/core/eigen.hpp>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
-
-#include "camodocal/camera_models/CameraFactory.h"
+#include <camodocal/camera_models/CameraFactory.h>
 
 #include "utils/parameters.h"
 #include "feature_manager.h"
-
 #include "front_end/background_tracker.h"
 #include "vio_util.h"
-#include "estimator_insts.h"
-#include "utils/def.h"
-#include "estimator/basic/point_landmark.h"
 #include "vio_parameters.h"
-#include "estimator/basic/frontend_feature.h"
-
+#include "body.h"
+#include "estimator_insts.h"
+#include "basic/def.h"
+#include "basic/point_landmark.h"
+#include "basic/frontend_feature.h"
 #include "estimator/imu/imu_factor.h"
 #include "estimator/initial/solve_5pts.h"
 #include "estimator/initial/initial_sfm.h"
 #include "estimator/initial/initial_alignment.h"
 #include "estimator/initial/initial_ex_rotation.h"
 #include "estimator/factor/marginalization_factor.h"
-#include "body.h"
 
 namespace dynamic_vins{\
 

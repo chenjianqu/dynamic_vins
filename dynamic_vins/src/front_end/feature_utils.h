@@ -17,8 +17,8 @@
 #include <opencv2/opencv.hpp>
 #include <camodocal/camera_models/CameraFactory.h>
 
-#include "utils/def.h"
-#include "semantic_image.h"
+#include "basic/def.h"
+#include "basic/semantic_image.h"
 #include "utils/camera_model.h"
 
 namespace dynamic_vins{\

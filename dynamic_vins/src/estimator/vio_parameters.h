@@ -83,6 +83,8 @@ public:
 
     inline static bool is_print_detail{false};
 
+    inline static bool is_static_inst_as_background{true};//是否将静态物体作为背景点优化相机位姿
+
     static void SetParameters(const std::string &config_path);
 };
 

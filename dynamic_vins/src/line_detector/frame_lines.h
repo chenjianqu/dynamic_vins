@@ -19,7 +19,7 @@
 
 #include "line_descriptor/include/line_descriptor_custom.hpp"
 #include "utils/camera_model.h"
-#include "estimator/basic/line_feature.h"
+#include "basic/line_feature.h"
 
 
 namespace dynamic_vins{\

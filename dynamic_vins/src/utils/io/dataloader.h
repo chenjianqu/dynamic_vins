@@ -19,8 +19,8 @@
 #include <cv_bridge/cv_bridge.h>
 
 #include "utils/parameters.h"
-#include "front_end/semantic_image.h"
-#include "utils/def.h"
+#include "basic/semantic_image.h"
+#include "basic/def.h"
 
 namespace fs=std::filesystem;
 

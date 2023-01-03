@@ -29,19 +29,20 @@
 #include <ros/console.h>
 #include <ros/assert.h>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/parameters.h"
-#include "estimator/basic/frontend_feature.h"
-#include "estimator/basic/line_landmark.h"
+#include "basic/frontend_feature.h"
+#include "basic/line_landmark.h"
+#include "basic/static_point_landmark.h"
 
 namespace dynamic_vins{\
 
-class FeatureManager
-{
-  public:
+class FeatureManager{
+public:
     FeatureManager();
 
     void ClearState();
+
     int GetFeatureCount();
 
     bool AddFeatureCheckParallax(
@@ -52,8 +53,11 @@ class FeatureManager
     bool AddFeatureCheckParallax(int frame_count, FeatureBackground &image, double td);
 
     vector<pair<Vec3d, Vec3d>> GetCorresponding(int frame_count_l, int frame_count_r);
+
     //void updateDepth(const VectorXd &x);
+
     void SetDepth(const Eigen::VectorXd &x);
+
     void RemoveFailures();
 
     void ClearDepth();
@@ -86,7 +90,7 @@ class FeatureManager
     void RemoveLineOutlier();
 
 public:
-    std::list<StaticLandmark> point_landmarks;
+    std::list<StaticPointLandmark> point_landmarks;
     std::list<LineLandmark> line_landmarks;
     int last_track_num;
 

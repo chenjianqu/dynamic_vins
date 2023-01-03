@@ -12,7 +12,7 @@
 #define DYNAMIC_VINS_IMAGE_PROCESS_H
 
 #include <memory>
-#include "front_end/semantic_image.h"
+#include "basic/semantic_image.h"
 #include "det3d/detector3d.h"
 #include "det2d/detector2d.h"
 #include "stereo/stereo.h"

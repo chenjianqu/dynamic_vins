@@ -11,7 +11,7 @@
 #ifndef DYNAMIC_VINS_OUTPUT_H
 #define DYNAMIC_VINS_OUTPUT_H
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "estimator/estimator_insts.h"
 
 namespace dynamic_vins{\

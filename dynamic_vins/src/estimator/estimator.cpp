@@ -7,7 +7,6 @@
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
  *******************************************************/
-
 /*******************************************************
  * Copyright (C) 2019, Aerial Robotics Group, Hong Kong Univebody.Rsity of Science and Technology
  *
@@ -17,16 +16,14 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-
+#include "estimator.h"
 #include <dirent.h>
 #include <cstdio>
-
-#include "estimator.h"
+#include "basic/def.h"
+#include "basic/feature_queue.h"
 #include "utils/io/visualization.h"
 #include "utils/io/publisher_map.h"
-#include "utils/def.h"
 #include "vio_parameters.h"
-
 #include "utility.h"
 #include "estimator/factor/pose_local_parameterization.h"
 #include "estimator/factor/projection_two_frame_one_cam_factor.h"
@@ -34,7 +31,6 @@
 #include "estimator/factor/projection_one_frame_two_cam_factor.h"
 #include "estimator/factor/line_parameterization.h"
 #include "estimator/factor/line_projection_factor.h"
-
 #include "utils/io/output.h"
 
 namespace dynamic_vins{\
@@ -145,39 +141,74 @@ int Estimator::AddResidualBlock(ceres::Problem &problem, ceres::LossFunction *lo
         for (auto &feat : lm.feats){
             imu_j++;
             if (imu_i != imu_j){
-                Vec3d pts_j = feat.point;
+                Vec3d& pts_j = feat.point;
+                ///单目重投影误差
                 auto *f_td = new ProjectionTwoFrameOneCamFactor(
                         pts_i, pts_j, lm.feats[0].velocity, feat.velocity,
                         lm.feats[0].cur_td, feat.cur_td);
                 problem.AddResidualBlock(f_td, loss_function, body.para_pose[imu_i], body.para_pose[imu_j],
-                                         body.para_ex_pose[0],
-                                         body.para_point_features[feature_index], body.para_td[0]);
+                                         body.para_ex_pose[0],body.para_point_features[feature_index],
+                                         body.para_td[0]);
             }
 
             if(cfg::is_stereo && feat.is_stereo){
-                Vec3d pts_j_right = feat.point_right;
+                Vec3d& pts_j_right = feat.point_right;
                 if(imu_i != imu_j){
-                    auto *f = new ProjectionTwoFrameTwoCamFactor(pts_i, pts_j_right,
-                                                                 lm.feats[0].velocity, feat.velocity_right,
-                                                                 lm.feats[0].cur_td, feat.cur_td);
+                    ///右相机重投影误差
+                    auto *f = new ProjectionTwoFrameTwoCamFactor(
+                            pts_i, pts_j_right,lm.feats[0].velocity, feat.velocity_right,
+                            lm.feats[0].cur_td, feat.cur_td);
                     problem.AddResidualBlock(f, loss_function,
                                              body.para_pose[imu_i], body.para_pose[imu_j],
                                              body.para_ex_pose[0], body.para_ex_pose[1],
                                              body.para_point_features[feature_index], body.para_td[0]);
                 }
                 else{
-                    auto *f = new ProjectionOneFrameTwoCamFactor(pts_i, pts_j_right,
-                                                                 lm.feats[0].velocity, feat.velocity_right,
-                                                                 lm.feats[0].cur_td, feat.cur_td);
+                    ///优化外参，左右相机重投影误差
+                    auto *f = new ProjectionOneFrameTwoCamFactor(
+                            pts_i, pts_j_right,lm.feats[0].velocity, feat.velocity_right,
+                            lm.feats[0].cur_td, feat.cur_td);
                     problem.AddResidualBlock(f, loss_function,
                                              body.para_ex_pose[0], body.para_ex_pose[1],
                                              body.para_point_features[feature_index], body.para_td[0]);
                 }
-
             }
             f_m_cnt++;
         }
     }
+
+    ///将静态物体的特征点来优化相机位姿
+    /*if(para::is_static_inst_as_background){
+        for(auto &[key,inst] : im.instances){
+            if(!inst.is_initial || !inst.is_tracking)
+                continue;
+            if(inst.landmarks.size()<5)
+                continue;
+            if(!inst.is_static)
+                continue;
+            int depth_index=-1;
+            for(auto &lm : inst.landmarks){
+                if(lm.bad || lm.depth < 0.2 || lm.is_extra())
+                    continue;
+                depth_index++;
+                auto feat_j=lm.front();
+                if(lm.size() < 2)
+                    continue;
+                for(auto feat_it = (++lm.feats.begin()); feat_it !=lm.feats.end();++feat_it ){
+                    int fi = (*feat_it)->frame;
+                    ///单目重投影误差
+                    auto *f_td = new ProjectionTwoFrameOneCamFactor(
+                            feat_j->point, (*feat_it)->point, feat_j->vel , (*feat_it)->vel,
+                            feat_j->td, (*feat_it)->td);
+                    problem.AddResidualBlock(
+                            f_td, loss_function, body.para_pose[feat_j->frame],body.para_pose[(*feat_it)->frame],
+                            body.para_ex_pose[0],inst.para_inv_depth[depth_index],body.para_td[0]);
+                }
+
+            }
+        }
+
+    }*/
 
     return f_m_cnt;
 }
@@ -1548,9 +1579,11 @@ void Estimator::ProcessImage(FrontendFeature &image, const double header){
         im.PushBack(frame, image.instances);
         Infov("processImage im.PushBack():{} ms",tt.TocThenTic());
 
-        ///输出实例的速度信息
-        im.SetOutputInstInfo();
-        Infov("processImage im.SetOutputInstInfo():{} ms",tt.TocThenTic());
+        ///输出实例的信息
+        if(para::is_static_inst_as_background){
+            im.SetOutputInstInfo();
+            Infov("processImage im.SetOutputInstInfo():{} ms",tt.TocThenTic());
+        }
 
         ///动态物体的位姿递推
         im.PropagatePose();

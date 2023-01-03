@@ -12,7 +12,7 @@
 
 #include <visualization_msgs/MarkerArray.h>
 
-#include "utils/box3d.h"
+#include "basic/box3d.h"
 #include "utils/camera_model.h"
 #include "utils/parameters.h"
 #include "utils/io/io_parameters.h"

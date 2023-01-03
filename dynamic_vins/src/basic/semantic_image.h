@@ -20,8 +20,8 @@
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
 
-#include "utils/box3d.h"
-#include "utils/box2d.h"
+#include "box3d.h"
+#include "box2d.h"
 #include "utils/parameters.h"
 
 namespace dynamic_vins{\
@@ -47,8 +47,10 @@ struct SemanticImage{
     torch::Tensor mask_tensor;
     std::vector<Box2D::Ptr> boxes2d;
 
-    cv::Mat merge_mask,inv_merge_mask;
-    cv::cuda::GpuMat merge_mask_gpu,inv_merge_mask_gpu;
+    cv::Mat merge_mask;//255表示物体区域，0表示背景区域
+    cv::Mat inv_merge_mask;//0表示物体区域，255表示背景区域
+    cv::cuda::GpuMat merge_mask_gpu;//255表示物体区域，0表示背景区域
+    cv::cuda::GpuMat inv_merge_mask_gpu;//0表示物体区域，255表示背景区域
 
     cv::Mat flow;//光流估计结果
 

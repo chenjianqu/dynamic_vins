@@ -11,7 +11,7 @@
 #ifndef DYNAMIC_VINS_POINT_FEATURE_H
 #define DYNAMIC_VINS_POINT_FEATURE_H
 
-#include "utils/def.h"
+#include "def.h"
 
 namespace dynamic_vins{\
 
@@ -98,42 +98,6 @@ struct FeaturePoint{
 
     float disp{0.f};//视差
 };
-
-
-
-class StaticFeature{
-public:
-    StaticFeature(const Eigen::Matrix<double, 7, 1> &_point, double td)
-    {
-        point.x() = _point(0);
-        point.y() = _point(1);
-        point.z() = _point(2);
-        uv.x() = _point(3);
-        uv.y() = _point(4);
-        velocity.x() = _point(5);
-        velocity.y() = _point(6);
-        cur_td = td;
-        is_stereo = false;
-    }
-    void rightObservation(const Eigen::Matrix<double, 7, 1> &_point)
-    {
-        point_right.x() = _point(0);
-        point_right.y() = _point(1);
-        point_right.z() = _point(2);
-        uvRight.x() = _point(3);
-        uvRight.y() = _point(4);
-        velocity_right.x() = _point(5);
-        velocity_right.y() = _point(6);
-        is_stereo = true;
-    }
-    double cur_td;
-    Vec3d point, point_right;
-    Vec2d uv, uvRight;
-    Vec2d velocity, velocity_right;
-    bool is_stereo;
-};
-
-
 
 
 }

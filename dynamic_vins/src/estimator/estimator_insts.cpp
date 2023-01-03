@@ -9,13 +9,11 @@
  *******************************************************/
 
 #include "estimator_insts.h"
-
 #include <algorithm>
 #include <filesystem>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "vio_parameters.h"
-
 #include "estimator/factor/pose_local_parameterization.h"
 #include "estimator/factor/project_instance_factor.h"
 #include "estimator/factor/box_factor.h"
@@ -172,7 +170,6 @@ void InstanceManager::PushBack(unsigned int frame_id, std::map<unsigned int,Feat
 }
 
 
-
 /**
  * 使用ICP推断当前帧的位姿
  * @param inst
@@ -313,7 +310,6 @@ void InstanceManager::PropagatePose()
 }
 
 
-
 /**
  * 三角化动态特征点
  */
@@ -354,10 +350,12 @@ void InstanceManager::Triangulate()
                     Vec2d point1 = feat->point_right.head(2);
                     Eigen::Vector3d point3d_w;
                     TriangulatePoint(leftPose, rightPose, point0, point1, point3d_w);
-                    Eigen::Vector3d localPoint = leftPose.leftCols<3>() * point3d_w + leftPose.rightCols<1>();//变换到相机坐标系下
+                    //变换到相机坐标系下
+                    Eigen::Vector3d localPoint = leftPose.leftCols<3>() * point3d_w + leftPose.rightCols<1>();
                     double depth = localPoint.z();
 
-                    if (depth > kDynamicDepthMin && depth<kDynamicDepthMax){//如果深度有效
+                    if (depth > kDynamicDepthMin && depth<kDynamicDepthMax &&//如果深度有效
+                    inst.IsInBoxPw(point3d_w,feat->frame)){//如果在边界框附近
                         feat->is_triangulated = true;
                         feat->p_w = point3d_w;
                         stereo_triangle_succeed++;
@@ -444,8 +442,10 @@ void InstanceManager::Triangulate()
         inst.set_triangle_num();
         log_text += fmt::format("inst:{} landmarks.size:{} triangle_size:{} valid:{}\n",
                                 inst.id, inst.landmarks.size(), inst.triangle_num, inst.valid_size());
-        log_text += fmt::format("extra_triangle_succeed:{} failed:{} stereo_triangle_succeed:{} failed:{} mono_triangle_succeed:{} failed:{} \n",
-                                extra_triangle_succeed,extra_triangle_failed,stereo_triangle_succeed,stereo_triangle_failed,
+        log_text += fmt::format("extra_triangle_succeed:{} failed:{} stereo_triangle_succeed:{} "
+                                "failed:{} mono_triangle_succeed:{} failed:{} \n",
+                                extra_triangle_succeed,extra_triangle_failed,
+                                stereo_triangle_succeed,stereo_triangle_failed,
                                 mono_triangle_succeed,mono_triangle_failed);
     }
 
@@ -460,7 +460,7 @@ void InstanceManager::Triangulate()
  * @param dims
  * @return 输出的位置
  */
-Vec3d InstanceManager::BoxFitPoints(const vector<Vec3d> &points3d,const Mat3d &R_cioi,const Vec3d &dims){
+Vec3d InstanceManager::BoxFitPoints(const vector<Vec3d> &points3d,const Mat3d &R_cioi,const Vec3d &dims) const{
     if(points3d.empty()){
         return Vec3d::Zero();
     }
@@ -590,13 +590,14 @@ void InstanceManager::InitialInstanceVelocity(){
             continue;
         }
 
-        Eigen::Isometry3d T_oioj = inst.state[body.frame-1].GetTransform().inverse() * inst.state[body.frame].GetTransform();
+        Eigen::Isometry3d T_oioj = inst.state[body.frame-1].GetTransform().inverse() *
+                inst.state[body.frame].GetTransform();
         inst.vel.SetVel(T_oioj,body.headers[body.frame] - body.headers[body.frame-1]);
 
         inst.is_init_velocity=true;
 
-        log_text += fmt::format("inst:{} vel: v{} a{} \n",inst.id,VecToStr(inst.vel.v), VecToStr(inst.vel.a));
-
+        log_text += fmt::format("inst:{} vel: v{} a{} \n",inst.id,
+                                VecToStr(inst.vel.v), VecToStr(inst.vel.a));
     }
 
     Debugv(log_text);
@@ -642,17 +643,16 @@ void InstanceManager::SetDynamicOrStatic(){
 
         Vec3d vel = (inst.state[body.frame].P - inst.state[body.frame-1].P ) /
                 (inst.state[body.frame].time - inst.state[body.frame-1].time);
-        scene_vec /= vec_size;
+        scene_vec /= vec_size;//计算平均场景流
 
-        Debugv("InstanceManager::SetDynamicOrStatic inst:{} vel:{} scene_vec:{} vec_size:{}",
+        log_text += fmt::format("InstanceManager::SetDynamicOrStatic inst:{} vel:{} scene_vec:{} vec_size:{}",
                inst.id,VecToStr(vel),VecToStr(scene_vec),vec_size);
 
         if(vec_size<3){
             return;
         }
-        //计算平均场景流
 
-        if(vel.norm()>8 || scene_vec.norm()>5){ //根据位姿变化或平均场景流判断是否为静态
+        if(vel.norm()>15 || scene_vec.norm()>12){ //根据位姿变化或平均场景流判断是否为静态
             inst.is_static=false;
             inst.static_frame=0;
         }
@@ -662,7 +662,7 @@ void InstanceManager::SetDynamicOrStatic(){
 
         if(inst.static_frame>=2){
             inst.is_static=true;
-            log_text += fmt::format("inst:{} set static",inst.id);
+            log_text += fmt::format("inst:{} set static\n",inst.id);
         }
     });
 
@@ -887,7 +887,6 @@ void InstanceManager::ManageTriangulatePoint()
                 "inst:{}  cnt_del_nodepth:{} cnt_del_valid_num:{} remain triangle_num:{} valid:{} all:{}\n",
                 inst.id, cnt_del_nodepth,cnt_del_valid_num,
                 inst.triangle_num, inst.valid_size(), inst.landmarks.size());
-
     }
 
     Debugv(log_text);
@@ -953,7 +952,6 @@ void InstanceManager::SlideWindow(const MarginFlag &flag)
 
 
 
-
 /**
  * 设置所有动态物体的最新的位姿,dims信息到输出变量
  */
@@ -975,13 +973,11 @@ void InstanceManager::SetOutputInstInfo(){
         estimated_info.a = inst.vel.a;
         estimated_info.v = inst.vel.v;
         estimated_info.dims = inst.box3d->dims;
-
+        estimated_info.is_static = inst.is_static;
         insts_output.insert({inst.id, estimated_info});;
     });
     //Debugv(log_text);
 }
-
-
 
 
 
@@ -1014,9 +1010,8 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
 {
     if(tracking_num < 1)
         return;
-
     ///DEBUG
-    PrintFactorDebugMsg(*this);
+    //PrintFactorDebugMsg(*this);
 
     for(auto &[key,inst] : instances){
         if(!inst.is_initial || !inst.is_tracking)
@@ -1099,8 +1094,6 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                         loss_function,
                         inst.para_state[lm.frame()]);
                 statistics["BoxEncloseStereoPointFactor_extra"]++;
-
-
             }
         }
 
@@ -1133,7 +1126,6 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
                                      loss_function,
                                      inst.para_state[feat_j->frame],inst.para_box[0],inst.para_inv_depth[depth_index]);
             statistics["BoxEncloseTrianglePointFactor"]++;*/
-
 
             if(inst.is_static){
                 continue;
@@ -1237,7 +1229,6 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
             }
         }
 
-
         //log
         string log_text;
         for(auto &pair : statistics)
@@ -1246,8 +1237,6 @@ void InstanceManager::AddResidualBlockForInstOpt(ceres::Problem &problem, ceres:
         Debugv("inst:{} 各个残差项的数量: \n{}",inst.id,log_text);
 
     } //inst
-
-
 }
 
 

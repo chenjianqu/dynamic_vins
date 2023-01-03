@@ -19,7 +19,7 @@
 #include <sensor_msgs/Image.h>
 #include <visualization_msgs/MarkerArray.h>
 
-#include "utils/def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

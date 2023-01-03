@@ -17,7 +17,7 @@
 
 #include <eigen3/Eigen/Dense>
 
-#include "utils/def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

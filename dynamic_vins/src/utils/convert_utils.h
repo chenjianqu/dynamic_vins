@@ -20,7 +20,7 @@
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 
-#include "def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

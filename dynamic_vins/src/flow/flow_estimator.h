@@ -15,9 +15,9 @@
 #include <atomic>
 #include <torch/torch.h>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "raft.h"
-#include "front_end/semantic_image.h"
+#include "basic/semantic_image.h"
 
 namespace dynamic_vins{\
 

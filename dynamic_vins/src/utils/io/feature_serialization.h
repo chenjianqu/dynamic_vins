@@ -11,7 +11,7 @@
 #ifndef DYNAMIC_VINS_FEATURE_SERIALIZATION_H
 #define DYNAMIC_VINS_FEATURE_SERIALIZATION_H
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "line_detector/frame_lines.h"
 
 namespace dynamic_vins{\

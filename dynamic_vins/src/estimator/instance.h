@@ -20,14 +20,15 @@
 #include <ceres/ceres.h>
 
 #include "vio_util.h"
-#include "estimator/basic/point_landmark.h"
 #include "vio_parameters.h"
 #include "utils/parameters.h"
-#include "utils/box2d.h"
-#include "utils/box3d.h"
 #include "body.h"
-#include "estimator/basic/velocity.h"
-#include "estimator/basic/state.h"
+#include "basic/point_landmark.h"
+#include "basic/box2d.h"
+#include "basic/box3d.h"
+#include "basic/velocity.h"
+#include "basic/state.h"
+
 
 namespace dynamic_vins{\
 
@@ -118,6 +119,28 @@ public:
         }
         return num;
     }
+
+
+    /**
+     * 判断3D点pw是否在边界框内
+     * @param pw
+     * @param factor
+     * @return
+     */
+    bool IsInBoxPw(const Vec3d &pw,int frame=body.frame,double factor=4.){
+        Vec3d pts_oi = WorldToObject(pw,frame);
+        return  (std::abs(pts_oi.x()) < factor * box3d->dims.x()) &&
+                (std::abs(pts_oi.y()) < factor * box3d->dims.y()) &&
+                (std::abs(pts_oi.z()) < factor * box3d->dims.z());
+    }
+
+    bool IsInBoxPc(const Vec3d &pw,int frame=body.frame,double factor=4.){
+        Vec3d pts_oi = CamToObject(pw,frame);
+        return  (std::abs(pts_oi.x()) < factor * box3d->dims.x()) &&
+        (std::abs(pts_oi.y()) < factor * box3d->dims.y()) &&
+        (std::abs(pts_oi.z()) < factor * box3d->dims.z());
+    }
+
 
     /**
      * 设置并返回路标点中具有深度的点的数量

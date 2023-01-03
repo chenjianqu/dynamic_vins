@@ -27,11 +27,11 @@
 #include <torch/torch.h>
 #include <camodocal/camera_models/CameraFactory.h>
 
-#include "semantic_image.h"
+#include "basic/semantic_image.h"
 #include "utils/parameters.h"
 #include "feature_utils.h"
-#include "utils/box3d.h"
-#include "utils/box2d.h"
+#include "basic/box3d.h"
+#include "basic/box2d.h"
 #include "line_detector/frame_lines.h"
 #include "line_detector/line_detector.h"
 

@@ -12,7 +12,6 @@
 #define DYNAMIC_VINS_VIO_UTIL_H
 
 #include <optional>
-
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 #include <opencv2/core/eigen.hpp>
@@ -21,10 +20,11 @@
 #include <pcl/common/common.h>
 #include <sophus/so3.hpp>
 
-#include "utils/def.h"
-#include "utils/box3d.h"
-#include "estimator/basic/point_landmark.h"
-#include "estimator/basic/line_landmark.h"
+#include "basic/def.h"
+#include "basic/box3d.h"
+#include "basic/point_landmark.h"
+#include "basic/line_landmark.h"
+#include "basic/static_point_landmark.h"
 
 namespace dynamic_vins{\
 
@@ -60,7 +60,7 @@ std::optional<Vec3d> FitBox3DSimple(vector<Vec3d> &points,const Vec3d& dims);
 std::optional<Vec3d> FitBox3DWithRANSAC(const vector<Vec3d> &points,const Vec3d& dims);
 
 
-void OutliersRejection(std::set<int> &removeIndex,std::list<StaticLandmark>& point_landmarks);
+void OutliersRejection(std::set<int> &removeIndex,std::list<StaticPointLandmark>& point_landmarks);
 
 
 double ReprojectionError(Mat3d &Ri, Vec3d &Pi, Mat3d &rici, Vec3d &tici,
@@ -76,7 +76,7 @@ void TriangulateOneLineStereo(LineLandmark &line);
 bool SolvePoseByPnP(Mat3d &R_initial, Vec3d &P_initial,
                            vector<cv::Point2f> &pts2D, vector<cv::Point3f> &pts3D);
 
-double CompensatedParallax2(const StaticLandmark &landmark, int frame_count);
+double CompensatedParallax2(const StaticPointLandmark &landmark, int frame_count);
 
 
 }

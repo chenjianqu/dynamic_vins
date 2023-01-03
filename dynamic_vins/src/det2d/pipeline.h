@@ -14,8 +14,8 @@
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
 
-#include "utils/def.h"
-#include "utils/box2d.h"
+#include "basic/def.h"
+#include "basic/box2d.h"
 
 namespace dynamic_vins{\
 

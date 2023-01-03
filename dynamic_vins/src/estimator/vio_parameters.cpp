@@ -66,6 +66,10 @@ void VioParameters::SetParameters(const std::string &config_path)
         fs["print_detail"]>>is_print_detail;
     }
 
+    if(!fs["static_inst_as_background"].isNone()){
+        fs["static_inst_as_background"]>>is_static_inst_as_background;
+    }
+
 
     fs.release();
 

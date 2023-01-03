@@ -11,7 +11,7 @@
 #ifndef DYNAMIC_VINS_STEREO_TEST_H
 #define DYNAMIC_VINS_STEREO_TEST_H
 
-#include "front_end/semantic_image.h"
+#include "basic/semantic_image.h"
 
 
 namespace dynamic_vins{\

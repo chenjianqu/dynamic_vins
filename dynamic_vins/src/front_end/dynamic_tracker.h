@@ -24,16 +24,16 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 #include <torch/torch.h>
-
 #include <camodocal/camera_models/CameraFactory.h>
 
-#include "semantic_image.h"
+#include "basic/semantic_image.h"
 #include "utils/parameters.h"
-#include "estimator/basic/point_landmark.h"
+#include "basic/point_landmark.h"
 #include "mot/deep_sort.h"
 #include "feature_utils.h"
-#include "estimator/basic/frontend_feature.h"
-#include "utils/box3d.h"
+#include "basic/frontend_feature.h"
+#include "basic/box3d.h"
+#include "basic/inst_estimated_info.h"
 #include "instance_feature.h"
 
 namespace dynamic_vins{\
@@ -59,19 +59,6 @@ public:
         estimated_info = estimated_info_;
     }
 
-private:
-    void ManageInstances();
-
-    void ClearState();
-
-    void BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes);
-
-    void DetectExtraPoints();
-
-    vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
-
-    std::tuple<int,float,float> GetMatchInst(Box2D &instInfo, torch::Tensor &inst_mask_tensor);
-
     void ExecInst(std::function<void(unsigned int, InstFeat&)> func){
         for(auto & [ key,inst] : instances_){
             if(inst.lost_num>0)
@@ -80,11 +67,22 @@ private:
         }
     }
 
-
 private:
+    void ManageInstances();
+
+    void ClearState();
+
+    void BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes);
+
+    vector<uchar> RejectWithF(InstFeat &inst, int col, int row) const;
+
+    std::tuple<int,float,float> GetMatchInst(Box2D &instInfo, torch::Tensor &inst_mask_tensor);
+
+public:
     std::unordered_map<unsigned int,InstFeat> instances_;
     std::unordered_map<unsigned int,InstEstimatedInfo> estimated_info;
 
+private:
     unsigned int global_frame_id{0};
     cv::Mat mask_background;
     cv::cuda::GpuMat mask_background_gpu;

@@ -11,7 +11,7 @@
 
 #include "stereo_parameters.h"
 
-#include "utils/def.h"
+#include "basic/def.h"
 
 
 namespace dynamic_vins{\

@@ -12,8 +12,8 @@
 #define DYNAMIC_VINS_VIODE_UTILS_H
 
 #include "utils/parameters.h"
-#include "utils/def.h"
-#include "front_end/semantic_image.h"
+#include "basic/def.h"
+#include "basic/semantic_image.h"
 
 
 namespace dynamic_vins{ \

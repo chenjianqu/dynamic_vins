@@ -378,7 +378,7 @@ std::optional<Vec3d> FitBox3DSimple(vector<Vec3d> &points,const Vec3d& dims){
  * 根据重投影误差判断哪些点需要被剔除
  * @param removeIndex
  */
-void OutliersRejection(std::set<int> &removeIndex,std::list<StaticLandmark>& point_landmarks)
+void OutliersRejection(std::set<int> &removeIndex,std::list<StaticPointLandmark>& point_landmarks)
 {
     //return;
     int feature_index = -1;
@@ -676,12 +676,12 @@ bool SolvePoseByPnP(Mat3d &R, Vec3d &P,
 }
 
 
-double CompensatedParallax2(const StaticLandmark &landmark, int frame_count)
+double CompensatedParallax2(const StaticPointLandmark &landmark, int frame_count)
 {
     //check the second last frame is keyframe or not
     //parallax betwwen seconde last frame and third last frame
-    const StaticFeature &frame_i = landmark.feats[frame_count - 2 - landmark.start_frame];
-    const StaticFeature &frame_j = landmark.feats[frame_count - 1 - landmark.start_frame];
+    const StaticPointFeature &frame_i = landmark.feats[frame_count - 2 - landmark.start_frame];
+    const StaticPointFeature &frame_j = landmark.feats[frame_count - 1 - landmark.start_frame];
 
     double ans = 0;
     Vec3d p_j = frame_j.point;

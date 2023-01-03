@@ -12,7 +12,7 @@
 #include <memory>
 
 #include "utils/tensorrt/tensorrt_utils.h"
-#include "utils/def.h"
+#include "basic/def.h"
 #include "flow/flow_parameter.h"
 
 using namespace std;

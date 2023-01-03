@@ -246,62 +246,56 @@ void Instance::OutlierRejection()
             continue;
 
         if(std::isfinite(lm.depth)){
-
-        ///根据包围框去除外点
-        int frame=lm.frame();
-        Vec3d pts_oi = CamToObject(lm.front()->point * lm.depth,frame);
-        constexpr double factor=4.;
-        bool is_in_box = (std::abs(pts_oi.x()) < factor* box3d->dims.x()) && (std::abs(pts_oi.y())<factor*box3d->dims.y() ) &&
-                (std::abs(pts_oi.z()) < factor*box3d->dims.z());
-        if(!is_in_box){
-           // log_text += fmt::format("del outbox lid:{},d:{:.2f},pts_oi:{} \n", lm.id, lm.depth, VecToStr(pts_oi));
-            lm.EraseBegin();
-            lm.depth=-1;
-            if(lm.feats.empty()){
-                lm.bad=true;
+            ///根据包围框去除外点
+            if(!IsInBoxPc(lm.front()->point * lm.depth,lm.frame())){
+               // log_text += fmt::format("del outbox lid:{},d:{:.2f},pts_oi:{} \n", lm.id, lm.depth, VecToStr(pts_oi));
+                lm.EraseBegin();
+                lm.depth=-1;
+                if(lm.feats.empty()){
+                    lm.bad=true;
+                }
+                num_delete++;
+                continue;
             }
-            num_delete++;
-            continue;
-        }
 
-        double err = 0;
-        int err_cnt = 0;
-        ///单目重投影误差
-        auto feat_it=lm.feats.begin();
-        int imu_i = (*feat_it)->frame;
-        Vec3d &start_observe = (*feat_it)->point;
-        for(++feat_it;feat_it!=lm.feats.end();++feat_it){
-            int imu_j = (*feat_it)->frame;
-            Vec3d pts_cj = ObjectToCam(CamToObject(lm.depth * start_observe,imu_i),imu_j);
-            Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - (*feat_it)->point.head<2>();
-            double re = residual.norm();
-            err+=re;
-            err_cnt++;
-        }
-        ///双目重投影误差
-        feat_it=lm.feats.begin();
-        for(++feat_it;feat_it!=lm.feats.end();++feat_it){
-            if((*feat_it)->is_stereo){
+            double err = 0;
+            int err_cnt = 0;
+            ///单目重投影误差
+            auto feat_it=lm.feats.begin();
+            int imu_i = (*feat_it)->frame;
+            Vec3d &start_observe = (*feat_it)->point;
+            for(++feat_it;feat_it!=lm.feats.end();++feat_it){
                 int imu_j = (*feat_it)->frame;
-                Vec3d pts_cj = ObjectToCam(CamToObject(lm.depth * start_observe,imu_i,0),imu_j,1);
+                Vec3d pts_cj = ObjectToCam(CamToObject(lm.depth * start_observe,imu_i),imu_j);
                 Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - (*feat_it)->point.head<2>();
                 double re = residual.norm();
                 err+=re;
                 err_cnt++;
             }
-        }
-
-        double ave_err = err / err_cnt * kFocalLength;
-        index++;
-        if(ave_err > 30){
-            //log_text += fmt::format("del lid:{},d:{:.2f},avg:{:.2f} \n", lm.id, lm.depth, ave_err);
-            lm.EraseBegin();
-            lm.depth=-1;
-            if(lm.feats.empty()){
-                lm.bad=true;
+            ///双目重投影误差
+            feat_it=lm.feats.begin();
+            for(++feat_it;feat_it!=lm.feats.end();++feat_it){
+                if((*feat_it)->is_stereo){
+                    int imu_j = (*feat_it)->frame;
+                    Vec3d pts_cj = ObjectToCam(CamToObject(lm.depth * start_observe,imu_i,0),imu_j,1);
+                    Vec2d residual = (pts_cj / pts_cj.z()).head<2>() - (*feat_it)->point.head<2>();
+                    double re = residual.norm();
+                    err+=re;
+                    err_cnt++;
+                }
             }
-            num_delete++;
-        }
+
+            double ave_err = err / err_cnt * kFocalLength;
+            index++;
+            if(ave_err > 30){
+                //log_text += fmt::format("del lid:{},d:{:.2f},avg:{:.2f} \n", lm.id, lm.depth, ave_err);
+                lm.EraseBegin();
+                lm.depth=-1;
+                if(lm.feats.empty()){
+                    lm.bad=true;
+                }
+                num_delete++;
+            }
 
         }
         else{
@@ -415,7 +409,6 @@ int Instance::DeleteBadLandmarks(){
             cnt++;
         }
     }
-
     return cnt;
 }
 

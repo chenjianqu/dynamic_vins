@@ -13,7 +13,7 @@
 
 #include <camodocal/camera_models/CameraFactory.h>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/parameters.h"
 #include "vio_parameters.h"
 

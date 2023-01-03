@@ -28,7 +28,7 @@
 #include "camodocal/camera_models/CataCamera.h"
 #include "camodocal/camera_models/PinholeCamera.h"
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/parameters.h"
 #include "dynamic_tracker.h"
 #include "det2d/detector2d.h"

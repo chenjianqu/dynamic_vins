@@ -14,12 +14,12 @@
 #include <memory>
 #include <chrono>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/tensorrt/tensorrt_utils.h"
 #include "pipeline.h"
 #include "solo_head.h"
 #include "buffer.h"
-#include "front_end/semantic_image.h"
+#include "basic/semantic_image.h"
 #include "det2d_parameter.h"
 
 using namespace std::chrono_literals;

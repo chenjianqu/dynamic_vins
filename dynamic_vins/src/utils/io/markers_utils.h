@@ -12,11 +12,10 @@
 #define DYNAMIC_VINS_MARKERS_UTILS_H
 
 #include <visualization_msgs/MarkerArray.h>
-
-#include "utils/def.h"
+#include "basic/def.h"
+#include "basic/state.h"
 #include "utils/parameters.h"
 #include "io_parameters.h"
-#include "estimator/basic/state.h"
 
 
 namespace dynamic_vins{\

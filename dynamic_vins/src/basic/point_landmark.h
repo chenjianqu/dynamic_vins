@@ -11,15 +11,14 @@
 #ifndef DYNAMIC_VINS_POINT_LANDMARK_H
 #define DYNAMIC_VINS_POINT_LANDMARK_H
 
-
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/opencv.hpp>
 #include <sophus/so3.hpp>
 
-#include "utils/def.h"
-#include "estimator/basic/point_feature.h"
+#include "def.h"
+#include "point_feature.h"
 
 namespace dynamic_vins{\
 
@@ -87,29 +86,6 @@ struct LandmarkPoint{
     std::list<FeaturePoint::Ptr> feats;//每个id的特征在各个帧上的特征点,因为要经常删除，故使用链表
     double depth{-1.0};
 };
-
-
-
-
-class StaticLandmark{
-public:
-    const int feature_id;
-    int start_frame;
-    vector<StaticFeature> feats;
-    size_t used_num;
-    double depth;
-    int solve_flag; // 0 haven't solve yet; 1 solve succ; 2 solve fail;
-
-    StaticLandmark(int _feature_id, int _start_frame)
-    : feature_id(_feature_id), start_frame(_start_frame),
-    used_num(0), depth(-1.0), solve_flag(0)
-    {}
-
-    int endFrame(){
-        return start_frame + feats.size() - 1;
-    }
-};
-
 
 
 }

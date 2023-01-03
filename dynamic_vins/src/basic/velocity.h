@@ -11,7 +11,7 @@
 #ifndef DYNAMIC_VINS_VELOCITY_H
 #define DYNAMIC_VINS_VELOCITY_H
 
-#include "utils/def.h"
+#include "def.h"
 
 
 namespace dynamic_vins{\

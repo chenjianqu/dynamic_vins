@@ -36,7 +36,7 @@
 #include "camera_pose_visualization.h"
 #include "estimator/estimator.h"
 #include "utils/parameters.h"
-#include "utils/box3d.h"
+#include "basic/box3d.h"
 #include "io_parameters.h"
 
 namespace dynamic_vins{\

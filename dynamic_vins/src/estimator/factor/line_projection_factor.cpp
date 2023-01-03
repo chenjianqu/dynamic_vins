@@ -3,7 +3,7 @@
 
 #include "line_parameterization.h"
 #include "line_detector/line_geometry.h"
-#include "utils/def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

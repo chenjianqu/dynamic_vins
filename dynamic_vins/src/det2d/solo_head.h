@@ -17,7 +17,7 @@
 #include <torch/torch.h>
 #include <torchvision/vision.h>
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "pipeline.h"
 
 namespace dynamic_vins{\

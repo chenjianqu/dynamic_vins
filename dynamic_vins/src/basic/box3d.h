@@ -16,10 +16,9 @@
 #include <string>
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
+#include <camodocal/camera_models/CameraFactory.h>
 
-#include "camodocal/camera_models/CameraFactory.h"
-
-#include "utils/def.h"
+#include "def.h"
 #include "utils/camera_model.h"
 
 

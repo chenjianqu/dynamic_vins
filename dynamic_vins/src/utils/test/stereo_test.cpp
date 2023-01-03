@@ -10,7 +10,7 @@
 
 #include "stereo_test.h"
 
-#include "utils/def.h"
+#include "basic/def.h"
 #include "utils/camera_model.h"
 #include "utils/io/publisher_map.h"
 

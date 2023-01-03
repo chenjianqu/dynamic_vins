@@ -18,7 +18,7 @@
 #include <ros/console.h>
 
 #include "estimator/utility.h"
-#include "utils/def.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 

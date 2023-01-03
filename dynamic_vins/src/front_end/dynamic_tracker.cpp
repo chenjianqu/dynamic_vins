@@ -15,11 +15,11 @@
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/io/pcd_io.h>
 
-#include "semantic_image.h"
-#include "utils/def.h"
+#include "basic/semantic_image.h"
+#include "basic/def.h"
 #include "front_end_parameters.h"
 #include "utils/dataset/coco_utils.h"
-#include "estimator/basic/point_landmark.h"
+#include "basic/point_landmark.h"
 #include "utils/convert_utils.h"
 
 namespace dynamic_vins{\
@@ -33,9 +33,7 @@ namespace idx = torch::indexing;
 InstsFeatManager::InstsFeatManager(const string& config_path)
 {
     std::array<int64_t, 2> orig_dim{int64_t(fe_para::kInputHeight), int64_t(fe_para::kInputWidth)};
-
     mot_tracker = std::make_unique<DeepSORT>(config_path,orig_dim);
-
     //orb_matcher_ = cv::DescriptorMatcher::create("BruteForce-Hamming");
 }
 
@@ -349,26 +347,7 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 {
     TicToc tic_toc;
     curr_time=img.time0;
-
     curr_img = img;
-
-    for(auto &[inst_id,inst]:instances_){
-        inst.is_curr_visible=false;
-        inst.box2d.reset();
-        inst.box3d.reset();
-    }
-
-    ///MOT
-    if(cfg::dataset == DatasetType::kKitti){
-        AddInstancesByTracking(img);
-    }
-    else if(cfg::dataset == DatasetType::kViode){
-        AddViodeInstances(img);
-    }
-    else{
-        std::cerr<<"InstFeat::InstsTrack()::MOT not is implemented, as dataset is "<<cfg::dataset_name<<endl;
-        throw std::runtime_error("InstFeat::InstsTrack()::MOT not is implemented");
-    }
 
     //将当前帧未观测到的box设置状态
     for(auto& [key,inst] : instances_){
@@ -484,7 +463,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
         });
 
-
         for(auto& [key,inst] : instances_){
             if(!inst.is_curr_visible)
                 continue;
@@ -516,7 +494,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
         ///等待线程结束
         t_process_extra.join();
 
-
         ExecInst([&](unsigned int key, InstFeat& inst){
             inst.PostProcess();
         });
@@ -525,8 +502,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             inst.prev_id_pts=inst.curr_id_pts;
             inst.right_prev_id_pts=inst.right_curr_id_pts;
         }*/
-
-
     }
     else{
         ManageInstances();
@@ -538,8 +513,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
     prev_img = img;
 
 }
-
-
 
 
 /**
@@ -561,7 +534,6 @@ void InstsFeatManager::ManageInstances()
         }
     }
 }
-
 
 
 /**
@@ -600,7 +572,6 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
             features_map.features.insert({inst.ids[i],feat});
         }
 
-
         int right_cnt=0;
         if(cfg::is_stereo){
             for(int i=0; i<(int)inst.right_un_points.size(); i++){
@@ -636,7 +607,6 @@ std::map<unsigned int,FeatureInstance> InstsFeatManager::Output()
 void InstsFeatManager::AddViodeInstances(SemanticImage &img)
 {
     cv::Mat seg = img.seg0;
-
     Debugt("addViodeInstancesBySegImg merge insts");
     for(auto &det_box : img.boxes2d){
         auto key = det_box->track_id;
@@ -646,7 +616,6 @@ void InstsFeatManager::AddViodeInstances(SemanticImage &img)
         }
         auto &inst = instances_[key];
         inst.box2d = det_box;
-
         inst.roi->mask_cv = det_box->roi->mask_cv;
         inst.roi->mask_gpu = det_box->roi->mask_gpu;
         inst.roi->roi_gray = det_box->roi->roi_gray;
@@ -655,9 +624,7 @@ void InstsFeatManager::AddViodeInstances(SemanticImage &img)
         //inst.color = img.seg0.at<cv::Vec3b>(inst.box2d->);
         inst.is_curr_visible=true;
     }
-
 }
-
 
 
 /**
@@ -843,31 +810,13 @@ void InstsFeatManager:: AddInstancesByIouWithGPU(const SemanticImage &img)
 }
 
 
-
 void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
 {
     double current_time = img.time0;
     int n_inst = (int)img.boxes2d.size();
     if(img.boxes2d.empty())
         return;
-
-    /*vector<Box2D::Ptr> boxes;
-    ///只跟踪车辆和行人
-    for(auto it=img.boxes2d.begin(),it_next=it;it!=img.boxes2d.end();it=it_next){
-        it_next++;
-        if(cfg::dataset == DatasetType::kKitti && (
-                (*it)->class_name=="Car" ||
-                (*it)->class_name=="Van" ||
-                (*it)->class_name=="Truck" ||
-                (*it)->class_name=="Tram")){
-            boxes.emplace_back(*it);
-        }
-
-    }*/
-
-
     auto trks = mot_tracker->update(img.boxes2d, img.color0);
-
 
     string log_text="MOT AddInstancesByTracking:\n";
 
@@ -881,9 +830,8 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
             inst_feat.is_curr_visible=true;
             instances_.insert({id, inst_feat});
             log_text += fmt::format("Create inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",
-                                    id, det_box->class_name,
-                                    inst_feat.box2d->min_pt.x,inst_feat.box2d->min_pt.y,inst_feat.box2d->max_pt.x,
-                                    inst_feat.box2d->max_pt.y);
+                                    id, det_box->class_name,inst_feat.box2d->min_pt.x,inst_feat.box2d->min_pt.y,
+                                    inst_feat.box2d->max_pt.x,inst_feat.box2d->max_pt.y);
         }
         else{
             it->second.box2d = det_box;
@@ -891,7 +839,6 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
             it->second.roi->mask_gpu = det_box->roi->mask_gpu;
             it->second.roi->roi_gray = det_box->roi->roi_gray;
             it->second.roi->roi_gpu = det_box->roi->roi_gpu;
-
             it->second.is_curr_visible=true;
 
             log_text += fmt::format("Update inst:{} cls:{} min_pt:({},{}),max_pt:({},{})\n",
@@ -899,7 +846,6 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
                                     it->second.box2d->max_pt.x, it->second.box2d->max_pt.y);
         }
     }
-
     Debugt(log_text);
 }
 
@@ -966,10 +912,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
             cv::circle(img,
                        cv::Point2f(pt2.x+inst.box2d->rect.tl().x,pt2.y+inst.box2d->rect.tl().y),
                        2, inst.color, -1);//当前帧的点
-
         }
-
-
 
         /*if(vel_map_.count(inst.id)!=0){
             auto anchor=inst.feats_center_pt;
@@ -996,10 +939,14 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
 
         ///绘制检测的3D边界框
         if(inst.box3d){
-            cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,
-                          cv::Scalar(255,255,255),2);
-
-            inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);//绘制投影3D-2D框
+            //cv::rectangle(img,inst.box3d->box2d.min_pt,inst.box3d->box2d.max_pt,
+            //              cv::Scalar(255,255,255),2);
+            if(estimated_info.count(id)>0 && estimated_info[id].is_static){
+                inst.box3d->VisCorners2d(img,cv::Scalar(255,255,255),cam_t.cam0);//绘制投影3D-2D框
+            }
+            else{
+                inst.box3d->VisCorners2d(img,inst.color,cam_t.cam0);
+            }
             //Debugt("inst:{} box3d:{}",id,inst.box3d->class_name);
 
             //Mat28d corners2d =inst.box3d->CornersProjectTo2D(*camera_);
@@ -1016,9 +963,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         //std::string label=fmt::format("{}-{}",id,inst.curr_points.size() - inst.visual_new_points.size());
         std::string label=fmt::format("{}",id);
         //cv::putText(img, label, inst.box_center_pt, cv::FONT_HERSHEY_SIMPLEX, 1.0, inst.color, 2);
-
         DrawText(img, label, inst.color, inst.box2d->center_pt(), 1.0, 2, false);
-
     }
 
 
