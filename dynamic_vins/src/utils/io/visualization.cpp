@@ -63,8 +63,8 @@ void Publisher::RegisterPub(ros::NodeHandle &n)
 
     camera_pose_visual=std::make_shared<CameraPoseVisualization>(1, 0, 0, 1);
     if(cfg::dataset==DatasetType::kCustom){
-        camera_pose_visual->setScale(0.2);
-        camera_pose_visual->setLineWidth(0.05);
+        camera_pose_visual->setScale(0.05);
+        camera_pose_visual->setLineWidth(0.01);
     }
     else{
         camera_pose_visual->setScale(1.);
@@ -194,8 +194,6 @@ void Publisher::PubCameraPose(const std_msgs::Header &header)
     odometry.pose.pose.orientation = EigenToGeometryQuaternion(Q_eigen);
 
     PublisherMap::Pub<nav_msgs::Odometry>(odometry,"camera_pose");
-
-
 
     camera_pose_visual->reset();
     camera_pose_visual->add_pose(P_eigen, Q_eigen);

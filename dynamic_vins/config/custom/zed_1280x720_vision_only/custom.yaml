@@ -7,29 +7,25 @@ num_of_cam: 2
 only_imgprocess: 0  #for debug
 only_frontend: 0  #for debug
 
-dataset_type: "kitti"
-slam_type: "dynamic" #SLAM mode,optional:raw,naive,dynamic
+dataset_type: "custom" #support:kitti,viode
+slam_type: "raw" #SLAM mode,optional:raw,naive,dynamic
 
 use_line: 0 #line feature
 undistort_input: 0 #是否对输入进行矫正
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
-plane_constraint: 0 #是否使用平面约束
+plane_constraint: 1 #是否使用平面约束
 
-static_inst_as_background: 1 #是否将静态物体作为背景点优化相机位姿
+show_input: 0
 
 ####################### Camera Parameters ########################
 
-kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/" #相机内参
+cam0_calib: "cam0_pinhole.yaml"
+cam1_calib: "cam1_pinhole.yaml"
 
-#kitti tracking seq:18
-#image_width: 1238
-#image_height: 374
-
-#kitti tracking seq:0-10
-image_width: 1242
-image_height: 375
+image_width: 1280
+image_height: 720
 
 ######################### Extrinsic ###########################
 #Whether to estimate the extrinsic between the camera and IMU,
@@ -37,6 +33,25 @@ image_height: 375
 #1 means estimated extrinsic with initial value
 #2 means estimated extrinsic, but no initial initial value
 estimate_extrinsic: 0
+
+body_T_cam0: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: d
+  data: [1.0, 0.0, 0.0, 0.0,
+         0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0,
+         0.0, 0.0, 0.0, 1.0]
+
+body_T_cam1: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: d
+  data: [1.0, 0.0, 0.0, 0.12,
+         0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0,
+         0.0, 0.0, 0.0, 1.0]
+
 
 ####################### ROS Topic ########################
 
@@ -71,10 +86,10 @@ max_num_iterations: 10   # max solver itrations, to guarantee real time
 keyframe_parallax: 15 # keyframe selection threshold (pixel)
 
 #imu parameters       The more accurate parameters you provide, the better performance
-acc_n: 0.1          # accelerometer measurement noise standard deviation. #0.2   0.04
-gyr_n: 0.01         # gyroscope measurement noise standard deviation.     #0.05  0.004
-acc_w: 0.001         # accelerometer bias random work noise standard deviation.  #0.02
-gyr_w: 1.0e-4       # gyroscope bias random work noise standard deviation.     #4.0e-5
+acc_n: 1.3816015296770526e-02          # accelerometer measurement noise standard deviation. #0.2   0.04
+gyr_n: 1.7437150007509720e-03         # gyroscope measurement noise standard deviation.     #0.05  0.004
+acc_w: 5.1404537157728519e-04         # accelerometer bias random work noise standard deviation.  #0.02
+gyr_w: 3.5656511595590793e-05       # gyroscope bias random work noise standard deviation.     #4.0e-5
 g_norm: 9.81007     # gravity magnitude
 
 #unsynchronization parameters
@@ -85,71 +100,38 @@ INIT_DEPTH: 5.0
 BIAS_ACC_THRESHOLD: 0.1
 BIAS_GYR_THRESHOLD: 0.1
 
-
-####################### Log Parameters ########################
+#######################  Log Parameters ########################
 estimator_log_level: "debug"
-estimator_log_flush: "debug"
+estimator_log_flush: "info"
 feature_tracker_log_level: "debug"
-feature_tracker_log_flush: "debug"
-segmentor_log_level: "info"
+feature_tracker_log_flush: "info"
+segmentor_log_level: "debug"
 segmentor_log_flush: "info"
 log_output_path: "data/log/"
 
-#for debug
-print_detail: 1
-
-#for debug，输出某些id的物体的位姿
-print_inst_ids: [1]
+#是否输出每一帧的每个路标点和位姿的信息,用于debug
+print_detail: 0
 
 ####################### Visualization Parameters ########################
-visual_inst_duration: 1000  #duration of marker display
+visual_inst_duration: 2000  #duration of marker display
 
-pub_groundtruth_box: 0 #可视化物体的GT框
-
-#当pub_groundtruth_box==1时，设置该路径
-object_groundtruth_path: "/home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/"
-
-pub_predict_box: 0 #可视化3D检测框
-
+pub_groundtruth_box: 0
+pub_predict_box: 0
 pub_object_axis: 1
 pub_object_trajectory: 1
 
-show_input: 1
-
-####################### Dynamic Parameters ########################
-
-instance_init_min_num: 4
-instance_static_err_threshold: 10.0
-
-static_inst_threshold: 8.0 #设置物体为静态的场景流阈值
-
-stereo_preprocess_path: "/home/chen/datasets/kitti/tracking/stereo/training/"
+####################### Dataloader Parameters ########################
+use_dataloader: 0 #read image for disk,not from ros
+image0_topic: "/zed_cam/cam0"
+image1_topic: "/zed_cam/cam1"
 
 ######################### Bounding box ########################
-use_det3d: 1
-det3d_score_threshold: 0.15
-use_offline_det3d: 1
-det3d_preprocess_path: "/home/chen/datasets/kitti/tracking/det3d_02/training/image_02_pgd/" #预处理的3D框
+use_det3d: 0
 
 use_offline_det2d: 1
-det2d_preprocess_path: "/home/chen/datasets/kitti/tracking/det2d_02/training/image_02/" #预处理的2D框
 
-box2d_min_height: 0 #至少高40pixel才会被处理
+det2d_preprocess_path: "/home/chen/datasets/MyData/ZED_data/mask/" #预处理的2D框,位置应该是 det2d_preprocess_path+seq_name/
 
-####################### MOT Parameters ########################
-tracking_max_age: 5
-tracking_n_init: 3
-
-extractor_model_path: "weights/deepsort/ckpt.bin" #外观模型
-
-####################### Dataloader Parameters ########################
-use_dataloader: 1 #read image for disk,not from ros
-#以下选项当use_dataloader=1时有效
-image_dataset_period: 400 #
-image_dataset_left: "/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/"
-image_dataset_right: "/home/chen/datasets/kitti/tracking/data_tracking_image_3/training/image_03/"
 
 ####################### Flow Parameters ########################
-
 use_dense_flow: 0 #是否使用稠密光流
-

@@ -10,14 +10,14 @@ only_frontend: 0  #for debug
 dataset_type: "custom" #support:kitti,viode
 slam_type: "raw" #SLAM mode,optional:raw,naive,dynamic
 
-use_line: 1 #line feature
+use_line: 0 #line feature
 undistort_input: 1 #是否对输入进行矫正
 
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
-plane_constraint: 1 #是否使用平面约束
+plane_constraint: 0 #是否使用平面约束
 
-show_input: 1
+show_input: 0
 
 ####################### Camera Parameters ########################
 
@@ -25,7 +25,7 @@ cam0_calib: "cam0_pinhole.yaml"
 cam1_calib: "cam1_pinhole.yaml"
 
 image_width: 1280
-image_height: 720
+image_height: 800
 
 ######################### Extrinsic ###########################
 #Whether to estimate the extrinsic between the camera and IMU,
@@ -47,7 +47,7 @@ body_T_cam1: !!opencv-matrix
   rows: 4
   cols: 4
   dt: d
-  data: [1.0, 0.0, 0.0, 0.12,
+  data: [1.0, 0.0, 0.0, 0.08,
          0.0, 1.0, 0.0, 0.0,
          0.0, 0.0, 1.0, 0.0,
          0.0, 0.0, 0.0, 1.0]
@@ -61,7 +61,6 @@ vins_keyframe_pose_topic: "/dynamic_vins/keyframe_pose"
 vins_extrinsic_topic: "/dynamic_vins/extrinsic"
 vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
 vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
-
 
 ####################### Frontend Parameters ########################
 
@@ -122,8 +121,8 @@ pub_object_trajectory: 1
 
 ####################### Dataloader Parameters ########################
 use_dataloader: 0 #read image for disk,not from ros
-image0_topic: "/zed_cam/cam0"
-image1_topic: "/zed_cam/cam1"
+image0_topic: "/mynteye/left_rect/image_rect"
+image1_topic: "/mynteye/right_rect/image_rect"
 
 ######################### Bounding box ########################
 use_det3d: 0

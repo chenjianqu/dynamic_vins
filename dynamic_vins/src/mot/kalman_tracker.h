@@ -8,8 +8,8 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef KALMAN_H
-#define KALMAN_H
+#ifndef DYNAMIC_VINS_KALMAN_H
+#define DYNAMIC_VINS_KALMAN_H
 
 #include <opencv2/video/tracking.hpp>
 
@@ -23,7 +23,7 @@ enum class TrackState {
 };
 
 
-// This class represents the internel state of individual tracked objects observed as bounding box.
+
 class KalmanTracker {
 public:
     KalmanTracker();
@@ -44,11 +44,7 @@ public:
 
     [[nodiscard]] int id() const { return _id; }
 
-    [[nodiscard]] int get_time_since_update(){ return time_since_update;}
-
-    static constexpr int STATE_DIM = 7;
-    static constexpr int MEASURE_DIM = 4;
-
+    [[nodiscard]] int get_time_since_update() const{ return time_since_update;}
 private:
 
     inline static int global_instances_id=1;
@@ -66,4 +62,4 @@ private:
 
 }
 
-#endif //KALMAN_H
+#endif //DYNAMIC_VINS_KALMAN_H

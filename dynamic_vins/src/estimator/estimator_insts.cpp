@@ -634,6 +634,11 @@ void InstanceManager::SetDynamicOrStatic(){
                             scene_vec += (next_ptr->p_w - (*it)->p_w) /
                                     (body.headers[next_ptr->frame] - body.headers[(*it)->frame]);
                             vec_size++;
+
+                            if(inst.id == 15){
+                                Vec3d v = (next_ptr->p_w - (*it)->p_w) / (body.headers[next_ptr->frame] - body.headers[(*it)->frame]);
+                                Debugv("lm:{} {}",lm.id, VecToStr(v));
+                            }
                             break;
                         }
                     }
@@ -645,16 +650,15 @@ void InstanceManager::SetDynamicOrStatic(){
                 (inst.state[body.frame].time - inst.state[body.frame-1].time);
         scene_vec /= vec_size;//计算平均场景流
 
-        log_text += fmt::format("InstanceManager::SetDynamicOrStatic inst:{} vel:{} scene_vec:{} vec_size:{}",
-               inst.id,VecToStr(vel),VecToStr(scene_vec),vec_size);
+        log_text += fmt::format("InstanceManager::SetDynamicOrStatic inst:{} vel:{} scene_vec:{} norm:{} vec_size:{}\n",
+               inst.id,VecToStr(vel),VecToStr(scene_vec),scene_vec.norm(),vec_size);
 
-        if(vec_size<3){
+        if(vec_size<5){
             return;
         }
 
-        if(vel.norm()>15 || scene_vec.norm()>12){ //根据位姿变化或平均场景流判断是否为静态
-            inst.is_static=false;
-            inst.static_frame=0;
+        if(vel.norm()>15 || scene_vec.norm()> para::kStaticInstThreshold){ //根据位姿变化或平均场景流判断是否为静态
+            inst.static_frame--;
         }
         else{
             inst.static_frame++;
@@ -662,10 +666,15 @@ void InstanceManager::SetDynamicOrStatic(){
 
         if(inst.static_frame>=2){
             inst.is_static=true;
+            inst.static_frame=2;
             log_text += fmt::format("inst:{} set static\n",inst.id);
         }
+        else if(inst.static_frame <=0 ){
+            inst.is_static=false;
+            inst.static_frame=0;
+            log_text += fmt::format("inst:{} set dynamic\n",inst.id);
+        }
     });
-
 
     /*    InstExec([&log_text,this](int key,Instance& inst){
 

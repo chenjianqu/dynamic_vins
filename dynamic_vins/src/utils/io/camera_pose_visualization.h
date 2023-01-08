@@ -48,6 +48,7 @@ public:
     void publish_by(ros::Publisher& pub, const std_msgs::Header& header);
     void add_edge(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1);
     void add_loopedge(const Eigen::Vector3d& p0, const Eigen::Vector3d& p1);
+
 private:
     std::vector<visualization_msgs::Marker> m_markers;
     std_msgs::ColorRGBA m_image_boundary_color;

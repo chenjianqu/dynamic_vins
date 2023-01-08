@@ -16,27 +16,25 @@ namespace dynamic_vins{\
 
 using namespace cv;
 
-namespace {
-    // Convert bounding box from [cx,cy,s,r] to [x,y,w,h] style.
-    cv::Rect2f get_rect_xysr(const Mat &xysr) {
-        auto cx = xysr.at<float>(0, 0), cy = xysr.at<float>(1, 0), s = xysr.at<float>(2, 0), r = xysr.at<float>(3, 0);
-        float w = sqrt(s * r);
-        float h = s / w;
-        float x = (cx - w / 2);
-        float y = (cy - h / 2);
+// Convert bounding box from [cx,cy,s,r] to [x,y,w,h] style.
+cv::Rect2f get_rect_xysr(const Mat &xysr) {
+    auto cx = xysr.at<float>(0, 0), cy = xysr.at<float>(1, 0), s = xysr.at<float>(2, 0), r = xysr.at<float>(3, 0);
+    float w = sqrt(s * r);
+    float h = s / w;
+    float x = (cx - w / 2);
+    float y = (cy - h / 2);
 
-        return cv::Rect2f(x, y, w, h);
-    }
+    return cv::Rect2f(x, y, w, h);
 }
 
 
 KalmanTracker::KalmanTracker() {
 
-    kf = KalmanFilter(STATE_DIM, MEASURE_DIM, 0);
+    kf = KalmanFilter(mot_para::STATE_DIM, mot_para::MEASURE_DIM, 0);
 
-    measurement = Mat::zeros(MEASURE_DIM, 1, CV_32F);
+    measurement = Mat::zeros(mot_para::MEASURE_DIM, 1, CV_32F);
 
-    kf.transitionMatrix = (Mat_<float>(STATE_DIM, STATE_DIM)
+    kf.transitionMatrix = (Mat_<float>(mot_para::STATE_DIM, mot_para::STATE_DIM)
             <<
             1, 0, 0, 0, 1, 0, 0,
             0, 1, 0, 0, 0, 1, 0,
@@ -59,6 +57,7 @@ void KalmanTracker::init(cv::Rect2f initRect) {
     kf.statePost.at<float>(2, 0) = initRect.area();
     kf.statePost.at<float>(3, 0) = initRect.width / initRect.height;
 }
+
 
 // Predict the estimated bounding box.
 void KalmanTracker::predict() {

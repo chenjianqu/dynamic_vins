@@ -9,7 +9,6 @@
  *******************************************************/
 
 #include "mot_parameter.h"
-
 #include <opencv2/opencv.hpp>
 
 namespace dynamic_vins{\
@@ -27,7 +26,6 @@ void MotParameter::SetParameters(const std::string &config_path)
     kExtractorModelPath = kBasicDir + kExtractorModelPath;
     fs["tracking_n_init"] >> kTrackingNInit;
     fs["tracking_max_age"] >> kTrackingMaxAge;
-
 
     fs.release();
 

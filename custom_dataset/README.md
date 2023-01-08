@@ -9,7 +9,7 @@
 
 **方式一：使用ZED SDK**
 
-* 设置分辨率**：修改`zed_ws/src/zed-ros-wrapper/zed_wrapper/params/common.yaml`中的general中的resolution参数， **`0`: HD2K, `1`: HD1080, `2`: HD720, `3`: VGA**
+* 设置分辨率**：修改`zed_ws/src/zed-ros-wrapper/zed_wrapper/params/common.yaml`中的general中的resolution参数， **`0`: HD2K, `1`: HD1080, `2`: HD720, `3`: VGA
 
 * launch ZED camera
 
@@ -279,7 +279,51 @@ python solov2_det2d_zed.py
 * 首先安装MYNT-eye的SDK
 
 ```shell
-roslaunch mynt_eye_ros_wrapper mynteye.launch
+MYNT_EYE_PATH=~/app/MYNT-EYE-S-SDK
+
+source ${MYNT_EYE_PATH}/wrappers/ros/devel/setup.bash
+
+roslaunch mynt_eye_ros_wrapper vins_fusion.launch
+```
+
+
+
+### 查看消息
+
+查看消息频率
+
+```shell
+rostopic hz /mynteye/left_rect/image_rect
+```
+
+查看消息内容
+
+```shell
+rostopic echo /mynteye/left_rect/image_rect --noarr
+```
+
+
+
+### 录制
+
+```shell
+rosbag record \
+/mynteye/disparity/camera_info \
+/mynteye/disparity/image_raw \
+/mynteye/left_rect/camera_info \
+/mynteye/left_rect/image_rect \
+/mynteye/right_rect/camera_info \
+/mynteye/right_rect/image_rect \
+/mynteye/imu/data_raw \
+-o room.bag  --duration=300
+```
+
+
+
+* 复制到本地主机
+
+```shell
+scp -r ${robotip}:~/room_2023-01-07-15-27-02.bag   /home/chen/datasets/MyData/bags/
 ```
 
 

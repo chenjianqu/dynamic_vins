@@ -15,18 +15,15 @@ use_line: 0 #line feature
 basic_dir: "/home/chen/ws/dynamic_ws/src/dynamic_vins/"
 
 plane_constraint: 1 #是否使用平面约束
-
-undistort_input: 0 #是否对输入进行矫正
-
-show_input: 0
+undistort_input: 1 #是否对输入进行矫正
+show_input: 0 #显示输入图像
 
 ####################### Camera Parameters ########################
-
 cam0_calib: "cam0_pinhole.yaml"
 cam1_calib: "cam1_pinhole.yaml"
 
 image_width: 1280
-image_height: 720
+image_height: 800
 
 ######################### Extrinsic ###########################
 #Whether to estimate the extrinsic between the camera and IMU,
@@ -35,63 +32,42 @@ image_height: 720
 #2 means estimated extrinsic, but no initial initial value
 estimate_extrinsic: 0
 
+#body_T_cam0: !!opencv-matrix
+#  rows: 4
+#  cols: 4
+#  dt: d
+#  data: [0.9980375839238246, 0.0012738811789833162, 0.06260477858948245, 0.0559500190917525,
+#         0.0017832425342426393, 0.9988093229582538, -0.048751988859330644, -0.022218317938504973,
+#         -0.0625923407579582, 0.04876795667667515, 0.9968469718467439, -0.06608421910045355,
+#         0.0, 0.0, 0.0, 1.0]
+
+#body_T_cam1: !!opencv-matrix
+#  rows: 4
+#  cols: 4
+#  dt: d
+#  data: [0.999949723776607, 0.003553356413655465, 0.009376757290521136, -0.02110786757132524,
+#         -0.003068549046900963, 0.9986826628266313, -0.051220337525793726, -0.021640808301362585,
+#         -0.009546409054433552, 0.051188989321015156, 0.9986433564824125, -0.06301244925948868,
+#         0.0, 0.0, 0.0, 1.0]
+
+
 body_T_cam0: !!opencv-matrix
   rows: 4
   cols: 4
   dt: d
-  data: [0.0, 0.0, 1.0, 0.0,
-         1.0, 0.0, 0.0, 0.0,
+  data: [1.0, 0.0, 0.0, 0.0,
          0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0,
          0.0, 0.0, 0.0, 1.0]
 
 body_T_cam1: !!opencv-matrix
   rows: 4
   cols: 4
   dt: d
-  data: [0.0, 0.0, 1.0, 0.0,
-         1.0, 0.0, 0.0, 0.12,
+  data: [1.0, 0.0, 0.0, 0.08,
          0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0,
          0.0, 0.0, 0.0, 1.0]
-
-#body_T_cam0: !!opencv-matrix
-#  rows: 4
-#  cols: 4
-#  dt: d
-#  data: [ -7.9311258804974094e-01, 5.5034523094379395e-03,
-#          6.0905019061627419e-01, 1.1781122416936267e+00,
-#          -6.0883056703913285e-01, 2.1166537702057897e-02,
-#          -7.9301785498216582e-01, -6.7642297617426506e-01,
-#          -1.7255819767552139e-02, -9.9976081624275781e-01,
-#          -1.3436777506703912e-02, -5.3132196718190748e+01, 0., 0., 0., 1. ]
-#body_T_cam1: !!opencv-matrix
-#  rows: 4
-#  cols: 4
-#  dt: d
-#  data: [ -7.8872434641994560e-01, 6.6386137542854828e-03,
-#          6.1471117947524878e-01, 1.1479567065029033e+00,
-#          -6.1447772554121238e-01, 2.1080917416605560e-02,
-#          -7.8865247082258794e-01, -7.0083444124557903e-01,
-#          -1.8194234749736027e-02, -9.9975573203072754e-01,
-#          -1.2547752530865264e-02, -5.3132987457435284e+01, 0., 0., 0., 1. ]
-
-#body_T_cam0: !!opencv-matrix
-#  rows: 4
-#  cols: 4
-#  dt: d
-#  data: [ 0.9988094516226048, -0.047604689072068336, 0.010652367234717887, 0.005029113641656006,
-#          0.007715456337467931, -0.06145703424286608, -0.9980799089629927, 0.004348743991337009,
-#          0.048167946633173184, 0.9969738344211562, -0.0610165747704744, -0.003003176613160689,
-#          0., 0., 0., 1. ]
-#
-#body_T_cam1: !!opencv-matrix
-#  rows: 4
-#  cols: 4
-#  dt: d
-#  data: [ 0.9991053194615518, -0.04121287127963379, 0.009489987593190988, -0.11498449637136818,
-#          0.0069732035798568265, -0.06078785133311593, -0.9981263504998437, 0.004488001050832086,
-#          0.04171252875892871, 0.9972995218945968, -0.06044607988401096, -0.003449562653344951,
-#          0., 0., 0., 1. ]
-
 
 ####################### ROS Topic ########################
 
@@ -102,15 +78,14 @@ vins_extrinsic_topic: "/dynamic_vins/extrinsic"
 vins_keyframe_point_topic: "/dynamic_vins/keyframe_point"
 vins_margin_cloud_topic: "/dynamic_vins/margin_cloud"
 
-
 ####################### Frontend Parameters ########################
 
 max_cnt: 250            # max feature number in feature tracking
 min_dist: 25            # min distance between two features
 freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
 F_threshold: 1.0        # ransac threshold (pixel)
-show_track: 1           # publish tracking image as topic
 flow_back: 1            # perform forward and backward optical flow to improve feature tracking accuracy
+
 
 min_dynamic_dist: 4 #检测动态特征点时每个点之间的最小距离
 max_dynamic_cnt: 50 #前端中每个动态物体上最多同时跟踪的特征数量
@@ -126,15 +101,16 @@ max_num_iterations: 10   # max solver itrations, to guarantee real time
 keyframe_parallax: 15 # keyframe selection threshold (pixel)
 
 #imu parameters       The more accurate parameters you provide, the better performance
-acc_n: 1.3816015296770526e-02          # accelerometer measurement noise standard deviation. #0.2   0.04
-gyr_n: 1.7437150007509720e-03         # gyroscope measurement noise standard deviation.     #0.05  0.004
-acc_w: 5.1404537157728519e-04         # accelerometer bias random work noise standard deviation.  #0.02
-gyr_w: 3.5656511595590793e-05       # gyroscope bias random work noise standard deviation.     #4.0e-5
+acc_n: 0.025772789820144627          # accelerometer measurement noise standard deviation. #0.2   0.04
+acc_w: 0.00022385207686569393         # accelerometer bias random work noise standard deviation.  #0.02
+gyr_n: 0.0018298682132947672         # gyroscope measurement noise standard deviation.     #0.05  0.004
+gyr_w: 1.82951645725973e-05       # gyroscope bias random work noise standard deviation.     #4.0e-5
 g_norm: 9.81007     # gravity magnitude
 
 #unsynchronization parameters
-estimate_td: 0                      # online estimate time offset between camera and imu
-td: 0.2680299411314499                             # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock)
+estimate_td: 0   # online estimate time offset between camera and imu
+#td: -0.034158789501110766  # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock)
+td: 0
 
 INIT_DEPTH: 5.0
 BIAS_ACC_THRESHOLD: 0.1
@@ -160,13 +136,14 @@ pub_predict_box: 0
 pub_object_axis: 1
 pub_object_trajectory: 1
 
+show_track: 1           #可视化相机
+
 ####################### Dataloader Parameters ########################
 use_dataloader: 0 #read image for disk,not from ros
-image0_topic: "/zed_cam/cam0"
-image1_topic: "/zed_cam/cam1"
+image0_topic: "/mynteye/left_rect/image_rect"
+image1_topic: "/mynteye/right_rect/image_rect"
 
-imu_topic: "/imu/data"
-
+imu_topic: "/mynteye/imu/data_raw"
 
 ######################### Bounding box ########################
 use_det3d: 0

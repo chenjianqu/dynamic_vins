@@ -69,6 +69,11 @@ void VioParameters::SetParameters(const std::string &config_path)
     if(!fs["static_inst_as_background"].isNone()){
         fs["static_inst_as_background"]>>is_static_inst_as_background;
     }
+    if(!fs["static_inst_threshold"].isNone()){
+        fs["static_inst_threshold"]>>kStaticInstThreshold;
+    }
+
+
 
 
     fs.release();

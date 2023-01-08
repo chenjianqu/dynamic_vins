@@ -66,8 +66,8 @@ startconda && conda activate py36
 ```
 
 ```shell
-sequence=0003
-estimate_file=0003_VO_dynamic_PointOnly_Odometry.txt
+sequence=0018
+estimate_file=0018_VO_dynamic_PointOnly_Odometry.txt
 
 gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_egomotion/
 estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output
@@ -109,6 +109,20 @@ sequence=0004
 
 source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_kitti_tracking_traj.sh ${estimate_dir} ${sequence} 
 ```
+
+
+
+
+
+* 读取.md文件，并汇总为.xlsx
+
+```shell
+startconda && conda activate py36
+
+python ${dynamic_vins_root}/src/dynamic_vins/scripts/python/read_summary_write_xls.py kitti_mot_exp.md summary.csv
+```
+
+
 
 
 
@@ -301,10 +315,33 @@ or
 startconda && conda activate py36
 
 gt_path=/home/chen/datasets/MyData/ZED_data
-gt_name=${gt_path}/room_static_1/vicon.txt
+gt_name=${gt_path}/room_dynamic_3/vicon.txt
 
 evo_traj tum ${gt_name}  -p --plot_mode xy
 ```
+
+or
+
+```shell
+startconda && conda activate py36
+
+seq=room_dynamic_3
+
+gt_path=/home/chen/datasets/MyData/ZED_data
+gt_name=${gt_path}/${seq}/vicon.txt
+
+est_1=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-13/Custom/${seq}_VO_raw_PointOnly_Odometry.txt
+
+est_2=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-13/Custom/${seq}_VO_raw_LinePoint_Odometry.txt
+
+est_3=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-13/Custom/${seq}_VO_naive_PointOnly_Odometry.txt
+
+est_4=${dynamic_vins_root}/src/dynamic_vins/data/exp/2022-12-13/Custom/${seq}_VO_naive_LinePoint_Odometry.txt
+
+evo_traj tum ${est_1} ${est_2} ${est_3} ${est_4} --ref=${gt_name} --align   -p --plot_mode xy -s
+```
+
+
 
 
 
@@ -402,7 +439,7 @@ optional arguments:
 如：
 
 ```shell
-python evaluate_ate.py groundtruth.txt pose_output.txt --plot result.png
+python ${dynamic_vins_root}/src/dynamic_vins/scripts/tum_tools/evaluate_ate.py groundtruth.txt pose_output.txt --plot result.png
 ```
 
 
@@ -474,6 +511,25 @@ python evaluate_ate.py ${gt_file} ${estimate_file} --plot result.png
 
 
 
+### 评估Custom
+
+```shell
+seq=room_static_3
+
+
+#ATE
+python ${dynamic_vins_root}/src/dynamic_vins/scripts/tum_tools/evaluate_ate.py \
+/home/chen/datasets/MyData/ZED_data/${seq}/vicon.txt \
+/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-12-13/Custom/${seq}_VO_raw_LinePoint_Odometry.txt \
+--plot ${seq}.png
+
+#RPE
+python ${dynamic_vins_root}/src/dynamic_vins/scripts/tum_tools/evaluate_rpe.py \
+/home/chen/datasets/MyData/ZED_data/${seq}/vicon.txt \
+/home/chen/ws/dynamic_ws/src/dynamic_vins/data/exp/2022-12-13/Custom/${seq}_VO_raw_LinePoint_Odometry.txt \
+--plot result.png
+```
+
 
 
 
@@ -481,6 +537,10 @@ python evaluate_ate.py ${gt_file} ${estimate_file} --plot result.png
 
 
 ## Evaluate object trajectory with EVO
+
+
+
+#### Use shell script
 
 * Visualize ground-turth boxes and its IDs
 
@@ -494,6 +554,10 @@ rosrun dynamic_vins_eval visualize_3d_box ${gt_file} ${image_dir}
 ```
 
 根据该程序，可以看到每个物体的gt id。
+
+
+
+
 
 * Split object tracking label to `TUM` format
 
@@ -515,6 +579,10 @@ ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_object_traj.sh ${sequence} ${
 * Visualize the **estimate** object trajectory and **ground-truth** trajectory
 
 ```shell
+sequence=0003
+gt_id=1
+object_id=4
+
 ref_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_tum/${sequence}_${gt_id}.txt
 estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_tum/${object_id}.txt
 
@@ -523,7 +591,39 @@ evo_traj tum ${estimate_path} --ref=${ref_path} -p
 
 
 
+#### Manually
 
+
+
+* 单独评估
+
+```shell
+sequence=0018
+gt_id=3
+object_id=9
+
+ref_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_tum/${sequence}_${gt_id}.txt
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_tum/${object_id}.txt
+
+evo_ape tum --align ${ref_path} ${estimate_path}  -p  --plot_mode xz
+
+#evo_traj tum ${estimate_path} --ref=${ref_path} -p  --plot_mode xz
+```
+
+
+
+* Or evaluate_ate.py
+
+```shell
+sequence=0000
+gt_id=0
+object_id=4
+
+ref_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_tum/${sequence}_${gt_id}.txt
+estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_tum/${object_id}.txt
+
+python evaluate_ate.py ${estimate_path} ${ref_path} --plot result.png
+```
 
 
 

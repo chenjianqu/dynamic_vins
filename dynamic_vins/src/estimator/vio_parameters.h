@@ -85,6 +85,8 @@ public:
 
     inline static bool is_static_inst_as_background{true};//是否将静态物体作为背景点优化相机位姿
 
+    inline static double kStaticInstThreshold{10};//将物体设置为静态的场景流
+
     static void SetParameters(const std::string &config_path);
 };
 
