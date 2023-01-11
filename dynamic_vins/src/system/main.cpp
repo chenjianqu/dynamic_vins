@@ -34,6 +34,7 @@
 #include "front_end/background_tracker.h"
 #include "front_end/front_end_parameters.h"
 #include "image_process/image_process.h"
+#include "utils/io/output.h"
 
 namespace dynamic_vins{\
 
@@ -98,8 +99,8 @@ void ImageProcess()
         ///入口程序
         processor->Run(img);
 
-/*
-        //可视化
+        /*
+        ///3D目标检测结果保存
         if(img.seq%10==0){
             string save_name = cfg::kDatasetSequence+"_"+to_string(img.seq)+"_det2d.png";
             cv::imwrite(save_name,img.merge_mask);
@@ -118,35 +119,52 @@ void ImageProcess()
 
         Warns("ImageProcess, all:{} ms \n",time_cost);
 
+        ///测试，输出图像和Mask
+        if(img.seq==587){
+            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/color0.png",img.color0);
+            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/color1.png",img.color1);
+            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/merge_mask.png",img.merge_mask);
+        }
+
         if(io_para::is_show_input){
             cv::Mat img_show;
-            if(!img.inv_merge_mask.empty()){
-                cv::cvtColor(img.inv_merge_mask,img_show,CV_GRAY2BGR);
+
+            /*
+            ///实例分割结果可视化
+            if(!img.merge_mask.empty()){
+                cv::cvtColor(img.merge_mask,img_show,CV_GRAY2BGR);
+                ///将Mask设置蓝色的
+                vector<cv::Mat> mat_vec;
+                cv::split(img_show,mat_vec);
+                mat_vec[0] = mat_vec[0]*255;//蓝色
+                cv::merge(mat_vec,img_show);
+
                 cv::scaleAdd(img_show,0.8,img.color0,img_show);
             }
             else{
                 img_show = cv::Mat(cv::Size(img.color0.cols,img.color0.rows),CV_8UC3,cv::Scalar(255,255,255));
             }
-            cv::resize(img_show,img_show,cv::Size(),0.4,0.4);
+            cv::resize(img_show,img_show,cv::Size(),0.4,0.4);*/
 
-            /*if(flow_tensor.defined()){
+            /*
+            ///光流可视化
+            if(flow_tensor.defined()){
                cv::Mat show = VisualFlow(flow_tensor);
                cv::imshow("show",show);
                cv::waitKey(1);
             }*/
 
+            ///3D目标检测结果可视化
+            img_show = img.color0.clone();
+            int id=0;
+            for(auto &box:img.boxes3d){
+                box->VisCorners2d(img_show, ColorMapping(id++),cam_s.cam0);
+            }
             viewer.ImageShow(img_show,io_para::kImageDatasetPeriod,1);
+
         }
         else{
             viewer.Delay(io_para::kImageDatasetPeriod);
-        }
-
-
-        ///TODO DEBUG
-        if(img.seq==5){
-            //while(true){
-            //    std::this_thread::sleep_for(10ms);
-            //}
         }
 
         ///将结果存放到消息队列中
@@ -184,7 +202,7 @@ void FeatureTrack()
                 insts_tracker->SetEstimatedInstancesInfo(estimator->im.GetOutputInstInfo());
                 TicToc t_i;
 
-                for(auto &[inst_id,inst]: insts_tracker->instances_){
+                for(auto &[inst_id,inst]: insts_tracker->instances){
                     inst.is_curr_visible=false;
                     inst.box2d.reset();
                     inst.box3d.reset();
@@ -247,6 +265,13 @@ void FeatureTrack()
                     insts_tracker->DrawInsts(feature_tracker->img_track());
                 }
 
+                ///保存多目标跟踪结果
+                if(cfg::dst_mode){
+                    if(cfg::slam==SLAM::kDynamic && cfg::dataset == DatasetType::kKitti){
+                        SaveMotTrajectory(insts_tracker->instances,img->seq);
+                    }
+                }
+
                 /*if(img->seq%10==0){
                     cv::Mat img_w=img->color0.clone();
                     string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
@@ -277,6 +302,7 @@ void FeatureTrack()
             //SerializeLineFeature(serialize_path,frame.features.lines);//序列化
             //frame.features.lines = DeserializeLineFeature(serialize_path);//反序列化
 
+
             ///将数据传入到后端
             if(!cfg::is_only_frontend){
                 if(cfg::dataset == DatasetType::kKitti){
@@ -292,7 +318,6 @@ void FeatureTrack()
             double time_cost=tt.Toc();
             time_sum += time_cost;
             cnt++;
-
 
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){
@@ -409,7 +434,6 @@ int Run(int argc, char **argv){
     estimator->SetParameter();
 
     cout<<"init completed"<<endl;
-
 
     ros::Subscriber sub_imu,sub_img0,sub_img1;
     ros::Subscriber sub_seg0,sub_seg1;

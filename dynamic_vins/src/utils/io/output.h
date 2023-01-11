@@ -13,6 +13,7 @@
 
 #include "basic/def.h"
 #include "estimator/estimator_insts.h"
+#include "front_end/instance_feature.h"
 
 namespace dynamic_vins{\
 
@@ -28,12 +29,13 @@ void SaveBodyTrajectory(const std_msgs::Header &header);
 
 void SaveInstancesPointCloud(InstanceManager& im);
 
-
 string PrintInstancePoseInfo(InstanceManager& im,bool output_lm);
 
 cv::Mat DrawTopView(InstanceManager& im,cv::Size size=cv::Size(600,600));
 
 string PrintFactorDebugMsg(InstanceManager& im);
+
+void SaveMotTrajectory(std::unordered_map<unsigned int,InstFeat>& instances,int frame_id);
 
 
 }

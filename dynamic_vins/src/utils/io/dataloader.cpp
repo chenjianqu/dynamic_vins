@@ -98,6 +98,12 @@ SemanticImage CallBack::SyncProcess()
         }
         break;
     }
+
+    if(cfg::dataset==DatasetType::kViode){
+        static int global_seq_id=0;
+        img.seq = global_seq_id++;
+    }
+
     return img;
 }
 

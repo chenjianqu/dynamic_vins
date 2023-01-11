@@ -261,10 +261,6 @@ ${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/EuRoc/MH_05_difficult_gt
 
 
 
-
-
-
-
 * Evaluate
 
 ```shell
@@ -542,7 +538,7 @@ python ${dynamic_vins_root}/src/dynamic_vins/scripts/tum_tools/evaluate_rpe.py \
 
 #### Use shell script
 
-* Visualize ground-turth boxes and its IDs
+* 可视化i物体的gt_id
 
 ```shell
 sequence=0018
@@ -557,19 +553,17 @@ rosrun dynamic_vins_eval visualize_3d_box ${gt_file} ${image_dir}
 
 
 
-
-
 * Split object tracking label to `TUM` format
 
 ```shell
 startconda && conda activate py36
 
-sequence=0018
-gt_id=3
-object_id=9
+sequence=0003
+gt_id=1
+object_id=4
 #object_id=1 - 0
 #object_id=9 - 3
-pose_file=0018_VO_dynamic_PointOnly_Odometry.txt
+pose_file=0003_VO_dynamic_PointOnly_Odometry.txt
 
 ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_object_traj.sh ${sequence} ${gt_id} ${object_id} ${pose_file}
 ```
@@ -641,16 +635,17 @@ Run environment: `Python2`, dependency:
 
 * pip install munkres
 
-### Evaluate
+### 评估单个物体的跟踪结果
 
 执行评估:
 
 ```shell
-sequence=0018
-gt_object_id=3
-estimate_object_id=9
+sequence=0003
+gt_id=1
+object_id=4
+mot_estimate_file=${dynamic_vins_root}/src/dynamic_vins/data/output/0003/0003_mot.txt #要评估的MOT文件
 
-source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking.sh ${sequence} ${gt_object_id} ${estimate_object_id}
+sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking.sh ${sequence} ${gt_id} ${object_id} ${mot_estimate_file}
 ```
 
 ​	这是一个python脚本，其中dynamic_vins是`./result`下保存模型输出结果的地方。
@@ -658,6 +653,22 @@ source ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking.sh 
 ​	需要注意的是，该kit只评估Car（van）类别和Pedestrian类别的目标，因此输出文件中应该只包含这两个类别的目标跟踪结果，且不应该包含Don't care类别。输出结果中的每行中的`truncated`和`occluded` 项设置为默认值-1.
 
 ​	为了设置评估的序列，在./data/tracking/下面的`evaluate_tracking.seqmap`设置要评估的序列。若想更改映射的文件，可在`./evaluate_tracking.py`中的代码 `filename_test_mapping = "./data/tracking/my_test.seqmap"` 设置文件名。
+
+
+
+### 评估所有物体的跟踪结果
+
+```shell
+sequence=0010
+
+mot_estimate_file=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_mot.txt #要评估的MOT文件
+
+sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking_multi.sh ${sequence} ${mot_estimate_file}
+```
+
+
+
+
 
 
 
@@ -695,7 +706,7 @@ python ./scripts/run_kitti_mots.py
 
 
 
-#### Evaluate mots
+#### Evaluate MOT
 
 Put our mot result to TrackEval's path:
 
@@ -752,36 +763,3 @@ the output path is `${TrackEval}/data/trackers/kitti/kitti_mots_val `.
 
 
 
-
-
-
-## Evaluate MOT with KITTI devkit_object
-
-#### Intall devkit_object
-
-
-
-
-
-#### Prepare ground-truth
-
-由于devkit_object使用的标签格式与KITTI Tracking的格式不同,因此通过下面的程序将`tracking_label_path`标签文件转换为kitti object数据集的格式文件.
-
-```shell
-rosrun dynamic_vins_eval convert_tracking_to_object tracking_label_path save_object_label_path
-
-such as:
-rosrun dynamic_vins_eval convert_tracking_to_object /home/chen/datasets/kitti/tracking/data_tracking_label_2/training/label_02/0003.txt ${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_object/0003
-```
-
-
-
-
-
-#### Evaluate
-
-```shell
-label=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_object/0003
-
-./evaluate_object ${label} results
-```

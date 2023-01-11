@@ -114,12 +114,19 @@ Config::Config(const std::string &file_name,const std::string &seq_name)
         }
     }
 
+    fs["dst_mode"]>>dst_mode;
+    cout<<"dst_mode: "<<dst_mode<<endl;
 
-    fs["only_imgprocess"]>>is_only_imgprocess;
-    cout<<"is_only_imgprocess: "<<is_only_imgprocess<<endl;
+    if(dst_mode){
+        is_only_frontend = true;
+    }
+    else{
+        fs["only_imgprocess"]>>is_only_imgprocess;
+        cout<<"is_only_imgprocess: "<<is_only_imgprocess<<endl;
 
-    fs["only_frontend"]>>is_only_frontend;
-    cout<<"is_only_frontend: "<<is_only_frontend<<endl;
+        fs["only_frontend"]>>is_only_frontend;
+        cout<<"is_only_frontend: "<<is_only_frontend<<endl;
+    }
 
     fs["plane_constraint"] >> use_plane_constraint;
     cout<<"plane_constraint: "<<use_plane_constraint<<endl;

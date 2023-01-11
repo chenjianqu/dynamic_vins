@@ -73,6 +73,8 @@ private:
                    vector<cv::Point2f> &curRightPts,
                    map<unsigned int, cv::Point2f> &prevLeftPtsMap);
 
+    static cv::Mat GetMaskColorImage(const SemanticImage &img);
+
     cv::Mat img_vis;
 
     std::map<unsigned int, cv::Point2f> last_id_pts_map;

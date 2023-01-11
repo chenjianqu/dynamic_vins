@@ -22,6 +22,7 @@
 #include <opencv2/cudaimgproc.hpp>
 #include "front_end_parameters.h"
 #include "utils/dataset/viode_utils.h"
+#include "utils/io/io_parameters.h"
 
 namespace dynamic_vins{\
 
@@ -460,8 +461,13 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
         Infot("trackImageNaive | flow_track right:{} ms", tt.TocThenTic());
     }
 
-    if(fe_para::is_show_track)
+    if(fe_para::is_show_track){
         DrawTrack(cur_img, bg.ids, bg.curr_points, bg.right_points, last_id_pts_map);
+    }
+
+    if(img.seq==587){
+        cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/point.png",img_vis);
+    }
 
     if(cfg::use_line){
         line_thread.join();
@@ -472,6 +478,9 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
             line_detector->VisualizeLineMonoMatch(img_vis, bg.prev_lines, bg.curr_lines);*/
 
         if(fe_para::is_show_track){
+
+            img_vis = GetMaskColorImage(img);
+
             ///可视化线
             line_detector->VisualizeLine(img_vis, bg.curr_lines);
             if(cfg::is_stereo){
@@ -479,13 +488,17 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
             }
 
             /*
-            //可视化双目线匹配
+            ///可视化双目线匹配
             if(cfg::dataset==DatasetType::kKitti){
                 line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,true);
             }
             else{
                 line_detector->VisualizeLineStereoMatch(img_vis, bg.curr_lines, bg.curr_lines_right,false);
             }*/
+
+            if(img.seq==587){
+                cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/line.png",img_vis);
+            }
 
         }
     }
@@ -571,6 +584,41 @@ void FeatureTracker::ShowUndistortion(const string &name)
 
 
 
+cv::Mat FeatureTracker::GetMaskColorImage(const SemanticImage &img){
+
+    cv::Mat mask_img;
+
+    if(cfg::slam==SLAM::kNaive && !img.inv_merge_mask_gpu.empty()){
+        cv::cuda::GpuMat img_show_gpu;
+        cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
+        //cv::cuda::cvtColor(mask_gpu,img_show_gpu,CV_GRAY2BGR);
+        cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
+        img_show_gpu.download(mask_img);
+    }
+    else if(cfg::slam==SLAM::kDynamic && !img.inv_merge_mask_gpu.empty()){
+        cv::cuda::GpuMat img_show_gpu;
+        cv::cuda::bitwise_not(img.inv_merge_mask_gpu,img_show_gpu);//二值化反转
+        cv::cuda::cvtColor(img_show_gpu,img_show_gpu,CV_GRAY2BGR);
+        cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
+        img_show_gpu.download(mask_img);
+    }
+    else{
+        mask_img = img.color0;
+    }
+
+    if (cfg::is_stereo && !img.color1.empty()){
+        if(cfg::is_vertical_draw){
+            cv::vconcat(mask_img, img.color1, mask_img);
+        }else{
+            cv::hconcat(mask_img, img.color1, mask_img);
+        }
+    }
+
+    return mask_img;
+}
+
+
+
 
 void FeatureTracker::DrawTrack(const SemanticImage &img,
                                vector<unsigned int> &curLeftIds,
@@ -578,43 +626,17 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
                                vector<cv::Point2f> &curRightPts,
                                std::map<unsigned int, cv::Point2f> &prevLeftPts){
 
-    if(cfg::slam==SLAM::kNaive && !img.inv_merge_mask_gpu.empty()){
-        cv::cuda::GpuMat img_show_gpu;
-        cv::cuda::cvtColor(img.inv_merge_mask_gpu,img_show_gpu,CV_GRAY2BGR);
-        //cv::cuda::cvtColor(mask_gpu,img_show_gpu,CV_GRAY2BGR);
-        cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
-        img_show_gpu.download(img_vis);
-    }
-    else if(cfg::slam==SLAM::kDynamic && !img.inv_merge_mask_gpu.empty()){
-        cv::cuda::GpuMat img_show_gpu;
-        cv::cuda::bitwise_not(img.inv_merge_mask_gpu,img_show_gpu);//二值化反转
-        cv::cuda::cvtColor(img_show_gpu,img_show_gpu,CV_GRAY2BGR);
-        cv::cuda::scaleAdd(img_show_gpu,0.5,img.color0_gpu,img_show_gpu);
-        img_show_gpu.download(img_vis);
-    }
-    else{
-        img_vis = img.color0;
-    }
+    img_vis = GetMaskColorImage(img);
 
-    if (cfg::is_stereo && !img.color1.empty()){
-        if(cfg::is_vertical_draw){
-            cv::vconcat(img_vis, img.color1, img_vis);
-        }else{
-            cv::hconcat(img_vis, img.color1, img_vis);
-        }
-    }
-
-    //DEBUG
-    //return;
-
-    //cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
+    /*//cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
     for (size_t j = 0; j < curLeftPts.size(); j++){
         double len = std::min(1.0, 1.0 * bg.track_cnt[j] / 20);
         cv::circle(img_vis, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
     }
 
-    for (auto & pt : bg.visual_new_points)
+    for (auto & pt : bg.visual_new_points){
         cv::circle(img_vis, pt, 2, cv::Scalar(255, 255, 255), 2);
+    }
 
     if (cfg::is_stereo && !img.color1.empty() ){
         if(cfg::is_vertical_draw){
@@ -629,7 +651,7 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
                 cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
             }
         }
-    }
+    }*/
 
     /*for (size_t i = 0; i < curLeftIds.size(); i++){
         if(auto it = prevLeftPts.find(curLeftIds[i]); it != prevLeftPts.end()){

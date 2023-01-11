@@ -19,6 +19,8 @@ plane_constraint: 0 #是否使用平面约束
 
 static_inst_as_background: 1 #是否将静态物体作为背景点优化相机位姿
 
+dst_mode: 1 #DST模式，即仅在前端进行3D多目标跟踪
+
 ####################### Camera Parameters ########################
 
 kitti_calib_path: "/home/chen/datasets/kitti/tracking/data_tracking_calib/training/calib/" #相机内参

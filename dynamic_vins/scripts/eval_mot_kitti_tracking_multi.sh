@@ -1,9 +1,7 @@
 #!/bin/sh
 
 sequence=$1
-gt_id=$2
-object_id=$3
-mot_estimate_file=$4
+mot_estimate_file=$2
 
 #KITTI TRACKING dataset
 dataset_root=/home/chen/datasets/kitti/tracking
@@ -12,37 +10,16 @@ dataset_root=/home/chen/datasets/kitti/tracking
 dynamic_vins_root=/home/chen/ws/dynamic_ws
 
 
-
-### split the single object from GT and estimation
-
-mkdir -p ${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_single
-mkdir -p ${dynamic_vins_root}/src/dynamic_vins/data/output/kitti_tracking_single
-
 gt_file=${dataset_root}/data_tracking_label_2/training/label_02/${sequence}.txt
-save_to_gt_path=${dynamic_vins_root}/src/dynamic_vins/data/ground_truth/kitti_tracking_single/${sequence}_${gt_id}.txt
 
-# shellcheck disable=SC2039
-source ${dynamic_vins_root}/devel/setup.bash
-rosrun dynamic_vins_eval split_mot_to_single ${gt_id} ${gt_file} ${save_to_gt_path}
-
-# 把评估的数据放到适当的位置：
+# 把gt到适当的位置
 cp_to_gt_path=${dynamic_vins_root}/src/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/data/tracking/label_02/${sequence}.txt
-cp ${save_to_gt_path} ${cp_to_gt_path}
+cp ${gt_file} ${cp_to_gt_path}
 
 
-
-
-#split the single object from **estimate results**:
-
-save_to_estimate_path=${dynamic_vins_root}/src/dynamic_vins/data/output/kitti_tracking_single/${sequence}_${object_id}.txt
-
-rosrun dynamic_vins_eval split_mot_to_single ${object_id} ${mot_estimate_file} ${save_to_estimate_path}
-
-#将预测结果放到适当的位置，并改名：
+#将预测结果放到适当的位置
 cp_to_path=${dynamic_vins_root}/src/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/results/dynamic_vins/data/${sequence}.txt
-
-cp ${save_to_estimate_path} ${cp_to_path}
-
+cp ${mot_estimate_file} ${cp_to_path}
 
 
 
@@ -101,8 +78,6 @@ fi
 # shellcheck disable=SC2034
 str_to_write=${sequence}" empty 000000 "${sequence_len}
 echo ${str_to_write} > ${dynamic_vins_root}/src/dynamic_vins_eval/eval_tools/devkit_tracking/devkit/python/data/tracking/evaluate_tracking.seqmap
-
-
 
 
 ### EVAL

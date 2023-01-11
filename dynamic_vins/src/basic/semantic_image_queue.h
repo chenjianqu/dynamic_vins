@@ -11,9 +11,11 @@
 #ifndef DYNAMIC_VINS_SEMANTIC_IMAGE_QUEUE_H
 #define DYNAMIC_VINS_SEMANTIC_IMAGE_QUEUE_H
 
+#include "semantic_image.h"
+
+
 namespace dynamic_vins{\
 
-#include "semantic_image.h"
 
 /**
  * 多线程图像队列

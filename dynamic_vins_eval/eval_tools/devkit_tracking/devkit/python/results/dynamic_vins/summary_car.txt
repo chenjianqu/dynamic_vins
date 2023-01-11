@@ -1,33 +1,33 @@
 ==========================tracking evaluation summary===========================
-Multiple Object Tracking Accuracy (MOTA)                                0.803509
-Multiple Object Tracking Precision (MOTP)                               0.909221
-Multiple Object Tracking Accuracy (MOTAL)                               0.803509
-Multiple Object Detection Accuracy (MODA)                               0.803509
-Multiple Object Detection Precision (MODP)                              0.979232
+Multiple Object Tracking Accuracy (MOTA)                                0.744828
+Multiple Object Tracking Precision (MOTP)                               0.859336
+Multiple Object Tracking Accuracy (MOTAL)                               0.744828
+Multiple Object Detection Accuracy (MODA)                               0.744828
+Multiple Object Detection Precision (MODP)                              0.865465
 
-Recall                                                                  0.803509
+Recall                                                                  0.747440
 Precision                                                               1.000000
-F1                                                                      0.891051
+F1                                                                      0.855469
 False Alarm Rate                                                        0.000000
 
-Mostly Tracked                                                          1.000000
-Partly Tracked                                                          0.000000
-Mostly Lost                                                             0.000000
+Mostly Tracked                                                          0.076923
+Partly Tracked                                                          0.846154
+Mostly Lost                                                             0.076923
 
-True Positives                                                               229
-Ignored True Positives                                                         0
+True Positives                                                               438
+Ignored True Positives                                                         6
 False Positives                                                                0
-False Negatives                                                               56
-Ignored False Negatives                                                        0
-Missed Targets                                                                56
+False Negatives                                                              148
+Ignored False Negatives                                                       87
+Missed Targets                                                               148
 ID-switches                                                                    0
-Fragmentations                                                                 2
+Fragmentations                                                                 5
 
-Ground Truth Objects (Total)                                                 285
-Ignored Ground Truth Objects                                                   0
-Ground Truth Trajectories                                                      1
+Ground Truth Objects (Total)                                                 673
+Ignored Ground Truth Objects                                                  93
+Ground Truth Trajectories                                                     16
 
-Tracker Objects (Total)                                                      229
-Ignored Tracker Objects                                                        0
-Tracker Trajectories                                                           1
+Tracker Objects (Total)                                                      441
+Ignored Tracker Objects                                                        3
+Tracker Trajectories                                                          14
 ================================================================================

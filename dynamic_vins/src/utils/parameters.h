@@ -101,6 +101,8 @@ public:
     inline static bool use_plane_constraint{false};
     inline static bool use_det3d{false};
 
+    inline static bool dst_mode{false};
+
     inline static bool is_vertical_draw{false};
 
     inline static std::atomic_bool ok{true};

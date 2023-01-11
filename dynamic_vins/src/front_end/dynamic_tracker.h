@@ -60,7 +60,7 @@ public:
     }
 
     void ExecInst(std::function<void(unsigned int, InstFeat&)> func){
-        for(auto & [ key,inst] : instances_){
+        for(auto & [ key,inst] : instances){
             if(inst.lost_num>0)
                 continue;
             func(key,inst);
@@ -79,7 +79,7 @@ private:
     std::tuple<int,float,float> GetMatchInst(Box2D &instInfo, torch::Tensor &inst_mask_tensor);
 
 public:
-    std::unordered_map<unsigned int,InstFeat> instances_;
+    std::unordered_map<unsigned int,InstFeat> instances;
     std::unordered_map<unsigned int,InstEstimatedInfo> estimated_info;
 
 private:

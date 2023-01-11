@@ -8,9 +8,9 @@ only_imgprocess: 0  #for debug
 only_frontend: 0  #for debug
 
 dataset_type: "viode" #support:kitti,viode
-slam_type: "raw" #SLAM mode,optional:raw,naive,dynamic
+slam_type: "naive" #SLAM mode,optional:raw,naive,dynamic
 
-use_line: 0 #line feature
+use_line: 1 #line feature
 undistort_input: 0 #无需矫正
 
 

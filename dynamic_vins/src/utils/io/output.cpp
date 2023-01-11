@@ -458,17 +458,100 @@ void SaveInstancesTrajectory(InstanceManager& im){
         }
         else{
             std::cerr<<"SaveInstancesTrajectory() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
-
         }
-
     }
-
 
     fout_mot.close();
     fout_object.close();
-
     Debugv(log_text);
 }
+
+
+void SaveMotTrajectory(std::unordered_map<unsigned int,InstFeat>& instances,int frame_id){
+    if(cfg::slam != SLAM::kDynamic){
+        return;
+    }
+    ///文件夹设置
+    const string object_base_path = io_para::kOutputFolder + cfg::kDatasetSequence + "/";
+    const string object_tracking_path = object_base_path+cfg::kDatasetSequence+"_mot.txt";
+
+    static bool first_run=true;
+    if(first_run){
+        std::ofstream fout(object_tracking_path, std::ios::out);
+        fout.close();
+        first_run=false;
+    }
+
+    std::ofstream fout_mot(object_tracking_path, std::ios::out | std::ios::app);//追加写入
+
+    for(auto &[inst_id,inst] : instances){
+        if(!inst.box2d || !inst.box3d){
+            continue;
+        }
+
+        if(cfg::dataset==DatasetType::kKitti){
+
+
+            ///计算3D包围框投影得到的2D包围框
+            /*Vec3d minPt = - inst.box3d->dims/2;
+            Vec3d maxPt = inst.box3d->dims/2;
+            EigenContainer<Vec3d> vertex(8);
+            vertex[0]=minPt;
+            vertex[1].x()=maxPt.x();vertex[1].y()=minPt.y();vertex[1].z()=minPt.z();
+            vertex[2].x()=maxPt.x();vertex[2].y()=minPt.y();vertex[2].z()=maxPt.z();
+            vertex[3].x()=minPt.x();vertex[3].y()=minPt.y();vertex[3].z()=maxPt.z();
+            vertex[4].x()=minPt.x();vertex[4].y()=maxPt.y();vertex[4].z()=maxPt.z();
+            vertex[5] = maxPt;
+            vertex[6].x()=maxPt.x();vertex[6].y()=maxPt.y();vertex[6].z()=minPt.z();
+            vertex[7].x()=minPt.x();vertex[7].y()=maxPt.y();vertex[7].z()=minPt.z();
+            for(int i=0;i<8;++i){
+                vertex[i] = R_coi * vertex[i] + P_coi;
+            }
+            //投影点
+            Mat28d corners_2d;
+            for(int i=0;i<8;++i){
+                Vec2d p;
+                cam0->ProjectPoint(vertex[i],p);
+                corners_2d.col(i) = p;
+            }
+            Vec2d corner2d_min_pt = corners_2d.rowwise().minCoeff();//包围框左上角的坐标
+            Vec2d corner2d_max_pt = corners_2d.rowwise().maxCoeff();//包围框右下角的坐标*/
+
+
+            ///保存为KITTI Tracking模式
+            //帧号
+            fout_mot << frame_id << " "<<
+            //物体的id
+            inst.id << " "<<
+            //类别名称
+            kitti::GetKittiName(inst.box3d->class_id) <<" "<<
+            // truncated    Integer (0,1,2)
+            -1<<" "<<
+            //occluded     Integer (0,1,2,3)
+            -1<<" "<<
+            // Observation angle of object, ranging [-pi..pi]
+            0.<<" "<<
+            // 2D bounding box of object in the image (0-based index): contains left, top, right, bottom pixel coordinates
+            inst.box2d->min_pt.x<<" "<<inst.box2d->min_pt.y<<" "<<inst.box2d->max_pt.x<<" "<<inst.box2d->max_pt.y<<" "<<
+            // 3D object dimensions: height, width, length (in meters)
+            VecToStr(inst.box3d->dims)<< //VecToStr()函数会输出一个空格
+            // 3D object location x,y,z in camera coordinates (in meters)
+            VecToStr(inst.box3d->bottom_center)<<
+            // Rotation ry around Y-axis in camera coordinates [-pi..pi]
+            inst.box3d->yaw<<" "<<
+            //  Only for results: Float, indicating confidence in detection, needed for p/r curves, higher is better.
+            inst.box3d->score<<
+            endl;
+        }
+        else{
+            std::cerr<<"SaveInstancesTrajectory() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+        }
+    }
+
+    fout_mot.close();
+}
+
+
 
 
 /**
