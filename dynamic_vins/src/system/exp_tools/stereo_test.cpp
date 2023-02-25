@@ -155,8 +155,8 @@ public:
     SemanticImage LoadStereo();
 
 private:
-    vector<string> left_names;
-    vector<string> right_names;
+    vector<string> left_paths;
+    vector<string> right_paths;
     vector<string> stereo_names;
 
     int index{0};
@@ -169,19 +169,19 @@ Dataloader::Dataloader(const string &kImageDatasetLeft,
                        const string &kImageDatasetRight,
                        const string &kImageDatasetStereo){
 
-    GetAllImageFiles(kImageDatasetLeft,left_names);
-    GetAllImageFiles(kImageDatasetRight,right_names);
-    GetAllImageFiles(kImageDatasetStereo,stereo_names);
+    GetAllImagePaths(kImageDatasetLeft, left_paths);
+    GetAllImagePaths(kImageDatasetRight, right_paths);
+    GetAllImagePaths(kImageDatasetStereo, stereo_names);
 
-    cout<<"left:"<<left_names.size()<<endl;
-    cout<<"right:"<<right_names.size()<<endl;
-    if(left_names.size() != right_names.size()){
+    cout << "left:" << left_paths.size() << endl;
+    cout << "right:" << right_paths.size() << endl;
+    if(left_paths.size() != right_paths.size()){
         cerr<< "left and right image number is not equal!"<<endl;
         return;
     }
 
-    std::sort(left_names.begin(),left_names.end());
-    std::sort(right_names.begin(),right_names.end());
+    std::sort(left_paths.begin(), left_paths.end());
+    std::sort(right_paths.begin(), right_paths.end());
     std::sort(stereo_names.begin(),stereo_names.end());
 
     index=0;
@@ -193,19 +193,19 @@ SemanticImage Dataloader::LoadStereo()
 {
     SemanticImage img;
 
-    if(index >= left_names.size()){
+    if(index >= left_paths.size()){
         ros::shutdown();
         return img;
     }
-    cout<<left_names[index]<<endl;
+    cout << left_paths[index] << endl;
 
-    img.color0  = cv::imread(left_names[index],-1);
-    img.color1 = cv::imread(right_names[index],-1);
+    img.color0  = cv::imread(left_paths[index], -1);
+    img.color1 = cv::imread(right_paths[index], -1);
 
     cv::Mat disp_raw = cv::imread(stereo_names[index],-1);
     disp_raw.convertTo(img.disp, CV_32F,1./256.);
 
-    std::filesystem::path name(left_names[index]);
+    std::filesystem::path name(left_paths[index]);
     std::string name_stem =  name.stem().string();//获得文件名(不含后缀)
 
     img.time0 = time;

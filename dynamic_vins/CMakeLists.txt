@@ -149,6 +149,15 @@ target_link_libraries(pub_object3d ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_L
         ${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
 
 
+add_executable(pub_inst_pointcloud src/system/eval/pub_inst_pointcloud.cpp  ${utils_sources} ${dataset_sources} ${tensorrt_sources}
+		${det2d_sources} ${det3d_sources} ${io_sources} ${image_process_source} ${stereo_sources} ${basic_sources}
+		${line_detector_sources} ${line_descriptor_sources}
+		${mot_sources} ${front_end_sources} ${initial_sources}  ${factor_sources} ${estimator_sources})
+target_link_libraries(pub_inst_pointcloud ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}  ${CUDA_LIBRARIES}
+		${TORCH_LIBRARIES} TorchVision::TorchVision ${TensorRT_LIBS} ${CERES_LIBRARIES} ${PCL_LIB} ${Sophus_LIBRARIES})
+
+
+
 add_executable(corners_detection src/system/exp_tools/corners_detections.cpp)
 target_link_libraries(corners_detection ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES})
 
@@ -180,7 +189,7 @@ target_link_libraries(object_pointcloud_test ${catkin_LIBRARIES} ${OpenCV_LIBS} 
 
 
 
-add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp
+add_executable(line_tracking src/system/exp_tools/line_tracking.cpp src/utils/log_utils.cpp src/basic/frame_lines.cpp
 		${line_detector_sources} ${line_descriptor_sources})
 target_link_libraries(line_tracking ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES}
 		${PROJECT_SOURCE_DIR}/thirdparty/line_descriptor/lib/liblinedesc.so)

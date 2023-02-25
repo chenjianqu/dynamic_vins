@@ -436,12 +436,25 @@ void InstFeat::DetectExtraPoints(const cv::Mat& disp){
             if(disparity<=0){
                 continue;
             }
+            if(disparity!=disparity){ //disparity is nan
+                continue;
+            }
 
             ///TODO 注意，这里未实现畸变矫正，因此需要输入的图像无畸变
 
             const float depth = cam_s.fx0 * cam_s.baseline / disparity;//根据视差计算深度
+
+            if(depth<=0.1 || depth>100){
+                continue;
+            }
+
             const float x_3d = (c - cam_s.cx0)*depth/cam_s.fx0;
             const float y_3d = (r - cam_s.cy0)*depth/cam_s.fy0;
+
+            if(i==j){
+                Debugt("p3d:{} {} {} disp:{}",x_3d,y_3d,depth,disparity);
+            }
+
             extra_points3d.emplace_back(x_3d,y_3d,depth);
         }
     }

@@ -168,7 +168,7 @@ int Run(int argc, char **argv){
     std::sort(pcd_files.begin(),pcd_files.end());
 
     vector<string> left_names;
-    GetAllImageFiles("/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0000/",left_names);
+    GetAllImagePaths("/home/chen/datasets/kitti/tracking/data_tracking_image_2/training/image_02/0000/", left_names);
     std::sort(left_names.begin(),left_names.end());
 
     ImageViewer image_viewer;

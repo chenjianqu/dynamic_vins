@@ -27,6 +27,13 @@ void MotParameter::SetParameters(const std::string &config_path)
     fs["tracking_n_init"] >> kTrackingNInit;
     fs["tracking_max_age"] >> kTrackingMaxAge;
 
+    if(!fs["reid_input_width"].isNone()){
+        fs["reid_input_width"] >> kReidInputWidth;
+    }
+    if(!fs["reid_input_height"].isNone()){
+        fs["reid_input_height"] >> kReidInputHeight;
+    }
+
     fs.release();
 
 }

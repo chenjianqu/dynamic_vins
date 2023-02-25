@@ -17,9 +17,6 @@
 
 namespace dynamic_vins{\
 
-using namespace std;
-using namespace cv;
-
 
 /**
  * 两个巨型之间的IoU
@@ -27,7 +24,7 @@ using namespace cv;
  * @param bb_gt
  * @return
  */
-float RectIou(const Rect2f &bb_test, const Rect2f &bb_gt) {
+float RectIou(const cv::Rect2f &bb_test, const cv::Rect2f &bb_gt) {
     auto in = (bb_test & bb_gt).area();
     auto un = bb_test.area() + bb_gt.area() - in;
 
@@ -44,7 +41,7 @@ float RectIou(const Rect2f &bb_test, const Rect2f &bb_gt) {
  * @param trks
  * @return 返回代价矩阵A，其中A[i,j]表示第i个轨迹和第j个检测框之间的iou分数，分数越小重合度越高
  */
-torch::Tensor CalIouDist(const vector<Rect2f> &dets, const vector<Rect2f> &trks) {
+torch::Tensor CalIouDist(const vector<cv::Rect2f> &dets, const vector<cv::Rect2f> &trks) {
     auto trk_num = trks.size();
     auto det_num = dets.size();
 
@@ -61,12 +58,13 @@ torch::Tensor CalIouDist(const vector<Rect2f> &dets, const vector<Rect2f> &trks)
 
 
 
-DeepSORT::DeepSORT(const string& config_path,const array<int64_t, 2> &dim)
-: extractor(make_unique<Extractor>()),
-manager(make_unique<TrackerManager<TrackData>>(data, dim)),
-feat_metric(make_unique<FeatureMetric<TrackData>>(data))
-{
+DeepSORT::DeepSORT(const string& config_path,const std::array<int64_t, 2> &dim){
+
     mot_para::SetParameters(config_path);
+
+    extractor = std::make_unique<Extractor>();
+    manager = std::make_unique<TrackerManager<TrackData>>(data, dim);
+    feat_metric = std::make_unique<FeatureMetric<TrackData>>(data);
 }
 
 

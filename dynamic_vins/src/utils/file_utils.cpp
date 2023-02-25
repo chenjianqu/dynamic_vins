@@ -126,11 +126,11 @@ bool CheckIsDir(const string &dir) {
 
 
 /**
- * 递归的搜索一个目录下所有的图像文件，以 jpg,jpeg,png 结尾的文件
+ * 递归的搜索一个目录下所有的图像文件的全路径，以 jpg,jpeg,png 结尾的文件
  * @param dir
  * @param files
  */
-void GetAllImageFiles(const string& dir, vector<string> &files) {
+void GetAllImagePaths(const string& dir, vector<string> &files) {
     // 首先检查目录是否为空，以及是否是目录
     if (!CheckIsDir(dir))
         return;
@@ -143,7 +143,7 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
 
         // 查看是否是目录，如果是目录则循环递归
         if (CheckIsDir(file_path)) {
-            GetAllImageFiles(file_path, files);
+            GetAllImagePaths(file_path, files);
         }
         //不是目录则检查后缀是否是图像
         else {
@@ -154,6 +154,36 @@ void GetAllImageFiles(const string& dir, vector<string> &files) {
         }
     }
 }
+
+
+/**
+ * 递归的搜索一个目录下所有的图像名字，以 jpg,jpeg,png 结尾的文件
+ * @param dir
+ * @param files
+ */
+void GetAllImageNames(const string& dir, vector<string> &files) {
+    if (!CheckIsDir(dir))// 首先检查目录是否为空，以及是否是目录
+        return;
+
+    // 递归遍历所有的文件
+    std::filesystem::directory_iterator iters(dir);
+    for(auto &iter: iters) {
+        string file_path(dir);
+        file_path += "/";
+        file_path += iter.path().filename();
+
+        if (CheckIsDir(file_path)) {// 查看是否是目录，如果是目录则循环递归
+            GetAllImagePaths(file_path, files);
+        }
+        else {//不是目录则检查后缀是否是图像
+            string extension = iter.path().extension(); // 获取文件的后缀名
+            if (extension == ".jpg" || extension == ".png" || extension == ".jpeg") {
+                files.push_back(iter.path().filename());
+            }
+        }
+    }
+}
+
 
 
 /**

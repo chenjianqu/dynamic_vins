@@ -6,7 +6,7 @@
  *
  * Licensed under the MIT License;
  * you may not use this file except in compliance with the License.
- *******************************************************//*
+ *******************************************************/
 
 
 #include <iostream>
@@ -58,13 +58,13 @@ std::unordered_map<string,vector<string>> ReadCameraPose(const string &pose_file
 class PubDemo{
 public:
 
-    */
+
 /**
      * 可视化3D目标检测的结果
      * @param argc
      * @param argv
      * @return
-     *//*
+     */
 
 
      int PubObject3D(int argc, char **argv)
@@ -365,7 +365,6 @@ public:
                         auto cube_marker = CubeMarker(box->corners,cnt, BgrColor("green"));
                         marker_array.markers.push_back(cube_marker);
 
-    */
 /*Mat34d axis_matrix = box->GetCoordinateVectorInCamera(4);
                         auto axis_markers = AxisMarker(axis_matrix,cnt);
                         marker_array.markers.push_back(std::get<0>(axis_markers));
@@ -438,7 +437,7 @@ return 0;
 
 }
 
-*//*
+*/
 
 
 
@@ -514,5 +513,3 @@ int main(int argc, char **argv)
 }
 
 
-
-*/

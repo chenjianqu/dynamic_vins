@@ -15,9 +15,11 @@ namespace dynamic_vins{\
 
 
 Extractor::Extractor() {
-    net->load_form(mot_para::kExtractorModelPath);
-    net->to(torch::kCUDA);
-    net->eval();
+    //net->load_form(mot_para::kExtractorModelPath);
+    //net->to(torch::kCUDA);
+    //net->eval();
+
+    net.load_form(mot_para::kExtractorModelPath);
 }
 
 
@@ -28,7 +30,7 @@ Extractor::Extractor() {
  */
 torch::Tensor Extractor::extract(std::vector<cv::Mat> input) {
     if (input.empty()) {
-        return torch::empty({0, 512});
+        return torch::empty({0, mot_para::kFeatDim});
     }
 
     torch::NoGradGuard no_grad;
@@ -36,15 +38,12 @@ torch::Tensor Extractor::extract(std::vector<cv::Mat> input) {
     static torch::Tensor mean_t=torch::from_blob(mot_para::kReIdImgMean, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).view({1, -1, 1, 1});
     static torch::Tensor std_t=torch::from_blob(mot_para::kReIdImgStd, {3, 1, 1}, torch::kFloat32).to(torch::kCUDA).view({1, -1, 1, 1});
 
-    constexpr int kWidth=64;
-    constexpr int kHeight=128;
-
     std::vector<torch::Tensor> resized;
     for (auto &x:input) {
-        cv::resize(x, x, {kWidth, kHeight});
+        cv::resize(x, x, {mot_para::kReidInputWidth, mot_para::kReidInputHeight});
         cv::cvtColor(x, x, cv::COLOR_RGB2BGR);
         x.convertTo(x, CV_32F, 1.0 / 255);
-        resized.push_back(torch::from_blob(x.data, {kHeight, kWidth, 3}));
+        resized.push_back(torch::from_blob(x.data, {mot_para::kReidInputHeight, mot_para::kReidInputWidth, 3}));
     }
     auto tensor = torch::stack(resized).cuda().permute({0, 3, 1, 2}).sub_(mean_t).div_(std_t);
 

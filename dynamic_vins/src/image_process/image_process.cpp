@@ -215,7 +215,7 @@ void ImageProcessor::Run(SemanticImage &img) {
 
 
     ///只跟踪车辆
-    /*if(cfg::dataset == DatasetType::kKitti){
+    if(cfg::dataset == DatasetType::kKitti || cfg::dataset==DatasetType::kCustom){
         vector<Box2D::Ptr> boxes;
         for(auto it=img.boxes2d.begin(),it_next=it;it!=img.boxes2d.end();it=it_next){
             it_next++;
@@ -229,8 +229,7 @@ void ImageProcessor::Run(SemanticImage &img) {
         }
 
         img.boxes2d = boxes;
-    }*/
-
+    }
 
     ///2D-3D关联
     //img.boxes3d = BoxAssociate2Dto3D(img.boxes3d,img.boxes2d);

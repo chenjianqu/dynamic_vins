@@ -62,6 +62,7 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
 {
     std::optional<Vec3d> center=std::nullopt;
 
+    Debugt("Start BoxAssociate2Dto3D()");
     string log_text="BoxAssociate2Dto3D:\n";
 
     vector<bool> match_vec(boxes.size(),false);
@@ -70,21 +71,21 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
             continue;
         }
 
-        /*auto it=estimated_info.find(inst_id);
-        if(it!=estimated_info.end()){
-            auto& estimated_inst = it->second;
-            if(estimated_inst.is_init && estimated_inst.is_init_velocity){
-                ///将物体的位姿递推到当前时刻
-                double time_ij = curr_time - estimated_inst.time;
-                Mat3d Roioj=Sophus::SO3d::exp(estimated_inst.a*time_ij).matrix();
-                Vec3d Poioj=estimated_inst.v*time_ij;
-                Mat3d R_woi = Roioj * estimated_inst.R;
-                Vec3d P_woi = Roioj * estimated_inst.P + Poioj;
-                center = P_woi;
-                ///生成物体的各个3D顶点
-                //Mat38d corners =  Box3D::GetCornersFromPose(R_woi,P_woi,estimated_inst.dims);
-            }
-        }*/
+//        auto it=estimated_info.find(inst_id);
+//        if(it!=estimated_info.end()){
+//            auto& estimated_inst = it->second;
+//            if(estimated_inst.is_init && estimated_inst.is_init_velocity){
+//                ///将物体的位姿递推到当前时刻
+//                double time_ij = curr_time - estimated_inst.time;
+//                Mat3d Roioj=Sophus::SO3d::exp(estimated_inst.a*time_ij).matrix();
+//                Vec3d Poioj=estimated_inst.v*time_ij;
+//                Mat3d R_woi = Roioj * estimated_inst.R;
+//                Vec3d P_woi = Roioj * estimated_inst.P + Poioj;
+//                center = P_woi;
+//                ///生成物体的各个3D顶点
+//                //Mat38d corners =  Box3D::GetCornersFromPose(R_woi,P_woi,estimated_inst.dims);
+//            }
+//        }
 
         vector<Box3D::Ptr> candidate_match;
         vector<int> candidate_idx;
@@ -116,10 +117,10 @@ void InstsFeatManager::BoxAssociate2Dto3D(std::vector<Box3D::Ptr> &boxes)
                 candidate_match.push_back(boxes[i]);
                 candidate_idx.push_back(i);
             }
-            /*if(iou > max_iou){
-                max_idx = i;
-                max_iou = iou;
-            }*/
+            //if(iou > max_iou){
+            //    max_idx = i;
+            //    max_iou = iou;
+            //}
         }
 
         double min_dist= std::numeric_limits<double>::max();
@@ -287,6 +288,7 @@ void InstsFeatManager::ProcessExtraPoints(){
             if(pc_filtered->empty() || pc_filtered->points.size()<5){
                 return;
             }
+
             pc_filtered->width = pc_filtered->points.size();
             pc_filtered->height=1;
             Debugt("ProcessExtraPoints() end t_filter");
@@ -313,19 +315,19 @@ void InstsFeatManager::ProcessExtraPoints(){
             segmented_pc->is_dense = true;
 
             ///TODO DEBUG
-            /*if(key==1){
-                const string object_base_path =
-                        "/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/point_cloud_temp/";
-                const string save_path_raw = object_base_path+fmt::format(
-                        "{}_{}_0_raw.pcd",PadNumber(curr_img.seq,6),key);
-                pcl::io::savePCDFile(save_path_raw,*pc);
-                const string save_path_filtered = object_base_path+fmt::format(
-                        "{}_{}_1_filtered.pcd",PadNumber(curr_img.seq,6),key);
-                pcl::io::savePCDFile(save_path_filtered,*pc_filtered);
-                const string save_path_segmented = object_base_path+fmt::format(
-                        "{}_{}_2_segmented.pcd",PadNumber(curr_img.seq,6),key);
-                pcl::io::savePCDFile(save_path_segmented,*segmented_pc);
-            }*/
+//            if(key==1){
+//                const string object_base_path =
+//                        "/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/point_cloud_temp/";
+//                const string save_path_raw = object_base_path+fmt::format(
+//                        "{}_{}_0_raw.pcd",PadNumber(curr_img.seq,6),key);
+//                pcl::io::savePCDFile(save_path_raw,*pc);
+//                const string save_path_filtered = object_base_path+fmt::format(
+//                        "{}_{}_1_filtered.pcd",PadNumber(curr_img.seq,6),key);
+//                pcl::io::savePCDFile(save_path_filtered,*pc_filtered);
+//                const string save_path_segmented = object_base_path+fmt::format(
+//                        "{}_{}_2_segmented.pcd",PadNumber(curr_img.seq,6),key);
+//                pcl::io::savePCDFile(save_path_segmented,*segmented_pc);
+//            }
 
             ///将结果转换eigen
             inst.extra_points3d = PclToEigen<pcl::PointXYZ>(segmented_pc);
@@ -393,18 +395,15 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
                 auto [prev_roi_gray_padded,roi_gray_padded] = InstanceImagePadding(inst.roi->prev_roi_gray,
                                                                       inst.roi->roi_gray);
 
-                /*
                  ///DEBUG
-                 {
-                    if(img.seq>8 && img.seq<=15){
-                        cv::Mat merge;
-                        cv::vconcat(prev_roi_gray_padded,roi_gray_padded,merge);
-                        const string save_gray_path = fmt::format("/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/single_instances/{}_{}_gray.png",img.seq,inst.id);
-                        cv::imwrite(save_gray_path,inst.roi->prev_roi_gray);
-                        const string save_mask_path = fmt::format("/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/single_instances/{}_{}_mask.png",img.seq,inst.id);
-                        cv::imwrite(save_mask_path,inst.roi->mask_cv);
-                    }
-                }*/
+//                if(img.seq>8 && img.seq<=15){
+//                    cv::Mat merge;
+//                    cv::vconcat(prev_roi_gray_padded,roi_gray_padded,merge);
+//                    const string save_gray_path = fmt::format("/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/single_instances/{}_{}_gray.png",img.seq,inst.id);
+//                    cv::imwrite(save_gray_path,inst.roi->prev_roi_gray);
+//                    const string save_mask_path = fmt::format("/home/chen/ws/dynamic_ws/src/dynamic_vins/data/output/single_instances/{}_{}_mask.png",img.seq,inst.id);
+//                    cv::imwrite(save_mask_path,inst.roi->mask_cv);
+//                }
 
                 //inst.TrackLeft(roi_gray_padded,prev_roi_gray_padded,inst.box2d->roi->mask_cv);
                 inst.TrackLeft(roi_gray_padded,prev_roi_gray_padded);
@@ -444,22 +443,6 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
             }
 
             Debugt("instsTrack id:{} add corners:{}",inst.id,inst.visual_new_points.size());
-
-
-            ///若某个实例的点太少,则采用密集采样的方法得到点
-            /*int inst_size=inst.curr_points.size();
-            for(int i=0;i<inst_size;++i){
-                cv::circle(inst.roi->mask_cv,inst.curr_points[i],2,cv::Scalar(0),-1);
-            }
-            int detect_num = std::max(50,100-inst_size);
-            auto new_ex_pts = DetectRegularCorners(detect_num,inst.roi->mask_cv,2);
-            for(auto &pt:new_ex_pts){
-                inst.extra_points.emplace_back(pt);
-                inst.extra_ids.emplace_back(InstFeat::global_id_count++);
-                //inst.visual_new_points.emplace_back(pt);
-                //inst.track_cnt.push_back(1);
-            }*/
-
         });
 
         for(auto& [key,inst] : instances){
@@ -490,17 +473,13 @@ void InstsFeatManager::InstsTrack(SemanticImage img)
 
         ManageInstances();
 
-        ///等待线程结束
-        t_process_extra.join();
+
+        t_process_extra.join();//等待线程结束
 
         ExecInst([&](unsigned int key, InstFeat& inst){
             inst.PostProcess();
         });
-        /*for(auto& [key,inst] : instances_){
-            inst.last_points=inst.curr_points;
-            inst.prev_id_pts=inst.curr_id_pts;
-            inst.right_prev_id_pts=inst.right_curr_id_pts;
-        }*/
+
     }
     else{
         ManageInstances();
@@ -851,22 +830,22 @@ void InstsFeatManager:: AddInstancesByTracking(SemanticImage &img)
 
 vector<uchar> InstsFeatManager::RejectWithF(InstFeat &inst, int col, int row) const
 {
-/*    vector<cv::Point2f> un_cur_pts(inst.curr_points.size()), un_prev_pts(inst.last_points.size());
+    vector<cv::Point2f> un_cur_pts(inst.curr_points.size()), un_prev_pts(inst.last_points.size());
     for (unsigned int i = 0; i < inst.curr_points.size(); i++){
         Eigen::Vector3d tmp_p;
-        camera_->liftProjective(Eigen::Vector2d(inst.curr_points[i].x, inst.curr_points[i].y), tmp_p);
+        cam_t.cam0->liftProjective(Eigen::Vector2d(inst.curr_points[i].x, inst.curr_points[i].y), tmp_p);
         tmp_p.x() = kFocalLength * tmp_p.x() / tmp_p.z() + col / 2.0;
         tmp_p.y() = kFocalLength * tmp_p.y() / tmp_p.z() + row / 2.0;
         un_cur_pts[i] = cv::Point2f((float)(tmp_p.x()), (float)tmp_p.y());
-        camera_->liftProjective(Eigen::Vector2d(inst.last_points[i].x, inst.last_points[i].y), tmp_p);
+        cam_t.cam0->liftProjective(Eigen::Vector2d(inst.last_points[i].x, inst.last_points[i].y), tmp_p);
         tmp_p.x() = kFocalLength * tmp_p.x() / tmp_p.z() + col / 2.0;
         tmp_p.y() = kFocalLength * tmp_p.y() / tmp_p.z() + row / 2.0;
         un_prev_pts[i] = cv::Point2f((float)tmp_p.x(), (float)tmp_p.y());
     }
     vector<uchar> status;
-    cv::findFundamentalMat(un_cur_pts, un_prev_pts, cv::FM_RANSAC, cfg::kFThreshold,
+    cv::findFundamentalMat(un_cur_pts, un_prev_pts, cv::FM_RANSAC, fe_para::kFThreshold,
                            0.99, status);
-    return status;*/
+    return status;
 }
 
 
@@ -887,12 +866,12 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
         ///绘制2D边界框
         //cv::rectangle(img,inst.box2d->min_pt,inst.box2d->max_pt,inst.color,2);
 
-        /*///绘制新的点
-        for(const auto &pt : inst.visual_new_points){
-            cv::circle(img,
-                       cv::Point2f(pt.x+inst.box2d->rect.tl().x,pt.y+inst.box2d->rect.tl().y),
-                       2, cv::Scalar(255,0,0), -1);
-        }
+        ///绘制新的点
+//        for(const auto &pt : inst.visual_new_points){
+//            cv::circle(img,
+//                       cv::Point2f(pt.x+inst.box2d->rect.tl().x,pt.y+inst.box2d->rect.tl().y),
+//                       2, cv::Scalar(255,0,0), -1);
+//        }
 
         ///绘制额外点
         //for(const auto &pt:inst.extra_points){
@@ -934,7 +913,7 @@ void InstsFeatManager::DrawInsts(cv::Mat& img)
                 pt.x+= cols_offset;
                 cv::circle(img, pt, 2, inst.color, -1);
             }
-        }*/
+        }
 
         ///绘制检测的3D边界框
         if(inst.box3d){

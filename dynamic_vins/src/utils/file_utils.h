@@ -24,7 +24,9 @@ vector<fs::path> GetDirectoryFileNames(const string &path);
 
 bool CheckIsDir(const string &dir);
 
-void GetAllImageFiles(const string& dir, vector<string> &files) ;
+void GetAllImagePaths(const string& dir, vector<string> &files);
+
+void GetAllImageNames(const string& dir, vector<string> &files);
 
 void GetAllFiles(const string& dir, vector<string> &files,const string &filter_suffix=string()) ;
 

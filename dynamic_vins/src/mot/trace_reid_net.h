@@ -8,32 +8,25 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_EXTRACTOR_H
-#define DYNAMIC_VINS_EXTRACTOR_H
+#ifndef TRACKING_SOLOV2_DEEPSORT_TRACE_REID_NET_H
+#define TRACKING_SOLOV2_DEEPSORT_TRACE_REID_NET_H
 
 #include <vector>
 #include <string>
 #include <torch/torch.h>
-#include <opencv2/opencv.hpp>
 
-#include "reid_net.h"
-#include "trace_reid_net.h"
-
-namespace dynamic_vins{\
-
-
-class Extractor {
+class TraceReidNet {
 public:
-    Extractor();
+    torch::Tensor forward(torch::Tensor x);
 
-    torch::Tensor extract(std::vector<cv::Mat> input); // return GPUTensor
+    torch::Tensor operator()(torch::Tensor x);
+
+    void load_form(const std::string &bin_path);
 
 private:
-    //ReIdNet net;
-    TraceReidNet net;
+    torch::jit::Module model;
+
 };
 
 
-}
-
-#endif //DYNAMIC_VINS_EXTRACTOR_H
+#endif //TRACKING_SOLOV2_DEEPSORT_TRACE_REID_NET_H

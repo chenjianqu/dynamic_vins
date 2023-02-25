@@ -43,17 +43,13 @@ std::vector<Box3D::Ptr>  Detector3D::WaitResult(){
         if(cfg::dataset == DatasetType::kViode){
             return Detector3D::ReadBox3D(DoubleToStr(image_time,6));
         }
-        else if(cfg::dataset == DatasetType::kKitti){
-            string target_name = PadNumber(image_seq_id,6);//补零
+        else if(cfg::dataset == DatasetType::kKitti || cfg::dataset == DatasetType::kCustom){
+            string target_name = PadNumber(image_seq_id,6);
             return Detector3D::ReadBox3D(target_name);
-        }
-        else if(cfg::dataset == DatasetType::kKitti){
-            std::cerr<<"Detector3D::WaitResult() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
-            throw std::runtime_error("Detector3D::WaitResult() not is implemented");
-            return {};
         }
         else{
             std::cerr<<"Detector3D::WaitResult() not is implemented, as dataset is "<<cfg::dataset_name<<endl;
+            std::terminate();
             return {};
         }
     }

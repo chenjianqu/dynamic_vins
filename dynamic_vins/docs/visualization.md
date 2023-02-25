@@ -49,7 +49,7 @@ rosrun dynamic_vins_eval visualize_3d_box ${tracking_result} ${image_dir}
 * run rviz
 
 ```shell
-rosrun rviz rviz -d ${dynamic_vins_root}/src/dynamic_vins/config/rviz/rviz.rviz
+rviz -d ${dynamic_vins_root}/src/custom_dataset/config/rviz/box3d.rviz
 ```
 
 
@@ -62,6 +62,30 @@ config_file=${dynamic_vins_root}/src/dynamic_vins/config/kitti/kitti_tracking/ki
 source ${dynamic_vins_root}/devel/setup.bash
 
 rosrun dynamic_vins pub_object3d ${config_file} "prediction"
+```
+
+
+
+## Visualize Instance Pointcloud
+
+### with Rviz
+
+* run rviz
+
+```shell
+rviz -d ${dynamic_vins_root}/src/custom_dataset/config/rviz/box3d.rviz
+```
+
+
+
+* run pub_inst_pointcloud
+
+```shell
+source  ${dynamic_vins_root}/devel/setup.bash
+
+config_file=${dynamic_vins_root}/src/dynamic_vins/config/custom/zed_1280x720_vision_only/dynamic.yaml
+
+rosrun dynamic_vins pub_inst_pointcloud ${config_file} road_2
 ```
 
 

@@ -8,32 +8,33 @@
  * you may not use this file except in compliance with the License.
  *******************************************************/
 
-#ifndef DYNAMIC_VINS_EXTRACTOR_H
-#define DYNAMIC_VINS_EXTRACTOR_H
+#ifndef DYNAMIC_VINS_IMAGE_VIEWER_H
+#define DYNAMIC_VINS_IMAGE_VIEWER_H
 
-#include <vector>
-#include <string>
-#include <torch/torch.h>
-#include <opencv2/opencv.hpp>
-
-#include "reid_net.h"
-#include "trace_reid_net.h"
+#include "basic/def.h"
 
 namespace dynamic_vins{\
 
 
-class Extractor {
+/**
+ * 图像可视化类
+ */
+class ImageViewer{
 public:
-    Extractor();
+    ImageViewer(){
+        tt.Tic();
+    }
 
-    torch::Tensor extract(std::vector<cv::Mat> input); // return GPUTensor
+    void ImageShow(cv::Mat &img,int period, int delay_frames=0);
+
+    void Delay(int period);
 
 private:
-    //ReIdNet net;
-    TraceReidNet net;
-};
+    std::queue<cv::Mat> img_queue;
 
+    TicToc tt;
+};
 
 }
 
-#endif //DYNAMIC_VINS_EXTRACTOR_H
+#endif //DYNAMIC_VINS_IMAGE_VIEWER_H

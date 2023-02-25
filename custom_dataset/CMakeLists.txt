@@ -46,6 +46,9 @@ include_directories(
 add_executable(sub_write_images src/sub_write_images.cpp src/io_utils.cpp)
 target_link_libraries(sub_write_images ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} )
 
+add_executable(sub_stereo_split_images src/sub_stereo_split_images.cpp src/io_utils.cpp)
+target_link_libraries(sub_stereo_split_images ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} )
+
 add_executable(read_stereo_cam src/read_stereo_cam.cpp src/io_utils.cpp)
 target_link_libraries(read_stereo_cam ${catkin_LIBRARIES} ${OpenCV_LIBS} ${spdlog_LIBRARIES} )
 

@@ -32,7 +32,7 @@
 #include "feature_utils.h"
 #include "basic/box3d.h"
 #include "basic/box2d.h"
-#include "line_detector/frame_lines.h"
+#include "basic/frame_lines.h"
 #include "line_detector/line_detector.h"
 
 namespace dynamic_vins{\

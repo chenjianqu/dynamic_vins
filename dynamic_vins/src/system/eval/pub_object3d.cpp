@@ -20,7 +20,7 @@
 #include "utils/convert_utils.h"
 #include "utils/io/visualization.h"
 #include "utils/io/markers_utils.h"
-#include "utils/io/dataloader.h"
+#include "utils/io/image_viewer.h"
 #include "det3d/det3d_parameter.h"
 
 using namespace std;
@@ -344,12 +344,31 @@ public:
     {
         ros::Publisher pub_instance_marker=nh.advertise<MarkerArray>("fcos3d_markers", 1000);
 
-        int index=0;
+        vector<fs::path> names = GetDirectoryFileNames(img_root_path);
 
-        while(ros::ok()){
+        if(names.empty()){
+            cerr<<img_root_path<<" empty!"<<endl;
+            return -1;
+        }
+
+        ///获取索引的最大值和最小值
+        vector<string> names_str;
+        names_str.reserve(names.size());
+        for(auto &n:names){
+            names_str.push_back(n.string());
+        }
+        std::sort(names_str.begin(),names_str.end());
+        int start_index = stoi(fs::path(names_str[0]).stem().string());
+        int end_index = stoi(fs::path(names_str[names_str.size()-1]).stem().string());
+
+        int index=start_index;
+
+        while(ros::ok() && index<=end_index){
+
             cv::Mat img= ReadImage(index);
             if(img.empty()){
-                break;
+                index++;
+                continue;
             }
 
             MarkerArray marker_array;
@@ -373,7 +392,6 @@ public:
                     marker_array.markers.push_back(std::get<0>(axis_markers));
                     marker_array.markers.push_back(std::get<1>(axis_markers));
                     marker_array.markers.push_back(std::get<2>(axis_markers));
-
                 }
                 cout<<"prediction_boxes:"<<boxes.size()<<endl;
             }

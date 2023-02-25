@@ -26,6 +26,9 @@ public:
     static inline float kReIdImgMean[3]={0.485f, 0.456f, 0.406f};//ReId网络的预处理归一化均值
     static inline float kReIdImgStd[3]={0.229f, 0.224f, 0.225f};
 
+    inline static int kReidInputWidth{64};
+    inline static int kReidInputHeight{128};
+
     inline static std::string kExtractorModelPath;
     inline static int kTrackingMaxAge;
     inline static int kTrackingNInit;

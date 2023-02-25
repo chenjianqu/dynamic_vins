@@ -12,7 +12,7 @@
 #define DYNAMIC_VINS_FEATURE_SERIALIZATION_H
 
 #include "basic/def.h"
-#include "line_detector/frame_lines.h"
+#include "basic/frame_lines.h"
 
 namespace dynamic_vins{\
 

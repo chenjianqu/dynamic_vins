@@ -661,7 +661,8 @@ sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking.sh ${se
 ```shell
 sequence=0010
 
-mot_estimate_file=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_mot.txt #要评估的MOT文件
+#mot_estimate_file=${dynamic_vins_root}/src/dynamic_vins/data/output/${sequence}/${sequence}_mot.txt #要评估的MOT文件
+mot_estimate_file=/home/chen/ws/dynamic_ws/src/dynamic_vins/data/deepsort_output/${sequence}_deepsort_result.txt
 
 sh ${dynamic_vins_root}/src/dynamic_vins/scripts/eval_mot_kitti_tracking_multi.sh ${sequence} ${mot_estimate_file}
 ```
@@ -759,7 +760,6 @@ python  ${TrackEval}/scripts/run_kitti.py --GT_FOLDER  ${TrackEval}/data/gt/kitt
 ```
 
 the output path is `${TrackEval}/data/trackers/kitti/kitti_mots_val `.
-
 
 
 

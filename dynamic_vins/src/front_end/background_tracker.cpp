@@ -434,7 +434,7 @@ FeatureBackground FeatureTracker::TrackImageNaive(SemanticImage &img)
     }
 
     ///特征点跟踪
-    bg.TrackLeftGPU(img,prev_img,lk_optical_flow,lk_optical_flow_back);
+    bg.TrackLeftGPU(img,prev_img,lk_optical_flow,lk_optical_flow_back,bg.roi->mask_cv);
     Infot("trackImageNaive | flowTrack left:{} ms", tt.TocThenTic());
 
     //RejectWithF();
@@ -628,7 +628,7 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
 
     img_vis = GetMaskColorImage(img);
 
-    /*//cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
+    //cv::cvtColor(img_track, img_track, CV_GRAY2RGB);
     for (size_t j = 0; j < curLeftPts.size(); j++){
         double len = std::min(1.0, 1.0 * bg.track_cnt[j] / 20);
         cv::circle(img_vis, curLeftPts[j], 2, cv::Scalar(255 * (1 - len), 0, 255 * len), 2);
@@ -651,14 +651,14 @@ void FeatureTracker::DrawTrack(const SemanticImage &img,
                 cv::circle(img_vis, rightPt, 2, cv::Scalar(0, 255, 0), 2);
             }
         }
-    }*/
+    }
 
-    /*for (size_t i = 0; i < curLeftIds.size(); i++){
+    for (size_t i = 0; i < curLeftIds.size(); i++){
         if(auto it = prevLeftPts.find(curLeftIds[i]); it != prevLeftPts.end()){
-            cv::arrowedLine(img_track_, curLeftPts[i], it->second, cv::Scalar(0, 255, 0),
+            cv::arrowedLine(img_vis, curLeftPts[i], it->second, cv::Scalar(0, 255, 0),
                             1, 8, 0, 0.2);
         }
-    }  */
+    }
 
 }
 

@@ -166,7 +166,7 @@ int main(int argc, char** argv)
     string data_path=argv[1];
     string image_path=argv[2];
 
-    auto boxes = ReadBox3dFromTxt(data_path,0.1);
+    auto boxes = ReadBox3dFromTxt(data_path,0.0);
 
     Dataloader dataloader(image_path);
 

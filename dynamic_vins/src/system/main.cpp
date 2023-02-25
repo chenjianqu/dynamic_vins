@@ -27,6 +27,8 @@
 #include "utils/dataset/viode_utils.h"
 #include "utils/dataset/coco_utils.h"
 #include "utils/io/dataloader.h"
+#include "utils/io/image_viewer.h"
+#include "utils/io/system_call_back.h"
 #include "basic/semantic_image.h"
 #include "basic/semantic_image_queue.h"
 #include "basic/feature_queue.h"
@@ -45,7 +47,7 @@ Estimator::Ptr estimator;
 ImageProcessor::Ptr processor;
 FeatureTracker::Ptr feature_tracker;
 InstsFeatManager::Ptr insts_tracker;
-CallBack* callback;
+SystemCallBack* sys_callback;
 Dataloader::Ptr dataloader;
 
 SemanticImageQueue image_queue;
@@ -76,7 +78,7 @@ void ImageProcess()
             img = dataloader->LoadStereo();
         }
         else{
-            img = callback->SyncProcess();
+            img = sys_callback->SyncProcess();
         }
 
         std::cout<<"image seq_id:"<<img.seq<<std::endl;
@@ -99,19 +101,18 @@ void ImageProcess()
         ///入口程序
         processor->Run(img);
 
-        /*
-        ///3D目标检测结果保存
-        if(img.seq%10==0){
-            string save_name = cfg::kDatasetSequence+"_"+to_string(img.seq)+"_det2d.png";
-            cv::imwrite(save_name,img.merge_mask);
-
-            cv::Mat img_w=img.color0.clone();
-            for(auto &box3d:img.boxes3d){
-                box3d->VisCorners2d(img_w,BgrColor("white",false),*cam0);
-            }
-             save_name = cfg::kDatasetSequence+"_"+to_string(img.seq)+"_det3d.png";
-            cv::imwrite(save_name,img_w);
-        }*/
+//        ///3D目标检测结果保存
+//        if(img.seq%10==0){
+//            string save_name = cfg::kDatasetSequence+"_"+to_string(img.seq)+"_det2d.png";
+//            cv::imwrite(save_name,img.merge_mask);
+//
+//            cv::Mat img_w=img.color0.clone();
+//            for(auto &box3d:img.boxes3d){
+//                box3d->VisCorners2d(img_w,BgrColor("white",false),*cam0);
+//            }
+//             save_name = cfg::kDatasetSequence+"_"+to_string(img.seq)+"_det3d.png";
+//            cv::imwrite(save_name,img_w);
+//        }
 
         double time_cost=t_all.Toc();
         time_sum+=time_cost;
@@ -119,46 +120,38 @@ void ImageProcess()
 
         Warns("ImageProcess, all:{} ms \n",time_cost);
 
-        ///测试，输出图像和Mask
-        if(img.seq==587){
-            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/color0.png",img.color0);
-            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/color1.png",img.color1);
-            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/merge_mask.png",img.merge_mask);
-        }
+//        ///测试，输出图像和Mask
+//        if(img.seq==587){
+//            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/color0.png",img.color0);
+//            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/color1.png",img.color1);
+//            cv::imwrite(io_para::kOutputFolder + cfg::kDatasetSequence + "/merge_mask.png",img.merge_mask);
+//        }
 
         if(io_para::is_show_input){
             cv::Mat img_show;
 
-            /*
-            ///实例分割结果可视化
-            if(!img.merge_mask.empty()){
-                cv::cvtColor(img.merge_mask,img_show,CV_GRAY2BGR);
-                ///将Mask设置蓝色的
-                vector<cv::Mat> mat_vec;
-                cv::split(img_show,mat_vec);
-                mat_vec[0] = mat_vec[0]*255;//蓝色
-                cv::merge(mat_vec,img_show);
+//            ///实例分割结果可视化
+//            if(!img.merge_mask.empty()){
+//                cv::cvtColor(img.merge_mask,img_show,CV_GRAY2BGR);
+//                ///将Mask设置蓝色的
+//                vector<cv::Mat> mat_vec;
+//                cv::split(img_show,mat_vec);
+//                mat_vec[0] = mat_vec[0]*255;//蓝色
+//                cv::merge(mat_vec,img_show);
+//
+//                cv::scaleAdd(img_show,0.8,img.color0,img_show);
+//            }
+//            else{
+//                img_show = cv::Mat(cv::Size(img.color0.cols,img.color0.rows),CV_8UC3,cv::Scalar(255,255,255));
+//            }
+//            cv::resize(img_show,img_show,cv::Size(),0.4,0.4);
 
-                cv::scaleAdd(img_show,0.8,img.color0,img_show);
-            }
-            else{
-                img_show = cv::Mat(cv::Size(img.color0.cols,img.color0.rows),CV_8UC3,cv::Scalar(255,255,255));
-            }
-            cv::resize(img_show,img_show,cv::Size(),0.4,0.4);*/
-
-            /*
-            ///光流可视化
-            if(flow_tensor.defined()){
-               cv::Mat show = VisualFlow(flow_tensor);
-               cv::imshow("show",show);
-               cv::waitKey(1);
-            }*/
 
             ///3D目标检测结果可视化
             img_show = img.color0.clone();
             int id=0;
             for(auto &box:img.boxes3d){
-                box->VisCorners2d(img_show, ColorMapping(id++),cam_s.cam0);
+                box->VisCorners2d(img_show, cv::Scalar(255, 255, 255),cam_s.cam0);
             }
             viewer.ImageShow(img_show,io_para::kImageDatasetPeriod,1);
 
@@ -209,7 +202,7 @@ void FeatureTrack()
                 }
 
                 ///MOT
-                if(cfg::dataset == DatasetType::kKitti){
+                if(cfg::dataset == DatasetType::kKitti || cfg::dataset==DatasetType::kCustom){
                     insts_tracker->AddInstancesByTracking(*img);
                 }
                 else if(cfg::dataset == DatasetType::kViode){
@@ -272,12 +265,12 @@ void FeatureTrack()
                     }
                 }
 
-                /*if(img->seq%10==0){
-                    cv::Mat img_w=img->color0.clone();
-                    string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
-                    insts_tracker->DrawInsts(img_w);
-                    cv::imwrite(save_name,img_w);
-                }*/
+//                if(img->seq%10==0){
+//                    cv::Mat img_w=img->color0.clone();
+//                    string save_name = cfg::kDatasetSequence+"_"+std::to_string(img->seq)+"_inst.png";
+//                    insts_tracker->DrawInsts(img_w);
+//                    cv::imwrite(save_name,img_w);
+//                }
             }
             else if(cfg::slam == SLAM::kNaive){
                 frame.features = feature_tracker->TrackImageNaive(*img);
@@ -290,7 +283,6 @@ void FeatureTrack()
                     frame.features = feature_tracker->TrackImage(*img);
                 }
             }
-
 
             ///TODO DEBUG
             //string serialize_path = cfg::kBasicDir + "/data/output/serialization/";
@@ -322,12 +314,12 @@ void FeatureTrack()
             ///发布跟踪可视化图像
             if (fe_para::is_show_track){
                 PublisherMap::PubImage(feature_tracker->img_track(),"image_track");
-                /*cv::imshow("img",feature_tracker->img_track);
-                cv::waitKey(1);*/
-                /*string label=to_string(img.time0)+".jpg";
-                if(saved_name.count(label)!=0){
-                    cv::imwrite(label,imgTrack);
-                }*/
+                //cv::imshow("img",feature_tracker->img_track);
+                //cv::waitKey(1);
+                //string label=to_string(img.time0)+".jpg";
+                //if(saved_name.count(label)!=0){
+                //    cv::imwrite(label,imgTrack);
+                //}
             }
             Infot("**************feature_track:{} ms****************\n", time_cost);
         }
@@ -337,56 +329,6 @@ void FeatureTrack()
     Warnt("FeatureTrack 线程退出");
 }
 
-
-void ImuCallback(const sensor_msgs::ImuConstPtr &imu_msg)
-{
-    double t = imu_msg->header.stamp.toSec();
-    Vector3d acc(imu_msg->linear_acceleration.x, imu_msg->linear_acceleration.y, imu_msg->linear_acceleration.z);
-    Vector3d gyr(imu_msg->angular_velocity.x, imu_msg->angular_velocity.y, imu_msg->angular_velocity.z);
-    estimator->InputIMU(t, acc, gyr);
-}
-
-void RestartCallback(const std_msgs::BoolConstPtr &restart_msg)
-{
-    if (restart_msg->data == true){
-        Warnv("restart the e!");
-        estimator->ClearState();
-        estimator->SetParameter();
-    }
-}
-
-void TerminalCallback(const std_msgs::BoolConstPtr &terminal_msg)
-{
-    if (terminal_msg->data == true){
-        cerr<<"terminal the e!"<<endl;
-        ros::shutdown();
-        cfg::ok.store(false,std::memory_order_seq_cst);
-    }
-}
-
-void ImuSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
-{
-    if (switch_msg->data == true){
-        Warnv("use IMU!");
-        estimator->ChangeSensorType(1, cfg::is_stereo);
-    }
-    else{
-        Warnv("disable IMU!");
-        estimator->ChangeSensorType(0, cfg::is_stereo);
-    }
-}
-
-void CamSwitchCallback(const std_msgs::BoolConstPtr &switch_msg)
-{
-    if (switch_msg->data == true){
-        Warnv("use stereo!");
-        estimator->ChangeSensorType(cfg::use_imu, 1);
-    }
-    else{
-        Warnv("use mono camera (left)!");
-        estimator->ChangeSensorType(cfg::use_imu, 0);
-    }
-}
 
 
 int Run(int argc, char **argv){
@@ -432,33 +374,14 @@ int Run(int argc, char **argv){
     }
 
     estimator->SetParameter();
-
     cout<<"init completed"<<endl;
 
-    ros::Subscriber sub_imu,sub_img0,sub_img1;
-    ros::Subscriber sub_seg0,sub_seg1;
-    ros::Subscriber sub_restart,sub_terminal,sub_imu_switch,sub_cam_switch;
-
     if(io_para::use_dataloader){
-        dataloader = std::make_shared<Dataloader>();
+        dataloader = std::make_shared<Dataloader>(io_para::kImageDatasetLeft,io_para::kImageDatasetRight);
     }
     else{
-        callback = new CallBack();
-
-        sub_imu = n.subscribe(io_para::kImuTopic, 2000, ImuCallback,
-                                              ros::TransportHints().tcpNoDelay());
-        sub_img0 = n.subscribe(io_para::kImage0Topic, 100, &CallBack::Img0Callback,callback);
-        sub_img1 = n.subscribe(io_para::kImage1Topic, 100, &CallBack::Img1Callback,callback);
-
-        if(cfg::is_input_seg){
-            sub_seg0 = n.subscribe(io_para::kImage0SegTopic, 100, &CallBack::Seg0Callback,callback);
-            sub_seg1 = n.subscribe(io_para::kImage1SegTopic, 100, &CallBack::Seg1Callback,callback);
-        }
-
-        sub_restart = n.subscribe("/vins_restart", 100, RestartCallback);
-        sub_terminal = n.subscribe("/vins_terminal", 100, TerminalCallback);
-        sub_imu_switch = n.subscribe("/vins_imu_switch", 100, ImuSwitchCallback);
-        sub_cam_switch = n.subscribe("/vins_cam_switch", 100, CamSwitchCallback);
+        ///订阅消息
+        sys_callback = new SystemCallBack(estimator,n);
     }
 
     Publisher::e = estimator;
@@ -489,7 +412,8 @@ int Run(int argc, char **argv){
     fk_thread.join();
     vio_thread.join();
     spdlog::drop_all();
-    delete callback;
+
+    delete sys_callback;
 
     cout<<"vins结束"<<endl;
 
@@ -502,7 +426,7 @@ int Run(int argc, char **argv){
 int main(int argc, char **argv)
 {
     if(argc != 3){
-        std::cerr<<"please input: rosrun vins vins_node [cfg file] [seq_name]"<< std::endl;
+        std::cerr<<"please input: rosrun dynamic_vins dynamic_vins [cfg file] [seq_name]"<< std::endl;
         return 1;
     }
 

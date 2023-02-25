@@ -358,7 +358,12 @@ void SetCameraIntrinsicByK(CameraInfo &cam){
 }
 
 
-
+/**
+ * 根据给定的参数文件初始化相机
+ * @param config_path
+ * @param seq_name
+ * @param cam
+ */
 void InitCameraByConfig(const std::string& config_path,const std::string& seq_name,CameraInfo &cam){
     vector<string> cam_paths = GetCameraPath(config_path);
 
@@ -428,10 +433,11 @@ void InitCameraByConfig(const std::string& config_path,const std::string& seq_na
  * @param cam
  */
 void InitOneCamera(const std::string& config_path,const std::string& seq_name,CameraInfo &cam){
-
+    ///根据参数文件初始化相机
     InitCameraByConfig(config_path,seq_name,cam);
 
     cam.model_type = cam.cam0->modelType();
+    cam.img_size = cv::Size(cam.cam0->imageWidth(),cam.cam0->imageHeight());
 
     ///获取内参
     if(cam.model_type==CamModelType::PINHOLE){
@@ -442,16 +448,16 @@ void InitOneCamera(const std::string& config_path,const std::string& seq_name,Ca
                 left_cam_para[4], 0.0, left_cam_para[6],
                 0.0, left_cam_para[5], left_cam_para[7],
                 0.0, 0.0, 1.0 );
-        cam.D0 = ( cv::Mat_<float> ( 4,1 ) <<
-                left_cam_para[0], left_cam_para[1], left_cam_para[2], left_cam_para[3]);//畸变系数 k1 k2 p1 p2
+        cam.D0 = ( cv::Mat_<float> ( 5,1 ) <<
+                left_cam_para[0], left_cam_para[1], 0 ,left_cam_para[2], left_cam_para[3]);//畸变系数 k1 k2 k3 p1 p2
 
         if(cfg::is_stereo){
             vector<double> right_cam_para;
             cam.cam1->writeParameters(right_cam_para);
             cam.K1 = ( cv::Mat_<float> ( 3,3 ) <<
                     right_cam_para[4], 0.0, right_cam_para[6], 0.0, right_cam_para[5], right_cam_para[7], 0.0, 0.0, 1.0 );
-            cam.D1 = ( cv::Mat_<float> ( 4,1 ) <<
-                    right_cam_para[0], right_cam_para[1], right_cam_para[2], right_cam_para[3]);//畸变系数 k1 k2 p1 p2
+            cam.D1 = ( cv::Mat_<float> ( 5,1 ) <<
+                    right_cam_para[0], right_cam_para[1], 0,right_cam_para[2], right_cam_para[3]);//畸变系数 k1 k2 k3 p1 p2
         }
 
         SetCameraIntrinsicByK(cam);
@@ -466,37 +472,36 @@ void InitOneCamera(const std::string& config_path,const std::string& seq_name,Ca
 
     ///设置是否对输入图像进行去畸变处理
     if(cfg::use_line && cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false){
-        throw std::runtime_error("InitOneCamera() cfg::use_line==true && "
+        throw std::logic_error("InitOneCamera() cfg::use_line==true && "
                                  "cfg::dataset==DatasetType::kEuRoc && cfg::is_undistort_input==false");
     }
 
-    ///获取去畸变的映射矩阵
+    ///如果需要矫正图像的话，获取去畸变的映射矩阵
     if(cfg::is_undistort_input){
-
-        cam.K0 = cam.cam0->initUndistortRectifyMap(cam.left_undist_map1,cam.left_undist_map2);
-        cam.D0 = ( cv::Mat_<float> ( 4,1 ) << 0, 0, 0, 0);//畸变系数 k1 k2 p1 p2
+        //首先获取新的内参矩阵
+        const double alpha=0;//值为0,损失最多的像素，没有黑色边框；值为1时，所有像素保留，但存在黑色边框。
+        cv::Mat new_K0 = cv::getOptimalNewCameraMatrix(cam.K0,cam.D0,cam.img_size,alpha,cam.img_size);
+        cv::initUndistortRectifyMap(cam.K0,cam.D0,cv::Mat(),new_K0,
+                cam.img_size,CV_16SC2,cam.left_undist_map1,cam.left_undist_map2);
+        //cam.K0 = cam.cam0->initUndistortRectifyMap(cam.left_undist_map1,cam.left_undist_map2);
+        cam.K0 = new_K0;
+        cam.D0 = ( cv::Mat_<float> ( 5,1 ) << 0, 0, 0, 0, 0);//畸变系数 k1 k2 k3 p1 p2
 
         Debugv("InitOneCamera() initUndistortRectifyMap K0:\n{}", CvMatToStr<float>(cam.K0));
 
-        //cv::Size image_size(left_cam_dl->imageWidth(),left_cam_dl->imageHeight());
-        //cv::initUndistortRectifyMap(left_K,left_D,cv::Mat(),left_K,image_size,
-        //                            CV_16SC2,left_undist_map1,left_undist_map2);
-        //dynamic_cast<camodocal::CataCamera*>(left_cam_dl.get())->initUndistortMap(left_undist_map1,left_undist_map2);
-
         if(cfg::is_stereo){
-            cam.K1 = cam.cam1->initUndistortRectifyMap(cam.right_undist_map1,cam.right_undist_map2);
-            cam.D1 = ( cv::Mat_<float> ( 4,1 ) << 0, 0, 0, 0);//畸变系数 k1 k2 p1 p2
+            cv::Mat new_K1 = cv::getOptimalNewCameraMatrix(cam.K1,cam.D1,cam.img_size,alpha,cam.img_size);
+            cv::initUndistortRectifyMap(cam.K1,cam.D1,cv::Mat(),new_K1,
+                                        cam.img_size,CV_16SC2,cam.right_undist_map1,cam.right_undist_map2);
+            cam.K1 = new_K1;
+            cam.D1 = ( cv::Mat_<float> ( 5,1 ) << 0, 0 ,0, 0, 0);//畸变系数 k1 k2 p1 p2
             Debugv("InitOneCamera() initUndistortRectifyMap K1:\n{}", CvMatToStr<float>(cam.K1));
-            //cv::Size image_size_2(right_cam_dl->imageWidth(),right_cam_dl->imageHeight());
-            //cv::initUndistortRectifyMap(right_K,right_D,cv::Mat(),right_K,image_size_2,
-            //                           CV_16SC2,right_undist_map1,right_undist_map2);
-
-            //dynamic_cast<camodocal::CataCamera*>(right_cam_dl.get())->initUndistortMap(right_undist_map1,right_undist_map2);
         }
 
         ///由于会对整张图像进行去畸变，因此重新设置相机的内参
         if(cam.cam0->modelType()==camodocal::Camera::ModelType::PINHOLE){
             SetCameraIntrinsicByK(cam);
+
             //0 k1();1 k2();2 p1();3 p2();4 fx();5 fy();6 cx();7 cy();
             vector<double> left_cam_para = {0,0,0,0,cam.fx0,cam.fy0,cam.cx0,cam.cy0};
             cam.cam0->readParameters(left_cam_para);
@@ -513,6 +518,7 @@ void InitOneCamera(const std::string& config_path,const std::string& seq_name,Ca
             cerr<<"InitOneCamera not implement"<<endl;
             std::terminate();
         }
+
     }
 
     Debugv("InitOneCamera() left cam intrinsic fx:{} fy:{} cx:{} cy:{}",cam.fx0,cam.fy0,cam.cx0,cam.cy0);
